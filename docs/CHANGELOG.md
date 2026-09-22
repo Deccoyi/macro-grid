@@ -4,6 +4,7 @@ Bu dosya [Keep a Changelog](https://keepachangelog.com/) formatını takip eder.
 
 ## [Unreleased]
 ### Added
+- WebSocket protokolüne `profiles.list` (server→client, hello'da gönderilir) ve `profile.change` (client→server) mesajları eklendi — client artık kendi profilini kendisi değiştirebiliyor (profil çekmecesi için gerekli altyapı).
 - Aşama 5 başladı: `client/` artık Capacitor + React + TS uygulaması (Capacitor 8.5.2). IP girip bağlanma ekranı, `@macro/renderer` ile aynı grid'i çizen ana ekran, WebSocket reconnect (exponential backoff). `android/` platformu eklendi.
 - Server iskeleti: WebSocket protokolü, JSON profil deposu, tray uygulaması, dosya logları, geçici test client sayfası (Aşama 1).
 - Canlı değişkenler (`system.time`, `system.cpu`, `system.ram`, ...), sayfa/profil geçişi, toggle widget'ları, `core.page`/`core.profile`/`core.open`/`core.delay` aksiyonları (Aşama 2).
@@ -28,3 +29,4 @@ Bu dosya [Keep a Changelog](https://keepachangelog.com/) formatını takip eder.
 - Test client'ta (`wwwroot/index.html`) `widget.state.style`/`animation` hiç uygulanmıyordu — sunucudan gelen dinamik renk/animasyon push'ları sessizce yok sayılıyordu.
 - Editör HTML dosyaları artık `Cache-Control: no-cache` ile sunuluyor — önceden WebView2/tarayıcı eski `index.html`'i (ve onun referans verdiği eski JS bundle'ını) önbellekten göstermeye devam ediyordu, editör yeniden derlenip sunucu yeniden başlatılsa bile. Hash'li `assets/*.js`/`*.css` dosyaları hâlâ önbelleklenebilir.
 - Arayüzdeki tüm emoji/sembol ikonlar (✎, ⚡, ↑/↓, ×, →) kaldırılıp `lucide-react` ikonlarıyla değiştirildi (Pencil, Zap, ChevronUp/Down, X, ArrowRight).
+- `ButtonContent`'te ikon üstte/altta iken kapsayıcının `flex-direction`'ı değiştiriliyordu, bu da hizalama için ayarlanan `justify-content`/`align-items`'ın eksenlerini karıştırıyordu (dikey hizalama yatay gibi davranıyordu). İkon+metin artık kendi iç kutusunda (`.ms-content-inner`), dış kutu her zaman hizalamayı doğru eksende uyguluyor.

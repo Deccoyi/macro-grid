@@ -143,6 +143,11 @@ public sealed class ClientHub(
                 var page = envelope.DataAs<PageChangeMessage>();
                 if (page is not null) session.PageId = page.PageId;
                 break;
+            case MessageTypes.ProfileChange:
+                var change = envelope.DataAs<ProfileChangeMessage>();
+                if (change is not null)
+                    await new SessionDeviceController(session, profiles, widgetState).SwitchProfileAsync(change.ProfileId);
+                break;
             default:
                 logger.LogDebug("Ignoring message type {Type}", envelope.Type);
                 break;
@@ -169,6 +174,8 @@ public sealed class ClientHub(
 
         await session.SendAsync(MessageTypes.Welcome, new WelcomeMessage(Environment.MachineName, ServerVersion), ct);
         await session.SendAsync(MessageTypes.LayoutFull, new LayoutFullPayload(profile, session.PageId ?? ""), ct);
+        // Every profile, not just the assigned one, so the client can offer a profile-switcher drawer.
+        await session.SendAsync(MessageTypes.ProfilesList, new ProfilesListPayload(profiles.All.Select(p => new ProfileSummary(p.Id, p.Name)).ToList()), ct);
         if (page is not null)
             await widgetState.SendInitialAsync(session, page, ct);
     }

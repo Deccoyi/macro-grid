@@ -58,7 +58,8 @@ export function widgetBaseCss(style: WidgetStyle | undefined): string {
 const SHARED_CONTENT_CSS = `
 @keyframes ms-blink { 0%, 49% { opacity: 1; } 50%, 100% { opacity: .25; } }
 @keyframes ms-pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.045); } }
-.ms-icon { width: 28px; height: 28px; object-fit: contain; margin-bottom: 4px; }
+.ms-content-inner { display: flex; align-items: center; max-width: 100%; min-width: 0; }
+.ms-icon { width: 28px; height: 28px; object-fit: contain; }
 .ms-text { overflow-wrap: anywhere; }
 .ms-slider, .ms-knob, .ms-image { flex-direction: column; gap: 6px; }
 .ms-range { width: 100%; touch-action: pan-x; }

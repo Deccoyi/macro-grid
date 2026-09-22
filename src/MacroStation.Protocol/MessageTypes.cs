@@ -17,5 +17,6 @@ public static class MessageTypes
     public const string LayoutFull = "layout.full";
     public const string PageShow = "page.show";
     public const string WidgetState = "widget.state";
+    public const string ProfilesList = "profiles.list";
     public const string Error = "error";
 }
