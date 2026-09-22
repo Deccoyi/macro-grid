@@ -1,0 +1,64 @@
+# ============================================================
+# .NET — applies at any depth, so it covers every csproj under
+# src/, tests/, and any future project.
+# ============================================================
+bin/
+obj/
+out/
+publish/
+artifacts/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+*.pdb
+*.cache
+*.nupkg
+*.snupkg
+project.lock.json
+project.fragment.lock.json
+.vs/
+TestResults/
+[Cc]overage/
+*.trx
+
+# ============================================================
+# Node / TypeScript (editor/, packages/renderer/)
+# — no leading slash, so this matches node_modules/dist at any depth.
+# ============================================================
+node_modules/
+dist/
+dist-ssr/
+build/
+.vite/
+.turbo/
+.cache/
+coverage/
+*.tsbuildinfo
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+*.tgz
+.env
+.env.*
+!.env.example
+
+# Built by `npm run build` in editor/ and copied into the .NET host's
+# wwwroot at deploy time — regenerate from source, don't commit the output.
+src/MacroStation.Host/wwwroot/editor/
+
+# ============================================================
+# Logs
+# ============================================================
+*.log
+%AppData%/MacroStation/logs/
+
+# ============================================================
+# OS / editor / IDE
+# ============================================================
+.idea/
+.vscode/
+*.iml
+.DS_Store
+Thumbs.db

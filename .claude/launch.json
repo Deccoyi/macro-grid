@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "renderer-demo",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["--prefix", "client/packages/renderer/demo", "run", "dev"],
+      "port": 5183
+    },
+    {
+      "name": "editor",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["--prefix", "server/editor", "run", "dev"],
+      "port": 5190
+    }
+  ]
+}

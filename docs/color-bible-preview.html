@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<title>Macro Station — Color Bible</title>
+<style>
+  body { margin:0; padding:24px; background:#1c1e22; color:#e6e7ea; font-family: system-ui, sans-serif; }
+  h1 { font-size:15px; font-weight:600; color:#9a9ea6; text-transform:uppercase; letter-spacing:.04em; margin:28px 0 10px; }
+  h1:first-of-type { margin-top:0; }
+  .row { display:flex; gap:8px; flex-wrap:wrap; }
+  .sw { width:120px; }
+  .sw .box { height:64px; border-radius:4px; border:1px solid #35383e; }
+  .sw .label { font-size:11px; margin-top:4px; color:#9a9ea6; }
+  .sw .hex { font-size:11px; color:#5b5e64; font-family: ui-monospace, monospace; }
+</style>
+</head>
+<body>
+  <h1>Editör chrome (koyu)</h1>
+  <div class="row" id="chrome"></div>
+  <h1>Widget swatch seti (16)</h1>
+  <div class="row" id="widgets"></div>
+<script>
+const chrome = [
+  ['bg-canvas', '#1c1e22'], ['bg-surface', '#232529'], ['bg-surface-raised', '#2b2e33'], ['bg-inset', '#16171a'],
+  ['border', '#35383e'], ['border-strong', '#46494f'],
+  ['text-primary', '#e6e7ea'], ['text-secondary', '#9a9ea6'], ['text-disabled', '#5b5e64'],
+  ['accent', '#d97706'], ['accent-hover', '#f59e0b'], ['success', '#3f9142'], ['danger', '#c0392b'],
+];
+const widgets = [
+  ['Graphite', '#374151'], ['Slate', '#475569'], ['Red', '#b91c1c'], ['Orange', '#c2410c'],
+  ['Amber', '#b45309'], ['Olive', '#84761f'], ['Green', '#15803d'], ['Teal', '#0f766e'],
+  ['Cyan', '#0e7490'], ['Blue', '#1d4ed8'], ['Indigo', '#4338ca'], ['Violet', '#6d28d9'],
+  ['Magenta', '#a21caf'], ['Pink', '#be185d'], ['Brown', '#78350f'], ['Charcoal', '#111827'],
+];
+const render = (id, items) => {
+  document.getElementById(id).innerHTML = items.map(([name, hex]) => `
+    <div class="sw">
+      <div class="box" style="background:${hex}"></div>
+      <div class="label">${name}</div>
+      <div class="hex">${hex}</div>
+    </div>`).join('');
+};
+render('chrome', chrome);
+render('widgets', widgets);
+</script>
+</body>
+</html>

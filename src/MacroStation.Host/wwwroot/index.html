@@ -1,0 +1,182 @@
+<!doctype html>
+<!--
+  Temporary test client served by the server until the Capacitor client (client/) exists.
+  Open http://<pc-ip>:9820 on a phone in the same Wi-Fi.
+-->
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <meta name="theme-color" content="#0b0d12">
+  <title>Macro Station Test</title>
+  <style>
+    :root { --bg: #0b0d12; --fg: #e5e7eb; --muted: #6b7280; --gap: 10px; }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; height: 100%; background: var(--bg); color: var(--fg);
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; overscroll-behavior: none; }
+    body { display: flex; flex-direction: column; }
+    header { display: flex; align-items: center; gap: 8px; padding: 8px 12px; font-size: 13px; color: var(--muted); }
+    .dot { width: 9px; height: 9px; border-radius: 50%; background: #ef4444; flex: none; }
+    .dot.on { background: #22c55e; }
+    #grid { flex: 1; display: grid; gap: var(--gap); padding: var(--gap); min-height: 0; }
+    .w { position: relative; overflow: hidden; border-radius: 10px; background: #2d3136; color: #e6e7ea;
+      display: flex; flex-direction: column; padding: 8px; font-weight: 600; font-size: 16px; text-align: center; white-space: pre-line;
+      align-items: center; justify-content: center; word-break: break-word; touch-action: none;
+      transition: transform .06s ease, filter .06s ease; }
+    .w.down { transform: scale(.96); filter: brightness(1.25); }
+    .w.label { touch-action: auto; }
+    .w.active { box-shadow: inset 0 0 0 3px currentColor; }
+    .w img.icon { width: 28px; height: 28px; object-fit: contain; margin-bottom: 4px; }
+    @keyframes ms-blink { 0%, 49% { opacity: 1; } 50%, 100% { opacity: .25; } }
+    @keyframes ms-pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.045); } }
+  </style>
+</head>
+<body>
+  <header><span class="dot" id="dot"></span><span id="status">Bağlanıyor…</span></header>
+  <div id="grid"></div>
+<script>
+(() => {
+  const grid = document.getElementById('grid');
+  const dot = document.getElementById('dot');
+  const statusEl = document.getElementById('status');
+
+  let deviceId;
+  try { deviceId = localStorage.getItem('ms.deviceId'); } catch {}
+  if (!deviceId) {
+    deviceId = 'web-' + Math.random().toString(36).slice(2, 10);
+    try { localStorage.setItem('ms.deviceId', deviceId); } catch {}
+  }
+
+  let ws, retry = 0;
+  let profile = null;   // full profile, cached from layout.full (holds every page)
+  let pageId = null;
+  let widgetEls = new Map(); // widgetId -> DOM element, for in-place widget.state updates
+
+  const send = (type, data) => ws && ws.readyState === 1 && ws.send(JSON.stringify({ type, data }));
+  const setStatus = (on, text) => { dot.classList.toggle('on', on); statusEl.textContent = text; };
+
+  function connect() {
+    ws = new WebSocket(`ws://${location.host}/ws`);
+    ws.onopen = () => {
+      retry = 0;
+      send('hello', { deviceId, deviceName: 'Tarayıcı (' + (navigator.platform || 'web') + ')', token: null, clientVersion: 'test-0.1' });
+    };
+    ws.onmessage = (e) => {
+      const msg = JSON.parse(e.data);
+      if (msg.type === 'welcome') setStatus(true, `${msg.data.serverName} · v${msg.data.serverVersion}`);
+      else if (msg.type === 'layout.full') { profile = msg.data.profile; renderPage(msg.data.pageId); }
+      else if (msg.type === 'page.show') renderPage(msg.data.pageId);
+      else if (msg.type === 'widget.state') applyWidgetState(msg.data);
+      else if (msg.type === 'error') console.warn('server error', msg.data);
+    };
+    ws.onclose = () => {
+      setStatus(false, 'Bağlantı yok, yeniden deneniyor…');
+      setTimeout(connect, Math.min(1000 * 2 ** retry++, 10000));
+    };
+  }
+
+  const LONG_PRESS_MS = 500;
+  const DOUBLE_TAP_MS = 300;
+  let textEls = new Map(); // widgetId -> the text span inside it, so widget.state doesn't clobber the icon
+
+  function applyWidgetState(state) {
+    const textEl = textEls.get(state.widgetId);
+    if (textEl && state.text != null) textEl.textContent = state.text;
+    const el = widgetEls.get(state.widgetId);
+    if (!el) return;
+    if (state.active != null) el.classList.toggle('active', state.active);
+    const s = state.style;
+    if (s) {
+      if (s.background) el.style.background = s.background;
+      if (s.foreground) el.style.color = s.foreground;
+      if (s.borderColor) el.style.borderColor = s.borderColor;
+      if (s.animation) el.style.animation = s.animation === 'none' ? '' : `ms-${s.animation} ${s.animation === 'blink' ? '1s step-start' : '1.4s ease-in-out'} infinite`;
+    }
+  }
+
+  function renderPage(pid) {
+    if (!profile) return;
+    pageId = pid;
+    widgetEls = new Map();
+    textEls = new Map();
+    const page = profile.pages.find(p => p.id === pid) || profile.pages[0];
+    grid.style.gridTemplateColumns = `repeat(${page.cols}, 1fr)`;
+    grid.style.gridTemplateRows = `repeat(${page.rows}, 1fr)`;
+    grid.replaceChildren(...page.widgets.map(w => {
+      const el = document.createElement('div');
+      el.className = 'w' + (w.type === 'label' ? ' label' : '');
+      el.style.gridArea = `${w.y + 1} / ${w.x + 1} / span ${w.h} / span ${w.w}`;
+      const s = w.style || {};
+      if (s.background) el.style.background = s.background;
+      if (s.foreground) el.style.color = s.foreground;
+      if (s.fontSize) el.style.fontSize = s.fontSize + 'px';
+      if (s.radius != null) el.style.borderRadius = s.radius + 'px';
+      if (s.borderWidth) el.style.border = `${s.borderWidth}px solid ${s.borderColor || '#fff'}`;
+
+      if (s.icon) {
+        const img = document.createElement('img');
+        img.className = 'icon';
+        img.src = s.icon;
+        img.alt = '';
+        el.appendChild(img);
+      }
+      const textEl = document.createElement('span');
+      textEl.textContent = w.text ?? '';
+      el.appendChild(textEl);
+      textEls.set(w.id, textEl);
+      widgetEls.set(w.id, el);
+
+      if (w.type !== 'label') attachGestures(el, w);
+      return el;
+    }));
+  }
+
+  // Mirrors client/packages/renderer's usePressGesture: press/release always fire; longPress/doubleTap
+  // fire IN ADDITION when they apply, never instead of press/release.
+  function attachGestures(el, w) {
+    let longPressTimer = null;
+    let longPressFired = false;
+    let lastReleaseAt = 0;
+
+    const clearLongPress = () => { if (longPressTimer) { clearTimeout(longPressTimer); longPressTimer = null; } };
+
+    el.addEventListener('pointerdown', (e) => {
+      el.setPointerCapture(e.pointerId);
+      el.classList.add('down');
+      longPressFired = false;
+      navigator.vibrate?.(15);
+      send('widget.down', { pageId, widgetId: w.id });
+
+      longPressTimer = setTimeout(() => {
+        longPressFired = true;
+        navigator.vibrate?.(30);
+        send('widget.longPress', { pageId, widgetId: w.id });
+      }, LONG_PRESS_MS);
+    });
+
+    const up = () => {
+      if (!el.classList.contains('down')) return;
+      el.classList.remove('down');
+      clearLongPress();
+      send('widget.up', { pageId, widgetId: w.id });
+
+      if (!longPressFired) {
+        const now = performance.now();
+        if (now - lastReleaseAt <= DOUBLE_TAP_MS) {
+          lastReleaseAt = 0;
+          send('widget.doubleTap', { pageId, widgetId: w.id });
+        } else {
+          lastReleaseAt = now;
+        }
+      }
+    };
+    el.addEventListener('pointerup', up);
+    el.addEventListener('pointercancel', () => { el.classList.remove('down'); clearLongPress(); });
+  }
+
+  connect();
+})();
+</script>
+</body>
+</html>
