@@ -4,7 +4,7 @@ Bu proje iki farklı yüzeye sahip ve ikisinin tasarım mantığı farklı: **ed
 
 ## Editör = masaüstü uygulaması, web dashboard'u değil
 
-Editör bir SaaS dashboard'u ya da landing page değil; kullanıcının saatlerce içinde kalacağı bir **masaüstü uygulaması** (VS Code, Figma, Obsidian, JetBrains IDE'leri, Steam, profesyonel yaratıcı yazılımlar gibi düşün — görsel dilini kopyalama, **etkileşim ilkelerini** al: kalıcı navigasyon, net çalışma alanı, bağlama duyarlı kontroller, kompakt bilgi sunumu, klavye dostu etkileşim, ekran alanının verimli kullanımı).
+Editör bir SaaS dashboard'u ya da landing page değil; kullanıcının saatlerce içinde kalacağı bir **masaüstü uygulaması** (kod editörleri, IDE'ler, not alma/tasarım araçları, oyun launcher'ları, profesyonel yaratıcı yazılımlar gibi düşün — hiçbirinin görsel dilini kopyalama, sadece **etkileşim ilkelerini** al: kalıcı navigasyon, net çalışma alanı, bağlama duyarlı kontroller, kompakt bilgi sunumu, klavye dostu etkileşim, ekran alanının verimli kullanımı).
 
 Masaüstü uygulaması gibi düşün: pencere, kenar çubuğu (sidebar), araç çubuğu (toolbar), komut çubuğu, çalışma alanı (workspace), paneller, bölünmüş görünümler, yeniden boyutlandırılabilir paneller, bağlam menüleri, özellik panelleri, listeler, grid'ler, detay görünümleri. 1080p/1440p masaüstü ekranında düzgün görünmeli; **duyarlı (responsive) bir mobil sitenin masaüstüne gerilmiş hali gibi görünmemeli.**
 

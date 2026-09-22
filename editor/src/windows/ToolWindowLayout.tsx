@@ -12,9 +12,9 @@ export interface ToolWindowLayoutProps {
   children: ReactNode;
 }
 
-/** Left categories + right settings — the layout every native preferences/plugins window uses (GIMP,
- * Photoshop, ...), not a modal dialog. This mounts as the whole page of its own separate OS window (see
- * ToolWindow.cs / main.tsx's `?window=` routing), so it fills the window rather than floating over it. */
+/** Left categories + right settings — the layout native desktop preferences/plugins windows use, not a
+ * modal dialog. This mounts as the whole page of its own separate OS window (see ToolWindow.cs /
+ * main.tsx's `?window=` routing), so it fills the window rather than floating over it. */
 export function ToolWindowLayout({ categories, activeId, onSelect, children }: ToolWindowLayoutProps) {
   return (
     <div style={{ display: "grid", gridTemplateColumns: "170px 1fr", height: "100%", background: "var(--ms-bg-canvas)", color: "var(--ms-text-primary)" }}>

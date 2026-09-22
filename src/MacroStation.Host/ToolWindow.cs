@@ -5,7 +5,7 @@ namespace MacroStation.Host;
 /// <summary>
 /// A floating, non-modal tool window (Tercihler, Eklentiler, ...) — a real separate OS window with its
 /// own WebView2 and native title bar, not an in-page modal overlay (see docs/ui-guidelines.md: desktop
-/// apps like GIMP show Preferences as its own window, never a dimmed dialog on top of the canvas). Kept
+/// apps commonly show Preferences as its own window, never a dimmed dialog on top of the canvas). Kept
 /// non-modal on purpose — the editor stays usable while this is open. One instance per `kind` at a time;
 /// reopening focuses the existing one instead of spawning a duplicate.
 /// </summary>
