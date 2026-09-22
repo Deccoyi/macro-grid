@@ -1,6 +1,6 @@
 # Macro Station: Windows Server + Android Client
 
-> **Not (2026-09-22):** Bu belge orijinal, tek-repo halindeki plandır. Proje sonradan **iki bağımsız repoya bölündü** (server+editör burada; client https://github.com/Deccoyi/macro-station-client'ta, kendi sürümüyle) ve paylaşılan `client/packages/renderer` fikri terk edildi — her repo artık kendi bağımsız render motoru kopyasını taşıyor. Aşağıdaki `client/`, `server/` klasör yolları ve "ortak renderer" bölümü bu bölünmeden ÖNCEki mimariyi anlatıyor; genel ürün vizyonu hâlâ geçerli, sadece repo/klasör sınırları değişti. Güncel durum için [agent-notes.md](agent-notes.md)'ye bakın.
+> **Not (2026-09-22):** Proje **iki bağımsız repoya bölündü**: bu repo server + editör, client ayrı bir repoda (`https://github.com/Deccoyi/macro-station-client`), her ikisi kendi sürümüyle. Paylaşılan `client/packages/renderer` fikri terk edildi — her repo artık kendi bağımsız render motoru kopyasını taşıyor (bilerek senkronize tutulmuyor). Klasör yapısı bölümü aşağıda **bu repo'nun gerçek/güncel haliyle** güncellendi. Genel ürün vizyonu ve mimari kararlar (Mimari/Plugin/Uygulama sırası bölümleri) hâlâ geçerli; hangi maddenin tamamlandığı satır satır işaretlendi. Güncel durum ve gerçek bug/fix kaydı için [agent-notes.md](agent-notes.md)'ye bakın.
 
 ## Bağlam
 Stream Deck benzeri bir sistem. Android telefon/tablet ekranında grid'e oturan, özelleştirilebilir **widget'lar** olacak: buton, slider, web penceresi (Kick/Twitch chat) ve plugin'lerin eklediği özel içerikler. Bu widget'lar PC'de aksiyon çalıştıracak (kısayol, ses, OBS) ve PC'den gelen canlı verileri gösterecek (saat, CPU, OBS yayın süresi). Haberleşme çift yönlü ve yalnızca yerel ağda (LAN). Plugin desteği olacak. Arayüz server'daki editörde tasarlanacak ve widget'lara özel CSS yazılabilecek. `macro-station/` klasörü boş, proje sıfırdan kuruluyor.
@@ -21,26 +21,21 @@ Stream Deck benzeri bir sistem. Android telefon/tablet ekranında grid'e oturan,
 | Windows Güvenlik Duvarı | — | İlk çalıştırmada 9820 portu için "Özel ağ" izni verilecek (kullanıcı onaylar). Wi-Fi ağ profili "Özel" olmalı, "Genel" profilde mDNS ve bağlantı engellenir |
 | OBS (plugin aşaması) | — | OBS 28+ → Araçlar → WebSocket Sunucu Ayarları → etkinleştir, şifreyi not al |
 
-## Klasör yapısı
+## Klasör yapısı (bu repo — server + editör)
 ```
-macro-station/
-├── server/                         (.NET 10 solution)
-│   ├── src/
-│   │   ├── MacroStation.Host/      Sistem tepsisi (NotifyIcon) + WebView2 editör penceresi, Kestrel başlatır
-│   │   ├── MacroStation.Core/      Profil/layout modeli, persist, değişken motoru, aksiyon çalıştırıcı, cihaz yönetimi
-│   │   ├── MacroStation.Protocol/  WebSocket mesaj DTO'ları
-│   │   ├── MacroStation.Plugin.Abstractions/  C# plugin SDK
-│   │   ├── MacroStation.Scripting/ Jint tabanlı sandbox'lı JS plugin runtime
-│   │   └── MacroStation.Windows/   SendInput, medya tuşları, CoreAudio, CPU/RAM, uygulama açma
-│   ├── plugins/                    Obs/, Soundboard/, Audio/ (ses slider'ları), IconPacks/, WebView/ (chat)
-│   ├── editor/                     React + Vite editör (build çıktısı Host'a gömülür)
-│   └── tests/
-└── client/                         (Capacitor + React + Vite + TS)
-    ├── packages/renderer/          Grid + widget renderer'ları + CSS sanitizer + protocol tipleri
-    ├── src/                        bağlantı, pairing, profil drawer'ı, sayfa gezinme, ayarlar, önbellek
-    └── android/                    Capacitor Android projesi (+ native WebView overlay plugin'i)
+macro-station/                      (.NET 10 solution, repo kökü)
+├── src/
+│   ├── MacroStation.Host/          Sistem tepsisi (NotifyIcon) + WebView2 editör penceresi, Kestrel başlatır
+│   ├── MacroStation.Core/          Profil/layout modeli, persist, değişken motoru, aksiyon çalıştırıcı, cihaz/pairing yönetimi
+│   ├── MacroStation.Protocol/      WebSocket mesaj DTO'ları
+│   ├── MacroStation.Plugin.Abstractions/  C# plugin SDK
+│   └── MacroStation.Windows/       SendInput, medya tuşları, CoreAudio, CPU/RAM, uygulama açma
+├── editor/                         React + Vite editör (build çıktısı Host'un wwwroot'una gömülür)
+├── packages/renderer/              Grid + widget renderer'ları + CSS sanitizer (editörün kendi kopyası)
+├── plugins/                        (henüz yok) Obs/, Soundboard/, Audio/, IconPacks/, WebView/
+└── tests/
 ```
-**Ortak renderer:** `client/packages/renderer` hem telefonda hem editörde kullanılır. Editör onu `"@macro/renderer": "file:../../client/packages/renderer"` ile alır, böylece editörde ne görünüyorsa telefonda da birebir o görünür. Tarayıcı client da bu paketten çıkar: server `http://pc-ip:9820/` adresinde aynı client'ın web build'ini sunar, aynı ağdaki başka bir PC'nin tarayıcısı client olarak kullanılabilir.
+Client repo'su (`https://github.com/Deccoyi/macro-station-client`) ayrı: `src/` (bağlantı, pairing, profil drawer'ı, önbellek), `packages/renderer/` (kendi bağımsız kopyası), `android/`. İki repo'nun renderer'ı **kasıtlı olarak senkronize tutulmuyor** — biri diğerinden bağımsız değişebilir.
 
 ## Veri modeli
 `%AppData%/MacroStation/profiles/*.json`
@@ -55,18 +50,18 @@ Device  { id, name, token, assignedProfileId, orientation, kiosk }   ← her cih
 - **Buton olayları:** `press`, `release`, `longPress` (süresi ayarlanabilir), `doubleTap`. Her birine ayrı aksiyon atanabilir. Dokunuşta titreşim (haptic) açılıp kapatılabilir, widget bazında ya da global.
 - **Slider/knob:** `value` alanı çift yönlü. Kullanıcı sürükledikçe `widget.value{id, v}` mesajı gider (throttled). Server tarafındaki değer değişince (ör. Windows ses seviyesi başka yerden değiştiyse) değer bir değişkene bağlanarak (`{audio.master}`) client'a geri gelir.
 - **Sayfalar arası geçiş:** `page.goto`, `page.next/prev`, `page.back` aksiyonları. Bir sayfaya sığmayan widget'lar başka sayfalara konur. İstenirse client'ta yatay swipe ile de sayfa geçişi yapılabilir (ayar).
-- **Profil seçimi:** Profil aktif pencereye göre otomatik değişmeyecek, seçim client'tan yapılacak. Ekranın kenarından swipe ile açılan bir **profil drawer'ı** olacak, ayrıca `profile.switch` aksiyonu ile bir butondan da profil değiştirilebilecek.
+- **Profil seçimi (drawer tamam, `profile.switch` aksiyonu henüz yok):** Profil aktif pencereye göre otomatik değişmiyor, seçim client'tan yapılıyor. Kenardan swipe (+ her zaman görünen ince tutamaç) ile açılan **profil drawer'ı tamam** (`profiles.list`/`profile.change` mesajları, `SessionDeviceController.SwitchProfileAsync`). Bir butondan `profile.switch` aksiyonuyla değiştirme henüz eklenmedi.
 
 ## Mimari
 - **Haberleşme:** Kestrel üzerinde düz WebSocket ve JSON mesajlar, port 9820.
-  - Server → client: `layout.full`, `layout.patch`, `widget.state` (render edilmiş text, değer, stil override'ı), `asset` (ikon)
+  - Server → client: `welcome` (+ pairing token), `layout.full`, `layout.patch` (henüz yok), `widget.state` (render edilmiş text, değer, stil override'ı), `profiles.list`, `asset` (ikon, henüz yok)
   - Client → server: `hello{deviceId, token}`, `widget.down/up/longPress/doubleTap`, `widget.value`, `page.change`, `profile.change`
   - Canlı güncellemeler en fazla ~10Hz gönderilir, yalnızca değer değiştiğinde.
-- **Eşleştirme ve keşif:** mDNS (`_macrostation._tcp`), editörde QR kod (`ip:port + pairing kodu`), ilk bağlantıda 6 haneli PIN onayı, ardından her cihaza ayrı token verilir. Editörde bir cihaz listesi olur: isim, bağlı olup olmadığı, atanmış profil, token iptali.
+- **Eşleştirme ve keşif (PIN + token + cihaz listesi tamam; mDNS/QR henüz yok):** ilk bağlantıda editörde gösterilen 6 haneli PIN onayı (`DeviceStore`/`PairingService`, `hello.pin`/`hello.token`, `welcome.token`), ardından her cihaza kalıcı ayrı token veriliyor. Editörde cihaz listesi var: isim, son görülme, kaldır (revoke). **Henüz yok:** mDNS (`_macrostation._tcp`) otomatik keşif ve editörde QR kod gösterimi — mDNS client tarafında native Android NSD köprüsü gerektiren bir Capacitor plugin'i ister, ayrı ve büyük bir iş.
 - **Dinamik text:** `"Live: {obs.stream.duration}"`, format filtreleri de var: `{system.cpu|0}%`, `{system.time|HH:mm}`. `VariableStore` hangi widget'ın hangi değişkene bağlı olduğunu indeksler, bir değer değişince yalnızca etkilenen widget'ları yeniden render edip ilgili cihazlara gönderir.
 - **Custom CSS güvenliği:** Her widget kendi Shadow DOM'unda çizilir. CSS `postcss` ile parse edilir ve boyut/konum özellikleri silinir (`width, height, min/max-*, position, inset, top/left/…, margin, grid-*, transform, zoom, display`). Dışarıdan `url()` çekmek engellenir, yalnızca asset ve data: URI'lerine izin var. Dış kutu `overflow:hidden` ile ölçüyü korur. Gradient border, gölge ve animasyon serbest.
 - **Web widget (Kick/Twitch chat):** Önce iframe ile denenir (Twitch embed chat `parent=` parametresi ister). Siteler iframe'i engellerse (X-Frame-Options), Android tarafında yazılacak küçük bir Capacitor plugin'i **native WebView'ı widget'ın grid hücresinin tam üstüne** konumlandırır ve sayfa kaydırılınca/değişince senkron tutar. Not: chat için telefonun internete erişimi olmalı, server tarafında ise internet gerekmez.
-- **Client dayanıklılığı:** Ekran açık tutulur (KeepAwake), tam ekran/kiosk modu (immersive, istenirse screen pinning), yön kilidi (yatay/dikey/otomatik, cihaz bazında). Bağlantı koparsa exponential backoff ile otomatik yeniden bağlanır, son layout ve asset'ler önbellekte tutulur ve bağlantı yokken ekranda "offline" rozeti gösterilir.
+- **Client dayanıklılığı (keep-awake + reconnect + son-layout önbelleği tamam; kiosk/yön kilidi henüz yok):** Ekran açık tutuluyor (KeepAwake). Bağlantı koparsa exponential backoff ile otomatik yeniden bağlanıyor, son layout `localStorage`'da host'a özel önbelleklenip soğuk başlangıçta anında gösteriliyor, bağlantı yokken "Çevrimdışı" / "Çevrimdışı · önbellek" rozeti var. **Henüz yok:** tam ekran/kiosk modu (immersive, screen pinning), yön kilidi, asset (ikon) önbellekleme.
 - **Built-in aksiyonlar:** kısayol (SendInput), metin yazdırma, medya tuşları, ses seviyesi (master/uygulama bazında, mute), uygulama/dosya/URL açma, sayfa/profil geçişi, gecikme, çoklu aksiyon (sıralı makro), toggle.
 - **Profil dışa/içe aktarma:** `.msprofile` bir zip dosyası: `profile.json` + kullanılan ikonlar/sesler + gereken plugin listesi. İçe aktarırken eksik plugin varsa kullanıcı uyarılır.
 
@@ -92,14 +87,14 @@ Sayfa ve profil yönetimi (ekleme, sıralama, kopyalama). Grid boyutu ayarı. Wi
 2. **Core:** Profil, sayfa ve widget modeli, kaydetme, built-in aksiyonlar, VariableStore ile `system.*` değişkenleri.
 3. **Renderer:** Grid, Shadow DOM, CSS sanitizer, `button/toggle/label/image/slider/knob` widget'ları, long press/double tap/haptic.
 4. **Editör:** Madde madde yukarıda sayılanlar.
-5. **Client:** Eşleştirme (mDNS/QR/PIN), cihaz bazında profil, profil drawer'ı, sayfa geçişi, kiosk/keep-awake/yön kilidi, yeniden bağlanma ve önbellek. Tarayıcı client da bu aşamada gelir.
+5. **Client (devam ediyor, ayrı repo):** Eşleştirme — PIN tamam, mDNS/QR henüz yok. Cihaz bazında profil henüz yok (drawer'la manuel seçim var). Profil drawer'ı tamam. Sayfa geçişi henüz client'tan tetiklenmiyor (server'da var). Keep-awake + yeniden bağlanma + son-layout önbelleği tamam; kiosk/yön kilidi henüz yok. Tarayıcı client (aynı `packages/renderer` build'i server'dan servis edilecek) henüz kurulmadı.
 6. **Plugin'ler:** Audio (ses slider'ları), Soundboard, OBS, IconPacks, WebView/chat (iframe ve native overlay).
 7. **JS plugin runtime:** Jint sandbox'ı, izin sistemi, ayar arayüzü. `plugin-html` widget köprüsü.
 8. **Paketleme:** `.msprofile` içe/dışa aktarma. Server için tek dosya publish + Inno Setup installer (Windows ile başlama seçeneğiyle), client için imzalı APK.
 
 ## Doğrulama
 - `dotnet test`: şablon ayrıştırma ve filtreler, layout çakışma kontrolü, plugin yükleme, Jint sandbox testleri (CLR erişimi, sonsuz döngü, bellek aşımı ve izinsiz API çağrısı reddedilmeli), `.msprofile` round-trip.
-- Vitest (`client/packages/renderer`): CSS sanitizer (`width`/`position` silinir, `linear-gradient` korunur), long press ve double tap zamanlaması.
+- Vitest (`packages/renderer`): CSS sanitizer (`width`/`position` silinir, `linear-gradient` korunur), long press ve double tap zamanlaması.
 - Uçtan uca test: 4x3 grid'de 2x2 bir buton, bir ses slider'ı ve bir Twitch chat web widget'ı oluşturulur, ayrıca ikinci bir sayfa ve ona geçiş butonu eklenir. İki cihaz (emülatör + tarayıcı) eşleştirilir ve her birine farklı profil atanır. Kontrol edilecekler:
   - Butonla Notepad'de `ctrl+v` çalışıyor
   - Slider Windows ses seviyesini değiştiriyor, Windows'tan değiştirilen ses de slider'a geri yansıyor
