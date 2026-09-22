@@ -1,4 +1,5 @@
 import { useMemo, useState, type ReactNode } from "react";
+import { useT } from "../i18n/I18nContext";
 
 export interface PickerCategory {
   id: string;
@@ -38,6 +39,7 @@ export function PickerShell({
   onClose,
   children,
 }: PickerShellProps) {
+  const { t } = useT();
   return (
     <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.5)", zIndex: 50, display: "flex", alignItems: "center", justifyContent: "center" }} onClick={onClose}>
       <div
@@ -51,12 +53,12 @@ export function PickerShell({
         <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 10px", borderBottom: "1px solid var(--ms-border)" }}>
           <span style={{ fontSize: 12, color: "var(--ms-text-secondary)", textTransform: "uppercase", letterSpacing: ".04em" }}>{title}</span>
           <div style={{ flex: 1 }} />
-          <button type="button" className="ghost" onClick={onClose}>Kapat</button>
+          <button type="button" className="ghost" onClick={onClose}>{t("picker.close")}</button>
         </div>
 
         <div style={{ display: "grid", gridTemplateColumns: "150px 1fr", minHeight: 0 }}>
           <div style={{ borderRight: "1px solid var(--ms-border)", overflowY: "auto", padding: 6 }}>
-            <CategoryButton active={activeCategory === "all"} onClick={() => onCategoryChange("all")} label="Tümü" />
+            <CategoryButton active={activeCategory === "all"} onClick={() => onCategoryChange("all")} label={t("picker.all")} />
             {categories.map((c) => (
               <CategoryButton key={c.id} active={activeCategory === c.id} onClick={() => onCategoryChange(c.id)} label={c.label} badge={c.badge} />
             ))}

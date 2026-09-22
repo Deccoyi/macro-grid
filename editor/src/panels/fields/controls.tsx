@@ -1,9 +1,47 @@
 import type { ReactNode } from "react";
+import { usePreferences } from "../../preferences/PreferencesContext";
 
 /** Small caps label above a group of fields — the only "section" affordance in the properties panel
  * (see docs/ui-guidelines.md: no card-per-section, a thin divider + label is enough). */
 export function SectionLabel({ children }: { children: string }) {
   return <div className="section-label">{children}</div>;
+}
+
+/** A top-level Inspector section (Appearance, the type-specific fields, Actions, Custom CSS) that can be
+ * collapsed — state remembered per user, server-side (see PreferencesContext), not just for this
+ * session: `id` must be stable and unique across the panel (e.g. "appearance", "css").
+ *
+ * Deliberately a plain button + conditional render, not a native <details>: a controlled <details open>
+ * re-renders every sibling section whenever any one of them toggles (they all share the same
+ * `collapsedInspectorSections` object from context), and re-applying the same `open` value on a
+ * <details> the browser just toggled natively raced its own "toggle" event — one click was observed
+ * flipping *other*, untouched sections' stored state too. A button has no such native toggle event to
+ * race, so only the section actually clicked ever calls setInspectorSectionCollapsed. */
+export function CollapsibleSection({
+  id,
+  label,
+  defaultCollapsed = false,
+  children,
+}: {
+  id: string;
+  label: string;
+  defaultCollapsed?: boolean;
+  children: ReactNode;
+}) {
+  const { collapsedInspectorSections, setInspectorSectionCollapsed } = usePreferences();
+  const collapsed = collapsedInspectorSections[id] ?? defaultCollapsed;
+
+  return (
+    <div className="collapsible">
+      <button type="button" className="collapsible-summary" onClick={() => setInspectorSectionCollapsed(id, !collapsed)}>
+        <span className="collapsible-caret">{collapsed ? "▸" : "▾"}</span>
+        {label}
+      </button>
+      {!collapsed && (
+        <div style={{ marginTop: 8, display: "flex", flexDirection: "column", gap: 10 }}>{children}</div>
+      )}
+    </div>
+  );
 }
 
 /** Swatch + hex in one flat row, shared by every color field in the panel. */

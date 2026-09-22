@@ -1,6 +1,7 @@
 import type { ActionBinding, Page } from "@macro/renderer";
 import { api } from "../../api/client";
 import type { ProfileSummary } from "../../api/types";
+import { useT } from "../../i18n/I18nContext";
 import { HotkeyCapture } from "./HotkeyCapture";
 
 export interface ActionFormProps {
@@ -14,41 +15,44 @@ const str = (v: unknown, fallback = "") => (typeof v === "string" ? v : fallback
 const num = (v: unknown, fallback = 0) => (typeof v === "number" ? v : fallback);
 
 export function HotkeyForm({ binding, onChange }: ActionFormProps) {
+  const { t } = useT();
   return (
     <label className="field">
-      Kısayol
+      {t("form.hotkey.label")}
       <HotkeyCapture value={str(binding.settings.keys)} onChange={(keys) => onChange({ keys })} />
     </label>
   );
 }
 
 export function TypeTextForm({ binding, onChange }: ActionFormProps) {
+  const { t } = useT();
   return (
     <label className="field">
-      Yazılacak metin
+      {t("form.typeText.label")}
       <textarea rows={2} value={str(binding.settings.text)} onChange={(e) => onChange({ text: e.target.value })} />
     </label>
   );
 }
 
 export function PageActionForm({ binding, onChange, pages }: ActionFormProps) {
+  const { t } = useT();
   const mode = str(binding.settings.mode, "goto");
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
       <label className="field">
-        Mod
+        {t("form.page.mode")}
         <select value={mode} onChange={(e) => onChange({ mode: e.target.value, pageId: binding.settings.pageId })}>
-          <option value="goto">Belirli sayfaya git</option>
-          <option value="next">Sonraki sayfa</option>
-          <option value="prev">Önceki sayfa</option>
-          <option value="back">Geri</option>
+          <option value="goto">{t("form.page.mode.goto")}</option>
+          <option value="next">{t("form.page.mode.next")}</option>
+          <option value="prev">{t("form.page.mode.prev")}</option>
+          <option value="back">{t("form.page.mode.back")}</option>
         </select>
       </label>
       {mode === "goto" && (
         <label className="field">
-          Sayfa
+          {t("form.page.page")}
           <select value={str(binding.settings.pageId)} onChange={(e) => onChange({ mode, pageId: e.target.value })}>
-            <option value="">— seçin —</option>
+            <option value="">{t("form.pickPlaceholder")}</option>
             {pages.map((p) => (
               <option key={p.id} value={p.id}>{p.name}</option>
             ))}
@@ -60,11 +64,12 @@ export function PageActionForm({ binding, onChange, pages }: ActionFormProps) {
 }
 
 export function ProfileActionForm({ binding, onChange, profiles }: ActionFormProps) {
+  const { t } = useT();
   return (
     <label className="field">
-      Profil
+      {t("form.profile.label")}
       <select value={str(binding.settings.profileId)} onChange={(e) => onChange({ profileId: e.target.value })}>
-        <option value="">— seçin —</option>
+        <option value="">{t("form.pickPlaceholder")}</option>
         {profiles.map((p) => (
           <option key={p.id} value={p.id}>{p.name}</option>
         ))}
@@ -74,16 +79,17 @@ export function ProfileActionForm({ binding, onChange, profiles }: ActionFormPro
 }
 
 export function OpenApplicationForm({ binding, onChange }: ActionFormProps) {
+  const { t } = useT();
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
       <label className="field">
-        Uygulama
+        {t("form.openApp.label")}
         <div style={{ display: "flex", gap: 6 }}>
           <input
             type="text"
             readOnly
             value={str(binding.settings.target)}
-            placeholder="Gözat'a tıklayın"
+            placeholder={t("form.openApp.browsePlaceholder")}
             onClick={async () => {
               const path = await api.browseForExecutable();
               if (path) onChange({ target: path, arguments: binding.settings.arguments });
@@ -97,12 +103,12 @@ export function OpenApplicationForm({ binding, onChange }: ActionFormProps) {
               if (path) onChange({ target: path, arguments: binding.settings.arguments });
             }}
           >
-            Gözat…
+            {t("form.openApp.browse")}
           </button>
         </div>
       </label>
       <label className="field">
-        Argümanlar (opsiyonel)
+        {t("form.openApp.arguments")}
         <input type="text" value={str(binding.settings.arguments)} onChange={(e) => onChange({ target: binding.settings.target, arguments: e.target.value })} />
       </label>
     </div>
@@ -110,11 +116,12 @@ export function OpenApplicationForm({ binding, onChange }: ActionFormProps) {
 }
 
 export function OpenUrlActionForm({ binding, onChange }: ActionFormProps) {
+  const { t } = useT();
   const url = str(binding.settings.url);
   const looksValid = url === "" || /^https?:\/\/.+/i.test(url);
   return (
     <label className="field">
-      URL (varsayılan tarayıcıda açılır)
+      {t("form.openUrl.label")}
       <input
         type="url"
         value={url}
@@ -122,15 +129,16 @@ export function OpenUrlActionForm({ binding, onChange }: ActionFormProps) {
         placeholder="https://twitch.tv/..."
         style={!looksValid ? { borderColor: "var(--ms-danger)" } : undefined}
       />
-      {!looksValid && <span style={{ color: "var(--ms-danger)", fontSize: 11 }}>http:// veya https:// ile başlamalı.</span>}
+      {!looksValid && <span style={{ color: "var(--ms-danger)", fontSize: 11 }}>{t("form.openUrl.invalid")}</span>}
     </label>
   );
 }
 
 export function DelayActionForm({ binding, onChange }: ActionFormProps) {
+  const { t } = useT();
   return (
     <label className="field">
-      Gecikme (ms, en fazla 60000)
+      {t("form.delay.label")}
       <input
         type="number"
         min={0}
@@ -144,10 +152,11 @@ export function DelayActionForm({ binding, onChange }: ActionFormProps) {
 
 /** Raw JSON fallback for action types the editor doesn't have a dedicated form for yet (future plugins). */
 export function GenericJsonForm({ binding, onChange }: ActionFormProps) {
+  const { t } = useT();
   const text = JSON.stringify(binding.settings, null, 2);
   return (
     <label className="field">
-      Ayarlar (JSON)
+      {t("form.json.label")}
       <textarea
         rows={4}
         style={{ fontFamily: "ui-monospace, monospace", fontSize: 12 }}

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type KeyboardEvent } from "react";
+import { useT } from "../../i18n/I18nContext";
 import { codeToKeyName, codeToModifier, formatCombo } from "./keyCapture";
 
 export interface HotkeyCaptureProps {
@@ -11,6 +12,7 @@ export interface HotkeyCaptureProps {
  * key (KeyboardEvent.code), so the captured shortcut is the same on any keyboard layout.
  */
 export function HotkeyCapture({ value, onChange }: HotkeyCaptureProps) {
+  const { t } = useT();
   const [display, setDisplay] = useState(value);
   const [capturing, setCapturing] = useState(false);
   const heldModifiers = useRef<Set<string>>(new Set());
@@ -24,7 +26,7 @@ export function HotkeyCapture({ value, onChange }: HotkeyCaptureProps) {
     heldModifiers.current = new Set();
     pressedMainKey.current = false;
     setCapturing(true);
-    setDisplay("Bir tuşa basın…");
+    setDisplay(t("hotkey.pressKey"));
   };
 
   const onBlur = () => {
@@ -74,12 +76,12 @@ export function HotkeyCapture({ value, onChange }: HotkeyCaptureProps) {
         onBlur={onBlur}
         onKeyDown={onKeyDown}
         onKeyUp={onKeyUp}
-        placeholder="Tıklayıp bir tuş kombinasyonuna basın"
+        placeholder={t("hotkey.placeholder")}
         style={{ cursor: "text", background: capturing ? "var(--ms-accent-bg-muted)" : undefined }}
       />
       {value && (
         <button type="button" className="ghost" onClick={() => { onChange(""); setDisplay(""); }}>
-          Temizle
+          {t("hotkey.clear")}
         </button>
       )}
     </div>

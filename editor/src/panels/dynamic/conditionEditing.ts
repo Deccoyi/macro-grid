@@ -16,16 +16,6 @@ export interface EditCase {
   result: string;
 }
 
-export const OPERATOR_LABELS: Record<CompareOperator, string> = {
-  ">": "büyük",
-  ">=": "büyük veya eşit",
-  "<": "küçük",
-  "<=": "küçük veya eşit",
-  "==": "eşit",
-  "!=": "eşit değil",
-  between: "arasında",
-};
-
 export function newCondition(): EditCondition {
   return { negate: false, variable: "", operator: ">", value: "", value2: "" };
 }

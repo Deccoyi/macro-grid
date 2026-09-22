@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Zap } from "lucide-react";
 import type { Widget } from "@macro/renderer";
 import type { VariableInfo } from "../../api/types";
+import { useT } from "../../i18n/I18nContext";
 import { DynamizeModal, type ResultKind } from "./DynamizeModal";
 
 export interface DynamicFieldLabelProps {
@@ -17,6 +18,7 @@ export interface DynamicFieldLabelProps {
 
 /** A field label with a small lightning-bolt button that opens the "make this depend on a variable" modal; lit up (accent color) once dynamized. */
 export function DynamicFieldLabel({ label, propertyKey, widget, variableCatalog, onChange, resultKind }: DynamicFieldLabelProps) {
+  const { t } = useT();
   const [open, setOpen] = useState(false);
   const binding = widget.dynamic?.[propertyKey];
   const isDynamic = binding !== undefined;
@@ -27,7 +29,7 @@ export function DynamicFieldLabel({ label, propertyKey, widget, variableCatalog,
       <button
         type="button"
         className="ghost"
-        title={isDynamic ? "Dinamik — düzenlemek için tıklayın" : "Bir değişkene göre değişsin"}
+        title={isDynamic ? t("dynamic.editTitle") : t("dynamic.addTitle")}
         onClick={() => setOpen(true)}
         style={{ padding: "0 4px", lineHeight: 1, display: "inline-flex", color: isDynamic ? "var(--ms-accent)" : "var(--ms-text-secondary)" }}
       >

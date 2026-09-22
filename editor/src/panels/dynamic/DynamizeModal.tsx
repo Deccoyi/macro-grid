@@ -2,8 +2,20 @@ import { useState } from "react";
 import { ArrowRight, Plus, Trash2, Variable, X } from "lucide-react";
 import type { DynamicBinding } from "@macro/renderer";
 import type { VariableInfo } from "../../api/types";
+import { useT } from "../../i18n/I18nContext";
+import type { DictKey } from "../../i18n/tr";
 import { VariablePicker } from "../VariablePicker";
-import { combinatorOf, fromConditionNode, newCase, newCondition, OPERATOR_LABELS, toConditionNode, type EditCase, type EditCondition } from "./conditionEditing";
+import { combinatorOf, fromConditionNode, newCase, newCondition, toConditionNode, type EditCase, type EditCondition } from "./conditionEditing";
+
+const OPERATOR_KEYS: Record<EditCondition["operator"], DictKey> = {
+  ">": "dynamic.operator.>",
+  ">=": "dynamic.operator.>=",
+  "<": "dynamic.operator.<",
+  "<=": "dynamic.operator.<=",
+  "==": "dynamic.operator.==",
+  "!=": "dynamic.operator.!=",
+  between: "dynamic.operator.between",
+};
 
 /** What each rule's "then" value is: a free color, or a fixed set of choices (e.g. animation names). */
 export type ResultKind = "color" | { select: { value: string; label: string }[] };
@@ -17,9 +29,10 @@ export interface DynamizeModalProps {
   onClose: () => void;
 }
 
-const COMBINATOR_LABELS: Record<EditCase["combinator"], string> = { and: "VE", or: "VEYA", xor: "XOR" };
+const COMBINATOR_KEYS: Record<EditCase["combinator"], DictKey> = { and: "dynamic.combinator.and", or: "dynamic.combinator.or", xor: "dynamic.combinator.xor" };
 
 export function DynamizeModal({ propertyLabel, binding, variableCatalog, resultKind = "color", onSave, onClose }: DynamizeModalProps) {
+  const { t } = useT();
   const defaultResult = typeof resultKind === "object" ? (resultKind.select[0]?.value ?? "") : "#c0392b";
   const [unsupported] = useState(() => binding !== undefined && binding.cases.some((c) => fromConditionNode(c.condition) === null));
   const [cases, setCases] = useState<EditCase[]>(() =>
@@ -56,11 +69,11 @@ export function DynamizeModal({ propertyLabel, binding, variableCatalog, resultK
             <Variable size={16} color="var(--ms-accent-hover)" />
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 2, minWidth: 0 }}>
-            <div style={{ fontSize: 14, fontWeight: 600 }}>Mantık kur</div>
+            <div style={{ fontSize: 14, fontWeight: 600 }}>{t("dynamic.title")}</div>
             <div style={{ fontSize: 12, color: "var(--ms-text-secondary)", fontFamily: "ui-monospace, monospace" }}>{propertyLabel}</div>
           </div>
           <div style={{ flex: 1 }} />
-          <button type="button" className="ghost" onClick={onClose} aria-label="Kapat" style={{ display: "flex", padding: 5 }}>
+          <button type="button" className="ghost" onClick={onClose} aria-label={t("header.close")} style={{ display: "flex", padding: 5 }}>
             <X size={18} />
           </button>
         </div>
@@ -69,13 +82,13 @@ export function DynamizeModal({ propertyLabel, binding, variableCatalog, resultK
         <div style={{ padding: "16px 20px", display: "flex", flexDirection: "column", gap: 10, overflowY: "auto" }}>
           {unsupported && (
             <div style={{ fontSize: 11, color: "var(--ms-text-secondary)", background: "var(--ms-bg-inset)", padding: 8, borderRadius: 6 }}>
-              Bu kural düzenleyicinin gösterebileceğinden daha karmaşık (muhtemelen elle/JSON ile oluşturulmuş). Kaydedersen aşağıdaki basit haliyle değiştirilir.
+              {t("dynamic.unsupported")}
             </div>
           )}
 
           {cases.map((c, i) => (
             <div key={i} style={{ borderRadius: 10, border: `1px solid ${i === 0 ? "var(--ms-border)" : "var(--ms-border)"}`, background: "var(--ms-bg-canvas)", padding: "14px 16px", display: "flex", flexDirection: "column", gap: 10 }}>
-              <Keyword>{i === 0 ? "Eğer" : "Yoksa eğer"}</Keyword>
+              <Keyword>{i === 0 ? t("dynamic.if") : t("dynamic.elseIf")}</Keyword>
 
               {c.conditions.map((cond, ci) => (
                 <div key={ci} style={{ display: "flex", flexDirection: "column", gap: 8 }}>
@@ -88,7 +101,7 @@ export function DynamizeModal({ propertyLabel, binding, variableCatalog, resultK
                           onClick={() => updateCase(i, (cc) => { cc.combinator = op; })}
                           style={pillComboStyle(c.combinator === op)}
                         >
-                          {COMBINATOR_LABELS[op]}
+                          {t(COMBINATOR_KEYS[op])}
                         </button>
                       ))}
                     </div>
@@ -98,9 +111,9 @@ export function DynamizeModal({ propertyLabel, binding, variableCatalog, resultK
                       type="button"
                       onClick={() => updateCase(i, (cc) => { cc.conditions[ci]!.negate = !cc.conditions[ci]!.negate; })}
                       style={pillNotStyle(cond.negate)}
-                      title="Bu koşulu tersine çevir"
+                      title={t("dynamic.negate")}
                     >
-                      değilse
+                      {t("dynamic.negate")}
                     </button>
 
                     <VariablePicker
@@ -110,7 +123,7 @@ export function DynamizeModal({ propertyLabel, binding, variableCatalog, resultK
                       renderTrigger={(open) => (
                         <button type="button" onClick={open} style={pillVarStyle}>
                           <Variable size={11} />
-                          {cond.variable || "değişken seç"}
+                          {cond.variable || t("dynamic.pickVariable")}
                         </button>
                       )}
                     />
@@ -120,8 +133,8 @@ export function DynamizeModal({ propertyLabel, binding, variableCatalog, resultK
                       onChange={(e) => updateCase(i, (cc) => { cc.conditions[ci]!.operator = e.target.value as EditCondition["operator"]; })}
                       style={pillSelectStyle}
                     >
-                      {Object.entries(OPERATOR_LABELS).map(([op, label]) => (
-                        <option key={op} value={op}>{label}</option>
+                      {(Object.keys(OPERATOR_KEYS) as EditCondition["operator"][]).map((op) => (
+                        <option key={op} value={op}>{t(OPERATOR_KEYS[op])}</option>
                       ))}
                     </select>
 
@@ -161,19 +174,19 @@ export function DynamizeModal({ propertyLabel, binding, variableCatalog, resultK
                 onClick={() => updateCase(i, (cc) => { cc.conditions.push(newCondition()); })}
                 style={{ alignSelf: "flex-start", display: "flex", alignItems: "center", gap: 5, fontSize: 12 }}
               >
-                <Plus size={11} /> Koşul ekle
+                <Plus size={11} /> {t("dynamic.addCondition")}
               </button>
 
               <div style={{ height: 1, background: "var(--ms-border)", margin: "2px 0" }} />
 
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <Keyword muted>İse</Keyword>
+                <Keyword muted>{t("dynamic.then")}</Keyword>
                 <ArrowRight size={13} color="var(--ms-border-strong)" />
                 <ResultInput value={c.result} onChange={(v) => updateCase(i, (cc) => { cc.result = v; })} kind={resultKind} />
                 <div style={{ flex: 1 }} />
                 {cases.length > 1 && (
                   <button type="button" className="ghost" onClick={() => setCases((prev) => prev.filter((_, idx) => idx !== i))} style={{ color: "var(--ms-danger)", fontSize: 12 }}>
-                    Kuralı sil
+                    {t("dynamic.removeRule")}
                   </button>
                 )}
               </div>
@@ -185,23 +198,23 @@ export function DynamizeModal({ propertyLabel, binding, variableCatalog, resultK
             onClick={() => setCases((prev) => [...prev, newCase(defaultResult)])}
             style={{ border: "1px dashed var(--ms-border-strong)", background: "transparent", color: "var(--ms-text-secondary)", padding: 10, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, borderRadius: 10, cursor: "pointer" }}
           >
-            <Plus size={14} /> Yeni kural
+            <Plus size={14} /> {t("dynamic.newRule")}
           </button>
 
           <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "11px 16px", borderRadius: 10, border: "1px dashed var(--ms-border)" }}>
-            <Keyword muted>Yoksa</Keyword>
-            <div style={{ flex: 1, fontSize: 12, color: "var(--ms-text-disabled)" }}>değişmesin, ya da bir varsayılan değer seç</div>
+            <Keyword muted>{t("dynamic.else")}</Keyword>
+            <div style={{ flex: 1, fontSize: 12, color: "var(--ms-text-disabled)" }}>{t("dynamic.elseHint")}</div>
             <ResultInput value={defaultValue} onChange={setDefaultValue} kind={resultKind} allowEmpty />
           </div>
         </div>
 
         {/* Footer */}
         <div style={{ display: "flex", alignItems: "center", padding: "14px 20px", borderTop: "1px solid var(--ms-border)" }}>
-          <button type="button" className="ghost" onClick={remove} style={{ color: "var(--ms-danger)" }}>Dinamizasyonu kaldır</button>
+          <button type="button" className="ghost" onClick={remove} style={{ color: "var(--ms-danger)" }}>{t("dynamic.remove")}</button>
           <div style={{ flex: 1 }} />
           <div style={{ display: "flex", gap: 8 }}>
-            <button type="button" className="ghost" onClick={onClose}>Vazgeç</button>
-            <button type="button" className="primary" onClick={save}>Uygula</button>
+            <button type="button" className="ghost" onClick={onClose}>{t("dynamic.cancel")}</button>
+            <button type="button" className="primary" onClick={save}>{t("dynamic.apply")}</button>
           </div>
         </div>
       </div>
@@ -218,10 +231,11 @@ function Keyword({ children, muted }: { children: string; muted?: boolean }) {
 }
 
 function ResultInput({ value, onChange, kind, allowEmpty }: { value: string; onChange: (v: string) => void; kind: ResultKind; allowEmpty?: boolean }) {
+  const { t } = useT();
   if (typeof kind === "object") {
     return (
       <select value={value} onChange={(e) => onChange(e.target.value)} style={{ ...pillSelectStyle, width: 130 }}>
-        {allowEmpty && <option value="">(değişmesin)</option>}
+        {allowEmpty && <option value="">{t("dynamic.noChange")}</option>}
         {kind.select.map((o) => (
           <option key={o.value} value={o.value}>{o.label}</option>
         ))}
@@ -241,7 +255,7 @@ function ResultInput({ value, onChange, kind, allowEmpty }: { value: string; onC
       }}
     >
       <span style={{ width: 12, height: 12, borderRadius: "50%", background: isColor ? value : "transparent", border: isColor ? "none" : "1px dashed var(--ms-text-disabled)", flexShrink: 0 }} />
-      {value || (allowEmpty ? "renk seç" : "#c0392b")}
+      {value || (allowEmpty ? t("dynamic.pickColor") : "#c0392b")}
       <input type="color" value={isColor ? value : "#000000"} onChange={(e) => onChange(e.target.value)} style={{ position: "absolute", width: 1, height: 1, opacity: 0, pointerEvents: "none" }} tabIndex={-1} />
       <input
         type="text"

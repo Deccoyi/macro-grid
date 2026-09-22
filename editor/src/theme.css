@@ -18,6 +18,26 @@
   --ms-grid-gap: 10px;
 }
 
+/* Light theme — same editor-chrome roles as the dark palette above, applied via data-theme on <html>
+ * (see Preferences). Widget colors are still always the user's own and never use these tokens. */
+:root[data-theme="light"] {
+  --ms-bg-canvas: #f3f4f6;
+  --ms-bg-surface: #ffffff;
+  --ms-bg-surface-raised: #eceef1;
+  --ms-bg-inset: #e5e7eb;
+  --ms-border: #d4d7dc;
+  --ms-border-strong: #b7bbc2;
+  --ms-text-primary: #1c1e22;
+  --ms-text-secondary: #565b63;
+  --ms-text-disabled: #9a9ea6;
+  --ms-accent: #b45f04;
+  --ms-accent-hover: #d97706;
+  --ms-accent-bg-muted: rgba(180, 95, 4, 0.12);
+  --ms-accent-on: #ffffff;
+  --ms-success: #2f7a33;
+  --ms-danger: #b02e21;
+}
+
 * { box-sizing: border-box; }
 
 html, body, #root {
@@ -54,9 +74,12 @@ button.primary {
   font-weight: 600;
 }
 button.primary:hover { background: var(--ms-accent-hover); border-color: var(--ms-accent-hover); }
+button.primary.danger { background: var(--ms-danger); border-color: var(--ms-danger); color: #fff; }
+button.primary.danger:hover { background: #d64535; border-color: #d64535; }
 button.ghost { background: transparent; border-color: transparent; }
 button.ghost:hover { background: var(--ms-bg-surface-raised); }
 button.active { border-color: var(--ms-accent); color: var(--ms-accent); }
+button.save-btn { min-width: 11ch; text-align: center; }
 
 input[type="text"], input[type="number"], input[type="url"], select, textarea {
   background: var(--ms-bg-inset);
@@ -103,6 +126,28 @@ hr.sep {
   color: var(--ms-text-disabled);
   margin: 0 0 2px;
 }
+
+/* Collapsible Inspector sections (Appearance, type fields, Actions, Custom CSS) — same compact,
+   hairline-divided grouping Figma's right-sidebar properties panel uses instead of boxed cards. A
+   top-level section header reads as its own tier above the small-caps field labels inside it (bold,
+   normal case, full-strength text color — see the Figma reference: "Position"/"Layout"/"Appearance"
+   are plain bold text, not tiny gray caps like a field's own label). */
+.collapsible-summary {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  width: 100%;
+  background: transparent;
+  border: none;
+  padding: 2px 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ms-text-primary);
+  cursor: pointer;
+  text-align: left;
+}
+.collapsible-summary:hover { color: var(--ms-accent); }
+.collapsible-caret { color: var(--ms-text-secondary); font-size: 11px; width: 10px; display: inline-block; }
 
 .color-field {
   display: flex;
@@ -157,3 +202,27 @@ hr.sep {
 .seg button:last-child { border-right: none; }
 .seg button.on { background: var(--ms-bg-surface-raised); color: var(--ms-text-primary); }
 .seg button:hover { border-color: var(--ms-border); background: var(--ms-bg-surface-raised); }
+
+.ctx-menu-item:hover:not(:disabled) { background: var(--ms-bg-inset); }
+
+/* Windows-native menu bar (File/Settings/Plugins/Help) — flat, no card/navbar look: plain background,
+ * a single hairline underneath, small tight buttons with square corners and no accent tint on the label
+ * itself (a native menu bar never colors its top-level items, only the open/hover state). */
+.menu-bar {
+  display: flex;
+  align-items: center;
+  background: var(--ms-bg-surface);
+  border-bottom: 1px solid var(--ms-border);
+  padding: 1px 2px;
+  font-size: 12.5px;
+}
+.menu-bar-item {
+  background: transparent;
+  border: none;
+  border-radius: 2px;
+  padding: 4px 9px;
+  color: var(--ms-text-primary);
+  cursor: pointer;
+}
+.menu-bar-item:hover { background: var(--ms-bg-inset); }
+.menu-bar-item.open { background: var(--ms-bg-inset); }

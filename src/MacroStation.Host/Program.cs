@@ -19,8 +19,9 @@ internal static class Program
         // running on Kestrel's thread pool can still marshal a native dialog (OpenFileDialog, ...) onto it.
         var ui = SynchronizationContext.Current ?? new WindowsFormsSynchronizationContext();
         var dialogs = new UiDialogService(ui);
+        var windows = new UiWindowService(ui);
 
-        var server = ServerApp.Build(args, dialogs);
+        var server = ServerApp.Build(args, dialogs, windows);
         try
         {
             server.StartAsync().GetAwaiter().GetResult();

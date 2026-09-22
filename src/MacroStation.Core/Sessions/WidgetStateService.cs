@@ -55,6 +55,30 @@ public sealed class WidgetStateService : IHostedService, IDisposable
 
     public void Dispose() => _variables.Changed -= OnVariableChanged;
 
+    /// <summary>
+    /// Re-sends <c>layout.full</c> (plus the usual initial text/toggle/dynamic-style state) to every
+    /// connected client currently showing this profile, so an editor "Kaydet" reaches devices live
+    /// instead of requiring them to reconnect. A client on a page that no longer exists (deleted while
+    /// editing) falls back to the profile's first page, same as a fresh <c>hello</c> would.
+    /// </summary>
+    public async Task BroadcastProfileAsync(Profile profile, CancellationToken ct = default)
+    {
+        foreach (var session in _sessions.All)
+        {
+            if (session.ProfileId != profile.Id) continue;
+
+            var page = profile.FindPage(session.PageId ?? "") ?? profile.Pages.FirstOrDefault();
+            if (page is null) continue;
+
+            session.PageId = page.Id;
+            session.SentTexts.Clear();
+            session.SentStyles.Clear();
+
+            await session.SendAsync(MessageTypes.LayoutFull, new LayoutFullPayload(profile, page.Id), ct);
+            await SendInitialAsync(session, page, ct);
+        }
+    }
+
     /// <summary>Sends the current rendered text and toggle state of every relevant widget on a page, e.g. right after a layout is shown.</summary>
     public async Task SendInitialAsync(ClientSession session, Page page, CancellationToken ct)
     {

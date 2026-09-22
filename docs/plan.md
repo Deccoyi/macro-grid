@@ -50,7 +50,7 @@ Device  { id, name, token, assignedProfileId, orientation, kiosk }   ← her cih
 - **Buton olayları:** `press`, `release`, `longPress` (süresi ayarlanabilir), `doubleTap`. Her birine ayrı aksiyon atanabilir. Dokunuşta titreşim (haptic) açılıp kapatılabilir, widget bazında ya da global.
 - **Slider/knob:** `value` alanı çift yönlü. Kullanıcı sürükledikçe `widget.value{id, v}` mesajı gider (throttled). Server tarafındaki değer değişince (ör. Windows ses seviyesi başka yerden değiştiyse) değer bir değişkene bağlanarak (`{audio.master}`) client'a geri gelir.
 - **Sayfalar arası geçiş:** `page.goto`, `page.next/prev`, `page.back` aksiyonları. Bir sayfaya sığmayan widget'lar başka sayfalara konur. İstenirse client'ta yatay swipe ile de sayfa geçişi yapılabilir (ayar).
-- **Profil seçimi (drawer tamam, `profile.switch` aksiyonu henüz yok):** Profil aktif pencereye göre otomatik değişmiyor, seçim client'tan yapılıyor. Kenardan swipe (+ her zaman görünen ince tutamaç) ile açılan **profil drawer'ı tamam** (`profiles.list`/`profile.change` mesajları, `SessionDeviceController.SwitchProfileAsync`). Bir butondan `profile.switch` aksiyonuyla değiştirme henüz eklenmedi.
+- **Profil seçimi (drawer ve butondan aksiyon tamam):** Profil aktif pencereye göre otomatik değişmiyor, seçim client'tan yapılıyor. Kenardan swipe (+ her zaman görünen ince tutamaç) ile açılan **profil drawer'ı tamam** (`profiles.list`/`profile.change` mesajları, `SessionDeviceController.SwitchProfileAsync`). Bir butondan da `core.profile` aksiyonuyla (`ProfileAction`, bkz. `PageActions.cs`) değiştirilebiliyor.
 
 ## Mimari
 - **Haberleşme:** Kestrel üzerinde düz WebSocket ve JSON mesajlar, port 9820.

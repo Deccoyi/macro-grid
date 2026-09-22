@@ -23,3 +23,39 @@ export interface PairedDeviceInfo {
   pairedAt: string;
   lastSeenAt: string;
 }
+
+/** Pairing QR payload. `text` is the `macrostation://pair?...` URI to encode — empty if the server
+ * has no LAN adapter up (nothing to reach it on), in which case the editor should warn instead of
+ * showing a QR code. `pin` is also shown as text for manual entry if the camera scan doesn't work. */
+export interface PairingQrInfo {
+  text: string;
+  host: string;
+  port: number;
+  pin: string;
+  expiresAt: string;
+}
+
+export interface PreviewProfileInfo {
+  id: string;
+  name: string;
+  width: number;
+  height: number;
+}
+
+/** Editor-wide preferences, persisted server-side (see docs/agent-notes.md — not localStorage, so they
+ * survive a cleared browser cache or opening the editor from a different machine on the LAN). */
+export interface AppPreferences {
+  theme: "dark" | "light";
+  language: "tr" | "en";
+  previewProfiles: PreviewProfileInfo[];
+  collapsedInspectorSections: Record<string, boolean>;
+}
+
+export interface ImportProfileResult {
+  path: string | null;
+  content: string | null;
+}
+
+export interface ExportProfileResult {
+  path: string | null;
+}

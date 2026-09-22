@@ -2,6 +2,8 @@ import { useState } from "react";
 import { ChevronUp, ChevronDown, X } from "lucide-react";
 import type { ActionBinding, Page, Widget, WidgetEventName } from "@macro/renderer";
 import type { ActionInfo, ProfileSummary } from "../api/types";
+import { useT } from "../i18n/I18nContext";
+import type { DictKey } from "../i18n/tr";
 import { formFor } from "./actionForms/forms";
 
 export interface ActionEditorProps {
@@ -12,19 +14,20 @@ export interface ActionEditorProps {
   onChange: (event: WidgetEventName, bindings: ActionBinding[]) => void;
 }
 
-const BUTTON_EVENTS: { event: WidgetEventName; label: string }[] = [
-  { event: "press", label: "Basınca" },
-  { event: "release", label: "Bırakınca" },
-  { event: "longPress", label: "Uzun basınca" },
-  { event: "doubleTap", label: "Çift dokununca" },
+const BUTTON_EVENTS: { event: WidgetEventName; key: DictKey }[] = [
+  { event: "press", key: "action.event.press" },
+  { event: "release", key: "action.event.release" },
+  { event: "longPress", key: "action.event.longPress" },
+  { event: "doubleTap", key: "action.event.doubleTap" },
 ];
 
-const TOGGLE_EVENTS: { event: WidgetEventName; label: string }[] = [
-  { event: "toggleOn", label: "Açılınca" },
-  { event: "toggleOff", label: "Kapanınca" },
+const TOGGLE_EVENTS: { event: WidgetEventName; key: DictKey }[] = [
+  { event: "toggleOn", key: "action.event.toggleOn" },
+  { event: "toggleOff", key: "action.event.toggleOff" },
 ];
 
 export function ActionEditor({ widget, actions, pages, profiles, onChange }: ActionEditorProps) {
+  const { t } = useT();
   const events = widget.type === "toggle" ? TOGGLE_EVENTS : BUTTON_EVENTS;
   const [activeEvent, setActiveEvent] = useState<WidgetEventName>(events[0]!.event);
   const bindings = widget.actions[activeEvent] ?? [];
@@ -63,7 +66,7 @@ export function ActionEditor({ widget, actions, pages, profiles, onChange }: Act
             onClick={() => setActiveEvent(e.event)}
             style={{ padding: "4px 8px", fontSize: 12 }}
           >
-            {e.label}
+            {t(e.key)}
             {(widget.actions[e.event]?.length ?? 0) > 0 ? " •" : ""}
           </button>
         ))}
@@ -71,11 +74,11 @@ export function ActionEditor({ widget, actions, pages, profiles, onChange }: Act
 
       {widget.type !== "toggle" && hasLongOrDouble && hasPressOrRelease && (
         <div style={{ fontSize: 11, color: "var(--ms-text-secondary)", background: "var(--ms-bg-inset)", border: "1px solid var(--ms-border)", borderRadius: 4, padding: "6px 8px" }}>
-          Uyarı: "Uzun basınca"/"Çift dokununca" ayrıca çalışır, "Basınca"/"Bırakınca"nın yerine geçmez — her dokunuş zaten bir basıştır, o yüzden ikisi de tetiklenir.
+          {t("action.warning.longDouble")}
         </div>
       )}
 
-      {bindings.length === 0 && <div style={{ color: "var(--ms-text-secondary)", fontSize: 12 }}>Bu olaya bağlı aksiyon yok.</div>}
+      {bindings.length === 0 && <div style={{ color: "var(--ms-text-secondary)", fontSize: 12 }}>{t("action.none")}</div>}
 
       {bindings.map((binding, index) => {
         const Form = formFor(binding.type);
@@ -93,11 +96,11 @@ export function ActionEditor({ widget, actions, pages, profiles, onChange }: Act
               </select>
               {bindings.length > 1 && (
                 <>
-                  <button className="ghost" onClick={() => move(index, -1)} disabled={index === 0} title="Yukarı taşı"><ChevronUp size={14} /></button>
-                  <button className="ghost" onClick={() => move(index, 1)} disabled={index === bindings.length - 1} title="Aşağı taşı"><ChevronDown size={14} /></button>
+                  <button className="ghost" onClick={() => move(index, -1)} disabled={index === 0} title={t("action.moveUp")}><ChevronUp size={14} /></button>
+                  <button className="ghost" onClick={() => move(index, 1)} disabled={index === bindings.length - 1} title={t("action.moveDown")}><ChevronDown size={14} /></button>
                 </>
               )}
-              <button className="ghost" onClick={() => removeBinding(index)} title="Kaldır"><X size={14} /></button>
+              <button className="ghost" onClick={() => removeBinding(index)} title={t("action.remove")}><X size={14} /></button>
             </div>
             <Form binding={binding} pages={pages} profiles={profiles} onChange={(settings) => updateBinding(index, { settings })} />
           </div>
@@ -105,7 +108,7 @@ export function ActionEditor({ widget, actions, pages, profiles, onChange }: Act
       })}
 
       <button className="ghost" onClick={addBinding} disabled={actions.length === 0} style={{ alignSelf: "flex-start" }}>
-        + Aksiyon ekle
+        {t("action.add")}
       </button>
     </div>
   );

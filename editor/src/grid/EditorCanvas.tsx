@@ -1,15 +1,16 @@
 import { useCallback, useRef, useState } from "react";
 import { Grid, WidgetView, gridArea, type Page, type Widget } from "@macro/renderer";
+import { useT } from "../i18n/I18nContext";
 import { canPlace, clamp } from "./collision";
 import { evaluateWidgetDynamicStyle } from "./evaluateDynamic";
 
-const GAP = "10px";
-
 export interface EditorCanvasProps {
   page: Page;
-  selectedWidgetId: string | null;
-  onSelect: (widgetId: string | null) => void;
+  selectedIds: string[];
+  onSelect: (ids: string[]) => void;
+  onToggleSelect: (id: string) => void;
   onRectChange: (widgetId: string, rect: { x: number; y: number; w: number; h: number }) => void;
+  onContextMenu: (x: number, y: number, widgetId: string) => void;
   variables: Record<string, unknown>;
 }
 
@@ -29,10 +30,12 @@ interface DragState {
  * uses (so "what you see is what you ship"), plus a light-DOM overlay per widget for selection,
  * dragging and resizing. The overlay never touches the widget's own shadow root.
  */
-export function EditorCanvas({ page, selectedWidgetId, onSelect, onRectChange, variables }: EditorCanvasProps) {
+export function EditorCanvas({ page, selectedIds, onSelect, onToggleSelect, onRectChange, onContextMenu, variables }: EditorCanvasProps) {
+  const { t } = useT();
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [drag, setDrag] = useState<DragState | null>(null);
   const [previewRect, setPreviewRect] = useState<{ x: number; y: number; w: number; h: number } | null>(null);
+  const gap = `${page.gap ?? 10}px`;
 
   const beginDrag = useCallback(
     (mode: DragMode, widget: Widget, e: React.PointerEvent) => {
@@ -41,7 +44,6 @@ export function EditorCanvas({ page, selectedWidgetId, onSelect, onRectChange, v
       e.stopPropagation();
       (e.target as Element).setPointerCapture?.(e.pointerId);
       const bounds = container.getBoundingClientRect();
-      onSelect(widget.id);
       setDrag({
         mode,
         widgetId: widget.id,
@@ -53,7 +55,7 @@ export function EditorCanvas({ page, selectedWidgetId, onSelect, onRectChange, v
       });
       setPreviewRect({ x: widget.x, y: widget.y, w: widget.w, h: widget.h });
     },
-    [onSelect, page.cols, page.rows],
+    [page.cols, page.rows],
   );
 
   const onPointerMove = useCallback(
@@ -93,15 +95,15 @@ export function EditorCanvas({ page, selectedWidgetId, onSelect, onRectChange, v
       onPointerMove={onPointerMove}
       onPointerUp={endDrag}
       onPointerCancel={endDrag}
-      onPointerDown={() => onSelect(null)}
+      onPointerDown={() => onSelect([])}
     >
       <Grid
         page={page}
-        gap={GAP}
+        gap={gap}
         renderWidget={(widget) => {
           const isDraggingThis = drag?.widgetId === widget.id;
           const rect = isDraggingThis && previewRect ? previewRect : widget;
-          const isSelected = widget.id === selectedWidgetId;
+          const isSelected = selectedIds.includes(widget.id);
           return (
             <div style={{ position: "relative", width: "100%", height: "100%" }}>
               <WidgetView
@@ -114,8 +116,18 @@ export function EditorCanvas({ page, selectedWidgetId, onSelect, onRectChange, v
               <div
                 onPointerDown={(e) => {
                   e.stopPropagation();
-                  onSelect(widget.id);
+                  if (e.shiftKey) {
+                    onToggleSelect(widget.id);
+                    return;
+                  }
+                  if (!isSelected) onSelect([widget.id]);
                   beginDrag("move", widget, e);
+                }}
+                onContextMenu={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  if (!isSelected) onSelect([widget.id]);
+                  onContextMenu(e.clientX, e.clientY, widget.id);
                 }}
                 style={{
                   position: "absolute",
@@ -129,7 +141,7 @@ export function EditorCanvas({ page, selectedWidgetId, onSelect, onRectChange, v
               {isSelected && (
                 <div
                   onPointerDown={(e) => beginDrag("resize", widget, e)}
-                  title="Boyutlandır"
+                  title={t("canvas.resize")}
                   style={{
                     position: "absolute",
                     right: -4,
@@ -154,7 +166,7 @@ export function EditorCanvas({ page, selectedWidgetId, onSelect, onRectChange, v
             display: "grid",
             gridTemplateColumns: `repeat(${page.cols}, 1fr)`,
             gridTemplateRows: `repeat(${page.rows}, 1fr)`,
-            gap: GAP,
+            gap,
           }}
         >
           <div

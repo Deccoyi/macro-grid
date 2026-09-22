@@ -2,6 +2,7 @@ using System.Text.Json;
 using MacroStation.Core.Actions;
 using MacroStation.Core.Devices;
 using MacroStation.Core.Model;
+using MacroStation.Core.Preferences;
 using MacroStation.Core.Profiles;
 using MacroStation.Core.Sessions;
 using MacroStation.Core.Variables;
@@ -17,7 +18,7 @@ internal static class ServerApp
 {
     public const int Port = 9820;
 
-    public static WebApplication Build(string[] args, IUiDialogService dialogs)
+    public static WebApplication Build(string[] args, IUiDialogService dialogs, IUiWindowService windows)
     {
         var dataDir = ProfileStore.DefaultDataDir;
 
@@ -35,6 +36,7 @@ internal static class ServerApp
         builder.Logging.AddProvider(new FileLoggerProvider(Path.Combine(dataDir, "logs")));
 
         builder.Services.AddSingleton(new ProfileStore(dataDir));
+        builder.Services.AddSingleton(new PreferencesStore(dataDir));
         builder.Services.AddSingleton<IInputService, WindowsInputService>();
         builder.Services.AddSingleton<IActionHandler, HotkeyAction>();
         builder.Services.AddSingleton<IActionHandler, TypeTextAction>();
@@ -45,6 +47,7 @@ internal static class ServerApp
         builder.Services.AddSingleton<IActionHandler, DelayAction>();
         builder.Services.AddSingleton<ActionDispatcher>();
         builder.Services.AddSingleton(dialogs);
+        builder.Services.AddSingleton(windows);
 
         builder.Services.AddSingleton<VariableStore>();
         builder.Services.AddSingleton<IVariableStore>(sp => sp.GetRequiredService<VariableStore>());
@@ -128,7 +131,7 @@ internal static class ServerApp
             return Results.Json(profile, ProtocolJson.Options);
         });
 
-        api.MapPut("/profiles/{id}", async (string id, HttpRequest request, ProfileStore profiles) =>
+        api.MapPut("/profiles/{id}", async (string id, HttpRequest request, ProfileStore profiles, WidgetStateService widgetState) =>
         {
             Profile? profile;
             try
@@ -147,11 +150,33 @@ internal static class ServerApp
                 return Results.BadRequest(new { error });
 
             profiles.Save(profile);
+            await widgetState.BroadcastProfileAsync(profile);
             return Results.NoContent();
         });
 
         api.MapDelete("/profiles/{id}", (string id, ProfileStore profiles) =>
             profiles.Delete(id) ? Results.NoContent() : Results.BadRequest(new { error = "Son profil silinemez." }));
+
+        api.MapGet("/preferences", (PreferencesStore preferences) =>
+            Results.Json(preferences.Get(), ProtocolJson.Options));
+
+        api.MapPut("/preferences", async (HttpRequest request, PreferencesStore preferences) =>
+        {
+            AppPreferences? parsed;
+            try
+            {
+                parsed = await JsonSerializer.DeserializeAsync<AppPreferences>(request.Body, ProtocolJson.Options);
+            }
+            catch (JsonException)
+            {
+                return Results.BadRequest(new { error = "Geçersiz JSON." });
+            }
+            if (parsed is null)
+                return Results.BadRequest(new { error = "Geçersiz JSON." });
+
+            preferences.Save(parsed);
+            return Results.NoContent();
+        });
 
         api.MapGet("/actions", (ActionDispatcher dispatcher) =>
             dispatcher.Handlers.Select(h => new { h.Type, h.DisplayName }).OrderBy(a => a.DisplayName));
@@ -167,9 +192,47 @@ internal static class ServerApp
             return Results.Json(new { path });
         });
 
+        api.MapPost("/browse/import-profile", async (IUiDialogService dialogs) =>
+        {
+            var (path, content) = await dialogs.OpenJsonFileAsync("Profil içe aktar");
+            return Results.Json(new { path, content });
+        });
+
+        api.MapPost("/browse/export-profile", async (HttpRequest request, IUiDialogService dialogs) =>
+        {
+            ExportProfileRequest? body;
+            try { body = await JsonSerializer.DeserializeAsync<ExportProfileRequest>(request.Body, ProtocolJson.Options); }
+            catch (JsonException) { return Results.BadRequest(new { error = "Geçersiz JSON." }); }
+            if (body is null) return Results.BadRequest(new { error = "Geçersiz JSON." });
+            var path = await dialogs.SaveJsonFileAsync("Profili dışa aktar", body.FileName, body.Content);
+            return Results.Json(new { path });
+        });
+
+        api.MapPost("/windows/preferences", async (IUiWindowService windows) =>
+        {
+            await windows.ShowToolWindowAsync("preferences", "Tercihler", $"http://localhost:{Port}/editor/?window=preferences", 640, 520);
+            return Results.NoContent();
+        });
+
+        api.MapPost("/windows/plugins", async (IUiWindowService windows) =>
+        {
+            await windows.ShowToolWindowAsync("plugins", "Eklentiler", $"http://localhost:{Port}/editor/?window=plugins", 640, 520);
+            return Results.NoContent();
+        });
+
+        api.MapPost("/windows/help", async (IUiWindowService windows) =>
+        {
+            await windows.ShowToolWindowAsync("help", "Yardım", $"http://localhost:{Port}/editor/?window=help", 640, 520);
+            return Results.NoContent();
+        });
+
         api.MapGet("/pairing/pin", (PairingService pairing) => new { pin = pairing.CurrentPin });
 
         api.MapPost("/pairing/pin/regenerate", (PairingService pairing) => new { pin = pairing.Regenerate() });
+
+        api.MapGet("/pairing/qr", (PairingService pairing) => BuildPairingQr(pairing.CurrentPin, pairing.ExpiresAt));
+
+        api.MapPost("/pairing/qr/regenerate", (PairingService pairing) => BuildPairingQr(pairing.Regenerate(), pairing.ExpiresAt));
 
         api.MapGet("/devices", (DeviceStore devices) =>
             devices.All.Select(d => new { d.Id, d.Name, d.PairedAt, d.LastSeenAt }));
@@ -177,4 +240,22 @@ internal static class ServerApp
         api.MapDelete("/devices/{id}", (string id, DeviceStore devices) =>
             devices.Revoke(id) ? Results.NoContent() : Results.NotFound());
     }
+
+    /// <summary>
+    /// The pairing QR's payload: a <c>macrostation://pair</c> deep-link URI carrying the LAN host, port and
+    /// current PIN, so a client can decode it without agreeing on a bespoke delimited format. Uses the first
+    /// LAN address <see cref="NetworkInfo.GetLanAddresses"/> reports (gateway-having adapters first); if the
+    /// host has no LAN adapter up, <c>host</c> comes back empty and the editor should show a warning instead
+    /// of a QR code, since a QR with no reachable host is useless.
+    /// </summary>
+    private static object BuildPairingQr(string pin, DateTimeOffset expiresAt)
+    {
+        var host = NetworkInfo.GetLanAddresses().FirstOrDefault()?.ToString() ?? "";
+        var text = string.IsNullOrEmpty(host)
+            ? ""
+            : $"macrostation://pair?host={Uri.EscapeDataString(host)}&port={Port}&pin={pin}";
+        return new { text, host, port = Port, pin, expiresAt };
+    }
 }
+
+file sealed record ExportProfileRequest(string FileName, string Content);

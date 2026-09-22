@@ -2,10 +2,11 @@ import { useRef } from "react";
 import { AlignCenter, AlignLeft, AlignRight, AlignVerticalJustifyCenter, AlignVerticalJustifyEnd, AlignVerticalJustifyStart } from "lucide-react";
 import type { Align, IconPosition, VAlign, WidgetStyle } from "@macro/renderer";
 import type { VariableInfo } from "../../api/types";
+import { useT } from "../../i18n/I18nContext";
 import { IconPicker, iconToDataUri } from "../IconPicker";
 import { VariablePicker } from "../VariablePicker";
 import type { FieldGroupProps } from "./AppearanceFields";
-import { Seg, SectionLabel } from "./controls";
+import { Seg } from "./controls";
 
 export interface TextFieldsProps extends FieldGroupProps {
   variableCatalog: VariableInfo[];
@@ -15,6 +16,7 @@ export interface TextFieldsProps extends FieldGroupProps {
 
 /** Text content + how it's laid out: for button/toggle/label, whose whole point is showing text. */
 export function TextFields({ widget, onChange, variableCatalog, showIcon = true }: TextFieldsProps) {
+  const { t } = useT();
   const style = widget.style ?? {};
   const textRef = useRef<HTMLTextAreaElement | null>(null);
   const set = (fn: (s: WidgetStyle) => void) =>
@@ -42,48 +44,47 @@ export function TextFields({ widget, onChange, variableCatalog, showIcon = true 
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-      <SectionLabel>İçerik</SectionLabel>
       <label className="field">
-        Metin
+        {t("fields.text.label")}
         <textarea
           ref={textRef}
           rows={2}
           value={widget.text ?? ""}
           onChange={(e) => onChange((w) => { w.text = e.target.value; })}
-          placeholder="Sabit metin, veya sağdan bir değişken ekleyin"
+          placeholder={t("fields.text.placeholder")}
         />
       </label>
       <VariablePicker catalog={variableCatalog} onInsert={insertVariable} />
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
         <label className="field">
-          Yatay
+          {t("fields.text.horizontal")}
           <Seg<Align>
             value={style.align ?? "center"}
             onChange={(v) => set((s) => { s.align = v; })}
             options={[
-              { value: "left", label: <AlignLeft size={14} />, title: "Sol" },
-              { value: "center", label: <AlignCenter size={14} />, title: "Orta" },
-              { value: "right", label: <AlignRight size={14} />, title: "Sağ" },
+              { value: "left", label: <AlignLeft size={14} />, title: t("fields.text.align.left") },
+              { value: "center", label: <AlignCenter size={14} />, title: t("fields.text.align.center") },
+              { value: "right", label: <AlignRight size={14} />, title: t("fields.text.align.right") },
             ]}
           />
         </label>
         <label className="field">
-          Dikey
+          {t("fields.text.vertical")}
           <Seg<VAlign>
             value={style.vAlign ?? "middle"}
             onChange={(v) => set((s) => { s.vAlign = v; })}
             options={[
-              { value: "top", label: <AlignVerticalJustifyStart size={14} />, title: "Üst" },
-              { value: "middle", label: <AlignVerticalJustifyCenter size={14} />, title: "Orta" },
-              { value: "bottom", label: <AlignVerticalJustifyEnd size={14} />, title: "Alt" },
+              { value: "top", label: <AlignVerticalJustifyStart size={14} />, title: t("fields.text.valign.top") },
+              { value: "middle", label: <AlignVerticalJustifyCenter size={14} />, title: t("fields.text.valign.middle") },
+              { value: "bottom", label: <AlignVerticalJustifyEnd size={14} />, title: t("fields.text.valign.bottom") },
             ]}
           />
         </label>
       </div>
 
       <label className="field">
-        Font boyutu (px)
+        {t("fields.text.fontSize")}
         <input
           type="number"
           min={8}
@@ -96,7 +97,7 @@ export function TextFields({ widget, onChange, variableCatalog, showIcon = true 
       {showIcon && (
         <>
           <label className="field">
-            İkon
+            {t("fields.text.icon")}
             <IconPicker
               value={style.icon}
               color={style.foreground}
@@ -106,24 +107,24 @@ export function TextFields({ widget, onChange, variableCatalog, showIcon = true 
           {style.icon && (
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
               <label className="field">
-                İkon boyutu (px)
+                {t("fields.text.iconSize")}
                 <input type="number" min={12} max={96} value={style.iconSize ?? 28} onChange={(e) => set((s) => { s.iconSize = Number(e.target.value); })} />
               </label>
               <label className="field">
-                İkon konumu
+                {t("fields.text.iconPosition")}
                 <select value={style.iconPosition ?? "top"} onChange={(e) => set((s) => { s.iconPosition = e.target.value as IconPosition; })}>
-                  <option value="top">Metnin üstünde</option>
-                  <option value="bottom">Metnin altında</option>
-                  <option value="left">Metnin solunda</option>
-                  <option value="right">Metnin sağında</option>
+                  <option value="top">{t("fields.text.iconPosition.top")}</option>
+                  <option value="bottom">{t("fields.text.iconPosition.bottom")}</option>
+                  <option value="left">{t("fields.text.iconPosition.left")}</option>
+                  <option value="right">{t("fields.text.iconPosition.right")}</option>
                 </select>
               </label>
               <label className="field">
-                İkon rengi
+                {t("fields.text.iconColor")}
                 <input
                   type="color"
                   disabled={!style.iconName}
-                  title={style.iconName ? undefined : "Bu ikon eski bir sürümde eklenmiş, rengini değiştirmek için yeniden seçin"}
+                  title={style.iconName ? undefined : t("fields.text.iconColorHint")}
                   value={/^#([0-9a-f]{6})$/i.test(style.foreground ?? "") ? style.foreground : "#e6e7ea"}
                   onChange={async (e) => {
                     if (!style.iconName) return;

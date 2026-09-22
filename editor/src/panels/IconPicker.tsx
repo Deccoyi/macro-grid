@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import dynamicIconImports from "lucide-react/dynamicIconImports";
+import { useT } from "../i18n/I18nContext";
 import { PickerShell, usePickerOpenState } from "./PickerShell";
 
 const ALL_NAMES = Object.keys(dynamicIconImports).sort();
@@ -43,9 +44,18 @@ export interface IconPickerProps {
 }
 
 /** "İkon seç…" button + a search modal over every lucide-react icon (ISC licensed, bundled locally — no network call). */
+/** Falls back to the editor's own current text color (not a hardcoded dark-theme hex) so icon previews
+ * stay visible against `--ms-bg-inset` in both themes — a fixed "#e6e7ea" (light gray) used to render
+ * invisible on the light theme's near-white inset background. */
+function defaultIconColor(): string {
+  if (typeof document === "undefined") return "#e6e7ea";
+  return getComputedStyle(document.documentElement).getPropertyValue("--ms-text-primary").trim() || "#e6e7ea";
+}
+
 export function IconPicker({ value, color, onChange }: IconPickerProps) {
+  const { t } = useT();
   const picker = usePickerOpenState();
-  const effectiveColor = color ?? "#e6e7ea";
+  const effectiveColor = color ?? defaultIconColor();
 
   const names = useMemo(() => {
     const q = picker.query.trim().toLowerCase();
@@ -59,23 +69,23 @@ export function IconPicker({ value, color, onChange }: IconPickerProps) {
         {value ? (
           <img src={value} width={22} height={22} alt="" style={{ background: "var(--ms-bg-inset)", borderRadius: 4, padding: 2 }} />
         ) : (
-          <span style={{ color: "var(--ms-text-secondary)", fontSize: 12 }}>İkon yok</span>
+          <span style={{ color: "var(--ms-text-secondary)", fontSize: 12 }}>{t("icon.none")}</span>
         )}
-        <button type="button" className="ghost" onClick={picker.openPicker}>İkon seç…</button>
-        {value && <button type="button" className="ghost" onClick={() => onChange(undefined, undefined)}>Kaldır</button>}
+        <button type="button" className="ghost" onClick={picker.openPicker}>{t("icon.pick")}</button>
+        {value && <button type="button" className="ghost" onClick={() => onChange(undefined, undefined)}>{t("icon.remove")}</button>}
       </div>
 
       {picker.open && (
         <PickerShell
-          title="İkon seç"
+          title={t("icon.pickTitle")}
           categories={ICON_PACKS}
           activeCategory="lucide"
           onCategoryChange={() => {}}
-          searchPlaceholder={`${ALL_NAMES.length} ikon içinde ara… (İngilizce, örn. "volume", "play")`}
+          searchPlaceholder={t("icon.searchPlaceholder", String(ALL_NAMES.length))}
           query={picker.query}
           onQueryChange={picker.setQuery}
           onClose={picker.closePicker}
-          footer="lucide.dev · ISC lisans · plugin ile ikon paketi eklenebilir (ileride)"
+          footer={t("icon.footer")}
         >
           <div style={{ display: "grid", gridTemplateColumns: "repeat(8, 1fr)", gap: 4 }}>
             {names.map((name) => (
@@ -91,7 +101,7 @@ export function IconPicker({ value, color, onChange }: IconPickerProps) {
               />
             ))}
             {names.length === 0 && (
-              <div style={{ gridColumn: "1 / -1", color: "var(--ms-text-secondary)", fontSize: 12, padding: 8 }}>Eşleşme yok.</div>
+              <div style={{ gridColumn: "1 / -1", color: "var(--ms-text-secondary)", fontSize: 12, padding: 8 }}>{t("icon.noMatch")}</div>
             )}
           </div>
         </PickerShell>

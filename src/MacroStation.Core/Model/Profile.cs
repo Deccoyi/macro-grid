@@ -8,6 +8,12 @@ public sealed class Profile
     public string Name { get; set; } = "Profile";
     public List<Page> Pages { get; set; } = [];
 
+    /// <summary>Which "Önizleme" device preset (or preview profile id) the editor should switch to when
+    /// this profile is opened — null/empty means "Serbest" (free). Purely an editor convenience; the
+    /// server/client never read it. If the referenced preset no longer exists (a custom preview profile
+    /// was deleted in Tercihler) the editor falls back to free on its own — this field is left as-is.</summary>
+    public string? PreviewDeviceId { get; set; }
+
     public Page? FindPage(string pageId) => Pages.FirstOrDefault(p => p.Id == pageId);
 
     public static string NewId() => Guid.NewGuid().ToString("N")[..12];
@@ -19,6 +25,12 @@ public sealed class Page
     public string Name { get; set; } = "Page";
     public int Cols { get; set; } = 4;
     public int Rows { get; set; } = 3;
+    /// <summary>Gap between grid cells, in CSS px. Matches the renderer's own default so old profiles without this field still look the same.</summary>
+    public int Gap { get; set; } = 10;
+    /// <summary>Padding around the grid, in CSS px.</summary>
+    public int Padding { get; set; } = 0;
+    /// <summary>How the grid is placed within the page when it doesn't fill the available space: "start" | "center" | "end".</summary>
+    public string Alignment { get; set; } = "center";
     public List<Widget> Widgets { get; set; } = [];
 
     public Widget? FindWidget(string widgetId) => Widgets.FirstOrDefault(w => w.Id == widgetId);
@@ -130,6 +142,13 @@ public sealed class WidgetStyle
     public double? BorderWidth { get; set; }
     public double? Radius { get; set; }
     public string? Icon { get; set; }
+    public double? IconSize { get; set; }
+    /// <summary>top | left | right | bottom</summary>
+    public string? IconPosition { get; set; }
+    /// <summary>Editor-only bookkeeping (which named icon <see cref="Icon"/> was baked from); the server/client never read this, but it must still round-trip or the editor loses it on reload.</summary>
+    public string? IconName { get; set; }
+    /// <summary>none | blink | pulse. Static default; a dynamic binding on "style.animation" (see WidgetStateService.DynamizableProperties) can override it live per-device.</summary>
+    public string? Animation { get; set; }
 }
 
 public sealed record ActionBinding(string Type, JsonObject Settings);

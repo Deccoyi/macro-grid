@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { useMemo } from "react";
 import type { VariableInfo } from "../api/types";
+import { useT } from "../i18n/I18nContext";
 import { PickerShell, usePickerFilter, usePickerOpenState } from "./PickerShell";
 
 export interface VariablePickerProps {
@@ -15,8 +16,10 @@ export interface VariablePickerProps {
 }
 
 /** "+ Değişken ekle": categorized (by provider — built-in "Sistem" today, a plugin's own category later), searchable. */
-export function VariablePicker({ catalog, onInsert, buttonLabel = "+ Değişken ekle", mode = "template", renderTrigger }: VariablePickerProps) {
+export function VariablePicker({ catalog, onInsert, buttonLabel, mode = "template", renderTrigger }: VariablePickerProps) {
+  const { t } = useT();
   const picker = usePickerOpenState();
+  const label = buttonLabel ?? t("variable.add");
 
   const categories = useMemo(() => {
     const counts = new Map<string, number>();
@@ -37,20 +40,20 @@ export function VariablePicker({ catalog, onInsert, buttonLabel = "+ Değişken 
   return (
     <>
       {renderTrigger ? renderTrigger(picker.openPicker) : (
-        <button type="button" className="ghost" onClick={picker.openPicker}>{buttonLabel}</button>
+        <button type="button" className="ghost" onClick={picker.openPicker}>{label}</button>
       )}
       {picker.open && (
         <PickerShell
-          title="Değişken ekle"
+          title={t("variable.pickTitle")}
           categories={categories}
           activeCategory={picker.category}
           onCategoryChange={picker.setCategory}
-          searchPlaceholder="Değişken ara…"
+          searchPlaceholder={t("variable.searchPlaceholder")}
           query={picker.query}
           onQueryChange={picker.setQuery}
           onClose={picker.closePicker}
         >
-          {items.length === 0 && <div style={{ color: "var(--ms-text-secondary)", fontSize: 12, padding: 8 }}>Eşleşme yok.</div>}
+          {items.length === 0 && <div style={{ color: "var(--ms-text-secondary)", fontSize: 12, padding: 8 }}>{t("variable.noMatch")}</div>}
           {items.map((v) => (
             <button
               key={v.name}

@@ -2,9 +2,9 @@ import type { CSSProperties, ReactNode } from "react";
 import type { Page, Widget } from "../types";
 
 export interface GridProps {
-  page: Pick<Page, "cols" | "rows" | "widgets">;
+  page: Pick<Page, "cols" | "rows" | "widgets" | "gap" | "padding" | "alignment">;
   renderWidget: (widget: Widget) => ReactNode;
-  /** CSS gap between cells; defaults to a CSS variable so a host page can theme it without a prop. */
+  /** CSS gap between cells. Defaults to `page.gap` (px) if set, else a CSS variable so a host page can theme it without either. */
   gap?: string;
   className?: string;
   style?: CSSProperties;
@@ -23,7 +23,10 @@ export function Grid({ page, renderWidget, gap, className, style }: GridProps) {
         display: "grid",
         gridTemplateColumns: `repeat(${page.cols}, 1fr)`,
         gridTemplateRows: `repeat(${page.rows}, 1fr)`,
-        gap: gap ?? "var(--ms-grid-gap, 10px)",
+        gap: gap ?? (page.gap !== undefined ? `${page.gap}px` : "var(--ms-grid-gap, 10px)"),
+        padding: page.padding ? `${page.padding}px` : undefined,
+        boxSizing: "border-box",
+        placeContent: page.alignment ?? "center",
         width: "100%",
         height: "100%",
         ...style,

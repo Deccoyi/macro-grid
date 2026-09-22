@@ -52,7 +52,12 @@ internal sealed class EditorWindow : Form
         }
 
         _instance = new EditorWindow(url);
-        _instance.FormClosed += (_, _) => _instance = null;
+        _instance.FormClosed += (_, _) =>
+        {
+            _instance = null;
+            // A Tercihler/Eklentiler window left open with no editor behind it would be confusing.
+            ToolWindow.CloseAll();
+        };
         _instance.Show();
     }
 }
