@@ -1,13 +1,16 @@
-import { Pencil } from "lucide-react";
+import { useState } from "react";
+import { Pencil, Smartphone } from "lucide-react";
 import { EditorCanvas } from "./grid/EditorCanvas";
 import { Inspector } from "./panels/Inspector";
 import { PageTabs } from "./panels/PageTabs";
+import { PairingPanel } from "./panels/PairingPanel";
 import { WidgetPalette } from "./panels/WidgetPalette";
 import { useEditorState } from "./state/useEditorState";
 
 export function App() {
   const state = useEditorState();
   const { profile, currentPage } = state;
+  const [pairingOpen, setPairingOpen] = useState(false);
 
   if (!profile || !currentPage) {
     return <div style={{ padding: 20, color: "var(--ms-text-secondary)" }}>Yükleniyor…</div>;
@@ -61,10 +64,15 @@ export function App() {
         </label>
 
         <button className="ghost" onClick={state.refreshVariables}>Değişkenleri yenile</button>
+        <button className="ghost" onClick={() => setPairingOpen(true)} style={{ display: "flex", alignItems: "center", gap: 5 }}>
+          <Smartphone size={13} /> Eşleştirme
+        </button>
         <button className="primary" onClick={state.save} disabled={!state.dirty || state.saving}>
           {state.saving ? "Kaydediliyor…" : state.dirty ? "Kaydet" : "Kaydedildi"}
         </button>
       </header>
+
+      {pairingOpen && <PairingPanel onClose={() => setPairingOpen(false)} />}
 
       {state.error && (
         <div style={{ padding: "6px 12px", background: "rgba(192,57,43,.15)", color: "var(--ms-danger)", fontSize: 12, display: "flex", justifyContent: "space-between" }}>

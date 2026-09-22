@@ -4,6 +4,7 @@ Bu dosya [Keep a Changelog](https://keepachangelog.com/) formatını takip eder.
 
 ## [Unreleased]
 ### Added
+- **Cihaz eşleştirme (pairing):** artık her bağlantı `hello`'da ya geçerli bir `token` ya da editörde gösterilen 6 haneli PIN taşımalı; ikisi de yoksa/yanlışsa sunucu `pairing_required` hatası döner ve `layout.full` göndermez. Başarılı eşleşmede sunucu `welcome.token` ile kalıcı bir belirteç verir, cihaz bunu saklayıp bir daha PIN sormaz. Yeni: `DeviceStore` (`%AppData%/MacroStation/devices.json`), `PairingService`, `/api/pairing/pin(/regenerate)`, `/api/devices` (GET/DELETE), editörde "Eşleştirme" paneli (PIN + eşleşmiş cihaz listesi + kaldır). Test client (`wwwroot/index.html`) da PIN akışını destekliyor (prompt ile).
 - WebSocket protokolüne `profiles.list` (server→client, hello'da gönderilir) ve `profile.change` (client→server) mesajları eklendi — client artık kendi profilini kendisi değiştirebiliyor (profil çekmecesi için gerekli altyapı).
 - Aşama 5 başladı: `client/` artık Capacitor + React + TS uygulaması (Capacitor 8.5.2). IP girip bağlanma ekranı, `@macro/renderer` ile aynı grid'i çizen ana ekran, WebSocket reconnect (exponential backoff). `android/` platformu eklendi.
 - Server iskeleti: WebSocket protokolü, JSON profil deposu, tray uygulaması, dosya logları, geçici test client sayfası (Aşama 1).

@@ -1,5 +1,5 @@
 import type { Profile } from "@macro/renderer";
-import type { ActionInfo, ProfileSummary, VariableInfo, VariableSnapshot } from "./types";
+import type { ActionInfo, PairedDeviceInfo, ProfileSummary, VariableInfo, VariableSnapshot } from "./types";
 
 /** Every editor API call must bypass the HTTP cache — a GET right after a save must never return a
  * stale cached body (see docs/agent-notes.md: same trap as the editor's own HTML/JS bundle caching). */
@@ -42,4 +42,13 @@ export const api = {
   /** Shows a native "choose an .exe" dialog on the server's desktop and returns the chosen path, or null if canceled. */
   browseForExecutable: (): Promise<string | null> =>
     req("/api/browse/executable", { method: "POST" }).then((res) => json<{ path: string | null }>(res)).then((r) => r.path),
+
+  pairingPin: (): Promise<string> => req("/api/pairing/pin").then((res) => json<{ pin: string }>(res)).then((r) => r.pin),
+
+  regeneratePairingPin: (): Promise<string> =>
+    req("/api/pairing/pin/regenerate", { method: "POST" }).then((res) => json<{ pin: string }>(res)).then((r) => r.pin),
+
+  listDevices: (): Promise<PairedDeviceInfo[]> => req("/api/devices").then((res) => json<PairedDeviceInfo[]>(res)),
+
+  revokeDevice: (id: string): Promise<void> => req(`/api/devices/${id}`, { method: "DELETE" }).then((res) => json<void>(res)),
 };

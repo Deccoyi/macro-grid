@@ -1,5 +1,6 @@
 using System.Text.Json;
 using MacroStation.Core.Actions;
+using MacroStation.Core.Devices;
 using MacroStation.Core.Model;
 using MacroStation.Core.Profiles;
 using MacroStation.Core.Sessions;
@@ -52,6 +53,9 @@ internal static class ServerApp
         builder.Services.AddSingleton<IVariableCatalogSource>(sp => sp.GetRequiredService<SystemMetricsProvider>());
         builder.Services.AddSingleton<VariableCatalog>();
         builder.Services.AddHostedService<VariableProviderHost>();
+
+        builder.Services.AddSingleton(new DeviceStore(dataDir));
+        builder.Services.AddSingleton<PairingService>();
 
         builder.Services.AddSingleton<SessionRegistry>();
         builder.Services.AddSingleton<ToggleStateStore>();
@@ -162,5 +166,15 @@ internal static class ServerApp
             var path = await dialogs.BrowseForExecutableAsync();
             return Results.Json(new { path });
         });
+
+        api.MapGet("/pairing/pin", (PairingService pairing) => new { pin = pairing.CurrentPin });
+
+        api.MapPost("/pairing/pin/regenerate", (PairingService pairing) => new { pin = pairing.Regenerate() });
+
+        api.MapGet("/devices", (DeviceStore devices) =>
+            devices.All.Select(d => new { d.Id, d.Name, d.PairedAt, d.LastSeenAt }));
+
+        api.MapDelete("/devices/{id}", (string id, DeviceStore devices) =>
+            devices.Revoke(id) ? Results.NoContent() : Results.NotFound());
     }
 }

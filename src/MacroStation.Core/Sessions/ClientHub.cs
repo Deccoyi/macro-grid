@@ -3,6 +3,7 @@ using System.Text;
 using System.Text.Json;
 using System.Threading.Channels;
 using MacroStation.Core.Actions;
+using MacroStation.Core.Devices;
 using MacroStation.Core.Model;
 using MacroStation.Core.Profiles;
 using MacroStation.Plugin.Abstractions;
@@ -20,6 +21,8 @@ public sealed class ClientHub(
     ActionDispatcher dispatcher,
     ToggleStateStore toggles,
     WidgetStateService widgetState,
+    DeviceStore devices,
+    PairingService pairing,
     ILogger<ClientHub> logger)
 {
     public const string ServerVersion = "0.1.0";
@@ -162,9 +165,27 @@ public sealed class ClientHub(
             return;
         }
 
-        // TODO(stage 5): verify pairing token before accepting the device.
-        session.DeviceId = hello.DeviceId;
-        session.DeviceName = string.IsNullOrWhiteSpace(hello.DeviceName) ? "Cihaz" : hello.DeviceName;
+        var deviceName = string.IsNullOrWhiteSpace(hello.DeviceName) ? "Cihaz" : hello.DeviceName;
+        var device = devices.FindByToken(hello.Token);
+        string? issuedToken = null;
+
+        if (device is null)
+        {
+            if (!pairing.Verify(hello.Pin))
+            {
+                await session.SendAsync(MessageTypes.Error, new ErrorMessage("pairing_required", "Eşleştirme gerekli. Bilgisayardaki Macro Station düzenleyicisinde gösterilen PIN'i girin."), ct);
+                return;
+            }
+            device = devices.Pair(hello.DeviceId, deviceName);
+            issuedToken = device.Token;
+        }
+        else
+        {
+            devices.Touch(device.Id, deviceName);
+        }
+
+        session.DeviceId = device.Id;
+        session.DeviceName = deviceName;
 
         var profile = profiles.First();
         session.ProfileId = profile.Id;
@@ -172,7 +193,7 @@ public sealed class ClientHub(
         session.PageId = page?.Id;
         sessions.NotifyChanged();
 
-        await session.SendAsync(MessageTypes.Welcome, new WelcomeMessage(Environment.MachineName, ServerVersion), ct);
+        await session.SendAsync(MessageTypes.Welcome, new WelcomeMessage(Environment.MachineName, ServerVersion, issuedToken), ct);
         await session.SendAsync(MessageTypes.LayoutFull, new LayoutFullPayload(profile, session.PageId ?? ""), ct);
         // Every profile, not just the assigned one, so the client can offer a profile-switcher drawer.
         await session.SendAsync(MessageTypes.ProfilesList, new ProfilesListPayload(profiles.All.Select(p => new ProfileSummary(p.Id, p.Name)).ToList()), ct);

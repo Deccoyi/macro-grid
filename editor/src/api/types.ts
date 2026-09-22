@@ -16,3 +16,10 @@ export interface VariableInfo {
   example: string;
   category: string;
 }
+
+export interface PairedDeviceInfo {
+  id: string;
+  name: string;
+  pairedAt: string;
+  lastSeenAt: string;
+}

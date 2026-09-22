@@ -47,6 +47,8 @@
     deviceId = 'web-' + Math.random().toString(36).slice(2, 10);
     try { localStorage.setItem('ms.deviceId', deviceId); } catch {}
   }
+  let token;
+  try { token = localStorage.getItem('ms.token'); } catch {}
 
   let ws, retry = 0;
   let profile = null;   // full profile, cached from layout.full (holds every page)
@@ -55,19 +57,28 @@
 
   const send = (type, data) => ws && ws.readyState === 1 && ws.send(JSON.stringify({ type, data }));
   const setStatus = (on, text) => { dot.classList.toggle('on', on); statusEl.textContent = text; };
+  const sendHello = (pin) => send('hello', { deviceId, deviceName: 'Tarayıcı (' + (navigator.platform || 'web') + ')', token, clientVersion: 'test-0.1', pin });
 
   function connect() {
     ws = new WebSocket(`ws://${location.host}/ws`);
     ws.onopen = () => {
       retry = 0;
-      send('hello', { deviceId, deviceName: 'Tarayıcı (' + (navigator.platform || 'web') + ')', token: null, clientVersion: 'test-0.1' });
+      sendHello();
     };
     ws.onmessage = (e) => {
       const msg = JSON.parse(e.data);
-      if (msg.type === 'welcome') setStatus(true, `${msg.data.serverName} · v${msg.data.serverVersion}`);
+      if (msg.type === 'welcome') {
+        setStatus(true, `${msg.data.serverName} · v${msg.data.serverVersion}`);
+        if (msg.data.token) { token = msg.data.token; try { localStorage.setItem('ms.token', token); } catch {} }
+      }
       else if (msg.type === 'layout.full') { profile = msg.data.profile; renderPage(msg.data.pageId); }
       else if (msg.type === 'page.show') renderPage(msg.data.pageId);
       else if (msg.type === 'widget.state') applyWidgetState(msg.data);
+      else if (msg.type === 'error' && msg.data.code === 'pairing_required') {
+        setStatus(false, 'Eşleştirme gerekli');
+        const pin = prompt('Düzenleyicideki "Eşleştirme" penceresinde gösterilen 6 haneli PIN\'i girin:');
+        if (pin) sendHello(pin);
+      }
       else if (msg.type === 'error') console.warn('server error', msg.data);
     };
     ws.onclose = () => {
