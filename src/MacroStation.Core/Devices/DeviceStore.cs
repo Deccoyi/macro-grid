@@ -60,6 +60,18 @@ public sealed class DeviceStore
         Save();
     }
 
+    /// <summary>Sets or clears (null) the profile this device always opens. Returns false if the device isn't paired.</summary>
+    public bool AssignProfile(string deviceId, string? profileId)
+    {
+        lock (_lock)
+        {
+            if (!_devices.TryGetValue(deviceId, out var device)) return false;
+            device.AssignedProfileId = profileId;
+        }
+        Save();
+        return true;
+    }
+
     public bool Revoke(string deviceId)
     {
         lock (_lock)

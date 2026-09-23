@@ -9,6 +9,7 @@ using MacroStation.Core.Variables;
 using MacroStation.Host.Logging;
 using MacroStation.Plugin.Abstractions;
 using MacroStation.Protocol;
+using MacroStation.Windows.Audio;
 using MacroStation.Windows.Input;
 using MacroStation.Windows.Variables;
 
@@ -45,6 +46,10 @@ internal static class ServerApp
         builder.Services.AddSingleton<IActionHandler, OpenAction>();
         builder.Services.AddSingleton<IActionHandler, OpenUrlAction>();
         builder.Services.AddSingleton<IActionHandler, DelayAction>();
+        builder.Services.AddSingleton<IAudioService, WindowsAudioService>();
+        builder.Services.AddSingleton<IActionHandler, SetVolumeAction>();
+        builder.Services.AddSingleton<IActionHandler, SetMuteAction>();
+        builder.Services.AddSingleton<IActionHandler, ToggleMuteAction>();
         builder.Services.AddSingleton<ActionDispatcher>();
         builder.Services.AddSingleton(dialogs);
         builder.Services.AddSingleton(windows);
@@ -54,6 +59,9 @@ internal static class ServerApp
         builder.Services.AddSingleton<SystemMetricsProvider>();
         builder.Services.AddSingleton<IVariableProvider>(sp => sp.GetRequiredService<SystemMetricsProvider>());
         builder.Services.AddSingleton<IVariableCatalogSource>(sp => sp.GetRequiredService<SystemMetricsProvider>());
+        builder.Services.AddSingleton<SystemAudioProvider>();
+        builder.Services.AddSingleton<IVariableProvider>(sp => sp.GetRequiredService<SystemAudioProvider>());
+        builder.Services.AddSingleton<IVariableCatalogSource>(sp => sp.GetRequiredService<SystemAudioProvider>());
         builder.Services.AddSingleton<VariableCatalog>();
         builder.Services.AddHostedService<VariableProviderHost>();
 
@@ -226,6 +234,12 @@ internal static class ServerApp
             return Results.NoContent();
         });
 
+        api.MapPost("/windows/pairing", async (IUiWindowService windows) =>
+        {
+            await windows.ShowToolWindowAsync("pairing", "Eşleştirme", $"http://localhost:{Port}/editor/?window=pairing", 760, 560);
+            return Results.NoContent();
+        });
+
         api.MapGet("/pairing/pin", (PairingService pairing) => new { pin = pairing.CurrentPin });
 
         api.MapPost("/pairing/pin/regenerate", (PairingService pairing) => new { pin = pairing.Regenerate() });
@@ -235,11 +249,22 @@ internal static class ServerApp
         api.MapPost("/pairing/qr/regenerate", (PairingService pairing) => BuildPairingQr(pairing.Regenerate(), pairing.ExpiresAt));
 
         api.MapGet("/devices", (DeviceStore devices) =>
-            devices.All.Select(d => new { d.Id, d.Name, d.PairedAt, d.LastSeenAt }));
+            devices.All.Select(d => new { d.Id, d.Name, d.PairedAt, d.LastSeenAt, d.AssignedProfileId }));
 
         api.MapDelete("/devices/{id}", (string id, DeviceStore devices) =>
             devices.Revoke(id) ? Results.NoContent() : Results.NotFound());
+
+        api.MapPut("/devices/{id}/profile", async (string id, HttpRequest request, DeviceStore devices) =>
+        {
+            AssignProfileRequest? body;
+            try { body = await JsonSerializer.DeserializeAsync<AssignProfileRequest>(request.Body, ProtocolJson.Options); }
+            catch (JsonException) { return Results.BadRequest(); }
+
+            return devices.AssignProfile(id, body?.ProfileId) ? Results.NoContent() : Results.NotFound();
+        });
     }
+
+    private sealed record AssignProfileRequest(string? ProfileId);
 
     /// <summary>
     /// The pairing QR's payload: a <c>macrostation://pair</c> deep-link URI carrying the LAN host, port and

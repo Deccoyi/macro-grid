@@ -29,6 +29,9 @@ public sealed class ClientSession(WebSocket socket, string remoteAddress)
     /// <summary>Last resolved dynamic style per widget id, so <see cref="WidgetStateService"/> only re-sends on an actual change.</summary>
     internal ConcurrentDictionary<string, Dictionary<string, string>> SentStyles { get; } = new();
 
+    /// <summary>Last pushed slider/knob live value per widget id (from its bound variable), so <see cref="WidgetStateService"/> only re-sends on an actual change.</summary>
+    internal ConcurrentDictionary<string, double> SentValues { get; } = new();
+
     internal WebSocket Socket => socket;
 
     public async Task SendAsync(Envelope envelope, CancellationToken cancellationToken = default)

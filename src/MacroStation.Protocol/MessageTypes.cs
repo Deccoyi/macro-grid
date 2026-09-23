@@ -10,6 +10,8 @@ public static class MessageTypes
     public const string WidgetDoubleTap = "widget.doubleTap";
     public const string WidgetValue = "widget.value";
     public const string PageChange = "page.change";
+    public const string PageNext = "page.next";
+    public const string PagePrev = "page.prev";
     public const string ProfileChange = "profile.change";
 
     // server -> client

@@ -16,4 +16,6 @@ public interface IActionHandler
     Task ExecuteAsync(ActionContext context, JsonObject settings, CancellationToken cancellationToken);
 }
 
-public sealed record ActionContext(string DeviceId, string PageId, string WidgetId, IDeviceController Device);
+/// <summary><paramref name="Value"/> is only set for a <c>valueChange</c> dispatch (a slider/knob drag
+/// commit) — the live dragged value, not a static per-binding setting. Every other event leaves it null.</summary>
+public sealed record ActionContext(string DeviceId, string PageId, string WidgetId, IDeviceController Device, double? Value = null);

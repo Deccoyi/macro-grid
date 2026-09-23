@@ -73,6 +73,7 @@ public sealed class WidgetStateService : IHostedService, IDisposable
             session.PageId = page.Id;
             session.SentTexts.Clear();
             session.SentStyles.Clear();
+            session.SentValues.Clear();
 
             await session.SendAsync(MessageTypes.LayoutFull, new LayoutFullPayload(profile, page.Id), ct);
             await SendInitialAsync(session, page, ct);
@@ -98,6 +99,13 @@ public sealed class WidgetStateService : IHostedService, IDisposable
             if (widget.Type == WidgetTypes.Toggle)
                 await session.SendAsync(MessageTypes.WidgetState, new WidgetStateMessage(widget.Id, Active: _toggles.Get(widget.Id)), ct);
 
+            var value = ResolveBoundValue(widget);
+            if (value is not null)
+            {
+                session.SentValues[widget.Id] = value.Value;
+                await session.SendAsync(MessageTypes.WidgetState, new WidgetStateMessage(widget.Id, Value: value), ct);
+            }
+
             var style = ResolveDynamicStyle(widget);
             if (style is not null)
             {
@@ -105,6 +113,26 @@ public sealed class WidgetStateService : IHostedService, IDisposable
                 await session.SendAsync(MessageTypes.WidgetState, new WidgetStateMessage(widget.Id, Style: style), ct);
             }
         }
+    }
+
+    /// <summary>A slider/knob's live position, if its <c>props.valueVariable</c> (set in the Inspector, e.g.
+    /// "system.audio.master") names a variable that currently holds a number. Buttons/labels/etc. and a
+    /// slider/knob with no binding (its position is purely local until the user drags it) both return null —
+    /// there is nothing to push from the server's side in that case.</summary>
+    private double? ResolveBoundValue(Widget widget)
+    {
+        if (widget.Type is not (WidgetTypes.Slider or WidgetTypes.Knob)) return null;
+        var variableName = widget.Props?["valueVariable"]?.GetValue<string>();
+        if (string.IsNullOrEmpty(variableName)) return null;
+
+        return _variables.Get(variableName) switch
+        {
+            double d => d,
+            float f => f,
+            int i => i,
+            long l => l,
+            _ => null,
+        };
     }
 
     /// <returns>Only the properties whose binding currently produced a value (matched a case, or hit the binding's default); null if the widget has no dynamized properties at all.</returns>
@@ -180,14 +208,24 @@ public sealed class WidgetStateService : IHostedService, IDisposable
                         style = resolved;
                 }
 
-                if (text is null && style is null) continue;
+                double? value = null;
+                var variableName = widget.Props?["valueVariable"]?.GetValue<string>();
+                if (!string.IsNullOrEmpty(variableName) && dirty.Contains(variableName))
+                {
+                    var resolved = ResolveBoundValue(widget);
+                    if (resolved is not null && (!session.SentValues.TryGetValue(widget.Id, out var prevValue) || prevValue != resolved))
+                        value = resolved;
+                }
+
+                if (text is null && style is null && value is null) continue;
 
                 if (text is not null) session.SentTexts[widget.Id] = text;
                 if (style is not null) session.SentStyles[widget.Id] = style;
+                if (value is not null) session.SentValues[widget.Id] = value.Value;
 
                 try
                 {
-                    await session.SendAsync(MessageTypes.WidgetState, new WidgetStateMessage(widget.Id, Text: text, Style: style));
+                    await session.SendAsync(MessageTypes.WidgetState, new WidgetStateMessage(widget.Id, Text: text, Value: value, Style: style));
                 }
                 catch (Exception ex) when (ex is IOException or ObjectDisposedException)
                 {

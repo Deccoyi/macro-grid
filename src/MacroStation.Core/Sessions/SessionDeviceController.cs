@@ -30,6 +30,7 @@ public sealed class SessionDeviceController(ClientSession session, ProfileStore 
         session.PageHistory.Clear();
         session.SentTexts.Clear();
         session.SentStyles.Clear();
+        session.SentValues.Clear();
 
         await session.SendAsync(MessageTypes.LayoutFull, new LayoutFullPayload(profile, page.Id));
         await widgetState.SendInitialAsync(session, page, CancellationToken.None);

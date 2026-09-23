@@ -35,7 +35,7 @@ export interface WidgetStyle {
   animation?: WidgetAnimation;
 }
 
-export type WidgetEventName = "press" | "release" | "longPress" | "doubleTap" | "toggleOn" | "toggleOff";
+export type WidgetEventName = "press" | "release" | "longPress" | "doubleTap" | "toggleOn" | "toggleOff" | "valueChange";
 
 export type ConditionKind = "compare" | "and" | "or" | "xor" | "not";
 export type CompareOperator = ">" | ">=" | "<" | "<=" | "==" | "!=" | "between";

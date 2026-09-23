@@ -142,9 +142,18 @@ public sealed class ClientHub(
             case MessageTypes.WidgetDoubleTap:
                 Enqueue(session, envelope, WidgetEvents.DoubleTap, queue);
                 break;
+            case MessageTypes.WidgetValue:
+                EnqueueValue(session, envelope, queue);
+                break;
             case MessageTypes.PageChange:
                 var page = envelope.DataAs<PageChangeMessage>();
                 if (page is not null) session.PageId = page.PageId;
+                break;
+            case MessageTypes.PageNext:
+                await new SessionDeviceController(session, profiles, widgetState).NextPageAsync();
+                break;
+            case MessageTypes.PagePrev:
+                await new SessionDeviceController(session, profiles, widgetState).PreviousPageAsync();
                 break;
             case MessageTypes.ProfileChange:
                 var change = envelope.DataAs<ProfileChangeMessage>();
@@ -187,7 +196,9 @@ public sealed class ClientHub(
         session.DeviceId = device.Id;
         session.DeviceName = deviceName;
 
-        var profile = profiles.First();
+        // A device with no assigned profile (or one assigned to a profile that's since been deleted)
+        // falls back to the first profile — same "just works" behavior as before per-device assignment existed.
+        var profile = (device.AssignedProfileId is { } assignedId ? profiles.Get(assignedId) : null) ?? profiles.First();
         session.ProfileId = profile.Id;
         var page = profile.Pages.FirstOrDefault();
         session.PageId = page?.Id;
@@ -201,18 +212,22 @@ public sealed class ClientHub(
             await widgetState.SendInitialAsync(session, page, ct);
     }
 
+    private Widget? FindWidget(ClientSession session, string pageId, string widgetId, out Page? page)
+    {
+        page = session.ProfileId is null ? null : profiles.Get(session.ProfileId)?.FindPage(pageId);
+        var widget = page?.FindWidget(widgetId);
+        if (widget is null || page is null)
+            logger.LogDebug("Widget {Widget} not found on page {Page}", widgetId, pageId);
+        return widget;
+    }
+
     private void Enqueue(ClientSession session, Envelope envelope, string eventName, ChannelWriter<Func<Task>> queue)
     {
         var msg = envelope.DataAs<WidgetEventMessage>();
         if (msg is null || session.ProfileId is null) return;
 
-        var page = profiles.Get(session.ProfileId)?.FindPage(msg.PageId);
-        var widget = page?.FindWidget(msg.WidgetId);
-        if (widget is null || page is null)
-        {
-            logger.LogDebug("Widget {Widget} not found on page {Page}", msg.WidgetId, msg.PageId);
-            return;
-        }
+        var widget = FindWidget(session, msg.PageId, msg.WidgetId, out _);
+        if (widget is null) return;
 
         var device = new SessionDeviceController(session, profiles, widgetState);
         var context = new ActionContext(session.DeviceId!, msg.PageId, msg.WidgetId, device);
@@ -230,6 +245,21 @@ public sealed class ClientHub(
         }
 
         queue.TryWrite(() => dispatcher.DispatchAsync(widget, eventName, context, CancellationToken.None));
+    }
+
+    /// <summary>A slider/knob drag commit — same dispatch as <see cref="Enqueue"/>, just carrying the live
+    /// value instead of being a bare press/release, and with no toggle special-case (sliders aren't toggles).</summary>
+    private void EnqueueValue(ClientSession session, Envelope envelope, ChannelWriter<Func<Task>> queue)
+    {
+        var msg = envelope.DataAs<WidgetValueMessage>();
+        if (msg is null || session.ProfileId is null) return;
+
+        var widget = FindWidget(session, msg.PageId, msg.WidgetId, out _);
+        if (widget is null) return;
+
+        var device = new SessionDeviceController(session, profiles, widgetState);
+        var context = new ActionContext(session.DeviceId!, msg.PageId, msg.WidgetId, device, Value: msg.Value);
+        queue.TryWrite(() => dispatcher.DispatchAsync(widget, WidgetEvents.ValueChange, context, CancellationToken.None));
     }
 
     private async Task BroadcastToggleAsync(string profileId, string pageId, string widgetId, bool active)
