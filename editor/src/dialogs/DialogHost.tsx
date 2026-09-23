@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useT } from "../i18n/I18nContext";
 import { type DialogRequest, subscribe } from "./dialogStore";
 
-/** Renders the single active confirm/prompt request as an app-styled modal (same chrome as
+/** Renders the single active confirm/prompt/alert/choice request as an app-styled modal (same chrome as
  * PairingPanel) instead of the browser's native confirm()/prompt(). Mount once near the app root. */
 export function DialogHost() {
   const { t } = useT();
@@ -19,13 +19,18 @@ export function DialogHost() {
 
   const cancel = () => {
     if (request.kind === "confirm") request.resolve(false);
-    else if (request.kind === "prompt") request.resolve(null);
+    else if (request.kind === "prompt" || request.kind === "choice") request.resolve(null);
     else request.resolve();
+    setRequest(null);
+  };
+  const choose = (value: string) => {
+    if (request.kind === "choice") request.resolve(value);
     setRequest(null);
   };
   const accept = () => {
     if (request.kind === "confirm") request.resolve(true);
     else if (request.kind === "prompt") request.resolve(value);
+    else if (request.kind === "choice") request.resolve(null);
     else request.resolve();
     setRequest(null);
   };
@@ -34,7 +39,7 @@ export function DialogHost() {
     <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.5)", zIndex: 80, display: "flex", alignItems: "center", justifyContent: "center" }} onClick={cancel}>
       <div
         onClick={(e) => e.stopPropagation()}
-        style={{ width: 320, background: "var(--ms-bg-surface)", border: "1px solid var(--ms-border-strong)", borderRadius: 6 }}
+        style={{ width: request.kind === "choice" ? 380 : 320, background: "var(--ms-bg-surface)", border: "1px solid var(--ms-border-strong)", borderRadius: 6 }}
       >
         <div style={{ padding: "16px 18px 4px", fontSize: 14, fontWeight: 600 }}>
           {request.title ??
@@ -57,9 +62,21 @@ export function DialogHost() {
         </div>
         <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, padding: "12px 18px", borderTop: "1px solid var(--ms-border)" }}>
           {request.kind !== "alert" && <button className="ghost" onClick={cancel}>{t("dialog.cancel")}</button>}
-          <button className={request.kind === "confirm" && request.danger ? "primary danger" : "primary"} onClick={accept}>
-            {request.kind === "confirm" ? t("dialog.confirm") : t("dialog.ok")}
-          </button>
+          {request.kind === "choice" ? (
+            request.options.map((o) => (
+              <button
+                key={o.value}
+                className={o.primary ? (o.danger ? "primary danger" : "primary") : o.danger ? "danger" : ""}
+                onClick={() => choose(o.value)}
+              >
+                {o.label}
+              </button>
+            ))
+          ) : (
+            <button className={request.kind === "confirm" && request.danger ? "primary danger" : "primary"} onClick={accept}>
+              {request.kind === "confirm" ? t("dialog.confirm") : t("dialog.ok")}
+            </button>
+          )}
         </div>
       </div>
     </div>

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { ActionBinding, Page, Profile, Widget, WidgetType } from "@macro/renderer";
 import { api } from "../api/client";
 import type { ActionInfo, ProfileSummary, StatusEntry, VariableInfo, VariableSnapshot } from "../api/types";
-import { alertAsync, confirmAsync } from "../dialogs/dialogStore";
+import { choiceAsync, confirmAsync } from "../dialogs/dialogStore";
 import { findFreeCell } from "../grid/collision";
 import { useT } from "../i18n/I18nContext";
 
@@ -136,28 +136,45 @@ export function useEditorState() {
     await loadProfileList(created.id);
   }, [confirmDiscardIfDirty, loadProfileList]);
 
-  /** "Dosya > Profili İçe Aktar": creates a brand-new profile then overwrites it with the imported
-   * content under the new id, so an imported file can never collide with (or overwrite) an existing one.
-   * A name collision with an existing profile is resolved by appending _1, _2, ... (never silently
-   * overwriting, never silently dropping the user's chosen name without telling them). */
+  /** "Dosya > Profili İçe Aktar": normally creates a brand-new profile then overwrites it with the
+   * imported content under the new id. If a profile with the same name already exists the user is asked
+   * (never decided silently): "Üzerine yaz" replaces that profile's content in place (keeping its id),
+   * "Adı değiştir" imports as a new profile named name_1, name_2, ... and Cancel aborts the import. */
   const importProfileFromJson = useCallback(
     async (data: Profile) => {
       if (!(await confirmDiscardIfDirty())) return;
-      const existingNames = new Set(profiles.map((p) => p.name));
       const originalName = data.name || "Profil";
+      const existing = profiles.find((p) => p.name === originalName);
       let name = originalName;
-      let suffix = 1;
-      while (existingNames.has(name)) {
-        name = `${originalName}_${suffix}`;
-        suffix += 1;
+
+      if (existing) {
+        const choice = await choiceAsync(
+          t("profile.importConflict", originalName),
+          [
+            { value: "overwrite", label: t("profile.importOverwrite"), danger: true },
+            { value: "rename", label: t("profile.importRename"), primary: true },
+          ],
+          { title: t("profile.importConflictTitle") },
+        );
+        if (choice === null) return;
+
+        if (choice === "overwrite") {
+          await api.saveProfile({ ...data, id: existing.id, name: originalName });
+          await loadProfileList(existing.id);
+          return;
+        }
+
+        const existingNames = new Set(profiles.map((p) => p.name));
+        let suffix = 1;
+        while (existingNames.has(name)) {
+          name = `${originalName}_${suffix}`;
+          suffix += 1;
+        }
       }
 
       const created = await api.createProfile();
-      const imported: Profile = { ...data, id: created.id, name };
-      await api.saveProfile(imported);
+      await api.saveProfile({ ...data, id: created.id, name });
       await loadProfileList(created.id);
-
-      if (name !== originalName) await alertAsync(t("profile.importRenamed", originalName, name));
     },
     [confirmDiscardIfDirty, loadProfileList, profiles, t],
   );
