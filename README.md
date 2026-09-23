@@ -24,7 +24,8 @@ Haberleşme yalnızca **yerel ağ (LAN)** üzerinden yapılır; internete açık
 Aktif geliştirme aşamasında. Ayrıntılı yol haritası ve hangi aşamanın tamamlandığı için:
 - [docs/plan.md](docs/plan.md) — genel plan
 - [docs/agent-notes.md](docs/agent-notes.md) — güncel durum, bilinen sınırlamalar
-- [docs/CHANGELOG.md](docs/CHANGELOG.md) — sürüm notları
+- [docs/CHANGELOG.md](docs/CHANGELOG.md) — sürüm notları (herkes için, sade)
+- [docs/CHANGELOG-developer.md](docs/CHANGELOG-developer.md) — geliştirici sürüm notları (ayrıntılı)
 
 **Bilinen sınırlamalar / güvenlik notu:** Şu an cihaz eşleştirme/kimlik doğrulama katmanı yok — sunucu, aynı ağdaki her bağlantıyı kabul eder. Yalnızca güvendiğiniz bir ev/ofis ağında çalıştırın, güvenlik duvarınızda 9820 portunu güvenmediğiniz ağlara açmayın.
 

@@ -88,11 +88,20 @@ don't force artificial splits just to produce multiple commits.
 Before committing, update the docs that track finished work, using whatever the project
 already has:
 
-- **`docs/CHANGELOG.md`** (or `CHANGELOG.md` at the repo root) — add an entry per
-  meaningful group under an `[Unreleased]` section (Keep a Changelog style, if that's
-  the format already in use — otherwise match whatever convention the existing file
-  uses). Don't invent a changelog file for a project that doesn't have one unless the
-  user asks for it.
+- **Changelogs** — a project may keep two changelogs side by side; update each one that
+  exists (in `docs/`, or at the repo root), under an `[Unreleased]` section:
+  - **`CHANGELOG-developer.md`** — the detailed, technical log for developers: what
+    changed and how (modules, endpoints, protocol messages, files), in Keep a Changelog
+    style (Added / Changed / Fixed). Add an entry per meaningful group.
+  - **`CHANGELOG.md`** — the short, public log for non-developer end users. Write in
+    English, with short, simple sentences: one line per change,
+    saying what the user can now do or what got fixed (headings "New / Changed / Fixed"). No code, file names, API names or internal jargon. Leave out small bug
+    fixes, stability and internal improvements, refactors, tests, tooling and docs — only
+    things a user would notice belong here. If a group of changes has nothing a user would
+    notice, skip it in this file.
+  - If a project has only a single `CHANGELOG.md`, keep using it as before and match its
+    existing convention. Don't invent a changelog file for a project that doesn't have one
+    unless the user asks for it.
 - **Plan / roadmap files** — many projects track work in `docs/` files like `PLAN.md`,
   `ROADMAP.md`, or similarly named documents with checklists or phase breakdowns. If a
   group of changes completes or advances an item tracked there, update it: check off the
@@ -101,7 +110,7 @@ already has:
   assume a fixed filename, since this varies per project.
 
 If a change doesn't correspond to anything worth recording (e.g. a trivial fix), it's
-fine to skip doc updates for that group — don't pad the changelog with noise.
+fine to skip doc updates for that group — don't pad the changelogs with noise.
 
 These doc edits become part of the same commit as the code they describe (see Step 5),
 so make them before, not after, committing that group.

@@ -47,4 +47,9 @@ Her plugin, hangi Plugin SDK sürümüyle derlendiğini `plugin.json` içinde be
 Henüz `development`/`main` branch'leri kurulmadı (repo `master` üzerinde, ilk commit atılmadı). Bu branch'ler kurulduğunda bu kural geçerli olacak.
 
 ## Changelog
-`docs/CHANGELOG.md` [Keep a Changelog](https://keepachangelog.com/) formatında tutulur; bir versiyon bump'ı onaylandığında o girdi de eklenir.
+Two separate changelogs are kept; when a version bump is approved, both get an entry:
+
+- `docs/CHANGELOG-developer.md` — the detailed, technical record for developers, in [Keep a Changelog](https://keepachangelog.com/) format.
+- `docs/CHANGELOG.md` — the short, public record for everyone who is not a developer. Short sentences, what is new and what got fixed. No code, file or API names; small bug fixes and stability improvements are not listed.
+
+Both are written in English.
