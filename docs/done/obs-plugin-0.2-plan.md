@@ -226,16 +226,16 @@ Existing type IDs stay, so profiles already using them keep working. Options sou
 - **`tests/MacroStation.Tests`:**
   - `PluginLoaderTests`: a stub plugin registers a settings page, a status item and a described action; check that `/api/actions` returns the category and fields and that the SDK caret check passes for `^0.3.0`.
   - `VariableStoreTests`: `Remove` raises `Changed`.
-- **OBS plugin tests** (a new `OBS/tests/` project, if the repo rules allow it; otherwise inside Host tests via a DLL reference). They run against a **fake obs-websocket server**, an in-process `HttpListener` WebSocket:
-  - handshake with and without auth;
-  - close 4009 stops retrying until the settings change;
-  - the server goes silent (no response) is detected by timeout and followed by reconnect;
-  - abrupt TCP drop leads to reconnect with backoff;
-  - `ExitStarted`;
-  - a pending request when the socket dies fails immediately;
-  - exactly 1 batch frame is sent per tick;
-  - group items are enumerated recursively;
-  - `Remove` is called when an input is removed.
+- **OBS plugin tests** (`OBS/tests/MacroStation.Plugin.Obs.Tests/`, xUnit — done, 2026-09-23). They run against a **fake obs-websocket server** (`FakeObsServer`, an in-process `HttpListener` WebSocket):
+  - [x] handshake with and without auth;
+  - [x] close 4009 stops retrying until the settings change;
+  - [x] the server goes silent (no response) is detected by timeout and followed by reconnect;
+  - [x] abrupt TCP drop leads to reconnect with backoff;
+  - [x] `ExitStarted`;
+  - [x] `Remove` is called when an input is removed.
+  - [ ] a pending request when the socket dies fails immediately — not covered yet.
+  - [ ] exactly 1 batch frame is sent per tick — not covered yet.
+  - [ ] group items are enumerated recursively — not covered yet.
 - **Builds and tests:** `dotnet build` both repos, `dotnet test`, and `npm run build` plus typecheck in `editor/`.
 - **Manual, with real OBS 30+:**
   - install via "Klasörden Yükle";
