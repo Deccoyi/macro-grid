@@ -21,7 +21,7 @@ public class AutoSwitchStateTests
     {
         var state = new AutoSwitchState();
         state.OnManual("base");
-        state.OnForeground("Notepad.exe", "notepad-profile");
+        state.OnForeground("Editor.exe", "editor-profile");
 
         var result = state.OnForeground("Explorer.exe", profileId: null);
 
@@ -30,7 +30,7 @@ public class AutoSwitchStateTests
         Assert.Equal("base", state.CurrentProfileId);
 
         // Refocusing the app switches again; a second undefined focus is then a no-op.
-        Assert.True(state.OnForeground("Notepad.exe", "notepad-profile").Changed);
+        Assert.True(state.OnForeground("Editor.exe", "editor-profile").Changed);
         state.OnForeground("Explorer.exe", profileId: null);
         Assert.False(state.OnForeground("Chrome.exe", profileId: null).Changed);
     }
