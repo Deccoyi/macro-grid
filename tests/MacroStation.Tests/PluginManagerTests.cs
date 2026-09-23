@@ -31,7 +31,7 @@ public sealed class PluginManagerTests : IAsyncLifetime
     {
         _providerHost = new VariableProviderHost([], _variables, NullLogger<VariableProviderHost>.Instance);
         await _providerHost.StartAsync(CancellationToken.None);
-        _manager = new PluginManager(_pluginsDir, "0.1.0", _status, _dispatcher, _catalog, _providerHost, _variables, NullLogger<PluginManager>.Instance);
+        _manager = new PluginManager(_pluginsDir, "0.1.0", _status, _dispatcher, _catalog, _providerHost, _variables, new PluginPermissionStore(_root), null, NullLogger<PluginManager>.Instance);
     }
 
     public async Task DisposeAsync()
@@ -65,7 +65,7 @@ public sealed class PluginManagerTests : IAsyncLifetime
     [Fact]
     public async Task Start_on_a_missing_folder_lists_nothing()
     {
-        var manager = new PluginManager(Path.Combine(_root, "does-not-exist"), "0.1.0", _status, _dispatcher, _catalog, _providerHost, _variables, NullLogger<PluginManager>.Instance);
+        var manager = new PluginManager(Path.Combine(_root, "does-not-exist"), "0.1.0", _status, _dispatcher, _catalog, _providerHost, _variables, new PluginPermissionStore(_root), null, NullLogger<PluginManager>.Instance);
 
         await manager.StartAsync(CancellationToken.None);
 
@@ -115,13 +115,62 @@ public sealed class PluginManagerTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task Start_flags_js_plugins_as_incompatible_until_the_runtime_exists()
+    public async Task A_js_plugin_waits_for_approval_of_its_permissions_and_runs_once_they_are_granted()
     {
-        WriteManifest(NewPluginFolder("JsOne"), kind: "js", entry: "index.js");
+        WriteJsPlugin(NewPluginFolder("js-one"), "js-one", ["variables", "actions"],
+            "host.registerAction({ type: 'js-one.say', name: 'Say', run() { host.variables.set('js-one.said', 1); } });");
 
         await _manager.StartAsync(CancellationToken.None);
 
-        Assert.Equal(PluginLoadStatus.Incompatible, Assert.Single(_manager.Plugins).Status);
+        var waiting = Assert.Single(_manager.Plugins);
+        Assert.Equal(PluginLoadStatus.NeedsApproval, waiting.Status);
+        Assert.Equal(["variables", "actions"], waiting.PendingPermissions);
+        Assert.Empty(_dispatcher.Handlers);
+
+        var approved = await _manager.ApproveAsync("js-one");
+
+        Assert.Equal(PluginLoadStatus.Loaded, approved?.Status);
+        Assert.Equal("js-one", _manager.GetActionPluginId("js-one.say"));
+    }
+
+    [Fact]
+    public async Task A_js_plugin_that_asks_for_more_than_was_approved_waits_again()
+    {
+        var dir = NewPluginFolder("js-two");
+        WriteJsPlugin(dir, "js-two", ["variables"], "host.variables.set('js-two.a', 1);");
+        await _manager.StartAsync(CancellationToken.None);
+        await _manager.ApproveAsync("js-two");
+
+        WriteJsPlugin(dir, "js-two", ["variables", "input"], "host.variables.set('js-two.a', 1);");
+        var info = await _manager.ReloadAsync("js-two");
+
+        Assert.Equal(PluginLoadStatus.NeedsApproval, info?.Status);
+    }
+
+    [Fact]
+    public async Task A_js_plugin_with_an_unknown_permission_is_an_error()
+    {
+        WriteJsPlugin(NewPluginFolder("js-three"), "js-three", ["root-access"], "");
+
+        await _manager.StartAsync(CancellationToken.None);
+
+        var plugin = Assert.Single(_manager.Plugins);
+        Assert.Equal(PluginLoadStatus.Error, plugin.Status);
+        Assert.Contains("root-access", plugin.Detail);
+    }
+
+    [Fact]
+    public async Task Uninstalling_a_js_plugin_unloads_it_and_forgets_its_approval()
+    {
+        WriteJsPlugin(NewPluginFolder("js-four"), "js-four", ["variables"], "host.variables.set('js-four.a', 1);");
+        await _manager.StartAsync(CancellationToken.None);
+        await _manager.ApproveAsync("js-four");
+        Assert.Equal(1.0, _variables.Get("js-four.a"));
+
+        await _manager.UninstallAsync("js-four");
+
+        Assert.Null(_variables.Get("js-four.a"));
+        Assert.False(new PluginPermissionStore(_root).IsGranted("js-four", ["variables"]));
     }
 
     [Fact]
@@ -252,6 +301,15 @@ public sealed class PluginManagerTests : IAsyncLifetime
         await _manager.StartAsync(CancellationToken.None);
 
         Assert.Null(await _manager.UninstallAsync("nope"));
+    }
+
+    private static void WriteJsPlugin(string dir, string id, string[] permissions, string script)
+    {
+        var list = string.Join(", ", permissions.Select(p => "\"" + p + "\""));
+        var manifest = "{ \"id\": \"" + id + "\", \"name\": \"Js\", \"version\": \"1.0.0\", \"sdkVersion\": \"^0.3.0\", "
+            + "\"minServerVersion\": \"0.1.0\", \"entry\": \"index.js\", \"kind\": \"js\", \"permissions\": [" + list + "] }";
+        File.WriteAllText(Path.Combine(dir, "plugin.json"), manifest);
+        File.WriteAllText(Path.Combine(dir, "index.js"), script);
     }
 
     private static async Task WaitForAsync(Func<bool> condition)

@@ -78,7 +78,8 @@ internal static class ServerApp
         builder.Services.AddSingleton(sp => new PluginManager(pluginsRoot, ClientHub.ServerVersion,
             sp.GetRequiredService<PluginStatusRegistry>(), sp.GetRequiredService<ActionDispatcher>(),
             sp.GetRequiredService<VariableCatalog>(), sp.GetRequiredService<VariableProviderHost>(),
-            sp.GetRequiredService<VariableStore>(), sp.GetRequiredService<ILogger<PluginManager>>()));
+            sp.GetRequiredService<VariableStore>(), new PluginPermissionStore(dataDir),
+            sp.GetRequiredService<IInputService>(), sp.GetRequiredService<ILogger<PluginManager>>()));
         builder.Services.AddHostedService(sp => sp.GetRequiredService<PluginManager>());
 
         builder.Services.AddSingleton(new DeviceStore(dataDir));
@@ -324,6 +325,10 @@ internal static class ServerApp
                 return Results.BadRequest(new { error = ex.Message });
             }
         });
+
+        // The user approved the permissions a JS plugin declares (shown to them in the Plugins window first).
+        api.MapPost("/plugins/{id}/approve", async (string id, PluginManager plugins) =>
+            await plugins.ApproveAsync(id) is { } info ? Results.Json(info, ProtocolJson.Options) : Results.NotFound());
 
         api.MapPost("/plugins/{id}/reload", async (string id, PluginManager plugins) =>
             await plugins.ReloadAsync(id) is { } info ? Results.Json(info, ProtocolJson.Options) : Results.NotFound());

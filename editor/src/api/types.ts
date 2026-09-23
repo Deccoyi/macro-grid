@@ -77,9 +77,11 @@ export interface PluginInfo {
   id: string;
   name: string;
   version: string;
-  status: "Loaded" | "Incompatible" | "Error";
+  status: "Loaded" | "Incompatible" | "Error" | "NeedsApproval";
   detail: string | null;
   hasSettings: boolean;
+  /** For "NeedsApproval": the permissions a JS plugin declares and is waiting to be allowed. */
+  pendingPermissions?: string[] | null;
 }
 
 /** One icon pack contributed by a plugin via IPluginHost.RegisterIconPack — e.g. the PLC icon set.

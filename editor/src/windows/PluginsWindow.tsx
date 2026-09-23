@@ -13,6 +13,7 @@ const STATUS_COLOR: Record<PluginInfo["status"], string> = {
   Loaded: "var(--ms-success, #4ade80)",
   Incompatible: "var(--ms-warning, #facc15)",
   Error: "var(--ms-danger)",
+  NeedsApproval: "var(--ms-warning, #facc15)",
 };
 
 /** The whole page of the "Eklentiler" tool window (see ToolWindow.cs) — a real separate, non-modal OS
@@ -25,6 +26,7 @@ export function PluginsWindow() {
   const [installing, setInstalling] = useState(false);
   const [uninstallingId, setUninstallingId] = useState<string | null>(null);
   const [reloadingId, setReloadingId] = useState<string | null>(null);
+  const [approvingId, setApprovingId] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -63,6 +65,27 @@ export function PluginsWindow() {
     } finally {
       setReloadingId(null);
     }
+  };
+
+  const approve = async (plugin: PluginInfo) => {
+    setApprovingId(plugin.id);
+    setError(null);
+    setNotice(null);
+    try {
+      const info = await api.approvePlugin(plugin.id);
+      if (info.status === "Loaded") setNotice(t("plugins.approve.success", plugin.name));
+      refresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setApprovingId(null);
+    }
+  };
+
+  const permissionText = (permission: string) => {
+    if (permission === "variables" || permission === "actions" || permission === "input") return t(`plugins.permission.${permission}`);
+    if (permission.startsWith("http:")) return t("plugins.permission.http", permission.slice(5));
+    return t("plugins.permission.unknown", permission);
   };
 
   const install = async () => {
@@ -113,6 +136,19 @@ export function PluginsWindow() {
                     {p.name} <span style={{ color: "var(--ms-text-disabled)" }}>v{p.version}</span>
                   </div>
                   {p.detail && <div style={{ fontSize: 11, color: "var(--ms-text-secondary)", marginTop: 2 }}>{p.detail}</div>}
+                  {p.status === "NeedsApproval" && (
+                    <div style={{ marginTop: 6 }}>
+                      <div style={{ fontSize: 11.5, color: "var(--ms-text-secondary)" }}>{t("plugins.approve.intro")}</div>
+                      <ul style={{ margin: "4px 0 8px", paddingLeft: 18, fontSize: 12 }}>
+                        {(p.pendingPermissions ?? []).map((permission) => (
+                          <li key={permission}>{permissionText(permission)}</li>
+                        ))}
+                      </ul>
+                      <button type="button" className="primary" disabled={approvingId === p.id} onClick={() => approve(p)}>
+                        {t("plugins.approve")}
+                      </button>
+                    </div>
+                  )}
                 </div>
                 {p.hasSettings && (
                   <button

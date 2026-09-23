@@ -119,6 +119,10 @@ export const api = {
   uninstallPlugin: (id: string): Promise<PluginUninstallResult> =>
     req(`/api/plugins/${encodeURIComponent(id)}`, { method: "DELETE" }).then((res) => json<PluginUninstallResult>(res)),
 
+  /** Approves the permissions a JS plugin declares and starts it. */
+  approvePlugin: (id: string): Promise<PluginInfo> =>
+    req(`/api/plugins/${encodeURIComponent(id)}/approve`, { method: "POST" }).then((res) => json<PluginInfo>(res)),
+
   /** Unloads a plugin and loads it again from its folder, picking up a replaced DLL or changed manifest. */
   reloadPlugin: (id: string): Promise<PluginInfo> =>
     req(`/api/plugins/${encodeURIComponent(id)}/reload`, { method: "POST" }).then((res) => json<PluginInfo>(res)),

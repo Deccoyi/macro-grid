@@ -1,6 +1,7 @@
 using System.Text.Json;
 using MacroStation.Core.Actions;
 using MacroStation.Core.Profiles;
+using MacroStation.Core.Plugins.Js;
 using MacroStation.Core.Variables;
 using MacroStation.Plugin.Abstractions;
 using Microsoft.Extensions.Hosting;
@@ -30,6 +31,8 @@ public sealed class PluginManager(
     VariableCatalog catalog,
     VariableProviderHost providerHost,
     VariableStore variables,
+    PluginPermissionStore permissionStore,
+    IInputService? input,
     ILogger<PluginManager> logger) : IHostedService
 {
     private static readonly JsonSerializerOptions ManifestJson = new(JsonSerializerDefaults.Web);
@@ -44,12 +47,13 @@ public sealed class PluginManager(
     }
 
     private sealed class Running(
-        PluginLoadContext context,
+        PluginLoadContext? context,
         IPlugin instance,
         PluginHostCollector host,
         TrackingVariableStore variableStore)
     {
-        public PluginLoadContext Context { get; } = context;
+        /// <summary>Null for a JS plugin (it has no assembly of its own).</summary>
+        public PluginLoadContext? Context { get; } = context;
         public IPlugin Instance { get; } = instance;
         public PluginHostCollector Host { get; } = host;
         public TrackingVariableStore VariableStore { get; } = variableStore;
@@ -207,6 +211,42 @@ public sealed class PluginManager(
         finally { _gate.Release(); }
     }
 
+    /// <summary>The user approved the permissions a JS plugin declares: remember that and start it.</summary>
+    public async Task<LoadedPlugin?> ApproveAsync(string pluginId)
+    {
+        await _gate.WaitAsync();
+        try
+        {
+            Entry? entry;
+            lock (_stateLock) _entries.TryGetValue(pluginId, out entry);
+            if (entry is null || entry.Info.Status != PluginLoadStatus.NeedsApproval || entry.Info.PendingPermissions is not { } pending)
+                return null;
+
+            permissionStore.Grant(pluginId, pending);
+            lock (_stateLock) _entries.Remove(pluginId);
+            return await LoadFolderCoreAsync(entry.Dir);
+        }
+        finally { _gate.Release(); }
+    }
+
+    /// <summary>Switches a running plugin off after it kept failing (called by the plugin itself); it stays in the
+    /// list with the reason, and Reload starts it again.</summary>
+    private async Task DisableAsync(string pluginId, string reason)
+    {
+        await _gate.WaitAsync();
+        try
+        {
+            Entry? entry;
+            lock (_stateLock) _entries.TryGetValue(pluginId, out entry);
+            if (entry?.Running is null) return;
+
+            await UnloadCoreAsync(entry);
+            entry.Info = entry.Info with { Status = PluginLoadStatus.Error, Detail = reason, HasSettings = false };
+            logger.LogWarning("Plugin {Id} was switched off: {Reason}", pluginId, reason);
+        }
+        finally { _gate.Release(); }
+    }
+
     /// <summary>Unloads a plugin and deletes its folder. If a file is still in use the folder is marked for
     /// removal at the next start instead (<see cref="PluginUninstallResult.Pending"/>).</summary>
     public async Task<PluginUninstallResult?> UninstallAsync(string pluginId)
@@ -220,6 +260,7 @@ public sealed class PluginManager(
 
             await UnloadCoreAsync(entry);
             lock (_stateLock) _entries.Remove(pluginId);
+            permissionStore.Revoke(pluginId);
 
             try
             {
@@ -260,9 +301,9 @@ public sealed class PluginManager(
         lock (_stateLock)
             _unrecognized.RemoveAll(p => p.Id == folderName);
 
-        LoadedPlugin Fail(PluginLoadStatus status, string detail)
+        LoadedPlugin Fail(PluginLoadStatus status, string detail, IReadOnlyList<string>? pending = null)
         {
-            var info = new LoadedPlugin(manifest.Id, manifest.Name, manifest.Version, status, detail);
+            var info = new LoadedPlugin(manifest.Id, manifest.Name, manifest.Version, status, detail, false, pending);
             lock (_stateLock)
             {
                 // A second folder with the same id must not replace the first one's entry.
@@ -286,24 +327,41 @@ public sealed class PluginManager(
         if (!SemVer.SatisfiesMinimum(serverVersion, manifest.MinServerVersion))
             return Fail(PluginLoadStatus.Incompatible, $"Needs server {manifest.MinServerVersion}+, this server is {serverVersion}");
 
-        if (manifest.Kind == PluginKind.Js)
-            return Fail(PluginLoadStatus.Incompatible, "The JS plugin runtime does not exist yet");
-
         var entryPath = Path.Combine(dir, manifest.Entry);
         if (!File.Exists(entryPath))
             return Fail(PluginLoadStatus.Error, $"Entry file not found: {manifest.Entry}");
 
+        var variableStore = new TrackingVariableStore(variables);
+        string[] declared = [.. manifest.Permissions ?? []];
+        if (manifest.Kind == PluginKind.Js)
+        {
+            var unknown = declared.FirstOrDefault(p => !JsPermissions.IsKnown(p));
+            if (unknown is not null)
+                return Fail(PluginLoadStatus.Error, $"Unknown permission '{unknown}'");
+            if (!permissionStore.IsGranted(manifest.Id, declared))
+                return Fail(PluginLoadStatus.NeedsApproval, "Needs your approval before it can run", declared);
+        }
+
         PluginLoadContext? context = null;
         PluginHostCollector? host = null;
         var registered = new List<IActionHandler>();
+        IPlugin? instance = null;
         try
         {
-            context = new PluginLoadContext(manifest.Id, entryPath);
-            var assembly = context.LoadPluginAssembly(entryPath);
-            var pluginType = assembly.GetTypes().FirstOrDefault(t => typeof(IPlugin).IsAssignableFrom(t) && !t.IsAbstract && !t.IsInterface)
-                ?? throw new InvalidOperationException($"No type implementing IPlugin was found in {manifest.Entry}");
+            if (manifest.Kind == PluginKind.Js)
+            {
+                instance = new JsPlugin(manifest, entryPath, new JsPermissions(declared), variableStore, input, logger,
+                    reason => _ = Task.Run(() => DisableAsync(manifest.Id, reason)));
+            }
+            else
+            {
+                context = new PluginLoadContext(manifest.Id, entryPath);
+                var assembly = context.LoadPluginAssembly(entryPath);
+                var pluginType = assembly.GetTypes().FirstOrDefault(t => typeof(IPlugin).IsAssignableFrom(t) && !t.IsAbstract && !t.IsInterface)
+                    ?? throw new InvalidOperationException($"No type implementing IPlugin was found in {manifest.Entry}");
+                instance = (IPlugin)(Activator.CreateInstance(pluginType) ?? throw new InvalidOperationException("The plugin instance could not be created"));
+            }
 
-            var instance = (IPlugin)(Activator.CreateInstance(pluginType) ?? throw new InvalidOperationException("The plugin instance could not be created"));
             host = new PluginHostCollector(serverVersion, dir, manifest.Id, statusRegistry, logger);
             instance.Initialize(host);
 
@@ -315,7 +373,6 @@ public sealed class PluginManager(
                 registered.Add(action);
             }
 
-            var variableStore = new TrackingVariableStore(variables);
             foreach (var provider in host.VariableProviders)
             {
                 if (provider is IVariableCatalogSource source) catalog.Add(source);
@@ -338,9 +395,14 @@ public sealed class PluginManager(
             {
                 foreach (var source in host.VariableProviders.OfType<IVariableCatalogSource>()) catalog.Remove(source);
                 await providerHost.StopOwnerAsync(manifest.Id, ProviderStopTimeout);
-                DisposeAll(host, manifest.Id);
+                DisposeAll(host, manifest.Id, instance);
+            }
+            else if (instance is IDisposable disposable)
+            {
+                disposable.Dispose();
             }
             statusRegistry.RemovePlugin(manifest.Id);
+            variableStore.RemoveAll();
             context?.Unload();
 
             return Fail(PluginLoadStatus.Error, ex.Message);
@@ -367,9 +429,12 @@ public sealed class PluginManager(
         statusRegistry.RemovePlugin(id);
         entry.Running = null;
 
-        var weak = new WeakReference(running.Context);
-        running.Context.Unload();
-        await WaitForCollectionAsync(weak, id);
+        if (running.Context is { } context)
+        {
+            var weak = new WeakReference(context);
+            context.Unload();
+            await WaitForCollectionAsync(weak, id);
+        }
         logger.LogInformation("Plugin unloaded: {Id}", id);
     }
 
