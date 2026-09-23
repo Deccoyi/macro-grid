@@ -35,7 +35,12 @@ export const tr = {
   "plugins.title": "Eklentiler",
   "plugins.category.installed": "Yüklü Eklentiler",
   "plugins.category.discover": "Keşfet",
-  "plugins.comingSoon.body": "Eklenti yükleme/kaldırma sistemi henüz hazır değil — bu ayrı bir geliştirme aşaması olarak planlandı.",
+  "plugins.comingSoon.body": "Bir plugin katalogu/keşif sayfası henüz yok — plugin'ler şimdilik klasörden elle yükleniyor (\"Yüklü Eklentiler\" sekmesi).",
+  "plugins.refresh": "Yenile",
+  "plugins.none": "Yüklü eklenti yok.",
+  "plugins.install.browse": "Klasörden Yükle…",
+  "plugins.install.hint": "plugin.json içeren bir klasör seç. Kopyalanır, ama devreye girmesi için sunucunun yeniden başlatılması gerekir.",
+  "plugins.install.success": (name: string) => `${name} kopyalandı. Devreye girmesi için sunucuyu yeniden başlat.`,
 
   "help.title": "Yardım",
   "help.licensesNote": "Kullanılan üçüncü taraf kütüphanelerin lisans metinleri THIRD_PARTY_NOTICES.md dosyasındadır.",

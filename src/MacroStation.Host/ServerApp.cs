@@ -2,6 +2,7 @@ using System.Text.Json;
 using MacroStation.Core.Actions;
 using MacroStation.Core.Devices;
 using MacroStation.Core.Model;
+using MacroStation.Core.Plugins;
 using MacroStation.Core.Preferences;
 using MacroStation.Core.Profiles;
 using MacroStation.Core.Sessions;
@@ -62,6 +63,19 @@ internal static class ServerApp
         builder.Services.AddSingleton<SystemAudioProvider>();
         builder.Services.AddSingleton<IVariableProvider>(sp => sp.GetRequiredService<SystemAudioProvider>());
         builder.Services.AddSingleton<IVariableCatalogSource>(sp => sp.GetRequiredService<SystemAudioProvider>());
+        var pluginsRoot = Path.Combine(dataDir, "plugins");
+        var pluginLoad = PluginLoader.LoadAll(pluginsRoot, ClientHub.ServerVersion,
+            new FileLoggerProvider(Path.Combine(dataDir, "logs")).CreateLogger("Plugins"));
+        builder.Services.AddSingleton(pluginLoad);
+        foreach (var action in pluginLoad.Actions)
+            builder.Services.AddSingleton<IActionHandler>(action);
+        foreach (var provider in pluginLoad.VariableProviders)
+        {
+            builder.Services.AddSingleton<IVariableProvider>(provider);
+            if (provider is IVariableCatalogSource catalogSource)
+                builder.Services.AddSingleton<IVariableCatalogSource>(catalogSource);
+        }
+
         builder.Services.AddSingleton<VariableCatalog>();
         builder.Services.AddHostedService<VariableProviderHost>();
 
@@ -98,7 +112,7 @@ internal static class ServerApp
             await next();
         });
 
-        MapEditorApi(app);
+        MapEditorApi(app, pluginsRoot);
 
         // Temporary test client (wwwroot/index.html) and the built editor (wwwroot/editor/) until the Capacitor client exists.
         app.UseDefaultFiles();
@@ -122,7 +136,7 @@ internal static class ServerApp
     /// Editor-only HTTP API (profile CRUD, action catalog, a one-shot variable snapshot for preview).
     /// No auth yet: like the WebSocket endpoint, this trusts anything on the LAN until Stage 5 (pairing) covers it too.
     /// </summary>
-    private static void MapEditorApi(WebApplication app)
+    private static void MapEditorApi(WebApplication app, string pluginsRoot)
     {
         var api = app.MapGroup("/api");
 
@@ -216,6 +230,43 @@ internal static class ServerApp
             return Results.Json(new { path });
         });
 
+        api.MapGet("/plugins", (PluginLoadResult pluginLoad) => pluginLoad.Plugins);
+
+        api.MapPost("/plugins/install", async (IUiDialogService dialogs) =>
+        {
+            var sourceDir = await dialogs.BrowseForFolderAsync("Plugin klasörünü seç (plugin.json içermeli)");
+            if (sourceDir is null) return Results.Json(new { installed = false, canceled = true });
+
+            var manifestPath = Path.Combine(sourceDir, "plugin.json");
+            if (!File.Exists(manifestPath))
+                return Results.BadRequest(new { error = $"Seçilen klasörde plugin.json yok: {sourceDir}" });
+
+            PluginManifest manifest;
+            try
+            {
+                manifest = JsonSerializer.Deserialize<PluginManifest>(File.ReadAllText(manifestPath), new JsonSerializerOptions(JsonSerializerDefaults.Web))
+                    ?? throw new JsonException("plugin.json boş");
+            }
+            catch (Exception ex) when (ex is JsonException or NotSupportedException)
+            {
+                return Results.BadRequest(new { error = $"plugin.json ayrıştırılamadı: {ex.Message}" });
+            }
+
+            Directory.CreateDirectory(pluginsRoot);
+            if (Directory.EnumerateDirectories(pluginsRoot)
+                .Any(d => File.Exists(Path.Combine(d, "plugin.json"))
+                    && JsonSerializer.Deserialize<PluginManifest>(File.ReadAllText(Path.Combine(d, "plugin.json")), new JsonSerializerOptions(JsonSerializerDefaults.Web))?.Id == manifest.Id))
+            {
+                return Results.BadRequest(new { error = $"'{manifest.Id}' id'li bir plugin zaten yüklü." });
+            }
+
+            var destDir = Path.Combine(pluginsRoot, manifest.Id);
+            if (Directory.Exists(destDir)) Directory.Delete(destDir, recursive: true);
+            CopyDirectory(sourceDir, destDir);
+
+            return Results.Json(new { installed = true, id = manifest.Id, name = manifest.Name, requiresRestart = true });
+        });
+
         api.MapPost("/windows/preferences", async (IUiWindowService windows) =>
         {
             await windows.ShowToolWindowAsync("preferences", "Tercihler", $"http://localhost:{Port}/editor/?window=preferences", 640, 520);
@@ -265,6 +316,15 @@ internal static class ServerApp
     }
 
     private sealed record AssignProfileRequest(string? ProfileId);
+
+    private static void CopyDirectory(string sourceDir, string destDir)
+    {
+        Directory.CreateDirectory(destDir);
+        foreach (var file in Directory.GetFiles(sourceDir))
+            File.Copy(file, Path.Combine(destDir, Path.GetFileName(file)), overwrite: true);
+        foreach (var dir in Directory.GetDirectories(sourceDir))
+            CopyDirectory(dir, Path.Combine(destDir, Path.GetFileName(dir)));
+    }
 
     /// <summary>
     /// The pairing QR's payload: a <c>macrostation://pair</c> deep-link URI carrying the LAN host, port and

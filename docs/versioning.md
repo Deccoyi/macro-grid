@@ -10,7 +10,7 @@ Tek bir "proje versiyonu" yok — birbirinden bağımsız dört versiyon takip e
 | **Server (Host)** | `MacroStation.Core.Sessions.ClientHub.ServerVersion` sabiti | `0.1.0` |
 | **Client** | `client/package.json` → `version` (client kurulunca) | — |
 | **Plugin SDK** (`MacroStation.Plugin.Abstractions`) | Kendi paket versiyonu (NuGet paketi olduğunda `.csproj` → `<Version>`) | `0.1.0` (henüz paketlenmedi, kod hâlâ proje referansıyla kullanılıyor) |
-| **Her plugin** | Kendi `plugin.json` → `version` | plugin'ler henüz yazılmadı (Aşama 6) |
+| **Her plugin** | Kendi `plugin.json` → `version` | loader tamam, henüz hiçbir gerçek plugin yazılmadı (Aşama 6) |
 
 **Protokol versiyonu ayrı bir kavram:** WebSocket mesaj şeması (`hello`/`welcome` içindeki `clientVersion`/`serverVersion`) şu an sadece bilgi amaçlı gönderiliyor, uyumluluk kontrolü yapmıyor. İleride (Aşama 5, eşleştirme) bir `protocolVersion` tamsayısı eklenip sunucu/istemci uyuşmazsa kullanıcıya net bir "istemcini güncelle" mesajı gösterilmesi planlanıyor — bu SemVer'den bağımsız, basit artan bir sayı olacak (protokol her değiştiğinde +1).
 
@@ -24,7 +24,7 @@ Tek bir "proje versiyonu" yok — birbirinden bağımsız dört versiyon takip e
 - **PATCH:** Davranış değişmeden hata düzeltmesi, performans, iç refactor.
 
 ## Plugin uyumluluk beyanı
-Her plugin, hangi Plugin SDK sürümüyle derlendiğini `plugin.json` içinde beyan eder (henüz uygulanmadı, Aşama 6'da eklenecek şema):
+Her plugin, hangi Plugin SDK sürümüyle derlendiğini `plugin.json` içinde beyan eder (uygulandı, Aşama 6 — bkz. `MacroStation.Plugin.Abstractions/PluginManifest.cs` ve `MacroStation.Core/Plugins/PluginLoader.cs`):
 
 ```json
 {
@@ -39,6 +39,7 @@ Her plugin, hangi Plugin SDK sürümüyle derlendiğini `plugin.json` içinde be
 - `sdkVersion`: npm tarzı caret aralığı (`^1.0.0` → `1.x.x` ile uyumlu, `2.0.0` ile değil). Host, plugin'i yüklemeden önce kendi Plugin SDK sürümüyle bu aralığı karşılaştırır; uyuşmazsa plugin'i **yüklemez** ve editörde net bir uyarı gösterir ("Bu plugin SDK 2.x istiyor, sunucu 1.x kullanıyor").
 - `minServerVersion`: plugin'in ihtiyaç duyduğu asgari server (Host) sürümü — ör. plugin bir `IDeviceController` metodunu kullanıyorsa ve o metot server 0.4.0'da eklendiyse.
 - Bu iki alan sayesinde "hangi plugin hangi sürümle çalışıyor" editördeki plugin listesinde tek bakışta görülebilir (yükleniyor/uyumsuz/güncel değil).
+- Tam manifesto şeması (`entry`, `kind`, `permissions` dahil) ve örnek bir C# plugin'i: `macro-station-plugins/docs/plugin-authoring.md`.
 
 ## Branch → main geçişinde versiyon bump'ı
 **Kural: `development` (veya çalışılan branch) `main`'e merge edilmeden önce, versiyonun bump edilip edilmeyeceği ve MAJOR/MINOR/PATCH'ten hangisi olacağı HER SEFERİNDE kullanıcıya sorulur.** Otomatik/sessiz bump yapılmaz — kullanıcı onaylamadan sürüm numarası değiştirilmez ve `main`'e merge edilmez.

@@ -17,6 +17,24 @@ export interface VariableInfo {
   category: string;
 }
 
+/** Mirrors MacroStation.Core.Plugins.LoadedPlugin. `status` is "Loaded" | "Incompatible" | "Error"
+ * (C# enum names as sent by System.Text.Json's default Web naming — see PluginLoader.cs). */
+export interface PluginInfo {
+  id: string;
+  name: string;
+  version: string;
+  status: "Loaded" | "Incompatible" | "Error";
+  detail: string | null;
+}
+
+export interface PluginInstallResult {
+  installed: boolean;
+  canceled?: boolean;
+  id?: string;
+  name?: string;
+  requiresRestart?: boolean;
+}
+
 export interface PairedDeviceInfo {
   id: string;
   name: string;

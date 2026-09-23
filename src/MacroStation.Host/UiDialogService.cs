@@ -16,6 +16,9 @@ public interface IUiDialogService
     /// <summary>Shows a native Save As dialog and writes <paramref name="content"/> to the chosen path.</summary>
     /// <returns>The chosen path, or null if the user canceled.</returns>
     Task<string?> SaveJsonFileAsync(string title, string suggestedFileName, string content);
+
+    /// <returns>The chosen folder's path, or null if the user canceled.</returns>
+    Task<string?> BrowseForFolderAsync(string title);
 }
 
 public sealed class UiDialogService(SynchronizationContext ui) : IUiDialogService
@@ -93,6 +96,28 @@ public sealed class UiDialogService(SynchronizationContext ui) : IUiDialogServic
                 }
                 File.WriteAllText(dialog.FileName, content);
                 tcs.SetResult(dialog.FileName);
+            }
+            catch (Exception ex)
+            {
+                tcs.SetException(ex);
+            }
+        }, null);
+        return tcs.Task;
+    }
+
+    public Task<string?> BrowseForFolderAsync(string title)
+    {
+        var tcs = new TaskCompletionSource<string?>();
+        ui.Post(_ =>
+        {
+            try
+            {
+                using var dialog = new FolderBrowserDialog
+                {
+                    Description = title,
+                    UseDescriptionForTitle = true,
+                };
+                tcs.SetResult(dialog.ShowDialog() == DialogResult.OK ? dialog.SelectedPath : null);
             }
             catch (Exception ex)
             {

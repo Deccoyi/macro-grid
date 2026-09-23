@@ -35,7 +35,12 @@ export const en: Record<DictKey, string | ((...args: string[]) => string)> = {
   "plugins.title": "Plugins",
   "plugins.category.installed": "Installed Plugins",
   "plugins.category.discover": "Discover",
-  "plugins.comingSoon.body": "Plugin install/remove isn't built yet — it's planned as a separate development stage.",
+  "plugins.comingSoon.body": "There's no plugin catalog/discovery page yet — plugins are installed by hand from a folder for now (see the \"Installed Plugins\" tab).",
+  "plugins.refresh": "Refresh",
+  "plugins.none": "No plugins installed.",
+  "plugins.install.browse": "Install from Folder…",
+  "plugins.install.hint": "Pick a folder containing a plugin.json. It's copied into place, but the server needs a restart to actually load it.",
+  "plugins.install.success": (name: string) => `${name} copied. Restart the server for it to take effect.`,
 
   "help.title": "Help",
   "help.licensesNote": "Third-party library license texts are in THIRD_PARTY_NOTICES.md.",

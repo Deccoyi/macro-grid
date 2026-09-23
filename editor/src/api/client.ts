@@ -6,6 +6,8 @@ import type {
   ImportProfileResult,
   PairedDeviceInfo,
   PairingQrInfo,
+  PluginInfo,
+  PluginInstallResult,
   ProfileSummary,
   VariableInfo,
   VariableSnapshot,
@@ -68,6 +70,13 @@ export const api = {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ profileId }),
     }).then((res) => json<void>(res)),
+
+  listPlugins: (): Promise<PluginInfo[]> => req("/api/plugins").then((res) => json<PluginInfo[]>(res)),
+
+  /** Shows a native "choose a folder" dialog on the server's desktop, validates plugin.json there, and
+   * copies it into the server's plugins/ folder. Loading it still needs a server restart. */
+  installPluginDialog: (): Promise<PluginInstallResult> =>
+    req("/api/plugins/install", { method: "POST" }).then((res) => json<PluginInstallResult>(res)),
 
   getPreferences: (): Promise<AppPreferences> => req("/api/preferences").then((res) => json<AppPreferences>(res)),
 
