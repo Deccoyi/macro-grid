@@ -17,6 +17,25 @@ public class AutoSwitchStateTests
     }
 
     [Fact]
+    public void Undefined_window_gaining_focus_returns_to_the_manual_base()
+    {
+        var state = new AutoSwitchState();
+        state.OnManual("base");
+        state.OnForeground("Notepad.exe", "notepad-profile");
+
+        var result = state.OnForeground("Explorer.exe", profileId: null);
+
+        Assert.True(result.Changed);
+        Assert.Equal("base", result.ProfileId);
+        Assert.Equal("base", state.CurrentProfileId);
+
+        // Refocusing the app switches again; a second undefined focus is then a no-op.
+        Assert.True(state.OnForeground("Notepad.exe", "notepad-profile").Changed);
+        state.OnForeground("Explorer.exe", profileId: null);
+        Assert.False(state.OnForeground("Chrome.exe", profileId: null).Changed);
+    }
+
+    [Fact]
     public void Rule_match_switches_and_closing_it_returns_to_the_previous_profile()
     {
         var state = new AutoSwitchState();

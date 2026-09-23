@@ -9,7 +9,7 @@ Bugün profil yalnızca elle değişiyor (client drawer, `profile.change` ya da 
 Her `ClientSession` bir `AutoSwitchState` tutar: `Stack<Entry>` ve `Locked`. Her `Entry` şu alanlardan oluşur: `{ ProfileId, Source: Manual | Rule, ProcessName? }`.
 
 - **Tanımlı bir pencere öne gelirse** (process adı eşleşir): o kural yığında zaten varsa en üste taşınır, yoksa eklenir. Ardından o profile geçilir.
-- **Tanımsız bir pencere öne gelirse:** hiçbir şey olmaz. Son eşleşen profilde kalınır. Oyun, MacroStation'ın kendi penceresi ve masaüstü de bu gruba girer.
+- **Tanımsız bir pencere öne gelirse (odak kaybı):** profil odağı takip eder, uygulamanın açık olması yetmez. Yığındaki tüm `Rule` kayıtları atılır ve elle seçilen (ya da varsayılan) profile dönülür. Eşleşen pencere tekrar öne gelince yine ona geçilir.
 - **Tanımlı pencere kapanırsa:** "Kapandı" demek, process'in görünür üst düzey penceresi kalmadı demek (tray'e gizlenen Spotify da kapanmış sayılır). Bu durumda yığındaki ölü `Rule` kayıtları atılır ve üstteki kayda dönülür.
 - **Yığın boşalırsa:** varsayılan profile dönülür. Önce cihaza atanmış profile bakılır (`PairedDevice.AssignedProfileId`), yoksa yeni `AppPreferences.DefaultProfileId` kullanılır, o da yoksa `profiles.First()`.
 - **Elle seçim** (drawer ya da `core.profile`): yığına bir `Manual` kaydı eklenir. Bu kayıt taban gibi davranır ve process kontrolüyle atılmaz. Sonra tanımlı başka bir pencere öne gelirse onun üstüne geçilir; o pencere kapanınca tekrar elle seçilen profile dönülür. Yani "yayın profili (elle) → Spotify açılır → Spotify kapanır → yayın profili" akışı doğal olarak çalışır.
@@ -77,6 +77,6 @@ Her `ClientSession` bir `AutoSwitchState` tutar: `Stack<Entry>` ve `Locked`. Her
 - **Manuel uçtan uca test:**
   1. Host'u çalıştır, telefonu bağla. Pairing'de takip anahtarını aç.
   2. Spotify profiline `Spotify.exe` kuralı ekle, yayın profilini elle seç.
-  3. Spotify'ı öne al → geçmeli. Oyun ya da Explorer'a geç → Spotify profilinde kalmalı. Spotify'ı kapat → yayın profiline dönmeli.
+  3. Spotify'ı öne al → geçmeli. Oyun ya da Explorer'a geç → yayın profiline dönmeli. Spotify'ı tekrar öne al → Spotify profiline geçmeli. Spotify'ı kapat → yayın profilinde kalmalı.
   4. Drawer'dan kilitle → Spotify öne gelse de geçmemeli, drawer'dan elle geçiş çalışmalı.
 - Görev Yöneticisi'nde host'un boşta CPU'sunun değişmediğini kontrol et (hafif kaynak bütçesi).

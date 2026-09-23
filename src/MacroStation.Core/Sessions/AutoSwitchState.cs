@@ -34,12 +34,14 @@ public sealed class AutoSwitchState
     /// <summary>Bottom-to-top order — the last entry is the one currently "showing". Exposed for tests.</summary>
     public IReadOnlyList<AutoSwitchEntry> Entries => _stack;
 
-    /// <summary>A defined window (one an <c>AppMatch</c> resolved to <paramref name="profileId"/>) came to
-    /// the foreground. An undefined window is the caller's job to filter out before calling this — pass
-    /// null and this is always a no-op, matching "tanımsız pencere → hiçbir şey olmaz".</summary>
+    /// <summary>A window came to the foreground. A defined one (an <c>AppMatch</c> resolved to
+    /// <paramref name="profileId"/>) pushes its rule entry; an undefined one (null) drops every Auto entry, so
+    /// the session falls back to the manual base (or the default) — the profile follows focus, not whether
+    /// the app is merely still open.</summary>
     public AutoSwitchResult OnForeground(string processName, string? profileId)
     {
-        if (Locked || profileId is null) return AutoSwitchResult.Unchanged;
+        if (Locked) return AutoSwitchResult.Unchanged;
+        if (profileId is null) return DropAutoEntries();
 
         var existingIndex = _stack.FindIndex(e => e.Source == ProfileSwitchOrigin.Auto && e.ProcessName == processName);
         AutoSwitchEntry entry;
@@ -64,12 +66,17 @@ public sealed class AutoSwitchState
     /// visible window (a Manual base entry is never touched). Call this whenever a process might have
     /// closed — the caller decides when that's worth checking (see <c>AutoProfileSwitcher</c>'s polling
     /// vs. per-foreground-event pruning).</summary>
-    public AutoSwitchResult Prune(Func<string, bool> hasVisibleWindow)
+    public AutoSwitchResult Prune(Func<string, bool> hasVisibleWindow) =>
+        RemoveAutoEntries(e => !hasVisibleWindow(e.ProcessName!));
+
+    private AutoSwitchResult DropAutoEntries() => RemoveAutoEntries(_ => true);
+
+    private AutoSwitchResult RemoveAutoEntries(Func<AutoSwitchEntry, bool> shouldRemove)
     {
         if (Locked || _stack.Count == 0) return AutoSwitchResult.Unchanged;
 
         var topBefore = _stack[^1];
-        var removed = _stack.RemoveAll(e => e.Source == ProfileSwitchOrigin.Auto && !hasVisibleWindow(e.ProcessName!));
+        var removed = _stack.RemoveAll(e => e.Source == ProfileSwitchOrigin.Auto && shouldRemove(e));
         if (removed == 0) return AutoSwitchResult.Unchanged;
 
         if (_stack.Count == 0) return AutoSwitchResult.SwitchToDefault;
