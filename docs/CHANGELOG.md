@@ -3,7 +3,24 @@
 Bu dosya [Keep a Changelog](https://keepachangelog.com/) formatını takip eder. Sürümleme kuralları için [versioning.md](versioning.md)'ye bakın.
 
 ## [Unreleased]
+
+## [0.2.0] - 2026-09-23
 ### Added
+- **Plugin SDK 0.3.0 — şema tabanlı ayar formları:** `SettingField`, `IActionDescriptor`, `IOptionsSource`, `IPluginSettingsPage`, `IPluginStatusItem`, `IIconPackSource`, `IVariableStore.Remove`. Editör, bir plugin action'ının ya da ayar sayfasının formunu `SettingField[]`'den otomatik çiziyor (`SchemaForm.tsx`); dinamik dropdown'lar `IOptionsSource` üzerinden geliyor.
+- **Kategorili aksiyon seçici** (`ActionPicker.tsx`): düz `<select>`'in yerini aldı, kategoriye göre gruplu ve aranabilir.
+- **Pencere geneli durum çubuğu** (`StatusBar.tsx`, `PluginStatusRegistry`): solda sunucu sürümü ve bağlı cihaz sayısı, sağda plugin durumları (ör. OBS bağlantısı); tıklayınca plugin'in ayar penceresi açılıyor (`PluginSettingsWindow.tsx`).
+- Yeni uç noktalar: `GET /api/status`, `POST /api/actions/{type}/options/{sourceId}`, `GET /api/plugins/{id}/settings/schema`, `POST /api/plugins/{id}/settings/options/{sourceId}`, `POST /api/windows/plugin-settings/{id}`, `GET /api/icon-packs(/{packId}/{iconName})`. `GET /api/actions` artık kategori/açıklama/ikon/alanlar döndürüyor, `GET /api/plugins` `hasSettings` döndürüyor.
+- Editör ve araç pencereleri artık uygulama ikonunu kullanıyor.
+
+### Changed
+- OBS'e özel satır-içi ayar formu (`ObsSettingsInline`) kaldırıldı; ayarı olan her plugin genel ayar penceresini kullanıyor.
+- Aksiyon olay hücreleri her widget türünde aynı boyutta (her zaman 4 sütunlu ızgara).
+
+### Fixed
+- Renk seçici, "Mantık kur" penceresinin arkasında kalıyordu.
+- Mantık editöründe karşılaştırma değeri kutusu çok dardı ve metin değerinin tırnaklı mı yazılacağı belirsizdi (tırnaksız yazılıyor, artık ipucu var).
+
+### Added (önceki)
 - **Aşama 5'in son kalemi kapandı: gerçek cihazda USB debug testi.** `macro-station-client` Android projesi `adb install` ile gerçek bir Samsung telefona kuruldu (debug APK). Daha önce eşleştirilmiş cihaz sunucuya gerçek LAN üzerinden yeniden bağlandı; canlı değişken push'ı (ses seviyesi widget'ının yüzdesi/rengi anlık değişti), dokunma girişi ve tek sayfalı bir profilde swipe'ın doğru şekilde no-op kalması doğrulandı. (`android/local.properties`'teki `sdk.dir` ters eğik çizgi kaçışı yüzünden bozuktu — Java `.properties` formatında `\` bir kaçış karakteri; düzeltildi.)
 - **İlk gerçek plugin: OBS Kontrolü** (`macro-station-plugins/OBS/`). obs-websocket v5'e bağlanıyor (Hello/Identify handshake, SHA256 kimlik doğrulama, kapaklı üstel geri çekilmeyle otomatik yeniden bağlanma). `obs.connected/streaming/recording/stream.duration/record.duration/scene.current/stats.fps/stats.cpu` değişkenleri; sahne değiştirme, yayın/kayıt başlat-durdur-aç/kapat, giriş sesi kapat/aç/seviye aksiyonları. Bağlantı ayarları plugin'in kendi `%AppData%/MacroStation/plugins/obs/settings.json`'ında tutuluyor — bunu mümkün kılmak için `IPluginHost`'a `DataDirectory` (plugin'in kendi klasörü) ve `Log(string)` eklendi, Plugin SDK `0.1.0`'dan `0.2.0`'a MINOR bump edildi (var olan arayüze üye eklendi, plugin'ler bunu implement etmiyor, yalnızca tüketiyor — geriye uyumlu).
 - **Plugin ayarları için editör arayüzü (OBS için ilk örnek):** host'ta jenerik `GET`/`PUT /api/plugins/{id}/settings` uç noktaları (bir plugin'in kendi `settings.json`'ına ham JSON geçirir, host şema bilmez — id path traversal'a karşı doğrulanıyor). Editörde "Eklentiler" penceresinde OBS satırının yanına bir dişli düğme eklendi; tıklanınca satırın altında Etkin/Sunucu/Port/Şifre alanları ve Kaydet düğmesi açılıyor (yeni pencere/modal değil, mevcut liste içinde satır-altı genişleme — bkz. `docs/ui-guidelines.md`). Bu form OBS'e özel kod (`ObsSettingsInline`); host'ta jenerik bir ayar şeması/form üretici yok. Ayrıca: `input[type="password"]` temel input stilinde eksikti (beyaz/tarayıcı varsayılanıyla görünüyordu), eklendi.

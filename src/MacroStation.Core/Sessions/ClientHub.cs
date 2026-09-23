@@ -25,7 +25,7 @@ public sealed class ClientHub(
     PairingService pairing,
     ILogger<ClientHub> logger)
 {
-    public const string ServerVersion = "0.1.0";
+    public const string ServerVersion = "0.2.0";
     private const int MaxMessageBytes = 64 * 1024;
 
     public IReadOnlyCollection<ClientSession> Sessions => sessions.All;

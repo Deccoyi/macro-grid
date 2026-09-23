@@ -7,10 +7,10 @@ Tek bir "proje versiyonu" yok — birbirinden bağımsız dört versiyon takip e
 
 | Ne | Versiyon nerede yaşar | Şu an |
 |---|---|---|
-| **Server (Host)** | `MacroStation.Core.Sessions.ClientHub.ServerVersion` sabiti | `0.1.0` |
+| **Server (Host)** | `MacroStation.Core.Sessions.ClientHub.ServerVersion` sabiti | `0.2.0` (yeni editör API uç noktaları — `/api/status`, `/api/actions/{type}/options/*`, `/api/plugins/{id}/settings/*`, `/api/icon-packs` — için MINOR bump) |
 | **Client** | `client/package.json` → `version` (client kurulunca) | — |
 | **Plugin SDK** (`MacroStation.Plugin.Abstractions`) | Kendi paket versiyonu (NuGet paketi olduğunda `.csproj` → `<Version>`) | `0.3.0` (henüz paketlenmedi, kod hâlâ proje referansıyla kullanılıyor — schema-driven ayar formları (`SettingField`, `IActionDescriptor`, `IOptionsSource`, `IPluginSettingsPage`, `IPluginStatusItem`, `IIconPackSource`) ve `IVariableStore.Remove` eklendiği için `0.2.0`'dan MINOR bump) |
-| **Her plugin** | Kendi `plugin.json` → `version` | loader tamam, ilk gerçek plugin (OBS, `0.1.0`) yazıldı — bkz. `macro-station-plugins/OBS/` |
+| **Her plugin** | Kendi `plugin.json` → `version` | loader tamam; OBS `0.2.0`, PLC İkonları — bkz. `macro-station-plugins/` |
 
 **Protokol versiyonu ayrı bir kavram:** WebSocket mesaj şeması (`hello`/`welcome` içindeki `clientVersion`/`serverVersion`) şu an sadece bilgi amaçlı gönderiliyor, uyumluluk kontrolü yapmıyor. İleride (Aşama 5, eşleştirme) bir `protocolVersion` tamsayısı eklenip sunucu/istemci uyuşmazsa kullanıcıya net bir "istemcini güncelle" mesajı gösterilmesi planlanıyor — bu SemVer'den bağımsız, basit artan bir sayı olacak (protokol her değiştiğinde +1).
 
