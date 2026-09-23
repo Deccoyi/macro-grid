@@ -93,7 +93,7 @@ public class ProfileValidatorTests
     public void Accepts_distinct_app_matches()
     {
         var profile = Profile();
-        profile.AppMatches = [new AppMatch { ProcessName = "Spotify.exe" }, new AppMatch { ProcessName = "Discord.exe" }];
+        profile.AppMatches = [new AppMatch { ProcessName = "Player.exe" }, new AppMatch { ProcessName = "Chat.exe" }];
 
         Assert.True(ProfileValidator.Validate(profile, out var error));
         Assert.Null(error);
@@ -113,7 +113,7 @@ public class ProfileValidatorTests
     public void Rejects_duplicate_app_matches()
     {
         var profile = Profile();
-        profile.AppMatches = [new AppMatch { ProcessName = "Spotify.exe" }, new AppMatch { ProcessName = "spotify.exe" }];
+        profile.AppMatches = [new AppMatch { ProcessName = "Player.exe" }, new AppMatch { ProcessName = "player.exe" }];
 
         Assert.False(ProfileValidator.Validate(profile, out var error));
         Assert.Contains("yinelenen", error);

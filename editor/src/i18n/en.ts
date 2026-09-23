@@ -85,7 +85,7 @@ export const en: Record<DictKey, string | ((...args: string[]) => string)> = {
   "profile.autoSwitch.hint": "When one of these apps comes to the foreground, a following device switches to this profile.",
   "profile.autoSwitch.remove": "Remove rule",
   "profile.autoSwitch.pickRunning": "Pick from running apps…",
-  "profile.autoSwitch.manualPlaceholder": "App name (e.g. Spotify.exe)",
+  "profile.autoSwitch.manualPlaceholder": "App name (e.g. Player.exe)",
   "profile.autoSwitch.add": "Add",
   "pages.label": "Pages",
   "page.add": "Page",
@@ -259,7 +259,7 @@ export const en: Record<DictKey, string | ((...args: string[]) => string)> = {
   "fields.text.iconColorHint": "This icon was added in an older version — pick it again to change its color",
 
   "fields.web.url": "Page URL",
-  "fields.web.urlPlaceholder": "https://twitch.tv/example/chat?parent=...",
+  "fields.web.urlPlaceholder": "https://example.com/chat?parent=...",
   "fields.web.note": "This widget currently shows as a placeholder in the editor and on the phone — a real embedded page (iframe/WebView) is coming in Stage 5-6.",
 
   "dynamic.editTitle": "Dynamic — click to edit",

@@ -86,7 +86,7 @@ export const tr = {
   "profile.autoSwitch.hint": "Bu uygulamalardan biri öne gelince, takip eden cihazlar bu profile geçer.",
   "profile.autoSwitch.remove": "Kuralı kaldır",
   "profile.autoSwitch.pickRunning": "Çalışan uygulamadan seç…",
-  "profile.autoSwitch.manualPlaceholder": "Uygulama adı (ör. Spotify.exe)",
+  "profile.autoSwitch.manualPlaceholder": "Uygulama adı (ör. Player.exe)",
   "profile.autoSwitch.add": "Ekle",
   "pages.label": "Sayfalar",
   "page.add": "Sayfa",
@@ -277,7 +277,7 @@ export const tr = {
 
   // ---- Web fields ----
   "fields.web.url": "Sayfa URL'si",
-  "fields.web.urlPlaceholder": "https://twitch.tv/örnek/chat?parent=...",
+  "fields.web.urlPlaceholder": "https://example.com/chat?parent=...",
   "fields.web.note": "Bu widget şu an düzenleyicide ve telefonda yer tutucu olarak görünür — gerçek gömülü sayfa (iframe/WebView) Aşama 5-6'da eklenecek.",
 
   // ---- Dynamic field / dynamize modal ----

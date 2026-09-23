@@ -56,7 +56,7 @@ Aynı token'lar, ters gri skala + aynı üç anlamlı renk (kontrast için hafif
 - **Widget/ikon paketi ikonları** (kullanıcının butonuna koyduğu ikon): serbest — düz (flat) renkli SVG/PNG olabilir, kullanıcının widget rengiyle uyumlu olması onun tercihi. Yine de gradient/3D-bevel/gölge/parlama efekti **önerilmez** (guideline'daki genel "flat, dekoratif değil" ilkesi burada da geçerli, sadece renk sınırı yok).
 
 ## Widget varsayılan swatch seti (16 renk)
-Editörde renk seçiciye "hazır palet" olarak sunulacak, düz (flat), beyaz metinle yeterli kontrastta 16 renk — Stream Deck / Notion etiket paleti mantığına yakın, ama neon değil:
+Editörde renk seçiciye "hazır palet" olarak sunulacak, düz (flat), beyaz metinle yeterli kontrastta 16 renk — etiket paleti mantığına yakın, ama neon değil:
 
 | Ad | Hex | | Ad | Hex |
 |---|---|---|---|---|

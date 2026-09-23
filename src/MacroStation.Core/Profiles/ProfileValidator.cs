@@ -58,7 +58,7 @@ public static class ProfileValidator
         {
             if (string.IsNullOrWhiteSpace(match.ProcessName))
             {
-                error = "Otomatik geçiş kuralı için uygulama adı (ör. \"Spotify.exe\") boş olamaz.";
+                error = "Otomatik geçiş kuralı için uygulama adı (ör. \"Player.exe\") boş olamaz.";
                 return false;
             }
 

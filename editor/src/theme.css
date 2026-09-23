@@ -160,9 +160,9 @@ hr.sep {
 }
 
 /* Collapsible Inspector sections (Appearance, type fields, Actions, Custom CSS) — same compact,
-   hairline-divided grouping Figma's right-sidebar properties panel uses instead of boxed cards. A
+   hairline-divided grouping a design tool's side properties panel uses instead of boxed cards. A
    top-level section header reads as its own tier above the small-caps field labels inside it (bold,
-   normal case, full-strength text color — see the Figma reference: "Position"/"Layout"/"Appearance"
+   normal case, full-strength text color — like a design tool's properties panel: "Position"/"Layout"/"Appearance"
    are plain bold text, not tiny gray caps like a field's own label). */
 .collapsible-summary {
   display: flex;

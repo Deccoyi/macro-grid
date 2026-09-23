@@ -10,7 +10,7 @@ public class AutoSwitchStateTests
         var state = new AutoSwitchState();
         state.OnManual("base");
 
-        var result = state.OnForeground("Explorer.exe", profileId: null);
+        var result = state.OnForeground("Shell.exe", profileId: null);
 
         Assert.False(result.Changed);
         Assert.Equal("base", state.CurrentProfileId);
@@ -23,7 +23,7 @@ public class AutoSwitchStateTests
         state.OnManual("base");
         state.OnForeground("Editor.exe", "editor-profile");
 
-        var result = state.OnForeground("Explorer.exe", profileId: null);
+        var result = state.OnForeground("Shell.exe", profileId: null);
 
         Assert.True(result.Changed);
         Assert.Equal("base", result.ProfileId);
@@ -31,8 +31,8 @@ public class AutoSwitchStateTests
 
         // Refocusing the app switches again; a second undefined focus is then a no-op.
         Assert.True(state.OnForeground("Editor.exe", "editor-profile").Changed);
-        state.OnForeground("Explorer.exe", profileId: null);
-        Assert.False(state.OnForeground("Chrome.exe", profileId: null).Changed);
+        state.OnForeground("Shell.exe", profileId: null);
+        Assert.False(state.OnForeground("Browser.exe", profileId: null).Changed);
     }
 
     [Fact]
@@ -41,12 +41,12 @@ public class AutoSwitchStateTests
         var state = new AutoSwitchState();
         state.OnManual("stream");
 
-        var toSpotify = state.OnForeground("Spotify.exe", "spotify-profile");
-        Assert.True(toSpotify.Changed);
-        Assert.Equal("spotify-profile", toSpotify.ProfileId);
-        Assert.Equal("spotify-profile", state.CurrentProfileId);
+        var toPlayer = state.OnForeground("Player.exe", "player-profile");
+        Assert.True(toPlayer.Changed);
+        Assert.Equal("player-profile", toPlayer.ProfileId);
+        Assert.Equal("player-profile", state.CurrentProfileId);
 
-        // Spotify no longer has a visible window (closed, or tray-minimized and gone).
+        // Player no longer has a visible window (closed, or tray-minimized and gone).
         var afterClose = state.Prune(hasVisibleWindow: _ => false);
         Assert.True(afterClose.Changed);
         Assert.Equal("stream", afterClose.ProfileId);
@@ -58,7 +58,7 @@ public class AutoSwitchStateTests
     {
         var state = new AutoSwitchState();
         state.OnManual("stream");
-        state.OnForeground("Spotify.exe", "spotify-profile");
+        state.OnForeground("Player.exe", "player-profile");
 
         var afterClose = state.Prune(hasVisibleWindow: _ => false);
 
@@ -70,7 +70,7 @@ public class AutoSwitchStateTests
     {
         var state = new AutoSwitchState();
         // No manual base at all — only a rule entry (e.g. this session never had a prior pick this run).
-        state.OnForeground("Spotify.exe", "spotify-profile");
+        state.OnForeground("Player.exe", "player-profile");
 
         var result = state.Prune(hasVisibleWindow: _ => false);
 
@@ -86,7 +86,7 @@ public class AutoSwitchStateTests
         state.OnManual("stream");
         state.SetLocked(true);
 
-        var whileLocked = state.OnForeground("Spotify.exe", "spotify-profile");
+        var whileLocked = state.OnForeground("Player.exe", "player-profile");
         Assert.False(whileLocked.Changed);
         Assert.Equal("stream", state.CurrentProfileId);
 
@@ -99,9 +99,9 @@ public class AutoSwitchStateTests
     {
         var state = new AutoSwitchState();
         state.OnManual("stream");
-        state.OnForeground("Spotify.exe", "spotify-profile");
+        state.OnForeground("Player.exe", "player-profile");
 
-        var again = state.OnForeground("Spotify.exe", "spotify-profile");
+        var again = state.OnForeground("Player.exe", "player-profile");
 
         Assert.False(again.Changed);
     }
@@ -111,18 +111,18 @@ public class AutoSwitchStateTests
     {
         var state = new AutoSwitchState();
         state.OnManual("stream");
-        state.OnForeground("Spotify.exe", "spotify-profile");
-        state.OnForeground("Discord.exe", "discord-profile");
+        state.OnForeground("Player.exe", "player-profile");
+        state.OnForeground("Chat.exe", "chat-profile");
 
-        // Spotify comes back to the foreground — its existing stack entry should move to the top rather
+        // Player comes back to the foreground — its existing stack entry should move to the top rather
         // than stacking a duplicate.
-        var backToSpotify = state.OnForeground("Spotify.exe", "spotify-profile");
-        Assert.True(backToSpotify.Changed);
-        Assert.Equal("spotify-profile", state.CurrentProfileId);
+        var backToPlayer = state.OnForeground("Player.exe", "player-profile");
+        Assert.True(backToPlayer.Changed);
+        Assert.Equal("player-profile", state.CurrentProfileId);
 
-        // Closing Discord now shouldn't resurface it (it was pruned off already) or change anything.
-        var pruneDiscord = state.Prune(hasVisibleWindow: p => p == "Spotify.exe");
-        Assert.False(pruneDiscord.Changed);
-        Assert.Equal("spotify-profile", state.CurrentProfileId);
+        // Closing Chat now shouldn't resurface it (it was pruned off already) or change anything.
+        var pruneChat = state.Prune(hasVisibleWindow: p => p == "Player.exe");
+        Assert.False(pruneChat.Changed);
+        Assert.Equal("player-profile", state.CurrentProfileId);
     }
 }

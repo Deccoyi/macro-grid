@@ -118,7 +118,7 @@ public sealed class ProfileStore
                 },
                 new Widget
                 {
-                    Text = "Notepad aç",
+                    Text = "Metin editörü aç",
                     X = 1, Y = 0,
                     Style = new WidgetStyle { Background = "#0284c7", Foreground = "#ffffff" },
                     Actions = { [WidgetEvents.Press] = [new ActionBinding(OpenAction.TypeId, OpenAction.Settings("notepad.exe"))] },

@@ -1,6 +1,6 @@
 # Macro Station
 
-Kendi ağınızda çalışan, Stream Deck benzeri bir masaüstü + telefon makro sistemi. Windows'ta çalışan bir sunucu; telefonunuzda (yakında) veya sunucunun kendi düzenleyicisinde tasarladığınız grid'e oturan butonlar, slider'lar ve widget'lar üzerinden klavye kısayolları çalıştırır, canlı sistem verilerini (CPU, RAM, saat...) gösterir ve koşullu (dinamik) stillerle tepki verir.
+Kendi ağınızda çalışan, fiziksel makro tuş takımı benzeri bir masaüstü + telefon makro sistemi. Windows'ta çalışan bir sunucu; telefonunuzda (yakında) veya sunucunun kendi düzenleyicisinde tasarladığınız grid'e oturan butonlar, slider'lar ve widget'lar üzerinden klavye kısayolları çalıştırır, canlı sistem verilerini (CPU, RAM, saat...) gösterir ve koşullu (dinamik) stillerle tepki verir.
 
 > ## ⚠️ Bu proje %100 yapay zeka tarafından üretilmiştir
 >

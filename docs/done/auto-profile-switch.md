@@ -1,7 +1,7 @@
 # Aktif pencereye göre otomatik profil geçişi
 
 ## Bağlam
-Bugün profil yalnızca elle değişiyor (client drawer, `profile.change` ya da `core.profile` aksiyonu). `docs/agent-notes.md` ve `docs/plan.md` bu yüzden "otomatik değişmeyecek" diyordu (bkz. bu dosyanın kaydedilmesiyle güncellenen karar). Kullanıcının asıl isteği farklı: yayın profili açıkken Spotify ya da media player öne gelince Spotify düzenine geçsin; Spotify kapanınca bir önceki profile dönsün; hiçbir şey eşleşmezse varsayılan profile düşsün. Client'taki drawer'da bir **kilit** olacak. Kilit otomatik geçişi durdurur ama drawer ve buton ile elle geçiş her zaman çalışır. Otomatik geçişi her cihaz kendi açar (opt-in).
+Bugün profil yalnızca elle değişiyor (client drawer, `profile.change` ya da `core.profile` aksiyonu). `docs/agent-notes.md` ve `docs/plan.md` bu yüzden "otomatik değişmeyecek" diyordu (bkz. bu dosyanın kaydedilmesiyle güncellenen karar). Kullanıcının asıl isteği farklı: yayın profili açıkken bir medya oynatıcı öne gelince Player düzenine geçsin; Player kapanınca bir önceki profile dönsün; hiçbir şey eşleşmezse varsayılan profile düşsün. Client'taki drawer'da bir **kilit** olacak. Kilit otomatik geçişi durdurur ama drawer ve buton ile elle geçiş her zaman çalışır. Otomatik geçişi her cihaz kendi açar (opt-in).
 
 Çalışma `dev` branch'inde yapılacak. Değişiklik üç repoya dokunuyor: `macro-station` (server + editör), `macro-station-client` (telefon), ayrıca protokol.
 
@@ -10,16 +10,16 @@ Her `ClientSession` bir `AutoSwitchState` tutar: `Stack<Entry>` ve `Locked`. Her
 
 - **Tanımlı bir pencere öne gelirse** (process adı eşleşir): o kural yığında zaten varsa en üste taşınır, yoksa eklenir. Ardından o profile geçilir.
 - **Tanımsız bir pencere öne gelirse (odak kaybı):** profil odağı takip eder, uygulamanın açık olması yetmez. Yığındaki tüm `Rule` kayıtları atılır ve elle seçilen (ya da varsayılan) profile dönülür. Eşleşen pencere tekrar öne gelince yine ona geçilir.
-- **Tanımlı pencere kapanırsa:** "Kapandı" demek, process'in görünür üst düzey penceresi kalmadı demek (tray'e gizlenen Spotify da kapanmış sayılır). Bu durumda yığındaki ölü `Rule` kayıtları atılır ve üstteki kayda dönülür.
+- **Tanımlı pencere kapanırsa:** "Kapandı" demek, process'in görünür üst düzey penceresi kalmadı demek (tray'e gizlenen Player da kapanmış sayılır). Bu durumda yığındaki ölü `Rule` kayıtları atılır ve üstteki kayda dönülür.
 - **Yığın boşalırsa:** varsayılan profile dönülür. Önce cihaza atanmış profile bakılır (`PairedDevice.AssignedProfileId`), yoksa yeni `AppPreferences.DefaultProfileId` kullanılır, o da yoksa `profiles.First()`.
-- **Elle seçim** (drawer ya da `core.profile`): yığına bir `Manual` kaydı eklenir. Bu kayıt taban gibi davranır ve process kontrolüyle atılmaz. Sonra tanımlı başka bir pencere öne gelirse onun üstüne geçilir; o pencere kapanınca tekrar elle seçilen profile dönülür. Yani "yayın profili (elle) → Spotify açılır → Spotify kapanır → yayın profili" akışı doğal olarak çalışır.
+- **Elle seçim** (drawer ya da `core.profile`): yığına bir `Manual` kaydı eklenir. Bu kayıt taban gibi davranır ve process kontrolüyle atılmaz. Sonra tanımlı başka bir pencere öne gelirse onun üstüne geçilir; o pencere kapanınca tekrar elle seçilen profile dönülür. Yani "yayın profili (elle) → Player açılır → Player kapanır → yayın profili" akışı doğal olarak çalışır.
 - **Kilitliyken:** pencere olayları yok sayılır. Elle geçişler çalışmaya devam eder. Kilit açıldığında durum bir kez yeniden değerlendirilir.
 - **Opt-in:** `PairedDevice.FollowActiveWindow = false` olan cihazlar bu mantığa hiç girmez.
 
 ## Değişiklikler: `macro-station` (server)
 
 **1. Model ve kalıcılık**
-- `Core/Model/Profile.cs`: `List<AppMatch> AppMatches` eklenecek. `AppMatch` şu alanları taşır: `{ ProcessName (örn. "Spotify.exe"), TitleContains? }`. Kurallar profilin üzerinde durduğu için "bu profil Spotify'da açılsın" diye düşünmek kolay oluyor. Birden fazla profil aynı pencereyle eşleşirse `ProfileStore.All` sırasındaki ilk profil kazanır. `ProfileValidator`'a boş ya da tekrarlı kural kontrolü eklenecek.
+- `Core/Model/Profile.cs`: `List<AppMatch> AppMatches` eklenecek. `AppMatch` şu alanları taşır: `{ ProcessName (örn. "Player.exe"), TitleContains? }`. Kurallar profilin üzerinde durduğu için "bu profil Player'da açılsın" diye düşünmek kolay oluyor. Birden fazla profil aynı pencereyle eşleşirse `ProfileStore.All` sırasındaki ilk profil kazanır. `ProfileValidator`'a boş ya da tekrarlı kural kontrolü eklenecek.
 - `Core/Model/PairedDevice.cs`: `bool FollowActiveWindow` ve `bool AutoSwitchLocked` eklenecek. Kilit kalıcı olacak, böylece yeniden bağlanınca korunur. Bunları yazmak için `DeviceStore`'a mevcut `AssignProfile` desenini izleyen setter'lar eklenecek.
 - `Core/Preferences/AppPreferences.cs`: `string? DefaultProfileId` eklenecek.
 - Varsayılan profil çözümlemesi tek bir yardımcıda toplanacak: `ProfileResolver.ResolveDefault(device)`. `ClientHub.OnHelloAsync` (`ClientHub.cs:201`) da bu yardımcıyı kullanacak.
@@ -68,7 +68,7 @@ Her `ClientSession` bir `AutoSwitchState` tutar: `Stack<Entry>` ve `Locked`. Her
 ## Doğrulama
 - **Unit testler** (`tests/MacroStation.Tests`), sahte `IActiveWindowSource` ile:
   - tanımsız pencere → değişiklik yok
-  - Spotify öne → Spotify profili; Spotify kapan → önceki profil
+  - Player öne → Player profili; Player kapan → önceki profil
   - elle seçim → kural → kapan → elle seçilen profil
   - yığın boş → varsayılan profil zinciri
   - kilitliyken olaylar yok sayılır, elle geçiş çalışır; kilit açılınca yeniden değerlendirme
@@ -76,7 +76,7 @@ Her `ClientSession` bir `AutoSwitchState` tutar: `Stack<Entry>` ve `Locked`. Her
 - `ProfileStoreTests` ve validator testleri `AppMatches` ile genişletilecek.
 - **Manuel uçtan uca test:**
   1. Host'u çalıştır, telefonu bağla. Pairing'de takip anahtarını aç.
-  2. Spotify profiline `Spotify.exe` kuralı ekle, yayın profilini elle seç.
-  3. Spotify'ı öne al → geçmeli. Oyun ya da Explorer'a geç → yayın profiline dönmeli. Spotify'ı tekrar öne al → Spotify profiline geçmeli. Spotify'ı kapat → yayın profilinde kalmalı.
-  4. Drawer'dan kilitle → Spotify öne gelse de geçmemeli, drawer'dan elle geçiş çalışmalı.
+  2. Player profiline `Player.exe` kuralı ekle, yayın profilini elle seç.
+  3. Player'ı öne al → geçmeli. Oyun ya da başka bir uygulamaya geç → yayın profiline dönmeli. Player'ı tekrar öne al → Player profiline geçmeli. Player'ı kapat → yayın profilinde kalmalı.
+  4. Drawer'dan kilitle → Player öne gelse de geçmemeli, drawer'dan elle geçiş çalışmalı.
 - Görev Yöneticisi'nde host'un boşta CPU'sunun değişmediğini kontrol et (hafif kaynak bütçesi).

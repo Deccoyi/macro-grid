@@ -129,7 +129,7 @@ export function OpenUrlActionForm({ binding, onChange }: ActionFormProps) {
         type="url"
         value={url}
         onChange={(e) => onChange({ url: e.target.value })}
-        placeholder="https://twitch.tv/..."
+        placeholder="https://example.com/..."
         style={!looksValid ? { borderColor: "var(--ms-danger)" } : undefined}
       />
       {!looksValid && <span style={{ color: "var(--ms-danger)", fontSize: 11 }}>{t("form.openUrl.invalid")}</span>}
