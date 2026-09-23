@@ -4,14 +4,20 @@
     {
       "name": "renderer-demo",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["--prefix", "client/packages/renderer/demo", "run", "dev"],
+      "runtimeArgs": ["--prefix", "packages/renderer/demo", "run", "dev"],
       "port": 5183
     },
     {
       "name": "editor",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["--prefix", "server/editor", "run", "dev"],
+      "runtimeArgs": ["--prefix", "editor", "run", "dev"],
       "port": 5190
+    },
+    {
+      "name": "webclient",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["--prefix", "webclient", "run", "dev"],
+      "port": 5192
     }
   ]
 }
