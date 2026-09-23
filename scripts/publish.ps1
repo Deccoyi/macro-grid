@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-  Builds the release folder of the server: the editor bundle, then a self-contained single-file MacroStation.exe.
+  Builds the release folder of the server: the editor and browser deck bundles, then a self-contained single-file MacroStation.exe.
 
 .DESCRIPTION
   Output goes to artifacts/server/. The version comes from ClientHub.ServerVersion, the single place the
@@ -36,6 +36,17 @@ if (-not $SkipEditor) {
     $target = Join-Path $root "src\MacroStation.Host\wwwroot\editor"
     New-Item -ItemType Directory -Force $target | Out-Null
     Copy-Item (Join-Path $root "editor\dist\*") $target -Recurse -Force
+
+    # The browser deck (webclient/) is served at /deck/ from wwwroot/deck.
+    Push-Location (Join-Path $root "webclient")
+    try {
+        if (-not (Test-Path "node_modules")) { npm ci; if ($LASTEXITCODE) { throw "npm ci failed (webclient)" } }
+        npm run build
+        if ($LASTEXITCODE) { throw "Browser deck build failed" }
+    } finally { Pop-Location }
+    $deck = Join-Path $root "src\MacroStation.Host\wwwroot\deck"
+    New-Item -ItemType Directory -Force $deck | Out-Null
+    Copy-Item (Join-Path $root "webclient\dist\*") $deck -Recurse -Force
 }
 
 if (Test-Path $out) { Remove-Item $out -Recurse -Force }
