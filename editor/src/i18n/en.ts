@@ -4,8 +4,8 @@ import type { DictKey } from "./tr";
 export const en: Record<DictKey, string | ((...args: string[]) => string)> = {
   "app.loading": "Loading…",
   "menu.file": "File",
-  "menu.file.exportProfile": "Export Profile (.json)",
-  "menu.file.importProfile": "Import Profile (.json)…",
+  "menu.file.exportProfile": "Export Profile (.msprofile)",
+  "menu.file.importProfile": "Import Profile (.msprofile / .json)…",
   "menu.settings": "Settings",
   "menu.settings.open": "Preferences…",
   "menu.help": "Help",
@@ -153,6 +153,14 @@ export const en: Record<DictKey, string | ((...args: string[]) => string)> = {
   "profile.importConflictTitle": "Profile already exists",
   "profile.importConflict": (name: string) =>
     `A profile named "${name}" already exists. Overwrite the existing profile, or import this one under a new name?`,
+  "profile.importFailedTitle": "Can't import profile",
+  "profile.exportFailedTitle": "Can't export profile",
+  "profile.importMissingTitle": "Some actions won't work yet",
+  "profile.importMissing": (plugins: string, types: string) =>
+    [
+      plugins && `This profile needs plugins that are not installed: ${plugins}. Install them from the Plugins window and its buttons will work.`,
+      types && `Actions with no provider on this server: ${types}.`,
+    ].filter(Boolean).join("\n\n"),
   "profile.importRename": "Rename",
   "profile.importOverwrite": "Overwrite",
 

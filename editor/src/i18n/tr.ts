@@ -4,8 +4,8 @@ export const tr = {
   // ---- App shell / menu bar ----
   "app.loading": "Yükleniyor…",
   "menu.file": "Dosya",
-  "menu.file.exportProfile": "Profili Dışa Aktar (.json)",
-  "menu.file.importProfile": "Profili İçe Aktar (.json)…",
+  "menu.file.exportProfile": "Profili Dışa Aktar (.msprofile)",
+  "menu.file.importProfile": "Profili İçe Aktar (.msprofile / .json)…",
   "menu.settings": "Ayarlar",
   "menu.settings.open": "Tercihler…",
   "menu.help": "Yardım",
@@ -160,6 +160,14 @@ export const tr = {
   "profile.importConflictTitle": "Profil zaten var",
   "profile.importConflict": (name: string) =>
     `"${name}" isimli bir profil zaten var. Mevcut profilin üzerine yazılsın mı, yoksa içe aktarılan profil yeni bir adla mı eklensin?`,
+  "profile.importFailedTitle": "Profil içe aktarılamadı",
+  "profile.exportFailedTitle": "Profil dışa aktarılamadı",
+  "profile.importMissingTitle": "Bazı aksiyonlar henüz çalışmaz",
+  "profile.importMissing": (plugins: string, types: string) =>
+    [
+      plugins && `Bu profil yüklü olmayan eklentilere ihtiyaç duyuyor: ${plugins}. Eklentiler penceresinden kurunca düğmeleri çalışır.`,
+      types && `Bu sunucuda karşılığı olmayan aksiyonlar: ${types}.`,
+    ].filter(Boolean).join("\n\n"),
   "profile.importRename": "Adı değiştir",
   "profile.importOverwrite": "Üzerine yaz",
 

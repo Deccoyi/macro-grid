@@ -1,5 +1,6 @@
 using System.Text.Json;
 using MacroStation.Core.Actions;
+using MacroStation.Core.Profiles;
 using MacroStation.Core.Variables;
 using MacroStation.Plugin.Abstractions;
 using Microsoft.Extensions.Hosting;
@@ -79,6 +80,32 @@ public sealed class PluginManager(
     {
         lock (_stateLock)
             return _entries.Values.FirstOrDefault(e => e.Running?.Host.Actions.Any(a => a.Type.Equals(actionType, StringComparison.OrdinalIgnoreCase)) == true)?.Info.Id;
+    }
+
+    /// <summary>The plugins that own the given action types (built-in action types belong to no plugin and are skipped),
+    /// with the types of each that were asked about. For the manifest of an exported profile.</summary>
+    public IReadOnlyList<PackagePluginRef> DescribeRequiredPlugins(IEnumerable<string> actionTypes)
+    {
+        var byPlugin = new Dictionary<string, List<string>>(StringComparer.OrdinalIgnoreCase);
+        foreach (var type in actionTypes)
+            if (GetActionPluginId(type) is { } id)
+                (byPlugin.TryGetValue(id, out var list) ? list : byPlugin[id] = []).Add(type);
+
+        var installed = Plugins;
+        return [.. byPlugin.Select(kv =>
+        {
+            var info = installed.FirstOrDefault(p => p.Id.Equals(kv.Key, StringComparison.OrdinalIgnoreCase));
+            return new PackagePluginRef(kv.Key, info?.Name ?? kv.Key, info?.Version ?? "?", kv.Value);
+        })];
+    }
+
+    /// <summary>The plugins a package needs that are not installed and loaded here.</summary>
+    public IReadOnlyList<PackagePluginRef> MissingPlugins(ProfilePackageManifest? manifest)
+    {
+        if (manifest is null) return [];
+        var installed = Plugins;
+        return [.. manifest.RequiredPlugins.Where(r =>
+            !installed.Any(p => p.Id.Equals(r.Id, StringComparison.OrdinalIgnoreCase) && p.Status == PluginLoadStatus.Loaded))];
     }
 
     /// <summary>The install folder of a plugin by id (loaded or not), or null if that id is not installed.</summary>

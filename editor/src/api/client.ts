@@ -154,16 +154,18 @@ export const api = {
       body: JSON.stringify(preferences),
     }).then((res) => json<void>(res)),
 
-  /** Shows a native "Open" dialog on the server's desktop and reads the chosen JSON file. */
+  /** Shows a native "Open" dialog on the server's desktop and reads the chosen .msprofile (or plain profile JSON)
+   * file; the server validates it and reports which plugins it needs that are missing. */
   importProfileDialog: (): Promise<ImportProfileResult> =>
     req("/api/browse/import-profile", { method: "POST" }).then((res) => json<ImportProfileResult>(res)),
 
-  /** Shows a native "Save As" dialog on the server's desktop and writes the profile JSON there. */
-  exportProfileDialog: (fileName: string, content: string): Promise<ExportProfileResult> =>
+  /** Shows a native "Save As" dialog on the server's desktop and writes the profile there as a .msprofile
+   * package (the profile plus a manifest naming the plugins it needs). */
+  exportProfileDialog: (profile: Profile): Promise<ExportProfileResult> =>
     req("/api/browse/export-profile", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ fileName, content }),
+      body: JSON.stringify(profile),
     }).then((res) => json<ExportProfileResult>(res)),
 
   /** Opens (or focuses) a real, separate OS window for a tool panel — see docs/ui-guidelines.md:

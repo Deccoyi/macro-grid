@@ -1,5 +1,6 @@
 using MacroStation.Core.Actions;
 using MacroStation.Core.Plugins;
+using MacroStation.Core.Profiles;
 using MacroStation.Core.Variables;
 using MacroStation.Plugin.Abstractions;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -225,6 +226,24 @@ public sealed class PluginManagerTests : IAsyncLifetime
         Assert.Contains("stub.action", second.Plugin.Detail);
         Assert.Equal("stub", _manager.GetActionPluginId("stub.action"));
         Assert.DoesNotContain(_status.All, i => i.PluginId == "stub-two");
+    }
+
+    [Fact]
+    public async Task Describes_the_plugins_a_profile_needs_and_reports_the_missing_ones()
+    {
+        await _manager.StartAsync(CancellationToken.None);
+        await _manager.InstallFromFolderAsync(NewStubSource());
+
+        var required = _manager.DescribeRequiredPlugins(["stub.action", "core.hotkey", "unknown.thing"]);
+
+        var stub = Assert.Single(required);
+        Assert.Equal("stub", stub.Id);
+        Assert.Equal(["stub.action"], stub.ActionTypes);
+
+        var manifest = new ProfilePackageManifest(1, "P", DateTimeOffset.UtcNow, "0.2.0",
+            [stub, new PackagePluginRef("gone", "Gone", "1.0.0", ["gone.act"])]);
+        Assert.Equal(["gone"], _manager.MissingPlugins(manifest).Select(p => p.Id));
+        Assert.Empty(_manager.MissingPlugins(null));
     }
 
     [Fact]

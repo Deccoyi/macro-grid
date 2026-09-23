@@ -1,12 +1,13 @@
 import { useEffect, useRef, useState } from "react";
 import type { Profile } from "@macro/renderer";
 import { api } from "../api/client";
+import { alertAsync } from "../dialogs/dialogStore";
 import { useT, type Language } from "../i18n/I18nContext";
 import { ContextMenu, type ContextMenuItem } from "./ContextMenu";
 
 export interface MenuBarProps {
   profile: Profile | null;
-  onImportProfile: (data: Profile) => void;
+  onImportProfile: (data: Profile) => Promise<void>;
 }
 
 const APP_VERSION = "0.1.0";
@@ -53,16 +54,31 @@ export function MenuBar({ profile, onImportProfile }: MenuBarProps) {
 
   const exportProfile = async () => {
     if (!profile) return;
-    await api.exportProfileDialog(`${profile.name || "profile"}.json`, JSON.stringify(profile, null, 2));
+    try {
+      await api.exportProfileDialog(profile);
+    } catch (err) {
+      await alertAsync(err instanceof Error ? err.message : String(err), { title: t("profile.exportFailedTitle") });
+    }
   };
 
   const importProfile = async () => {
-    const { content } = await api.importProfileDialog();
-    if (!content) return;
+    let result;
     try {
-      onImportProfile(JSON.parse(content));
-    } catch {
-      // Malformed file — silently ignored rather than showing a raw parser error to the user.
+      result = await api.importProfileDialog();
+    } catch (err) {
+      // The server says why the file is unusable (damaged, empty, made by a newer version...).
+      await alertAsync(err instanceof Error ? err.message : String(err), { title: t("profile.importFailedTitle") });
+      return;
+    }
+    if (!result.profile) return;
+
+    await onImportProfile(result.profile);
+
+    const missing = result.missingPlugins?.map((p) => p.name) ?? [];
+    const covered = new Set(result.missingPlugins?.flatMap((p) => p.actionTypes) ?? []);
+    const unknown = (result.unknownActionTypes ?? []).filter((type) => !covered.has(type));
+    if (missing.length > 0 || unknown.length > 0) {
+      await alertAsync(t("profile.importMissing", missing.join(", "), unknown.join(", ")), { title: t("profile.importMissingTitle") });
     }
   };
 

@@ -261,19 +261,36 @@ internal static class ServerApp
             return Results.Json(new { path });
         });
 
-        api.MapPost("/browse/import-profile", async (IUiDialogService dialogs) =>
+        // .msprofile (a zip with the profile and a manifest naming the plugins it needs) or a plain profile JSON file.
+        api.MapPost("/browse/import-profile", async (IUiDialogService dialogs, PluginManager plugins, ActionDispatcher dispatcher) =>
         {
-            var (path, content) = await dialogs.OpenJsonFileAsync("Profil içe aktar");
-            return Results.Json(new { path, content });
+            var (path, bytes) = await dialogs.OpenFileAsync("Import profile", "Macro Station profile (*.msprofile;*.json)|*.msprofile;*.json");
+            if (bytes is null) return Results.Json(new { path = (string?)null });
+
+            ProfilePackageContent package;
+            try { package = ProfilePackage.Read(bytes); }
+            catch (InvalidDataException ex) { return Results.BadRequest(new { error = ex.Message }); }
+
+            var missing = plugins.MissingPlugins(package.Manifest);
+            var known = dispatcher.Handlers.Select(h => h.Type).ToHashSet(StringComparer.OrdinalIgnoreCase);
+            var unknownTypes = ProfilePackage.ActionTypes(package.Profile).Where(t => !known.Contains(t)).ToList();
+            return Results.Json(new { path, profile = package.Profile, missingPlugins = missing, unknownActionTypes = unknownTypes }, ProtocolJson.Options);
         });
 
-        api.MapPost("/browse/export-profile", async (HttpRequest request, IUiDialogService dialogs) =>
+        api.MapPost("/browse/export-profile", async (HttpRequest request, IUiDialogService dialogs, PluginManager plugins) =>
         {
-            ExportProfileRequest? body;
-            try { body = await JsonSerializer.DeserializeAsync<ExportProfileRequest>(request.Body, ProtocolJson.Options); }
-            catch (JsonException) { return Results.BadRequest(new { error = "Geçersiz JSON." }); }
-            if (body is null) return Results.BadRequest(new { error = "Geçersiz JSON." });
-            var path = await dialogs.SaveJsonFileAsync("Profili dışa aktar", body.FileName, body.Content);
+            Profile? profile;
+            try { profile = await JsonSerializer.DeserializeAsync<Profile>(request.Body, ProtocolJson.Options); }
+            catch (JsonException) { return Results.BadRequest(new { error = "Invalid JSON." }); }
+            if (profile is null) return Results.BadRequest(new { error = "Invalid JSON." });
+
+            var manifest = new ProfilePackageManifest(
+                ProfilePackage.CurrentFormatVersion, profile.Name, DateTimeOffset.UtcNow, ClientHub.ServerVersion,
+                plugins.DescribeRequiredPlugins(ProfilePackage.ActionTypes(profile)));
+            var invalid = Path.GetInvalidFileNameChars();
+            var fileName = string.Concat(profile.Name.Select(c => invalid.Contains(c) ? '_' : c)).Trim();
+            var path = await dialogs.SaveFileAsync("Export profile", (fileName.Length > 0 ? fileName : "profile") + ProfilePackage.Extension,
+                "Macro Station profile (*.msprofile)|*.msprofile", "msprofile", ProfilePackage.Write(profile, manifest));
             return Results.Json(new { path });
         });
 
@@ -478,4 +495,3 @@ internal static class ServerApp
     }
 }
 
-file sealed record ExportProfileRequest(string FileName, string Content);

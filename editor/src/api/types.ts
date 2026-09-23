@@ -1,3 +1,4 @@
+import type { Profile } from "@macro/renderer";
 export type SettingFieldKind = "Text" | "Password" | "Number" | "Slider" | "Bool" | "Select" | "Segmented";
 
 export interface SettingOption {
@@ -156,9 +157,22 @@ export interface AppPreferences {
   defaultProfileId: string | null;
 }
 
+/** A plugin a packaged profile needs (from the manifest of a .msprofile file). */
+export interface PackagePluginRef {
+  id: string;
+  name: string;
+  version: string;
+  actionTypes: string[];
+}
+
 export interface ImportProfileResult {
+  /** Null when the user canceled the dialog. */
   path: string | null;
-  content: string | null;
+  profile?: Profile;
+  /** Plugins the file says it needs that are not installed and loaded on this server. */
+  missingPlugins?: PackagePluginRef[];
+  /** Action types in the profile that no installed plugin or built-in provides (also covers plain JSON files, which carry no manifest). */
+  unknownActionTypes?: string[];
 }
 
 export interface ExportProfileResult {

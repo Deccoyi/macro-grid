@@ -10,12 +10,13 @@ public interface IUiDialogService
     /// <returns>The chosen path, or null if the user canceled.</returns>
     Task<string?> BrowseForExecutableAsync();
 
-    /// <returns>The chosen file's path and contents, or (null, null) if the user canceled.</returns>
-    Task<(string? Path, string? Content)> OpenJsonFileAsync(string title);
+    /// <param name="filter">A WinForms file filter, e.g. <c>"Profile (*.msprofile)|*.msprofile"</c>.</param>
+    /// <returns>The chosen file's path and bytes, or (null, null) if the user canceled.</returns>
+    Task<(string? Path, byte[]? Content)> OpenFileAsync(string title, string filter);
 
     /// <summary>Shows a native Save As dialog and writes <paramref name="content"/> to the chosen path.</summary>
     /// <returns>The chosen path, or null if the user canceled.</returns>
-    Task<string?> SaveJsonFileAsync(string title, string suggestedFileName, string content);
+    Task<string?> SaveFileAsync(string title, string suggestedFileName, string filter, string defaultExtension, byte[] content);
 
     /// <returns>The chosen folder's path, or null if the user canceled.</returns>
     Task<string?> BrowseForFolderAsync(string title);
@@ -46,9 +47,9 @@ public sealed class UiDialogService(SynchronizationContext ui) : IUiDialogServic
         return tcs.Task;
     }
 
-    public Task<(string? Path, string? Content)> OpenJsonFileAsync(string title)
+    public Task<(string? Path, byte[]? Content)> OpenFileAsync(string title, string filter)
     {
-        var tcs = new TaskCompletionSource<(string?, string?)>();
+        var tcs = new TaskCompletionSource<(string?, byte[]?)>();
         ui.Post(_ =>
         {
             try
@@ -56,7 +57,7 @@ public sealed class UiDialogService(SynchronizationContext ui) : IUiDialogServic
                 using var dialog = new OpenFileDialog
                 {
                     Title = title,
-                    Filter = "JSON (*.json)|*.json|Tüm dosyalar (*.*)|*.*",
+                    Filter = filter + "|All files (*.*)|*.*",
                     CheckFileExists = true,
                 };
                 if (dialog.ShowDialog() != DialogResult.OK)
@@ -64,7 +65,7 @@ public sealed class UiDialogService(SynchronizationContext ui) : IUiDialogServic
                     tcs.SetResult((null, null));
                     return;
                 }
-                tcs.SetResult((dialog.FileName, File.ReadAllText(dialog.FileName)));
+                tcs.SetResult((dialog.FileName, File.ReadAllBytes(dialog.FileName)));
             }
             catch (Exception ex)
             {
@@ -74,7 +75,7 @@ public sealed class UiDialogService(SynchronizationContext ui) : IUiDialogServic
         return tcs.Task;
     }
 
-    public Task<string?> SaveJsonFileAsync(string title, string suggestedFileName, string content)
+    public Task<string?> SaveFileAsync(string title, string suggestedFileName, string filter, string defaultExtension, byte[] content)
     {
         var tcs = new TaskCompletionSource<string?>();
         ui.Post(_ =>
@@ -84,17 +85,17 @@ public sealed class UiDialogService(SynchronizationContext ui) : IUiDialogServic
                 using var dialog = new SaveFileDialog
                 {
                     Title = title,
-                    Filter = "JSON (*.json)|*.json|Tüm dosyalar (*.*)|*.*",
+                    Filter = filter + "|All files (*.*)|*.*",
                     FileName = suggestedFileName,
                     AddExtension = true,
-                    DefaultExt = "json",
+                    DefaultExt = defaultExtension,
                 };
                 if (dialog.ShowDialog() != DialogResult.OK)
                 {
                     tcs.SetResult(null);
                     return;
                 }
-                File.WriteAllText(dialog.FileName, content);
+                File.WriteAllBytes(dialog.FileName, content);
                 tcs.SetResult(dialog.FileName);
             }
             catch (Exception ex)
