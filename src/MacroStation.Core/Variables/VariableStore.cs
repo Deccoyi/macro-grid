@@ -31,6 +31,16 @@ public sealed class VariableStore : IVariableStore
         lock (_lock) return _values.GetValueOrDefault(name);
     }
 
+    public void Remove(string name)
+    {
+        lock (_lock)
+        {
+            if (!_values.Remove(name))
+                return;
+        }
+        Changed?.Invoke(name);
+    }
+
     /// <summary>A point-in-time copy of every known variable, for the editor's one-shot live preview.</summary>
     public IReadOnlyDictionary<string, object?> Snapshot()
     {

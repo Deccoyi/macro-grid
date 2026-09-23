@@ -5,12 +5,16 @@ using MacroStation.Plugin.Abstractions;
 namespace MacroStation.Core.Actions;
 
 /// <summary>Sends a key chord. Settings: { "keys": "ctrl+c" }</summary>
-public sealed class HotkeyAction(IInputService input) : IActionHandler
+public sealed class HotkeyAction(IInputService input) : IActionHandler, IActionDescriptor
 {
     public const string TypeId = "core.hotkey";
 
     public string Type => TypeId;
     public string DisplayName => "Kısayol tuşu";
+    public string Category => "Klavye";
+    public string? Description => "Bir tuş kombinasyonu gönderir";
+    public string? Icon => "keyboard";
+    public IReadOnlyList<SettingField> Fields => [];
 
     public Task ExecuteAsync(ActionContext context, JsonObject settings, CancellationToken cancellationToken)
     {
@@ -23,12 +27,16 @@ public sealed class HotkeyAction(IInputService input) : IActionHandler
 }
 
 /// <summary>Types a piece of text. Settings: { "text": "hello" }</summary>
-public sealed class TypeTextAction(IInputService input) : IActionHandler
+public sealed class TypeTextAction(IInputService input) : IActionHandler, IActionDescriptor
 {
     public const string TypeId = "core.typeText";
 
     public string Type => TypeId;
     public string DisplayName => "Metin yaz";
+    public string Category => "Klavye";
+    public string? Description => "Sabit bir metni yazar";
+    public string? Icon => "type";
+    public IReadOnlyList<SettingField> Fields => [];
 
     public Task ExecuteAsync(ActionContext context, JsonObject settings, CancellationToken cancellationToken)
     {

@@ -8,12 +8,16 @@ using Microsoft.Extensions.Logging;
 namespace MacroStation.Core.Actions;
 
 /// <summary>Opens a local application (chosen via the editor's native file browser). Settings: { "target": string, "arguments"?: string }</summary>
-public sealed class OpenAction(ILogger<OpenAction> logger) : IActionHandler
+public sealed class OpenAction(ILogger<OpenAction> logger) : IActionHandler, IActionDescriptor
 {
     public const string TypeId = "core.open";
 
     public string Type => TypeId;
     public string DisplayName => "Uygulama aç";
+    public string Category => "Sistem";
+    public string? Description => "Bir uygulama veya dosya açar";
+    public string? Icon => "app-window";
+    public IReadOnlyList<SettingField> Fields => [];
 
     public Task ExecuteAsync(ActionContext context, JsonObject settings, CancellationToken cancellationToken)
     {
@@ -41,12 +45,16 @@ public sealed class OpenAction(ILogger<OpenAction> logger) : IActionHandler
 }
 
 /// <summary>Opens a URL in the system's default browser. Settings: { "url": string }</summary>
-public sealed class OpenUrlAction(ILogger<OpenUrlAction> logger) : IActionHandler
+public sealed class OpenUrlAction(ILogger<OpenUrlAction> logger) : IActionHandler, IActionDescriptor
 {
     public const string TypeId = "core.openUrl";
 
     public string Type => TypeId;
     public string DisplayName => "URL aç";
+    public string Category => "Sistem";
+    public string? Description => "Varsayılan tarayıcıda bir adres açar";
+    public string? Icon => "link";
+    public IReadOnlyList<SettingField> Fields => [];
 
     public Task ExecuteAsync(ActionContext context, JsonObject settings, CancellationToken cancellationToken)
     {
@@ -76,13 +84,17 @@ public sealed class OpenUrlAction(ILogger<OpenUrlAction> logger) : IActionHandle
 }
 
 /// <summary>Pauses a multi-action macro. Settings: { "ms": number }, clamped to [0, 60000].</summary>
-public sealed class DelayAction : IActionHandler
+public sealed class DelayAction : IActionHandler, IActionDescriptor
 {
     public const string TypeId = "core.delay";
     private const int MaxMs = 60_000;
 
     public string Type => TypeId;
     public string DisplayName => "Bekle";
+    public string Category => "Sistem";
+    public string? Description => "Çoklu aksiyon içinde bekler";
+    public string? Icon => "clock";
+    public IReadOnlyList<SettingField> Fields => [];
 
     public Task ExecuteAsync(ActionContext context, JsonObject settings, CancellationToken cancellationToken)
     {

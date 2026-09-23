@@ -36,4 +36,14 @@ public interface IPluginHost
 
     /// <summary>Registers a variable provider. If it also implements <see cref="IVariableCatalogSource"/>, that is picked up automatically.</summary>
     void RegisterVariableProvider(IVariableProvider provider);
+
+    /// <summary>Registers the plugin's own settings window, drawn by the host from the page's <c>Fields</c>.</summary>
+    void RegisterSettingsPage(IPluginSettingsPage page);
+
+    /// <summary>Creates one entry the plugin owns in the editor's window-wide status bar. Call once per
+    /// logical status ("obs-connection"); reuse the returned item across the plugin's lifetime.</summary>
+    IPluginStatusItem CreateStatusItem(string id);
+
+    /// <summary>Registers a set of icons the plugin contributes to the editor's icon picker.</summary>
+    void RegisterIconPack(IIconPackSource iconPack);
 }

@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using MacroStation.Core.Actions;
 using MacroStation.Core.Devices;
 using MacroStation.Core.Model;
@@ -63,8 +64,12 @@ internal static class ServerApp
         builder.Services.AddSingleton<SystemAudioProvider>();
         builder.Services.AddSingleton<IVariableProvider>(sp => sp.GetRequiredService<SystemAudioProvider>());
         builder.Services.AddSingleton<IVariableCatalogSource>(sp => sp.GetRequiredService<SystemAudioProvider>());
+        var statusRegistry = new PluginStatusRegistry();
+        builder.Services.AddSingleton(statusRegistry);
+        statusRegistry.SetCore("server", $"Macro Station {ClientHub.ServerVersion}", StatusLevel.Idle, "server");
+
         var pluginsRoot = Path.Combine(dataDir, "plugins");
-        var pluginLoad = PluginLoader.LoadAll(pluginsRoot, ClientHub.ServerVersion,
+        var pluginLoad = PluginLoader.LoadAll(pluginsRoot, ClientHub.ServerVersion, statusRegistry,
             new FileLoggerProvider(Path.Combine(dataDir, "logs")).CreateLogger("Plugins"));
         builder.Services.AddSingleton(pluginLoad);
         foreach (var action in pluginLoad.Actions)
@@ -89,6 +94,12 @@ internal static class ServerApp
         builder.Services.AddSingleton<ClientHub>();
 
         var app = builder.Build();
+
+        var sessionRegistry = app.Services.GetRequiredService<SessionRegistry>();
+        void UpdateDeviceStatus() => statusRegistry.SetCore("devices", $"{sessionRegistry.All.Count} cihaz",
+            sessionRegistry.All.Count > 0 ? StatusLevel.Ok : StatusLevel.Idle, "smartphone");
+        sessionRegistry.Changed += UpdateDeviceStatus;
+        UpdateDeviceStatus();
 
         app.UseWebSockets(new WebSocketOptions { KeepAliveInterval = TimeSpan.FromSeconds(15) });
         app.Map("/ws", async (HttpContext http, ClientHub hub) =>
@@ -200,8 +211,42 @@ internal static class ServerApp
             return Results.NoContent();
         });
 
-        api.MapGet("/actions", (ActionDispatcher dispatcher) =>
-            dispatcher.Handlers.Select(h => new { h.Type, h.DisplayName }).OrderBy(a => a.DisplayName));
+        api.MapGet("/actions", (ActionDispatcher dispatcher, PluginLoadResult pluginLoad) =>
+            dispatcher.Handlers.Select(h =>
+            {
+                var descriptor = h as IActionDescriptor;
+                return new
+                {
+                    h.Type,
+                    h.DisplayName,
+                    Category = descriptor?.Category ?? "Diğer",
+                    Description = descriptor?.Description,
+                    Icon = descriptor?.Icon,
+                    PluginId = pluginLoad.ActionPluginIds.GetValueOrDefault(h.Type),
+                    Fields = descriptor is { Fields.Count: > 0 } ? descriptor.Fields : null,
+                };
+            }).OrderBy(a => a.DisplayName));
+
+        api.MapPost("/actions/{type}/options/{sourceId}", async (string type, string sourceId, HttpRequest request, ActionDispatcher dispatcher) =>
+        {
+            var handler = dispatcher.Handlers.FirstOrDefault(h => h.Type == type);
+            if (handler is not IOptionsSource optionsSource)
+                return Results.Json(new OptionsResult([], "Bu aksiyon dinamik seçenek sağlamıyor"));
+
+            JsonObject? currentValues;
+            try { currentValues = await JsonSerializer.DeserializeAsync<JsonObject>(request.Body, ProtocolJson.Options); }
+            catch (JsonException) { return Results.BadRequest(new { error = "Geçersiz JSON." }); }
+
+            try
+            {
+                var result = await optionsSource.GetOptionsAsync(sourceId, currentValues ?? [], request.HttpContext.RequestAborted);
+                return Results.Json(result, ProtocolJson.Options);
+            }
+            catch (Exception ex) when (ex is not OperationCanceledException)
+            {
+                return Results.Json(new OptionsResult([], ex.Message));
+            }
+        });
 
         api.MapGet("/variables/snapshot", (VariableStore variables) =>
             Results.Json(variables.Snapshot(), ProtocolJson.Options));
@@ -231,6 +276,16 @@ internal static class ServerApp
         });
 
         api.MapGet("/plugins", (PluginLoadResult pluginLoad) => pluginLoad.Plugins);
+
+        api.MapGet("/icon-packs", (PluginLoadResult pluginLoad) =>
+            pluginLoad.IconPacks.Select(p => new { p.Id, p.DisplayName, Icons = p.IconNames }));
+
+        api.MapGet("/icon-packs/{packId}/{iconName}", (string packId, string iconName, PluginLoadResult pluginLoad) =>
+        {
+            var pack = pluginLoad.IconPacks.FirstOrDefault(p => p.Id == packId);
+            var svg = pack?.GetIconSvg(iconName);
+            return svg is null ? Results.NotFound() : Results.Text(svg, "image/svg+xml");
+        });
 
         api.MapPost("/plugins/install", async (IUiDialogService dialogs) =>
         {
@@ -267,19 +322,35 @@ internal static class ServerApp
             return Results.Json(new { installed = true, id = manifest.Id, name = manifest.Name, requiresRestart = true });
         });
 
-        // Generic raw-JSON passthrough to a plugin's own settings.json (see docs/plugin-authoring.md §"Ayarlar" —
-        // the host has no per-plugin settings schema/UI, plugins own their settings file under their DataDirectory).
-        // The editor builds whatever form makes sense per plugin (e.g. OBS's host/port/password) on top of this.
-        api.MapGet("/plugins/{id}/settings", (string id) =>
+        // A registered IPluginSettingsPage (schema-driven form) takes precedence; a plugin without one
+        // falls back to the raw settings.json passthrough it always had (see docs/plugin-authoring.md
+        // §"Ayarlar") so older plugins keep working unchanged.
+        api.MapGet("/plugins/{id}/settings/schema", (string id, PluginLoadResult pluginLoad) =>
+            pluginLoad.SettingsPages.TryGetValue(id, out var page) ? Results.Json(page.Fields, ProtocolJson.Options) : Results.NotFound());
+
+        api.MapGet("/plugins/{id}/settings", (string id, PluginLoadResult pluginLoad) =>
         {
+            if (pluginLoad.SettingsPages.TryGetValue(id, out var page))
+                return Results.Json(page.Load(), ProtocolJson.Options);
+
             var dir = ResolvePluginDir(pluginsRoot, id);
             if (dir is null) return Results.NotFound();
             var path = Path.Combine(dir, "settings.json");
             return File.Exists(path) ? Results.Text(File.ReadAllText(path), "application/json") : Results.NotFound();
         });
 
-        api.MapPut("/plugins/{id}/settings", async (string id, HttpRequest request) =>
+        api.MapPut("/plugins/{id}/settings", async (string id, HttpRequest request, PluginLoadResult pluginLoad) =>
         {
+            if (pluginLoad.SettingsPages.TryGetValue(id, out var page))
+            {
+                JsonObject? values;
+                try { values = await JsonSerializer.DeserializeAsync<JsonObject>(request.Body, ProtocolJson.Options); }
+                catch (JsonException) { return Results.BadRequest(new { error = "Geçersiz JSON." }); }
+                if (values is null) return Results.BadRequest(new { error = "Geçersiz JSON." });
+                page.Save(values);
+                return Results.NoContent();
+            }
+
             var dir = ResolvePluginDir(pluginsRoot, id);
             if (dir is null) return Results.NotFound();
 
@@ -292,6 +363,28 @@ internal static class ServerApp
             return Results.NoContent();
         });
 
+        api.MapPost("/plugins/{id}/settings/options/{sourceId}", async (string id, string sourceId, HttpRequest request, PluginLoadResult pluginLoad) =>
+        {
+            if (!pluginLoad.SettingsPages.TryGetValue(id, out var page) || page is not IOptionsSource optionsSource)
+                return Results.Json(new OptionsResult([], "Bu plugin dinamik seçenek sağlamıyor"));
+
+            JsonObject? currentValues;
+            try { currentValues = await JsonSerializer.DeserializeAsync<JsonObject>(request.Body, ProtocolJson.Options); }
+            catch (JsonException) { return Results.BadRequest(new { error = "Geçersiz JSON." }); }
+
+            try
+            {
+                var result = await optionsSource.GetOptionsAsync(sourceId, currentValues ?? [], request.HttpContext.RequestAborted);
+                return Results.Json(result, ProtocolJson.Options);
+            }
+            catch (Exception ex) when (ex is not OperationCanceledException)
+            {
+                return Results.Json(new OptionsResult([], ex.Message));
+            }
+        });
+
+        api.MapGet("/status", (PluginStatusRegistry statusRegistry) => statusRegistry.All);
+
         api.MapPost("/windows/preferences", async (IUiWindowService windows) =>
         {
             await windows.ShowToolWindowAsync("preferences", "Tercihler", $"http://localhost:{Port}/editor/?window=preferences", 640, 520);
@@ -301,6 +394,14 @@ internal static class ServerApp
         api.MapPost("/windows/plugins", async (IUiWindowService windows) =>
         {
             await windows.ShowToolWindowAsync("plugins", "Eklentiler", $"http://localhost:{Port}/editor/?window=plugins", 640, 520);
+            return Results.NoContent();
+        });
+
+        api.MapPost("/windows/plugin-settings/{id}", async (string id, IUiWindowService windows, PluginLoadResult pluginLoad) =>
+        {
+            var name = pluginLoad.Plugins.FirstOrDefault(p => p.Id == id)?.Name ?? id;
+            await windows.ShowToolWindowAsync($"plugin-settings-{id}", name,
+                $"http://localhost:{Port}/editor/?window=plugin-settings&id={Uri.EscapeDataString(id)}", 520, 560);
             return Results.NoContent();
         });
 

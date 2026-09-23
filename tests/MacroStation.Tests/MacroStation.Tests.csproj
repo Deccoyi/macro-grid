@@ -21,6 +21,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\MacroStation.Core\MacroStation.Core.csproj" />
     <ProjectReference Include="..\..\src\MacroStation.Windows\MacroStation.Windows.csproj" />
+    <ProjectReference Include="..\MacroStation.Tests.StubPlugin\MacroStation.Tests.StubPlugin.csproj" />
   </ItemGroup>
 
 </Project>

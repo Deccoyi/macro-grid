@@ -47,6 +47,32 @@ public class VariableStoreTests
     }
 
     [Fact]
+    public void Remove_raises_Changed_and_clears_the_value()
+    {
+        var store = new VariableStore();
+        store.Set("obs.input.mic.muted", true);
+        var fired = 0;
+        store.Changed += _ => fired++;
+
+        store.Remove("obs.input.mic.muted");
+
+        Assert.Equal(1, fired);
+        Assert.Null(store.Get("obs.input.mic.muted"));
+    }
+
+    [Fact]
+    public void Remove_of_an_unknown_name_does_not_raise_Changed()
+    {
+        var store = new VariableStore();
+        var fired = 0;
+        store.Changed += _ => fired++;
+
+        store.Remove("nope");
+
+        Assert.Equal(0, fired);
+    }
+
+    [Fact]
     public void Snapshot_is_a_point_in_time_copy()
     {
         var store = new VariableStore();

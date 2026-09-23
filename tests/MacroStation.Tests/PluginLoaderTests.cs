@@ -1,4 +1,5 @@
 using MacroStation.Core.Plugins;
+using MacroStation.Plugin.Abstractions;
 using Microsoft.Extensions.Logging.Abstractions;
 
 namespace MacroStation.Tests;
@@ -9,7 +10,11 @@ public sealed class PluginLoaderTests : IDisposable
 
     public void Dispose()
     {
-        if (Directory.Exists(_dir)) Directory.Delete(_dir, recursive: true);
+        // A loaded plugin's DLL stays memory-mapped by its (collectible but not yet GC'd)
+        // AssemblyLoadContext for a moment after LoadAll returns — best-effort cleanup only.
+        try { if (Directory.Exists(_dir)) Directory.Delete(_dir, recursive: true); }
+        catch (UnauthorizedAccessException) { }
+        catch (IOException) { }
     }
 
     private string NewPluginFolder(string name)
@@ -22,7 +27,7 @@ public sealed class PluginLoaderTests : IDisposable
     [Fact]
     public void LoadAll_on_a_missing_folder_returns_empty()
     {
-        var result = PluginLoader.LoadAll(Path.Combine(_dir, "does-not-exist"), "0.1.0", NullLogger.Instance);
+        var result = PluginLoader.LoadAll(Path.Combine(_dir, "does-not-exist"), "0.1.0", new PluginStatusRegistry(), NullLogger.Instance);
 
         Assert.Empty(result.Plugins);
     }
@@ -32,7 +37,7 @@ public sealed class PluginLoaderTests : IDisposable
     {
         NewPluginFolder("NotAPlugin");
 
-        var result = PluginLoader.LoadAll(_dir, "0.1.0", NullLogger.Instance);
+        var result = PluginLoader.LoadAll(_dir, "0.1.0", new PluginStatusRegistry(), NullLogger.Instance);
 
         Assert.Empty(result.Plugins);
     }
@@ -43,7 +48,7 @@ public sealed class PluginLoaderTests : IDisposable
         var dir = NewPluginFolder("Broken");
         File.WriteAllText(Path.Combine(dir, "plugin.json"), "{ not json");
 
-        var result = PluginLoader.LoadAll(_dir, "0.1.0", NullLogger.Instance);
+        var result = PluginLoader.LoadAll(_dir, "0.1.0", new PluginStatusRegistry(), NullLogger.Instance);
 
         var plugin = Assert.Single(result.Plugins);
         Assert.Equal(PluginLoadStatus.Error, plugin.Status);
@@ -55,7 +60,7 @@ public sealed class PluginLoaderTests : IDisposable
         var dir = NewPluginFolder("TooNew");
         WriteManifest(dir, sdkVersion: "^99.0.0");
 
-        var result = PluginLoader.LoadAll(_dir, "0.1.0", NullLogger.Instance);
+        var result = PluginLoader.LoadAll(_dir, "0.1.0", new PluginStatusRegistry(), NullLogger.Instance);
 
         var plugin = Assert.Single(result.Plugins);
         Assert.Equal(PluginLoadStatus.Incompatible, plugin.Status);
@@ -68,7 +73,7 @@ public sealed class PluginLoaderTests : IDisposable
         var dir = NewPluginFolder("NeedsNewerServer");
         WriteManifest(dir, minServerVersion: "99.0.0");
 
-        var result = PluginLoader.LoadAll(_dir, "0.1.0", NullLogger.Instance);
+        var result = PluginLoader.LoadAll(_dir, "0.1.0", new PluginStatusRegistry(), NullLogger.Instance);
 
         var plugin = Assert.Single(result.Plugins);
         Assert.Equal(PluginLoadStatus.Incompatible, plugin.Status);
@@ -80,7 +85,7 @@ public sealed class PluginLoaderTests : IDisposable
         var dir = NewPluginFolder("JsOne");
         WriteManifest(dir, kind: "js", entry: "index.js");
 
-        var result = PluginLoader.LoadAll(_dir, "0.1.0", NullLogger.Instance);
+        var result = PluginLoader.LoadAll(_dir, "0.1.0", new PluginStatusRegistry(), NullLogger.Instance);
 
         var plugin = Assert.Single(result.Plugins);
         Assert.Equal(PluginLoadStatus.Incompatible, plugin.Status);
@@ -92,7 +97,7 @@ public sealed class PluginLoaderTests : IDisposable
         var dir = NewPluginFolder("NoDll");
         WriteManifest(dir, entry: "DoesNotExist.dll");
 
-        var result = PluginLoader.LoadAll(_dir, "0.1.0", NullLogger.Instance);
+        var result = PluginLoader.LoadAll(_dir, "0.1.0", new PluginStatusRegistry(), NullLogger.Instance);
 
         var plugin = Assert.Single(result.Plugins);
         Assert.Equal(PluginLoadStatus.Error, plugin.Status);
@@ -106,13 +111,47 @@ public sealed class PluginLoaderTests : IDisposable
         var dir2 = NewPluginFolder("Second");
         WriteManifest(dir2, id: "dupe");
 
-        var result = PluginLoader.LoadAll(_dir, "0.1.0", NullLogger.Instance);
+        var result = PluginLoader.LoadAll(_dir, "0.1.0", new PluginStatusRegistry(), NullLogger.Instance);
 
         Assert.Equal(2, result.Plugins.Count);
         Assert.Contains(result.Plugins, p => p.Status == PluginLoadStatus.Error);
     }
 
-    private static void WriteManifest(string dir, string? id = null, string sdkVersion = "^0.2.0", string minServerVersion = "0.1.0", string kind = "csharp", string entry = "Plugin.dll")
+    [Fact]
+    public void LoadAll_collects_a_plugins_described_action_settings_page_and_status_item()
+    {
+        var dir = NewPluginFolder("Stub");
+        var entryAssembly = typeof(StubPlugin.StubPlugin).Assembly.Location;
+        var entryName = Path.GetFileName(entryAssembly);
+        CopyBuildOutput(Path.GetDirectoryName(entryAssembly)!, dir);
+        WriteManifest(dir, id: "stub", entry: entryName);
+
+        var statusRegistry = new PluginStatusRegistry();
+        var result = PluginLoader.LoadAll(_dir, "0.1.0", statusRegistry, NullLogger.Instance);
+
+        var plugin = Assert.Single(result.Plugins);
+        Assert.Equal(PluginLoadStatus.Loaded, plugin.Status);
+        Assert.True(plugin.HasSettings);
+
+        var action = Assert.Single(result.Actions);
+        var descriptor = Assert.IsAssignableFrom<IActionDescriptor>(action);
+        Assert.Equal("Stub", descriptor.Category);
+        Assert.Single(descriptor.Fields);
+
+        Assert.True(result.SettingsPages.ContainsKey("stub"));
+        Assert.Equal("stub", result.ActionPluginIds["stub.action"]);
+
+        var statusItem = Assert.Single(statusRegistry.All, i => i.PluginId == "stub");
+        Assert.Equal("stub hazır", statusItem.Text);
+    }
+
+    private static void CopyBuildOutput(string sourceDir, string destDir)
+    {
+        foreach (var file in Directory.GetFiles(sourceDir, "*.dll"))
+            File.Copy(file, Path.Combine(destDir, Path.GetFileName(file)), overwrite: true);
+    }
+
+    private static void WriteManifest(string dir, string? id = null, string sdkVersion = "^0.3.0", string minServerVersion = "0.1.0", string kind = "csharp", string entry = "Plugin.dll")
     {
         var json = $$"""
         {

@@ -21,6 +21,7 @@ internal sealed class ToolWindow : Form
         Height = height;
         MinimumSize = new Size(480, 360);
         StartPosition = FormStartPosition.CenterScreen;
+        Icon = Icon.ExtractAssociatedIcon(Application.ExecutablePath);
         Controls.Add(_webView);
         _ = InitializeAsync(url);
     }

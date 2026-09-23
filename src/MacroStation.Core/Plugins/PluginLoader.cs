@@ -5,7 +5,13 @@ using Microsoft.Extensions.Logging;
 
 namespace MacroStation.Core.Plugins;
 
-public sealed record PluginLoadResult(IReadOnlyList<LoadedPlugin> Plugins, IReadOnlyList<IActionHandler> Actions, IReadOnlyList<IVariableProvider> VariableProviders);
+public sealed record PluginLoadResult(
+    IReadOnlyList<LoadedPlugin> Plugins,
+    IReadOnlyList<IActionHandler> Actions,
+    IReadOnlyList<IVariableProvider> VariableProviders,
+    IReadOnlyDictionary<string, IPluginSettingsPage> SettingsPages,
+    IReadOnlyList<IIconPackSource> IconPacks,
+    IReadOnlyDictionary<string, string> ActionPluginIds);
 
 /// <summary>
 /// Scans a `plugins/&lt;Name&gt;/` folder tree for `plugin.json` manifests and loads each `kind: "csharp"`
@@ -17,15 +23,18 @@ public static class PluginLoader
 {
     private static readonly JsonSerializerOptions ManifestJson = new(JsonSerializerDefaults.Web);
 
-    public static PluginLoadResult LoadAll(string pluginsRoot, string serverVersion, ILogger logger)
+    public static PluginLoadResult LoadAll(string pluginsRoot, string serverVersion, PluginStatusRegistry statusRegistry, ILogger logger)
     {
         var plugins = new List<LoadedPlugin>();
         var actions = new List<IActionHandler>();
         var providers = new List<IVariableProvider>();
+        var settingsPages = new Dictionary<string, IPluginSettingsPage>(StringComparer.OrdinalIgnoreCase);
+        var iconPacks = new List<IIconPackSource>();
+        var actionPluginIds = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
         var seenIds = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
         if (!Directory.Exists(pluginsRoot))
-            return new PluginLoadResult(plugins, actions, providers);
+            return new PluginLoadResult(plugins, actions, providers, settingsPages, iconPacks, actionPluginIds);
 
         foreach (var dir in Directory.EnumerateDirectories(pluginsRoot))
         {
@@ -91,12 +100,17 @@ public static class PluginLoader
                     ?? throw new InvalidOperationException($"{manifest.Entry} içinde IPlugin uygulayan bir tip bulunamadı");
 
                 var instance = (IPlugin)(Activator.CreateInstance(pluginType) ?? throw new InvalidOperationException("Plugin örneği oluşturulamadı"));
-                var host = new PluginHostCollector(serverVersion, dir, manifest.Id, logger);
+                var host = new PluginHostCollector(serverVersion, dir, manifest.Id, statusRegistry, logger);
                 instance.Initialize(host);
 
                 actions.AddRange(host.Actions);
+                foreach (var action in host.Actions)
+                    actionPluginIds[action.Type] = manifest.Id;
                 providers.AddRange(host.VariableProviders);
-                plugins.Add(new LoadedPlugin(manifest.Id, manifest.Name, manifest.Version, PluginLoadStatus.Loaded, null));
+                iconPacks.AddRange(host.IconPacks);
+                if (host.SettingsPage is { } settingsPage)
+                    settingsPages[manifest.Id] = settingsPage;
+                plugins.Add(new LoadedPlugin(manifest.Id, manifest.Name, manifest.Version, PluginLoadStatus.Loaded, null, host.SettingsPage is not null));
                 logger.LogInformation("Plugin yüklendi: {Id} {Version}", manifest.Id, manifest.Version);
             }
             catch (Exception ex) when (ex is not OperationCanceledException)
@@ -106,6 +120,6 @@ public static class PluginLoader
             }
         }
 
-        return new PluginLoadResult(plugins, actions, providers);
+        return new PluginLoadResult(plugins, actions, providers, settingsPages, iconPacks, actionPluginIds);
     }
 }

@@ -8,5 +8,6 @@
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/MacroStation.Tests/MacroStation.Tests.csproj" />
+    <Project Path="tests/MacroStation.Tests.StubPlugin/MacroStation.Tests.StubPlugin.csproj" />
   </Folder>
 </Solution>

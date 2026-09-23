@@ -19,6 +19,7 @@ internal sealed class EditorWindow : Form
         Width = 1280;
         Height = 800;
         StartPosition = FormStartPosition.CenterScreen;
+        Icon = Icon.ExtractAssociatedIcon(Application.ExecutablePath);
         Controls.Add(_webView);
         _ = InitializeAsync(url);
     }
