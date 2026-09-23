@@ -34,7 +34,7 @@ export function DialogHost() {
     <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.5)", zIndex: 80, display: "flex", alignItems: "center", justifyContent: "center" }} onClick={cancel}>
       <div
         onClick={(e) => e.stopPropagation()}
-        style={{ width: 340, background: "var(--ms-bg-surface)", border: "1px solid var(--ms-border)", borderRadius: 10, boxShadow: "0 24px 60px rgba(0,0,0,.5)" }}
+        style={{ width: 320, background: "var(--ms-bg-surface)", border: "1px solid var(--ms-border-strong)", borderRadius: 6 }}
       >
         <div style={{ padding: "16px 18px 4px", fontSize: 14, fontWeight: 600 }}>
           {request.title ??

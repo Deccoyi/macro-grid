@@ -22,6 +22,7 @@ export interface PairedDeviceInfo {
   name: string;
   pairedAt: string;
   lastSeenAt: string;
+  assignedProfileId: string | null;
 }
 
 /** Pairing QR payload. `text` is the `macrostation://pair?...` URI to encode — empty if the server

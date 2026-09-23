@@ -143,6 +143,10 @@ export const tr = {
   "pairing.noDevices": "Henüz eşleşmiş cihaz yok.",
   "pairing.lastSeen": (date: string) => `Son görülme: ${date}`,
   "pairing.revoke": "Eşleşmeyi kaldır",
+  "pairing.browser": "Tarayıcıdan bağlan",
+  "pairing.browser.hint": "Telefon uygulaması kurmadan, aynı ağdaki herhangi bir cihazın tarayıcısından bu adrese girerek deck'i açabilirsiniz. PIN yine sorulur.",
+  "pairing.deviceProfile": "Bu cihazda açılacak profil",
+  "pairing.deviceProfile.default": "Varsayılan (ilk profil)",
 
   // ---- Action editor ----
   "action.event.press": "Basınca",
@@ -150,6 +154,7 @@ export const tr = {
   "action.event.longPress": "Uzun basınca",
   "action.event.doubleTap": "Çift dokununca",
   "action.event.toggleOn": "Açılınca",
+  "action.event.valueChange": "Değer değişti",
   "action.event.toggleOff": "Kapanınca",
   "action.warning.longDouble": "Uyarı: \"Uzun basınca\"/\"Çift dokununca\" ayrıca çalışır, \"Basınca\"/\"Bırakınca\"nın yerine geçmez — her dokunuş zaten bir basıştır, o yüzden ikisi de tetiklenir.",
   "action.none": "Bu olaya bağlı aksiyon yok.",
@@ -204,7 +209,10 @@ export const tr = {
   "fields.range.min": "Min",
   "fields.range.max": "Maks",
   "fields.range.step": "Adım",
-  "fields.range.note": "Bu widget'ın sürüklenen değerini şu an hiçbir şey kullanmıyor — ses seviyesi gibi gerçek bir bağlantı, o değeri işleyecek bir plugin (Aşama 6, \"Ses\" plugin'i) kurulunca çalışacak. \"Basınca\"/\"Uzun basınca\" gibi olaylara aksiyon bağlamak (ör. sustur) yine de çalışır.",
+  "fields.range.valueVariable": "Konumu gösteren değişken",
+  "fields.range.valueVariable.none": "Seçilmedi (yalnızca yerel)",
+  "fields.range.valueVariable.clear": "Kaldır",
+  "fields.range.note": "Sürükleme bittiğinde (bırakınca) \"Değer değişti\" olayına bağlanan aksiyon çalışır — Aksiyonlar bölümünden bağlayın (ör. \"Ana ses seviyesi\"). Yukarıdaki değişken seçiliyse widget'ın konumu o değişkenin canlı değerini (başka bir cihazdan ya da Windows'un kendisinden değişse bile) gösterir; seçilmezse konum yalnızca bu cihazdaki son sürüklemeyi yansıtır.",
 
   // ---- Text fields ----
   "fields.text.label": "Metin",
@@ -219,7 +227,7 @@ export const tr = {
   "fields.text.valign.bottom": "Alt",
   "fields.text.fontSize": "Font boyutu (px)",
   "fields.text.icon": "İkon",
-  "fields.text.iconSize": "İkon boyutu (px)",
+  "fields.text.iconSize": "İkon boyutu",
   "fields.text.iconPosition": "İkon konumu",
   "fields.text.iconPosition.top": "Metnin üstünde",
   "fields.text.iconPosition.bottom": "Metnin altında",
@@ -287,6 +295,10 @@ export const tr = {
   "form.openUrl.label": "URL (varsayılan tarayıcıda açılır)",
   "form.openUrl.invalid": "http:// veya https:// ile başlamalı.",
   "form.delay.label": "Gecikme (ms, en fazla 60000)",
+  "form.noSettings": "Ek ayar gerekmiyor.",
+  "form.setMute.label": "Ses",
+  "form.setMute.mute": "Sustur",
+  "form.setMute.unmute": "Aç",
   "form.json.label": "Ayarlar (JSON)",
 
   // ---- useEditorState defaults / errors ----

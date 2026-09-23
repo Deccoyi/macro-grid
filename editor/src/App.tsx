@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import type { Profile } from "@macro/renderer";
 import { Copy, Smartphone, Trash2 } from "lucide-react";
+import { api } from "./api/client";
 import { confirmAsync, promptAsync } from "./dialogs/dialogStore";
 import { DialogHost } from "./dialogs/DialogHost";
 import { DevicePreviewFrame, type DeviceSize } from "./grid/DevicePreviewFrame";
@@ -11,7 +12,6 @@ import { ContextMenu, type ContextMenuItem } from "./panels/ContextMenu";
 import { Inspector } from "./panels/Inspector";
 import { MenuBar } from "./panels/MenuBar";
 import { MoveCopyDialog } from "./panels/MoveCopyDialog";
-import { PairingPanel } from "./panels/PairingPanel";
 import { ProfilePagesPanel } from "./panels/ProfilePagesPanel";
 import { WidgetPalette } from "./panels/WidgetPalette";
 import { usePreferences } from "./preferences/PreferencesContext";
@@ -33,7 +33,6 @@ export function App() {
   const { previewProfiles } = usePreferences();
   const state = useEditorState();
   const { profile, currentPage } = state;
-  const [pairingOpen, setPairingOpen] = useState(false);
   const [devicePresetId, setDevicePresetId] = useState("free");
   const [customSize, setCustomSize] = useState<DeviceSize>({ width: 390, height: 844 });
   const devicePresets = [
@@ -104,7 +103,7 @@ export function App() {
         )}
 
         <button className="ghost" onClick={state.refreshVariables}>{t("header.refreshVariables")}</button>
-        <button className="ghost" onClick={() => setPairingOpen(true)} style={{ display: "flex", alignItems: "center", gap: 5 }}>
+        <button className="ghost" onClick={() => api.openToolWindow("pairing")} style={{ display: "flex", alignItems: "center", gap: 5 }}>
           <Smartphone size={13} /> {t("header.pairing")}
         </button>
         <button className="primary save-btn" onClick={state.save} disabled={!state.dirty || state.saving}>
@@ -112,7 +111,6 @@ export function App() {
         </button>
       </header>
 
-      {pairingOpen && <PairingPanel onClose={() => setPairingOpen(false)} />}
       <DialogHost />
 
       {state.error && (

@@ -62,6 +62,13 @@ export const api = {
 
   revokeDevice: (id: string): Promise<void> => req(`/api/devices/${id}`, { method: "DELETE" }).then((res) => json<void>(res)),
 
+  assignDeviceProfile: (id: string, profileId: string | null): Promise<void> =>
+    req(`/api/devices/${id}/profile`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ profileId }),
+    }).then((res) => json<void>(res)),
+
   getPreferences: (): Promise<AppPreferences> => req("/api/preferences").then((res) => json<AppPreferences>(res)),
 
   savePreferences: (preferences: AppPreferences): Promise<void> =>
@@ -85,6 +92,6 @@ export const api = {
 
   /** Opens (or focuses) a real, separate OS window for a tool panel — see docs/ui-guidelines.md:
    * Preferences/Plugins are native windows, not in-page modals. */
-  openToolWindow: (kind: "preferences" | "plugins" | "help"): Promise<void> =>
+  openToolWindow: (kind: "preferences" | "plugins" | "help" | "pairing"): Promise<void> =>
     req(`/api/windows/${kind}`, { method: "POST" }).then((res) => json<void>(res)),
 };
