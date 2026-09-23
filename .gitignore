@@ -48,6 +48,9 @@ pnpm-debug.log*
 # wwwroot at deploy time — regenerate from source, don't commit the output.
 src/MacroStation.Host/wwwroot/editor/
 
+# Same for webclient/ — built and copied into wwwroot/deck/ at deploy time.
+src/MacroStation.Host/wwwroot/deck/
+
 # ============================================================
 # Logs
 # ============================================================

@@ -1,0 +1,24 @@
+{
+  "name": "macro-station-webclient",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Browser deck — the same grid/widgets as the Android client, served by the server itself at /deck/ so any device on the LAN with a browser can act as a Macro Station deck without installing the app.",
+  "scripts": {
+    "dev": "vite --port 5192",
+    "build": "vite build",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@macro/renderer": "file:../packages/renderer",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.11",
+    "@types/react-dom": "^18.3.1",
+    "@vitejs/plugin-react": "^4.3.2",
+    "typescript": "^5.6.3",
+    "vite": "^5.4.9"
+  }
+}
