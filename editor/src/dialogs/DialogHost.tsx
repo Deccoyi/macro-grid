@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useT } from "../i18n/I18nContext";
 import { type DialogRequest, subscribe } from "./dialogStore";
+import { useBackdropClose } from "../components/useBackdropClose";
 
 /** Renders the single active confirm/prompt/alert/choice request as an app-styled modal (same chrome as
  * PairingPanel) instead of the browser's native confirm()/prompt(). Mount once near the app root. */
@@ -8,6 +9,9 @@ export function DialogHost() {
   const { t } = useT();
   const [request, setRequest] = useState<DialogRequest | null>(null);
   const [value, setValue] = useState("");
+
+  const cancelRef = useRef<() => void>(() => {});
+  const backdrop = useBackdropClose(() => cancelRef.current());
 
   useEffect(() => subscribe(setRequest), []);
 
@@ -23,6 +27,7 @@ export function DialogHost() {
     else request.resolve();
     setRequest(null);
   };
+  cancelRef.current = cancel;
   const choose = (value: string) => {
     if (request.kind === "choice") request.resolve(value);
     setRequest(null);
@@ -36,7 +41,7 @@ export function DialogHost() {
   };
 
   return (
-    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.5)", zIndex: 80, display: "flex", alignItems: "center", justifyContent: "center" }} onClick={cancel}>
+    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.5)", zIndex: 80, display: "flex", alignItems: "center", justifyContent: "center" }} {...backdrop}>
       <div
         onClick={(e) => e.stopPropagation()}
         style={{ width: request.kind === "choice" ? 380 : 320, background: "var(--ms-bg-surface)", border: "1px solid var(--ms-border-strong)", borderRadius: 6 }}

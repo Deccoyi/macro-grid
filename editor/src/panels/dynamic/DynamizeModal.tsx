@@ -7,6 +7,7 @@ import { useT } from "../../i18n/I18nContext";
 import type { DictKey } from "../../i18n/tr";
 import { VariablePicker } from "../VariablePicker";
 import { combinatorOf, fromConditionNode, newCase, newCondition, toConditionNode, type EditCase, type EditCondition } from "./conditionEditing";
+import { useBackdropClose } from "../../components/useBackdropClose";
 
 const OPERATOR_KEYS: Record<EditCondition["operator"], DictKey> = {
   ">": "dynamic.operator.>",
@@ -34,6 +35,7 @@ const COMBINATOR_KEYS: Record<EditCase["combinator"], DictKey> = { and: "dynamic
 
 export function DynamizeModal({ propertyLabel, binding, variableCatalog, resultKind = "color", onSave, onClose }: DynamizeModalProps) {
   const { t } = useT();
+  const backdrop = useBackdropClose(onClose);
   const defaultResult = typeof resultKind === "object" ? (resultKind.select[0]?.value ?? "") : "#c0392b";
   const [unsupported] = useState(() => binding !== undefined && binding.cases.some((c) => fromConditionNode(c.condition) === null));
   const [cases, setCases] = useState<EditCase[]>(() =>
@@ -59,7 +61,7 @@ export function DynamizeModal({ propertyLabel, binding, variableCatalog, resultK
   const remove = () => { onSave(null); onClose(); };
 
   return (
-    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.5)", zIndex: 60, display: "flex", alignItems: "center", justifyContent: "center" }} onClick={onClose}>
+    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.5)", zIndex: 60, display: "flex", alignItems: "center", justifyContent: "center" }} {...backdrop}>
       <div
         onClick={(e) => e.stopPropagation()}
         style={{ width: 600, maxHeight: "82vh", background: "var(--ms-bg-surface)", border: "1px solid var(--ms-border-strong)", display: "flex", flexDirection: "column" }}

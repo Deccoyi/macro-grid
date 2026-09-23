@@ -1,5 +1,6 @@
 import { useMemo, useState, type ReactNode } from "react";
 import { useT } from "../i18n/I18nContext";
+import { useBackdropClose } from "../components/useBackdropClose";
 
 export interface PickerCategory {
   id: string;
@@ -40,8 +41,9 @@ export function PickerShell({
   children,
 }: PickerShellProps) {
   const { t } = useT();
+  const backdrop = useBackdropClose(onClose);
   return (
-    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.5)", zIndex: 50, display: "flex", alignItems: "center", justifyContent: "center" }} onClick={onClose}>
+    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.5)", zIndex: 50, display: "flex", alignItems: "center", justifyContent: "center" }} {...backdrop}>
       <div
         onClick={(e) => e.stopPropagation()}
         style={{
