@@ -9,8 +9,8 @@ Tek bir "proje versiyonu" yok — birbirinden bağımsız dört versiyon takip e
 |---|---|---|
 | **Server (Host)** | `MacroStation.Core.Sessions.ClientHub.ServerVersion` sabiti | `0.1.0` |
 | **Client** | `client/package.json` → `version` (client kurulunca) | — |
-| **Plugin SDK** (`MacroStation.Plugin.Abstractions`) | Kendi paket versiyonu (NuGet paketi olduğunda `.csproj` → `<Version>`) | `0.1.0` (henüz paketlenmedi, kod hâlâ proje referansıyla kullanılıyor) |
-| **Her plugin** | Kendi `plugin.json` → `version` | loader tamam, henüz hiçbir gerçek plugin yazılmadı (Aşama 6) |
+| **Plugin SDK** (`MacroStation.Plugin.Abstractions`) | Kendi paket versiyonu (NuGet paketi olduğunda `.csproj` → `<Version>`) | `0.2.0` (henüz paketlenmedi, kod hâlâ proje referansıyla kullanılıyor — `IPluginHost`'a `DataDirectory`/`Log` eklendiği için `0.1.0`'dan MINOR bump) |
+| **Her plugin** | Kendi `plugin.json` → `version` | loader tamam, ilk gerçek plugin (OBS, `0.1.0`) yazıldı — bkz. `macro-station-plugins/OBS/` |
 
 **Protokol versiyonu ayrı bir kavram:** WebSocket mesaj şeması (`hello`/`welcome` içindeki `clientVersion`/`serverVersion`) şu an sadece bilgi amaçlı gönderiliyor, uyumluluk kontrolü yapmıyor. İleride (Aşama 5, eşleştirme) bir `protocolVersion` tamsayısı eklenip sunucu/istemci uyuşmazsa kullanıcıya net bir "istemcini güncelle" mesajı gösterilmesi planlanıyor — bu SemVer'den bağımsız, basit artan bir sayı olacak (protokol her değiştiğinde +1).
 

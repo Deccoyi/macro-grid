@@ -23,6 +23,15 @@ public interface IPluginHost
     /// <summary>The Plugin SDK (this assembly's) version the plugin was validated against.</summary>
     string SdkVersion { get; }
 
+    /// <summary>The plugin's own install folder (e.g. `%AppData%/MacroStation/plugins/&lt;id&gt;/`) — writable,
+    /// no admin rights needed. A plugin that needs to persist its own settings (connection details, etc.)
+    /// reads/writes its own file(s) here; the host has no generic settings UI/storage for plugins yet.</summary>
+    string DataDirectory { get; }
+
+    /// <summary>Writes a line to the host's plugin log, prefixed with the plugin's id. There is no
+    /// per-plugin log level — use sparingly (connection state changes, errors), not for high-frequency polling.</summary>
+    void Log(string message);
+
     void RegisterAction(IActionHandler handler);
 
     /// <summary>Registers a variable provider. If it also implements <see cref="IVariableCatalogSource"/>, that is picked up automatically.</summary>

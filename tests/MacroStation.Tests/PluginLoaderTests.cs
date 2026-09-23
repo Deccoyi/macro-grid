@@ -112,7 +112,7 @@ public sealed class PluginLoaderTests : IDisposable
         Assert.Contains(result.Plugins, p => p.Status == PluginLoadStatus.Error);
     }
 
-    private static void WriteManifest(string dir, string? id = null, string sdkVersion = "^0.1.0", string minServerVersion = "0.1.0", string kind = "csharp", string entry = "Plugin.dll")
+    private static void WriteManifest(string dir, string? id = null, string sdkVersion = "^0.2.0", string minServerVersion = "0.1.0", string kind = "csharp", string entry = "Plugin.dll")
     {
         var json = $$"""
         {

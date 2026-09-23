@@ -91,7 +91,7 @@ public static class PluginLoader
                     ?? throw new InvalidOperationException($"{manifest.Entry} içinde IPlugin uygulayan bir tip bulunamadı");
 
                 var instance = (IPlugin)(Activator.CreateInstance(pluginType) ?? throw new InvalidOperationException("Plugin örneği oluşturulamadı"));
-                var host = new PluginHostCollector(serverVersion);
+                var host = new PluginHostCollector(serverVersion, dir, manifest.Id, logger);
                 instance.Initialize(host);
 
                 actions.AddRange(host.Actions);
