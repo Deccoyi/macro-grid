@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { ChevronUp, ChevronDown, X } from "lucide-react";
+import { useState, type ElementType } from "react";
+import { ChevronUp, ChevronDown, Circle, CircleDot, SlidersHorizontal, Timer, ToggleLeft, ToggleRight, X } from "lucide-react";
 import type { ActionBinding, Page, Widget, WidgetEventName } from "@macro/renderer";
 import type { ActionInfo, ProfileSummary } from "../api/types";
 import { useT } from "../i18n/I18nContext";
@@ -14,21 +14,39 @@ export interface ActionEditorProps {
   onChange: (event: WidgetEventName, bindings: ActionBinding[]) => void;
 }
 
-const BUTTON_EVENTS: { event: WidgetEventName; key: DictKey }[] = [
-  { event: "press", key: "action.event.press" },
-  { event: "release", key: "action.event.release" },
-  { event: "longPress", key: "action.event.longPress" },
-  { event: "doubleTap", key: "action.event.doubleTap" },
+/** Two filled dots — lucide has no "double tap" glyph, so this stays a small hand-drawn icon in the
+ * same stroke-icon family (see the other event icons, all lucide). */
+function DoubleTapIcon({ size = 16 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor">
+      <circle cx="8" cy="12" r="3" />
+      <circle cx="16" cy="12" r="3" />
+    </svg>
+  );
+}
+
+const BUTTON_EVENTS: { event: WidgetEventName; key: DictKey; icon: ElementType }[] = [
+  { event: "press", key: "action.event.press", icon: CircleDot },
+  { event: "release", key: "action.event.release", icon: Circle },
+  { event: "longPress", key: "action.event.longPress", icon: Timer },
+  { event: "doubleTap", key: "action.event.doubleTap", icon: DoubleTapIcon },
 ];
 
-const TOGGLE_EVENTS: { event: WidgetEventName; key: DictKey }[] = [
-  { event: "toggleOn", key: "action.event.toggleOn" },
-  { event: "toggleOff", key: "action.event.toggleOff" },
+const TOGGLE_EVENTS: { event: WidgetEventName; key: DictKey; icon: ElementType }[] = [
+  { event: "toggleOn", key: "action.event.toggleOn", icon: ToggleRight },
+  { event: "toggleOff", key: "action.event.toggleOff", icon: ToggleLeft },
+];
+
+const VALUE_EVENTS: { event: WidgetEventName; key: DictKey; icon: ElementType }[] = [
+  { event: "valueChange", key: "action.event.valueChange", icon: SlidersHorizontal },
 ];
 
 export function ActionEditor({ widget, actions, pages, profiles, onChange }: ActionEditorProps) {
   const { t } = useT();
-  const events = widget.type === "toggle" ? TOGGLE_EVENTS : BUTTON_EVENTS;
+  const events =
+    widget.type === "toggle" ? TOGGLE_EVENTS
+    : widget.type === "slider" || widget.type === "knob" ? VALUE_EVENTS
+    : BUTTON_EVENTS;
   const [activeEvent, setActiveEvent] = useState<WidgetEventName>(events[0]!.event);
   const bindings = widget.actions[activeEvent] ?? [];
 
@@ -58,18 +76,26 @@ export function ActionEditor({ widget, actions, pages, profiles, onChange }: Act
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-      <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
-        {events.map((e) => (
-          <button
-            key={e.event}
-            className={activeEvent === e.event ? "active" : "ghost"}
-            onClick={() => setActiveEvent(e.event)}
-            style={{ padding: "4px 8px", fontSize: 12 }}
-          >
-            {t(e.key)}
-            {(widget.actions[e.event]?.length ?? 0) > 0 ? " •" : ""}
-          </button>
-        ))}
+      {/* Fixed N-column grid — never wraps unevenly the way the old flex-wrap pill row did, since a
+         grid track never breaks mid-row (see docs/ui-guidelines.md: kompakt, öngörülebilir kontroller). */}
+      <div style={{ display: "grid", gridTemplateColumns: `repeat(${events.length}, 1fr)`, gap: 6 }}>
+        {events.map((e) => {
+          const Icon = e.icon;
+          const bound = (widget.actions[e.event]?.length ?? 0) > 0;
+          return (
+            <button
+              key={e.event}
+              type="button"
+              className={activeEvent === e.event ? "action-event-cell on" : "action-event-cell"}
+              title={t(e.key)}
+              onClick={() => setActiveEvent(e.event)}
+            >
+              <Icon size={16} />
+              <span className="cap">{t(e.key)}</span>
+              {bound && <span className="dot" />}
+            </button>
+          );
+        })}
       </div>
 
       {widget.type !== "toggle" && hasLongOrDouble && hasPressOrRelease && (

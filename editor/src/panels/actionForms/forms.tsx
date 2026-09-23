@@ -150,6 +150,26 @@ export function DelayActionForm({ binding, onChange }: ActionFormProps) {
   );
 }
 
+/** No settings to configure — the action reads the widget's live dragged value instead (core.setVolume). */
+export function NoSettingsForm() {
+  const { t } = useT();
+  return <p style={{ fontSize: 11.5, color: "var(--ms-text-secondary)", margin: 0 }}>{t("form.noSettings")}</p>;
+}
+
+export function SetMuteActionForm({ binding, onChange }: ActionFormProps) {
+  const { t } = useT();
+  const muted = binding.settings.muted !== false;
+  return (
+    <label className="field">
+      {t("form.setMute.label")}
+      <select value={muted ? "mute" : "unmute"} onChange={(e) => onChange({ muted: e.target.value === "mute" })}>
+        <option value="mute">{t("form.setMute.mute")}</option>
+        <option value="unmute">{t("form.setMute.unmute")}</option>
+      </select>
+    </label>
+  );
+}
+
 /** Raw JSON fallback for action types the editor doesn't have a dedicated form for yet (future plugins). */
 export function GenericJsonForm({ binding, onChange }: ActionFormProps) {
   const { t } = useT();
@@ -181,6 +201,9 @@ export const ACTION_FORMS: Record<string, (props: ActionFormProps) => JSX.Elemen
   "core.open": OpenApplicationForm,
   "core.openUrl": OpenUrlActionForm,
   "core.delay": DelayActionForm,
+  "core.setVolume": NoSettingsForm,
+  "core.toggleMute": NoSettingsForm,
+  "core.setMute": SetMuteActionForm,
 };
 
 export function formFor(type: string): (props: ActionFormProps) => JSX.Element {
