@@ -116,6 +116,20 @@ internal static class ServerApp
             return Results.Empty;
         });
 
+        // The editor API (profiles, plugin install and approval, the pairing PIN, ...) is for the editor in the
+        // server's own window only. Phones and browser decks talk to /ws; nothing else on the network may
+        // reach /api, otherwise anyone on the LAN could read the pairing PIN or approve a plugin's permissions.
+        app.Use(async (ctx, next) =>
+        {
+            if (ctx.Request.Path.StartsWithSegments("/api") && !LoopbackGuard.IsLoopback(ctx.Connection.RemoteIpAddress))
+            {
+                ctx.Response.StatusCode = StatusCodes.Status403Forbidden;
+                await ctx.Response.WriteAsync("The editor API is only available on this computer.");
+                return;
+            }
+            await next();
+        });
+
         // Same disk-cache trap as the HTML files below, but for the editor's own REST calls: without
         // this, a GET right after a successful PUT/POST could return a stale cached body, making a
         // save look like it silently "sometimes doesn't work" when it actually did.
