@@ -3,6 +3,8 @@
 Bu dosya [Keep a Changelog](https://keepachangelog.com/) formatını takip eder. Sürümleme kuralları için [versioning.md](versioning.md)'ye bakın.
 
 ## [Unreleased]
+### Added
+- **Plugin kaldırma (uninstall):** `DELETE /api/plugins/{id}` (`ServerApp.cs`), `%AppData%/MacroStation/plugins/<id>/` klasörünü siler. Plugin o an yüklüyse (DLL hâlâ çalışan sürecin `PluginLoadContext`'inde memory-map'li) klasör anında silinemeyebilir — bu durumda bir `.uninstall` işaret dosyası bırakılır, `PluginLoader.LoadAll` bir sonraki açılışta bu işaretli klasörleri hiçbir şey yüklemeden önce siler. Editörde "Eklentiler" penceresindeki her satıra bir Kaldır düğmesi eklendi (`PluginsWindow.tsx`, `Trash2` ikonu), yıkıcı olduğu için `confirmAsync` ile onay isteniyor (`dialogStore.ts`'teki app-styled confirm, native `confirm()` değil). Kurulum gibi bu da devreye girmesi için sunucunun yeniden başlatılmasını gerektiriyor.
 
 ## [0.2.0] - 2026-09-23
 ### Added

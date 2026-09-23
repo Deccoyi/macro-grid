@@ -42,6 +42,10 @@ export const tr = {
   "plugins.install.hint": "plugin.json içeren bir klasör seç. Kopyalanır, ama devreye girmesi için sunucunun yeniden başlatılması gerekir.",
   "plugins.install.success": (name: string) => `${name} kopyalandı. Devreye girmesi için sunucuyu yeniden başlat.`,
   "plugins.settings": "Ayarlar",
+  "plugins.uninstall": "Kaldır",
+  "plugins.uninstall.confirm": (name: string) => `"${name}" kaldırılsın mı? Plugin klasörü silinir, bu geri alınamaz.`,
+  "plugins.uninstall.success": (name: string) => `${name} kaldırıldı. Devreye girmesi için sunucuyu yeniden başlat.`,
+  "plugins.uninstall.pending": (name: string) => `${name} şu an yüklü olduğu için hemen silinemedi; sunucu bir sonraki açılışta klasörü kaldıracak.`,
 
   // ---- Plugin settings window (schema-driven, IPluginSettingsPage) ----
   "pluginSettings.none": "Bu eklentinin ayarı yok.",
@@ -140,8 +144,11 @@ export const tr = {
   "dialog.confirm": "Onayla",
   "dialog.ok": "Tamam",
   "dialog.discardChanges": "Kaydedilmemiş değişiklikler kaybolacak. Devam edilsin mi?",
-  "profile.importRenamed": (original: string, renamed: string) =>
-    `"${original}" isimli bir profil zaten var. İçe aktarılan profil "${renamed}" olarak adlandırıldı.`,
+  "profile.importConflictTitle": "Profil zaten var",
+  "profile.importConflict": (name: string) =>
+    `"${name}" isimli bir profil zaten var. Mevcut profilin üzerine yazılsın mı, yoksa içe aktarılan profil yeni bir adla mı eklensin?`,
+  "profile.importRename": "Adı değiştir",
+  "profile.importOverwrite": "Üzerine yaz",
 
   // ---- Pairing panel ----
   "pairing.title": "Eşleştirme",

@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
-import { FolderOpen, RefreshCw, Settings } from "lucide-react";
+import { FolderOpen, RefreshCw, Settings, Trash2 } from "lucide-react";
 import { api } from "../api/client";
 import type { PluginInfo } from "../api/types";
+import { confirmAsync } from "../dialogs/dialogStore";
 import { useT } from "../i18n/I18nContext";
 import { SectionLabel } from "../panels/fields/controls";
 import { ToolWindowLayout } from "./ToolWindowLayout";
@@ -23,6 +24,7 @@ export function PluginsWindow() {
   const [category, setCategory] = useState<Category>("installed");
   const [plugins, setPlugins] = useState<PluginInfo[] | null>(null);
   const [installing, setInstalling] = useState(false);
+  const [uninstallingId, setUninstallingId] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -31,6 +33,22 @@ export function PluginsWindow() {
   useEffect(() => {
     refresh();
   }, []);
+
+  const uninstall = async (plugin: PluginInfo) => {
+    if (!(await confirmAsync(t("plugins.uninstall.confirm", plugin.name), { title: t("plugins.uninstall"), danger: true }))) return;
+    setUninstallingId(plugin.id);
+    setError(null);
+    setNotice(null);
+    try {
+      const result = await api.uninstallPlugin(plugin.id);
+      setNotice(result.pending ? t("plugins.uninstall.pending", plugin.name) : t("plugins.uninstall.success", plugin.name));
+      refresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setUninstallingId(null);
+    }
+  };
 
   const install = async () => {
     setInstalling(true);
@@ -90,6 +108,16 @@ export function PluginsWindow() {
                     <Settings size={14} />
                   </button>
                 )}
+                <button
+                  type="button"
+                  className="ghost"
+                  title={t("plugins.uninstall")}
+                  disabled={uninstallingId === p.id}
+                  onClick={() => uninstall(p)}
+                  style={{ display: "flex", padding: 6, flexShrink: 0 }}
+                >
+                  <Trash2 size={14} />
+                </button>
               </div>
             </div>
           ))}

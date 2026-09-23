@@ -42,6 +42,10 @@ export const en: Record<DictKey, string | ((...args: string[]) => string)> = {
   "plugins.install.hint": "Pick a folder containing a plugin.json. It's copied into place, but the server needs a restart to actually load it.",
   "plugins.install.success": (name: string) => `${name} copied. Restart the server for it to take effect.`,
   "plugins.settings": "Settings",
+  "plugins.uninstall": "Remove",
+  "plugins.uninstall.confirm": (name: string) => `Remove "${name}"? The plugin folder will be deleted — this can't be undone.`,
+  "plugins.uninstall.success": (name: string) => `${name} removed. Restart the server for it to take effect.`,
+  "plugins.uninstall.pending": (name: string) => `${name} couldn't be deleted right away because it's currently loaded; the server will remove its folder on the next restart.`,
 
   // ---- Plugin settings window (schema-driven, IPluginSettingsPage) ----
   "pluginSettings.none": "This plugin has no settings.",
@@ -133,8 +137,11 @@ export const en: Record<DictKey, string | ((...args: string[]) => string)> = {
   "dialog.confirm": "Confirm",
   "dialog.ok": "OK",
   "dialog.discardChanges": "Unsaved changes will be lost. Continue?",
-  "profile.importRenamed": (original: string, renamed: string) =>
-    `A profile named "${original}" already exists. The imported profile was named "${renamed}".`,
+  "profile.importConflictTitle": "Profile already exists",
+  "profile.importConflict": (name: string) =>
+    `A profile named "${name}" already exists. Overwrite the existing profile, or import this one under a new name?`,
+  "profile.importRename": "Rename",
+  "profile.importOverwrite": "Overwrite",
 
   "pairing.title": "Pairing",
   "pairing.newDeviceCode": "Code for a new device",

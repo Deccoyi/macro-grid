@@ -97,6 +97,14 @@ export interface PluginInstallResult {
   requiresRestart?: boolean;
 }
 
+export interface PluginUninstallResult {
+  removed: boolean;
+  /** true if the folder couldn't be deleted outright (plugin still loaded in the running process) and was
+   * instead marked for removal on the next server start — see ServerApp.cs's DELETE /api/plugins/{id}. */
+  pending: boolean;
+  requiresRestart: boolean;
+}
+
 export interface PairedDeviceInfo {
   id: string;
   name: string;

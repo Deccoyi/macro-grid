@@ -38,11 +38,24 @@ public static class PluginLoader
 
         foreach (var dir in Directory.EnumerateDirectories(pluginsRoot))
         {
+            var folderName = Path.GetFileName(dir);
+
+            // Deferred uninstall: the DELETE /api/plugins/{id} endpoint drops this marker when it can't
+            // delete the folder outright (plugin DLL still memory-mapped by the running server). Finish
+            // the removal here, before the server ever gets a chance to load it again.
+            if (File.Exists(Path.Combine(dir, ".uninstall")))
+            {
+                try { Directory.Delete(dir, recursive: true); }
+                catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+                {
+                    logger.LogError(ex, "Kaldırılmak üzere işaretlenmiş plugin klasörü silinemedi: {Folder}", folderName);
+                }
+                continue;
+            }
+
             var manifestPath = Path.Combine(dir, "plugin.json");
             if (!File.Exists(manifestPath))
                 continue;
-
-            var folderName = Path.GetFileName(dir);
             PluginManifest manifest;
             try
             {

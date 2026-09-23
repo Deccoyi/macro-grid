@@ -322,6 +322,30 @@ internal static class ServerApp
             return Results.Json(new { installed = true, id = manifest.Id, name = manifest.Name, requiresRestart = true });
         });
 
+        // Uninstall. A loaded plugin's assembly stays memory-mapped by its (collectible but never actually
+        // unloaded at runtime) PluginLoadContext for as long as the server process is alive, so an immediate
+        // Directory.Delete can throw (file in use) for a plugin that's currently Loaded. We try the immediate
+        // delete first (works for Error/Incompatible plugins, or ones never actually loaded), and if that
+        // throws we fall back to dropping a ".uninstall" marker file: PluginLoader.LoadAll deletes any folder
+        // carrying that marker at the next startup, before attempting to load anything else. Either way this
+        // requires a restart to fully take effect — same honesty as install's requiresRestart: true.
+        api.MapDelete("/plugins/{id}", (string id) =>
+        {
+            var dir = ResolvePluginDir(pluginsRoot, id);
+            if (dir is null) return Results.NotFound();
+
+            try
+            {
+                Directory.Delete(dir, recursive: true);
+                return Results.Json(new { removed = true, pending = false, requiresRestart = true });
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                File.WriteAllText(Path.Combine(dir, ".uninstall"), "");
+                return Results.Json(new { removed = true, pending = true, requiresRestart = true });
+            }
+        });
+
         // A registered IPluginSettingsPage (schema-driven form) takes precedence; a plugin without one
         // falls back to the raw settings.json passthrough it always had (see docs/plugin-authoring.md
         // §"Ayarlar") so older plugins keep working unchanged.
