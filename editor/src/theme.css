@@ -179,6 +179,60 @@ hr.sep {
 }
 .color-field input[type="text"]:focus { outline: none; }
 
+/* ColorField's own popover (replaces the native OS color dialog) — right-aligned so it hugs the
+   trigger's right edge and stays inside the narrow Properties panel instead of overflowing past it. */
+.color-field-popover {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  width: 186px;
+  z-index: 20;
+  background: var(--ms-bg-surface-raised);
+  border: 1px solid var(--ms-border-strong);
+  border-radius: 4px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, .35);
+  padding: 9px;
+}
+.swatch-grid {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 4px;
+}
+.swatch {
+  width: 16px;
+  height: 16px;
+  padding: 0;
+  border-radius: 3px;
+  border: 1px solid rgba(255, 255, 255, .14);
+  cursor: pointer;
+}
+.swatch.on { outline: 1.5px solid var(--ms-accent); outline-offset: 1px; }
+
+/* Actions section's event picker (press/release/long-press/double-tap, or toggleOn/toggleOff) — a fixed
+   grid of square cells, never a flex-wrap pill row (see docs/ui-guidelines.md: predictable, never
+   reflows unevenly at panel width). */
+.action-event-cell {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  aspect-ratio: 1 / 1;
+  background: var(--ms-bg-inset);
+  border: 1px solid var(--ms-border);
+  border-radius: 4px;
+  padding: 6px 2px;
+  cursor: pointer;
+}
+.action-event-cell:hover { border-color: var(--ms-border-strong); }
+.action-event-cell.on { border-color: var(--ms-accent); background: var(--ms-bg-canvas); }
+.action-event-cell svg { color: var(--ms-text-secondary); }
+.action-event-cell.on svg { color: var(--ms-accent); }
+.action-event-cell .cap { font-size: 9px; color: var(--ms-text-secondary); line-height: 1; white-space: nowrap; }
+.action-event-cell.on .cap { color: var(--ms-text-primary); font-weight: 600; }
+.action-event-cell .dot { position: absolute; top: 4px; right: 4px; width: 5px; height: 5px; border-radius: 50%; background: var(--ms-accent); }
+
 .seg {
   display: inline-flex;
   width: 100%;

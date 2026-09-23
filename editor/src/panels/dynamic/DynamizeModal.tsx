@@ -2,6 +2,7 @@ import { useState } from "react";
 import { ArrowRight, Plus, Trash2, Variable, X } from "lucide-react";
 import type { DynamicBinding } from "@macro/renderer";
 import type { VariableInfo } from "../../api/types";
+import { ColorField } from "../fields/controls";
 import { useT } from "../../i18n/I18nContext";
 import type { DictKey } from "../../i18n/tr";
 import { VariablePicker } from "../VariablePicker";
@@ -61,12 +62,13 @@ export function DynamizeModal({ propertyLabel, binding, variableCatalog, resultK
     <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.5)", zIndex: 60, display: "flex", alignItems: "center", justifyContent: "center" }} onClick={onClose}>
       <div
         onClick={(e) => e.stopPropagation()}
-        style={{ width: 620, maxHeight: "82vh", background: "var(--ms-bg-surface)", border: "1px solid var(--ms-border)", borderRadius: 10, boxShadow: "0 24px 60px rgba(0,0,0,.5)", display: "flex", flexDirection: "column" }}
+        style={{ width: 600, maxHeight: "82vh", background: "var(--ms-bg-surface)", border: "1px solid var(--ms-border-strong)", display: "flex", flexDirection: "column" }}
       >
-        {/* Header */}
-        <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "16px 20px", borderBottom: "1px solid var(--ms-border)" }}>
-          <div style={{ width: 30, height: 30, borderRadius: 7, background: "var(--ms-accent-bg-muted)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-            <Variable size={16} color="var(--ms-accent-hover)" />
+        {/* Header — a window title bar, not a web modal's rounded card top: square corners, no radius
+           anywhere in this shell (see docs/ui-guidelines.md: "pencere gibi", asla web modalı gibi). */}
+        <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "13px 18px", borderBottom: "1px solid var(--ms-border)" }}>
+          <div style={{ width: 26, height: 26, background: "var(--ms-accent-bg-muted)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+            <Variable size={14} color="var(--ms-accent-hover)" />
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 2, minWidth: 0 }}>
             <div style={{ fontSize: 14, fontWeight: 600 }}>{t("dynamic.title")}</div>
@@ -81,25 +83,25 @@ export function DynamizeModal({ propertyLabel, binding, variableCatalog, resultK
         {/* Body */}
         <div style={{ padding: "16px 20px", display: "flex", flexDirection: "column", gap: 10, overflowY: "auto" }}>
           {unsupported && (
-            <div style={{ fontSize: 11, color: "var(--ms-text-secondary)", background: "var(--ms-bg-inset)", padding: 8, borderRadius: 6 }}>
+            <div style={{ fontSize: 11, color: "var(--ms-text-secondary)", background: "var(--ms-bg-inset)", padding: 8 }}>
               {t("dynamic.unsupported")}
             </div>
           )}
 
           {cases.map((c, i) => (
-            <div key={i} style={{ borderRadius: 10, border: `1px solid ${i === 0 ? "var(--ms-border)" : "var(--ms-border)"}`, background: "var(--ms-bg-canvas)", padding: "14px 16px", display: "flex", flexDirection: "column", gap: 10 }}>
+            <div key={i} style={{ border: "1px solid var(--ms-border)", background: "var(--ms-bg-canvas)", padding: "12px 14px", display: "flex", flexDirection: "column", gap: 9 }}>
               <Keyword>{i === 0 ? t("dynamic.if") : t("dynamic.elseIf")}</Keyword>
 
               {c.conditions.map((cond, ci) => (
                 <div key={ci} style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                   {ci > 0 && (
-                    <div style={{ display: "flex", gap: 0, alignSelf: "flex-start" }}>
+                    <div className="seg" style={{ width: "auto", alignSelf: "flex-start" }}>
                       {(["and", "or", "xor"] as const).map((op) => (
                         <button
                           key={op}
                           type="button"
+                          className={c.combinator === op ? "on" : undefined}
                           onClick={() => updateCase(i, (cc) => { cc.combinator = op; })}
-                          style={pillComboStyle(c.combinator === op)}
                         >
                           {t(COMBINATOR_KEYS[op])}
                         </button>
@@ -109,9 +111,10 @@ export function DynamizeModal({ propertyLabel, binding, variableCatalog, resultK
                   <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
                     <button
                       type="button"
+                      className={cond.negate ? "active" : "ghost"}
                       onClick={() => updateCase(i, (cc) => { cc.conditions[ci]!.negate = !cc.conditions[ci]!.negate; })}
-                      style={pillNotStyle(cond.negate)}
                       title={t("dynamic.negate")}
+                      style={{ fontSize: 11 }}
                     >
                       {t("dynamic.negate")}
                     </button>
@@ -121,7 +124,7 @@ export function DynamizeModal({ propertyLabel, binding, variableCatalog, resultK
                       mode="bare"
                       onInsert={(name) => updateCase(i, (cc) => { cc.conditions[ci]!.variable = name; })}
                       renderTrigger={(open) => (
-                        <button type="button" onClick={open} style={pillVarStyle}>
+                        <button type="button" className="ghost" onClick={open} style={chipStyle}>
                           <Variable size={11} />
                           {cond.variable || t("dynamic.pickVariable")}
                         </button>
@@ -131,7 +134,7 @@ export function DynamizeModal({ propertyLabel, binding, variableCatalog, resultK
                     <select
                       value={cond.operator}
                       onChange={(e) => updateCase(i, (cc) => { cc.conditions[ci]!.operator = e.target.value as EditCondition["operator"]; })}
-                      style={pillSelectStyle}
+                      style={{ width: "auto" }}
                     >
                       {(Object.keys(OPERATOR_KEYS) as EditCondition["operator"][]).map((op) => (
                         <option key={op} value={op}>{t(OPERATOR_KEYS[op])}</option>
@@ -143,7 +146,7 @@ export function DynamizeModal({ propertyLabel, binding, variableCatalog, resultK
                       value={cond.value}
                       onChange={(e) => updateCase(i, (cc) => { cc.conditions[ci]!.value = e.target.value; })}
                       placeholder="50"
-                      style={pillInputStyle}
+                      style={{ width: 52, textAlign: "center", fontFamily: "ui-monospace, monospace" }}
                     />
                     {cond.operator === "between" && (
                       <>
@@ -153,7 +156,7 @@ export function DynamizeModal({ propertyLabel, binding, variableCatalog, resultK
                           value={cond.value2}
                           onChange={(e) => updateCase(i, (cc) => { cc.conditions[ci]!.value2 = e.target.value; })}
                           placeholder="80"
-                          style={pillInputStyle}
+                          style={{ width: 52, textAlign: "center", fontFamily: "ui-monospace, monospace" }}
                         />
                       </>
                     )}
@@ -177,12 +180,14 @@ export function DynamizeModal({ propertyLabel, binding, variableCatalog, resultK
                 <Plus size={11} /> {t("dynamic.addCondition")}
               </button>
 
-              <div style={{ height: 1, background: "var(--ms-border)", margin: "2px 0" }} />
+              <hr className="sep" style={{ margin: "1px 0" }} />
 
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                 <Keyword muted>{t("dynamic.then")}</Keyword>
                 <ArrowRight size={13} color="var(--ms-border-strong)" />
-                <ResultInput value={c.result} onChange={(v) => updateCase(i, (cc) => { cc.result = v; })} kind={resultKind} />
+                <div style={{ width: 150 }}>
+                  <ResultInput value={c.result} onChange={(v) => updateCase(i, (cc) => { cc.result = v; })} kind={resultKind} />
+                </div>
                 <div style={{ flex: 1 }} />
                 {cases.length > 1 && (
                   <button type="button" className="ghost" onClick={() => setCases((prev) => prev.filter((_, idx) => idx !== i))} style={{ color: "var(--ms-danger)", fontSize: 12 }}>
@@ -195,16 +200,19 @@ export function DynamizeModal({ propertyLabel, binding, variableCatalog, resultK
 
           <button
             type="button"
+            className="ghost"
             onClick={() => setCases((prev) => [...prev, newCase(defaultResult)])}
-            style={{ border: "1px dashed var(--ms-border-strong)", background: "transparent", color: "var(--ms-text-secondary)", padding: 10, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, borderRadius: 10, cursor: "pointer" }}
+            style={{ border: "1px dashed var(--ms-border-strong)", padding: 9, display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}
           >
             <Plus size={14} /> {t("dynamic.newRule")}
           </button>
 
-          <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "11px 16px", borderRadius: 10, border: "1px dashed var(--ms-border)" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", border: "1px dashed var(--ms-border)" }}>
             <Keyword muted>{t("dynamic.else")}</Keyword>
             <div style={{ flex: 1, fontSize: 12, color: "var(--ms-text-disabled)" }}>{t("dynamic.elseHint")}</div>
-            <ResultInput value={defaultValue} onChange={setDefaultValue} kind={resultKind} allowEmpty />
+            <div style={{ width: 150 }}>
+              <ResultInput value={defaultValue} onChange={setDefaultValue} kind={resultKind} allowEmpty />
+            </div>
           </div>
         </div>
 
@@ -230,11 +238,14 @@ function Keyword({ children, muted }: { children: string; muted?: boolean }) {
   );
 }
 
+/** The rule's "then" value — a plain flat select for a fixed choice set, or the same ColorField
+ * popover (native color wheel + hex + shared presets) every other color field in the app uses, instead
+ * of a bespoke rounded/tinted pill. */
 function ResultInput({ value, onChange, kind, allowEmpty }: { value: string; onChange: (v: string) => void; kind: ResultKind; allowEmpty?: boolean }) {
   const { t } = useT();
   if (typeof kind === "object") {
     return (
-      <select value={value} onChange={(e) => onChange(e.target.value)} style={{ ...pillSelectStyle, width: 130 }}>
+      <select value={value} onChange={(e) => onChange(e.target.value)} style={{ width: "100%" }}>
         {allowEmpty && <option value="">{t("dynamic.noChange")}</option>}
         {kind.select.map((o) => (
           <option key={o.value} value={o.value}>{o.label}</option>
@@ -242,79 +253,25 @@ function ResultInput({ value, onChange, kind, allowEmpty }: { value: string; onC
       </select>
     );
   }
-  const isColor = /^#([0-9a-f]{6})$/i.test(value);
   return (
-    <label
-      style={{
-        display: "inline-flex", alignItems: "center", gap: 7, borderRadius: 999, padding: "5px 12px 5px 9px",
-        fontSize: 12.5, fontWeight: 600, fontFamily: "ui-monospace, monospace", cursor: "pointer",
-        background: isColor ? hexToRgba(value, 0.14) : "transparent",
-        color: isColor ? value : "var(--ms-text-disabled)",
-        border: `1px solid ${isColor ? hexToRgba(value, 0.35) : "var(--ms-border-strong)"}`,
-        borderStyle: isColor ? "solid" : "dashed",
-      }}
-    >
-      <span style={{ width: 12, height: 12, borderRadius: "50%", background: isColor ? value : "transparent", border: isColor ? "none" : "1px dashed var(--ms-text-disabled)", flexShrink: 0 }} />
-      {value || (allowEmpty ? t("dynamic.pickColor") : "#c0392b")}
-      <input type="color" value={isColor ? value : "#000000"} onChange={(e) => onChange(e.target.value)} style={{ position: "absolute", width: 1, height: 1, opacity: 0, pointerEvents: "none" }} tabIndex={-1} />
-      <input
-        type="text"
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        style={{ position: "absolute", width: 1, height: 1, opacity: 0 }}
-        tabIndex={-1}
-        aria-hidden
-      />
-    </label>
+    <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <ColorField value={value} onChange={onChange} />
+      </div>
+      {allowEmpty && value && (
+        <button type="button" className="ghost" title={t("dynamic.noChange")} onClick={() => onChange("")} style={{ display: "flex", padding: 4 }}>
+          <X size={12} />
+        </button>
+      )}
+    </div>
   );
 }
 
-const pillBase: React.CSSProperties = {
-  display: "inline-flex", alignItems: "center", gap: 5, borderRadius: 999, padding: "5px 11px 5px 9px",
-  fontSize: 12.5, fontWeight: 600, border: "1px solid transparent", cursor: "pointer", whiteSpace: "nowrap",
-  fontFamily: "inherit", lineHeight: 1.2,
+const chipStyle: React.CSSProperties = {
+  display: "inline-flex", alignItems: "center", gap: 5, background: "var(--ms-bg-inset)",
+  border: "1px solid var(--ms-border)", borderRadius: 4, padding: "4px 8px",
+  fontSize: 12, fontFamily: "ui-monospace, monospace", color: "var(--ms-text-primary)",
 };
-
-const pillVarStyle: React.CSSProperties = {
-  ...pillBase,
-  background: "rgba(56,131,246,.14)", color: "#7ab0fb", borderColor: "rgba(56,131,246,.3)",
-  fontFamily: "ui-monospace, monospace", fontWeight: 500,
-};
-
-const pillSelectStyle: React.CSSProperties = {
-  borderRadius: 999, padding: "5px 10px", fontSize: 12.5, fontWeight: 600,
-  background: "rgba(167,139,250,.14)", color: "#c1adfc", border: "1px solid rgba(167,139,250,.3)",
-  width: "auto",
-};
-
-const pillInputStyle: React.CSSProperties = {
-  background: "var(--ms-bg-inset)", border: "1px solid var(--ms-border)", color: "var(--ms-text-primary)",
-  borderRadius: 999, fontSize: 12.5, fontFamily: "ui-monospace, monospace", fontWeight: 600,
-  padding: "5px 12px", width: 46, textAlign: "center",
-};
-
-function pillNotStyle(on: boolean): React.CSSProperties {
-  return on
-    ? { ...pillBase, background: "rgba(192,57,43,.16)", color: "#ef6a5a", borderColor: "rgba(192,57,43,.4)" }
-    : { ...pillBase, background: "transparent", color: "var(--ms-text-disabled)", border: "1px dashed var(--ms-border-strong)" };
-}
-
-function pillComboStyle(on: boolean): React.CSSProperties {
-  return {
-    padding: "5px 10px", fontSize: 11, fontWeight: 700, cursor: "pointer", border: "1px solid var(--ms-border)",
-    background: on ? "var(--ms-accent-bg-muted)" : "var(--ms-bg-inset)",
-    color: on ? "var(--ms-accent-hover)" : "var(--ms-text-secondary)",
-    borderColor: on ? "rgba(217,119,6,.4)" : "var(--ms-border)",
-    marginLeft: -1,
-  };
-}
-
-function hexToRgba(hex: string, alpha: number): string {
-  const m = /^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(hex);
-  if (!m) return `rgba(255,255,255,${alpha})`;
-  const [r, g, b] = [m[1]!, m[2]!, m[3]!].map((h) => parseInt(h, 16));
-  return `rgba(${r},${g},${b},${alpha})`;
-}
 
 function withMutation<T>(obj: T, fn: (draft: T) => void): T {
   const draft = structuredClone(obj);
