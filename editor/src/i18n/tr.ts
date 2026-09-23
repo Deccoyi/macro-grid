@@ -199,7 +199,7 @@ export const tr = {
   "icon.pickTitle": "İkon seç",
   "icon.remove": "Kaldır",
   "icon.searchPlaceholder": (n: string) => `${n} ikon içinde ara… (İngilizce, örn. "volume", "play")`,
-  "icon.footer": "lucide.dev · ISC lisans · plugin ile ikon paketi eklenebilir (ileride)",
+  "icon.footer": "lucide.dev · ISC lisans · plugin'ler ikon paketi ekleyebilir",
   "icon.noMatch": "Eşleşme yok.",
 
   // ---- Picker shell ----

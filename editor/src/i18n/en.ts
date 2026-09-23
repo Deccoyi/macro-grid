@@ -188,7 +188,7 @@ export const en: Record<DictKey, string | ((...args: string[]) => string)> = {
   "icon.pickTitle": "Pick an icon",
   "icon.remove": "Remove",
   "icon.searchPlaceholder": (n: string) => `Search ${n} icons… (e.g. "volume", "play")`,
-  "icon.footer": "lucide.dev · ISC license · an icon-pack plugin can add more (later)",
+  "icon.footer": "lucide.dev · ISC license · plugins can add icon packs",
   "icon.noMatch": "No matches.",
 
   "picker.close": "Close",
