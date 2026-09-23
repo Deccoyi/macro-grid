@@ -7,8 +7,11 @@ namespace MacroStation.Core.Plugins;
 /// <summary>
 /// One isolated <see cref="AssemblyLoadContext"/> per plugin (agent-and-repo-rules.md madde 4: C# plugins
 /// get isolation, not a sandbox — full CLR access, but a crashing/leaking plugin doesn't take down the
-/// default context or collide with another plugin's own dependency versions). Collectible so a future
-/// "reload plugin" feature can unload it.
+/// default context or collide with another plugin's own dependency versions). Collectible so a plugin can be
+/// unloaded and reloaded without restarting the server. Managed assemblies are loaded from memory, not from
+/// the file, so the plugin's DLLs are never locked on disk: a plugin can be replaced or deleted while (or
+/// right after) it ran. The trade-off is that <c>Assembly.Location</c> is empty inside a plugin — use
+/// <see cref="MacroStation.Plugin.Abstractions.IPluginHost.DataDirectory"/> to find its files instead.
 /// </summary>
 internal sealed class PluginLoadContext(string pluginId, string entryDllPath) : AssemblyLoadContext(name: $"plugin:{pluginId}", isCollectible: true)
 {
@@ -27,7 +30,13 @@ internal sealed class PluginLoadContext(string pluginId, string entryDllPath) : 
             return null; // fall through to the Default context, which already has it loaded
 
         var path = _resolver.ResolveAssemblyToPath(assemblyName);
-        return path is null ? null : LoadFromAssemblyPath(path);
+        return path is null ? null : LoadPluginAssembly(path);
+    }
+
+    internal Assembly LoadPluginAssembly(string path)
+    {
+        using var stream = new MemoryStream(File.ReadAllBytes(path));
+        return LoadFromStream(stream);
     }
 
     protected override nint LoadUnmanagedDll(string unmanagedDllName)

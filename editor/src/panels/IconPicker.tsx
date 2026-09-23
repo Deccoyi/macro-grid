@@ -26,6 +26,10 @@ const MAX_RESULTS = 96;
 // fetch per session is enough, and it lets `iconToDataUri` resolve a stored icon name without the caller
 // having opened the picker first (e.g. recoloring an already-picked icon from TextFields.tsx).
 let iconPacksPromise: Promise<IconPackInfo[]> | null = null;
+/** Forgets the cached pack list so the next lookup refetches it (a plugin was installed, reloaded or removed). */
+export function invalidateIconPacks() {
+  iconPacksPromise = null;
+}
 function fetchIconPacks(): Promise<IconPackInfo[]> {
   iconPacksPromise ??= api.listIconPacks().catch(() => []);
   return iconPacksPromise;

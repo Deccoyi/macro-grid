@@ -10,6 +10,7 @@ public sealed class StubPlugin : IPlugin
     public void Initialize(IPluginHost host)
     {
         host.RegisterAction(new StubAction());
+        host.RegisterVariableProvider(new StubProvider());
         host.RegisterSettingsPage(new StubSettingsPage());
         host.CreateStatusItem("stub").Update("stub hazır", StatusLevel.Ok);
     }
@@ -34,4 +35,16 @@ public sealed class StubSettingsPage : IPluginSettingsPage
     public JsonObject Load() => new() { ["enabled"] = true };
 
     public void Save(JsonObject values) { }
+}
+
+/// <summary>Sets one variable and then idles until cancelled, like a real long-running provider.</summary>
+public sealed class StubProvider : IVariableProvider, IVariableCatalogSource
+{
+    public IEnumerable<VariableInfo> Describe() => [new VariableInfo("stub.value", "Test value", "{stub.value}", "Stub")];
+
+    public async Task RunAsync(IVariableStore store, CancellationToken cancellationToken)
+    {
+        store.Set("stub.value", 42.0);
+        await Task.Delay(Timeout.Infinite, cancellationToken);
+    }
 }

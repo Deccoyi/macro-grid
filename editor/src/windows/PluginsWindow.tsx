@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { FolderOpen, RefreshCw, Settings, Trash2 } from "lucide-react";
+import { FolderOpen, RefreshCw, RotateCw, Settings, Trash2 } from "lucide-react";
 import { api } from "../api/client";
 import type { PluginInfo } from "../api/types";
 import { confirmAsync } from "../dialogs/dialogStore";
@@ -16,15 +16,15 @@ const STATUS_COLOR: Record<PluginInfo["status"], string> = {
 };
 
 /** The whole page of the "Eklentiler" tool window (see ToolWindow.cs) — a real separate, non-modal OS
- * window. Lists what MacroStation.Core.Plugins.PluginLoader found under plugins/ at last startup, and
- * lets the user browse to a plugin folder to install one (copied into place — still needs a restart to
- * actually load, since the loader only runs once at startup before the DI container is built). */
+ * window. Lists what MacroStation.Core.Plugins.PluginManager found under plugins/, and lets the user
+ * install (from a folder), reload or remove a plugin. All of it takes effect immediately — no restart. */
 export function PluginsWindow() {
   const { t } = useT();
   const [category, setCategory] = useState<Category>("installed");
   const [plugins, setPlugins] = useState<PluginInfo[] | null>(null);
   const [installing, setInstalling] = useState(false);
   const [uninstallingId, setUninstallingId] = useState<string | null>(null);
+  const [reloadingId, setReloadingId] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -50,6 +50,21 @@ export function PluginsWindow() {
     }
   };
 
+  const reload = async (plugin: PluginInfo) => {
+    setReloadingId(plugin.id);
+    setError(null);
+    setNotice(null);
+    try {
+      const info = await api.reloadPlugin(plugin.id);
+      if (info.status === "Loaded") setNotice(t("plugins.reload.success", plugin.name));
+      refresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setReloadingId(null);
+    }
+  };
+
   const install = async () => {
     setInstalling(true);
     setError(null);
@@ -58,7 +73,9 @@ export function PluginsWindow() {
       const result = await api.installPluginDialog();
       if (result.canceled) return;
       if (result.installed) {
-        setNotice(t("plugins.install.success", result.name ?? result.id ?? ""));
+        const name = result.name ?? result.id ?? "";
+        if (result.status && result.status !== "Loaded") setError(t("plugins.install.failed", name, result.detail ?? result.status));
+        else setNotice(t("plugins.install.success", name));
         refresh();
       }
     } catch (err) {
@@ -108,6 +125,16 @@ export function PluginsWindow() {
                     <Settings size={14} />
                   </button>
                 )}
+                <button
+                  type="button"
+                  className="ghost"
+                  title={t("plugins.reload")}
+                  disabled={reloadingId === p.id}
+                  onClick={() => reload(p)}
+                  style={{ display: "flex", padding: 6, flexShrink: 0 }}
+                >
+                  <RotateCw size={14} />
+                </button>
                 <button
                   type="button"
                   className="ghost"

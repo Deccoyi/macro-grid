@@ -5,6 +5,7 @@ import type { ActionInfo, ProfileSummary, StatusEntry, VariableInfo, VariableSna
 import { choiceAsync, confirmAsync } from "../dialogs/dialogStore";
 import { findFreeCell } from "../grid/collision";
 import { useT } from "../i18n/I18nContext";
+import { invalidateIconPacks } from "../panels/IconPicker";
 
 let nextTempId = 1;
 /** Client-generated ids only ever need to be unique within this editing session; the server assigns real ones on first save of a brand new widget/page... */
@@ -31,6 +32,12 @@ export function useEditorState() {
     api.getStatus().then(setStatus).catch(() => {});
   }, []);
 
+  const refreshCatalogs = useCallback(() => {
+    invalidateIconPacks();
+    api.listActions().then(setActions).catch(() => {});
+    api.variableCatalog().then(setVariableCatalog).catch(() => {});
+  }, []);
+
   const loadProfileList = useCallback(async (selectId?: string) => {
     const list = await api.listProfiles();
     setProfiles(list);
@@ -46,10 +53,16 @@ export function useEditorState() {
 
   useEffect(() => {
     loadProfileList().catch((e) => setError(String(e)));
-    api.listActions().then(setActions).catch(() => {});
-    api.variableCatalog().then(setVariableCatalog).catch(() => {});
+    refreshCatalogs();
     refreshVariables();
-  }, [loadProfileList, refreshVariables]);
+  }, [loadProfileList, refreshVariables, refreshCatalogs]);
+
+  // Plugins are installed / reloaded / removed live from the separate "Eklentiler" window, which changes the
+  // action list, variable picker and icon packs. Coming back to this window is the cheap moment to refetch.
+  useEffect(() => {
+    window.addEventListener("focus", refreshCatalogs);
+    return () => window.removeEventListener("focus", refreshCatalogs);
+  }, [refreshCatalogs]);
 
   // Auto-poll so the canvas's dynamic-style preview (evaluateWidgetDynamicStyle) actually reacts to
   // live values like system.cpu instead of only updating when the user clicks "Değişkenleri yenile" —

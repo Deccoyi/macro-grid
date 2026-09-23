@@ -70,20 +70,16 @@ internal static class ServerApp
         statusRegistry.SetCore("server", $"Macro Station {ClientHub.ServerVersion}", StatusLevel.Idle, "server");
 
         var pluginsRoot = Path.Combine(dataDir, "plugins");
-        var pluginLoad = PluginLoader.LoadAll(pluginsRoot, ClientHub.ServerVersion, statusRegistry,
-            new FileLoggerProvider(Path.Combine(dataDir, "logs")).CreateLogger("Plugins"));
-        builder.Services.AddSingleton(pluginLoad);
-        foreach (var action in pluginLoad.Actions)
-            builder.Services.AddSingleton<IActionHandler>(action);
-        foreach (var provider in pluginLoad.VariableProviders)
-        {
-            builder.Services.AddSingleton<IVariableProvider>(provider);
-            if (provider is IVariableCatalogSource catalogSource)
-                builder.Services.AddSingleton<IVariableCatalogSource>(catalogSource);
-        }
 
         builder.Services.AddSingleton<VariableCatalog>();
-        builder.Services.AddHostedService<VariableProviderHost>();
+        builder.Services.AddSingleton<VariableProviderHost>();
+        builder.Services.AddHostedService(sp => sp.GetRequiredService<VariableProviderHost>());
+        // Registered after the provider host: loading a plugin starts its variable providers on that host.
+        builder.Services.AddSingleton(sp => new PluginManager(pluginsRoot, ClientHub.ServerVersion,
+            sp.GetRequiredService<PluginStatusRegistry>(), sp.GetRequiredService<ActionDispatcher>(),
+            sp.GetRequiredService<VariableCatalog>(), sp.GetRequiredService<VariableProviderHost>(),
+            sp.GetRequiredService<VariableStore>(), sp.GetRequiredService<ILogger<PluginManager>>()));
+        builder.Services.AddHostedService(sp => sp.GetRequiredService<PluginManager>());
 
         builder.Services.AddSingleton(new DeviceStore(dataDir));
         builder.Services.AddSingleton<PairingService>();
@@ -127,7 +123,7 @@ internal static class ServerApp
             await next();
         });
 
-        MapEditorApi(app, pluginsRoot);
+        MapEditorApi(app);
 
         // Temporary test client (wwwroot/index.html) and the built editor (wwwroot/editor/) until the Capacitor client exists.
         app.UseDefaultFiles();
@@ -151,7 +147,7 @@ internal static class ServerApp
     /// Editor-only HTTP API (profile CRUD, action catalog, a one-shot variable snapshot for preview).
     /// No auth yet: like the WebSocket endpoint, this trusts anything on the LAN until Stage 5 (pairing) covers it too.
     /// </summary>
-    private static void MapEditorApi(WebApplication app, string pluginsRoot)
+    private static void MapEditorApi(WebApplication app)
     {
         var api = app.MapGroup("/api");
 
@@ -215,7 +211,7 @@ internal static class ServerApp
             return Results.NoContent();
         });
 
-        api.MapGet("/actions", (ActionDispatcher dispatcher, PluginLoadResult pluginLoad) =>
+        api.MapGet("/actions", (ActionDispatcher dispatcher, PluginManager plugins) =>
             dispatcher.Handlers.Select(h =>
             {
                 var descriptor = h as IActionDescriptor;
@@ -226,7 +222,7 @@ internal static class ServerApp
                     Category = descriptor?.Category ?? "Diğer",
                     Description = descriptor?.Description,
                     Icon = descriptor?.Icon,
-                    PluginId = pluginLoad.ActionPluginIds.GetValueOrDefault(h.Type),
+                    PluginId = plugins.GetActionPluginId(h.Type),
                     Fields = descriptor is { Fields.Count: > 0 } ? descriptor.Fields : null,
                 };
             }).OrderBy(a => a.DisplayName));
@@ -279,97 +275,68 @@ internal static class ServerApp
             return Results.Json(new { path });
         });
 
-        api.MapGet("/plugins", (PluginLoadResult pluginLoad) => pluginLoad.Plugins);
+        api.MapGet("/plugins", (PluginManager plugins) => plugins.Plugins);
 
-        api.MapGet("/icon-packs", (PluginLoadResult pluginLoad) =>
-            pluginLoad.IconPacks.Select(p => new { p.Id, p.DisplayName, Icons = p.IconNames }));
+        api.MapGet("/icon-packs", (PluginManager plugins) =>
+            plugins.IconPacks.Select(p => new { p.Id, p.DisplayName, Icons = p.IconNames }));
 
-        api.MapGet("/icon-packs/{packId}/{iconName}", (string packId, string iconName, PluginLoadResult pluginLoad) =>
+        api.MapGet("/icon-packs/{packId}/{iconName}", (string packId, string iconName, PluginManager plugins) =>
         {
-            var pack = pluginLoad.IconPacks.FirstOrDefault(p => p.Id == packId);
+            var pack = plugins.IconPacks.FirstOrDefault(p => p.Id == packId);
             var svg = pack?.GetIconSvg(iconName);
             return svg is null ? Results.NotFound() : Results.Text(svg, "image/svg+xml");
         });
 
-        api.MapPost("/plugins/install", async (IUiDialogService dialogs) =>
+        api.MapPost("/plugins/install", async (IUiDialogService dialogs, PluginManager plugins) =>
         {
-            var sourceDir = await dialogs.BrowseForFolderAsync("Plugin klasörünü seç (plugin.json içermeli)");
+            var sourceDir = await dialogs.BrowseForFolderAsync("Choose the plugin folder (must contain plugin.json)");
             if (sourceDir is null) return Results.Json(new { installed = false, canceled = true });
 
-            var manifestPath = Path.Combine(sourceDir, "plugin.json");
-            if (!File.Exists(manifestPath))
-                return Results.BadRequest(new { error = $"Seçilen klasörde plugin.json yok: {sourceDir}" });
-
-            PluginManifest manifest;
-            try
-            {
-                manifest = JsonSerializer.Deserialize<PluginManifest>(File.ReadAllText(manifestPath), new JsonSerializerOptions(JsonSerializerDefaults.Web))
-                    ?? throw new JsonException("plugin.json boş");
-            }
-            catch (Exception ex) when (ex is JsonException or NotSupportedException)
-            {
-                return Results.BadRequest(new { error = $"plugin.json ayrıştırılamadı: {ex.Message}" });
-            }
-
-            Directory.CreateDirectory(pluginsRoot);
-            if (Directory.EnumerateDirectories(pluginsRoot)
-                .Any(d => File.Exists(Path.Combine(d, "plugin.json"))
-                    && JsonSerializer.Deserialize<PluginManifest>(File.ReadAllText(Path.Combine(d, "plugin.json")), new JsonSerializerOptions(JsonSerializerDefaults.Web))?.Id == manifest.Id))
-            {
-                return Results.BadRequest(new { error = $"'{manifest.Id}' id'li bir plugin zaten yüklü." });
-            }
-
-            var destDir = Path.Combine(pluginsRoot, manifest.Id);
-            if (Directory.Exists(destDir)) Directory.Delete(destDir, recursive: true);
-            CopyDirectory(sourceDir, destDir);
-
-            return Results.Json(new { installed = true, id = manifest.Id, name = manifest.Name, requiresRestart = true });
-        });
-
-        // Uninstall. A loaded plugin's assembly stays memory-mapped by its (collectible but never actually
-        // unloaded at runtime) PluginLoadContext for as long as the server process is alive, so an immediate
-        // Directory.Delete can throw (file in use) for a plugin that's currently Loaded. We try the immediate
-        // delete first (works for Error/Incompatible plugins, or ones never actually loaded), and if that
-        // throws we fall back to dropping a ".uninstall" marker file: PluginLoader.LoadAll deletes any folder
-        // carrying that marker at the next startup, before attempting to load anything else. Either way this
-        // requires a restart to fully take effect — same honesty as install's requiresRestart: true.
-        api.MapDelete("/plugins/{id}", (string id) =>
-        {
-            var dir = ResolvePluginDir(pluginsRoot, id);
-            if (dir is null) return Results.NotFound();
+            if (!File.Exists(Path.Combine(sourceDir, "plugin.json")))
+                return Results.BadRequest(new { error = $"No plugin.json in the selected folder: {sourceDir}" });
 
             try
             {
-                Directory.Delete(dir, recursive: true);
-                return Results.Json(new { removed = true, pending = false, requiresRestart = true });
+                var result = await plugins.InstallFromFolderAsync(sourceDir);
+                return Results.Json(new { installed = true, id = result.Id, name = result.Name, status = result.Plugin.Status, detail = result.Plugin.Detail }, ProtocolJson.Options);
             }
-            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            catch (Exception ex) when (ex is JsonException or NotSupportedException or InvalidOperationException or IOException or UnauthorizedAccessException)
             {
-                File.WriteAllText(Path.Combine(dir, ".uninstall"), "");
-                return Results.Json(new { removed = true, pending = true, requiresRestart = true });
+                return Results.BadRequest(new { error = ex.Message });
             }
         });
+
+        api.MapPost("/plugins/{id}/reload", async (string id, PluginManager plugins) =>
+            await plugins.ReloadAsync(id) is { } info ? Results.Json(info, ProtocolJson.Options) : Results.NotFound());
+
+        // Unloads the plugin (its actions, variables and status items disappear immediately) and deletes its
+        // folder. Plugin DLLs are loaded from memory so they are not locked; if a file is still in use anyway
+        // the folder is marked and removed at the next start ("pending").
+        api.MapDelete("/plugins/{id}", async (string id, PluginManager plugins) =>
+            await plugins.UninstallAsync(id) is { } result
+                ? Results.Json(new { removed = result.Removed, pending = result.Pending })
+                : Results.NotFound());
 
         // A registered IPluginSettingsPage (schema-driven form) takes precedence; a plugin without one
         // falls back to the raw settings.json passthrough it always had (see docs/plugin-authoring.md
         // §"Ayarlar") so older plugins keep working unchanged.
-        api.MapGet("/plugins/{id}/settings/schema", (string id, PluginLoadResult pluginLoad) =>
-            pluginLoad.SettingsPages.TryGetValue(id, out var page) ? Results.Json(page.Fields, ProtocolJson.Options) : Results.NotFound());
+        api.MapGet("/plugins/{id}/settings/schema", (string id, PluginManager plugins) =>
+            plugins.GetSettingsPage(id) is { } page ? Results.Json(page.Fields, ProtocolJson.Options) : Results.NotFound());
 
-        api.MapGet("/plugins/{id}/settings", (string id, PluginLoadResult pluginLoad) =>
+        api.MapGet("/plugins/{id}/settings", (string id, PluginManager plugins) =>
         {
-            if (pluginLoad.SettingsPages.TryGetValue(id, out var page))
+            if (plugins.GetSettingsPage(id) is { } page)
                 return Results.Json(page.Load(), ProtocolJson.Options);
 
-            var dir = ResolvePluginDir(pluginsRoot, id);
+            var dir = plugins.GetPluginDir(id);
             if (dir is null) return Results.NotFound();
             var path = Path.Combine(dir, "settings.json");
             return File.Exists(path) ? Results.Text(File.ReadAllText(path), "application/json") : Results.NotFound();
         });
 
-        api.MapPut("/plugins/{id}/settings", async (string id, HttpRequest request, PluginLoadResult pluginLoad) =>
+        api.MapPut("/plugins/{id}/settings", async (string id, HttpRequest request, PluginManager plugins) =>
         {
-            if (pluginLoad.SettingsPages.TryGetValue(id, out var page))
+            if (plugins.GetSettingsPage(id) is { } page)
             {
                 JsonObject? values;
                 try { values = await JsonSerializer.DeserializeAsync<JsonObject>(request.Body, ProtocolJson.Options); }
@@ -379,7 +346,7 @@ internal static class ServerApp
                 return Results.NoContent();
             }
 
-            var dir = ResolvePluginDir(pluginsRoot, id);
+            var dir = plugins.GetPluginDir(id);
             if (dir is null) return Results.NotFound();
 
             using var reader = new StreamReader(request.Body);
@@ -391,9 +358,9 @@ internal static class ServerApp
             return Results.NoContent();
         });
 
-        api.MapPost("/plugins/{id}/settings/options/{sourceId}", async (string id, string sourceId, HttpRequest request, PluginLoadResult pluginLoad) =>
+        api.MapPost("/plugins/{id}/settings/options/{sourceId}", async (string id, string sourceId, HttpRequest request, PluginManager plugins) =>
         {
-            if (!pluginLoad.SettingsPages.TryGetValue(id, out var page) || page is not IOptionsSource optionsSource)
+            if (plugins.GetSettingsPage(id) is not IOptionsSource optionsSource)
                 return Results.Json(new OptionsResult([], "Bu plugin dinamik seçenek sağlamıyor"));
 
             JsonObject? currentValues;
@@ -425,9 +392,9 @@ internal static class ServerApp
             return Results.NoContent();
         });
 
-        api.MapPost("/windows/plugin-settings/{id}", async (string id, IUiWindowService windows, PluginLoadResult pluginLoad) =>
+        api.MapPost("/windows/plugin-settings/{id}", async (string id, IUiWindowService windows, PluginManager plugins) =>
         {
-            var name = pluginLoad.Plugins.FirstOrDefault(p => p.Id == id)?.Name ?? id;
+            var name = plugins.Plugins.FirstOrDefault(p => p.Id == id)?.Name ?? id;
             await windows.ShowToolWindowAsync($"plugin-settings-{id}", name,
                 $"http://localhost:{Port}/editor/?window=plugin-settings&id={Uri.EscapeDataString(id)}", 520, 560);
             return Results.NoContent();
@@ -491,25 +458,6 @@ internal static class ServerApp
 
     private sealed record AssignProfileRequest(string? ProfileId);
     private sealed record FollowWindowRequest(bool FollowActiveWindow);
-
-    /// <summary>Resolves a plugin id from a URL segment to its install folder, rejecting anything that
-    /// isn't a plain single path segment (no traversal) and any id that isn't actually installed.</summary>
-    private static string? ResolvePluginDir(string pluginsRoot, string id)
-    {
-        if (string.IsNullOrWhiteSpace(id) || id.Contains("..") || id.Contains('/') || id.Contains('\\'))
-            return null;
-        var dir = Path.Combine(pluginsRoot, id);
-        return Directory.Exists(dir) ? dir : null;
-    }
-
-    private static void CopyDirectory(string sourceDir, string destDir)
-    {
-        Directory.CreateDirectory(destDir);
-        foreach (var file in Directory.GetFiles(sourceDir))
-            File.Copy(file, Path.Combine(destDir, Path.GetFileName(file)), overwrite: true);
-        foreach (var dir in Directory.GetDirectories(sourceDir))
-            CopyDirectory(dir, Path.Combine(destDir, Path.GetFileName(dir)));
-    }
 
     /// <summary>
     /// The pairing QR's payload: a <c>macrostation://pair</c> deep-link URI carrying the LAN host, port and

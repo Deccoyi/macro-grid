@@ -108,17 +108,20 @@ export const api = {
       return res.text();
     }),
 
-  /** Shows a native "choose a folder" dialog on the server's desktop, validates plugin.json there, and
-   * copies it into the server's plugins/ folder. Loading it still needs a server restart. */
+  /** Shows a native "choose a folder" dialog on the server's desktop, validates plugin.json there, copies it
+   * into the server's plugins/ folder and loads it right away (no restart). Installing over an existing id
+   * replaces that plugin. */
   installPluginDialog: (): Promise<PluginInstallResult> =>
     req("/api/plugins/install", { method: "POST" }).then((res) => json<PluginInstallResult>(res)),
 
-  /** Removes a plugin's folder under %AppData%. If the plugin is currently loaded the folder can't be
-   * deleted outright (its DLL is still memory-mapped by the running server), so the server instead marks
-   * it and finishes the removal on the next restart — `pending` tells the caller which happened. Either
-   * way the change needs a server restart to actually take effect. */
+  /** Unloads a plugin (its actions, variables and status items disappear immediately) and deletes its
+   * folder under %AppData%. `pending` means a file was still in use and the folder goes at the next start. */
   uninstallPlugin: (id: string): Promise<PluginUninstallResult> =>
     req(`/api/plugins/${encodeURIComponent(id)}`, { method: "DELETE" }).then((res) => json<PluginUninstallResult>(res)),
+
+  /** Unloads a plugin and loads it again from its folder, picking up a replaced DLL or changed manifest. */
+  reloadPlugin: (id: string): Promise<PluginInfo> =>
+    req(`/api/plugins/${encodeURIComponent(id)}/reload`, { method: "POST" }).then((res) => json<PluginInfo>(res)),
 
   /** A registered IPluginSettingsPage's form schema — 404 if the plugin has none (PluginInfo.hasSettings
    * is false), in which case the editor has no generic fallback UI for that plugin's settings anymore. */

@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using MacroStation.Core.Model;
 using MacroStation.Plugin.Abstractions;
 using Microsoft.Extensions.Logging;
@@ -7,10 +8,19 @@ namespace MacroStation.Core.Actions;
 /// <summary>Holds every registered action type (built-in and plugin) and runs a widget's bindings for an event.</summary>
 public sealed class ActionDispatcher(IEnumerable<IActionHandler> handlers, ILogger<ActionDispatcher> logger)
 {
-    private readonly Dictionary<string, IActionHandler> _handlers =
-        handlers.ToDictionary(h => h.Type, StringComparer.OrdinalIgnoreCase);
+    private readonly ConcurrentDictionary<string, IActionHandler> _handlers =
+        new(handlers.Select(h => KeyValuePair.Create(h.Type, h)), StringComparer.OrdinalIgnoreCase);
 
-    public IReadOnlyCollection<IActionHandler> Handlers => _handlers.Values;
+    public IReadOnlyCollection<IActionHandler> Handlers => [.. _handlers.Values];
+
+    /// <summary>Adds a handler at runtime (a hot-loaded plugin's action). Returns false, changing nothing,
+    /// if that type id is already taken.</summary>
+    public bool Register(IActionHandler handler) => _handlers.TryAdd(handler.Type, handler);
+
+    /// <summary>Removes a handler only if it is still the given instance, so unloading one plugin can never
+    /// drop a same-named handler that belongs to something else.</summary>
+    public void Unregister(IActionHandler handler) =>
+        _handlers.TryRemove(KeyValuePair.Create(handler.Type, handler));
 
     /// <summary>
     /// Runs the actions bound to <paramref name="eventName"/> sequentially.

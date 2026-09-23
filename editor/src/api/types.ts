@@ -94,15 +94,16 @@ export interface PluginInstallResult {
   canceled?: boolean;
   id?: string;
   name?: string;
-  requiresRestart?: boolean;
+  /** How the plugin came up right after being copied in: "Loaded" means it is already live. */
+  status?: PluginInfo["status"];
+  detail?: string | null;
 }
 
 export interface PluginUninstallResult {
   removed: boolean;
-  /** true if the folder couldn't be deleted outright (plugin still loaded in the running process) and was
-   * instead marked for removal on the next server start — see ServerApp.cs's DELETE /api/plugins/{id}. */
+  /** true if a file was still in use and the folder was instead marked for removal on the next server
+   * start — see ServerApp.cs's DELETE /api/plugins/{id}. The plugin itself is already unloaded either way. */
   pending: boolean;
-  requiresRestart: boolean;
 }
 
 export interface PairedDeviceInfo {

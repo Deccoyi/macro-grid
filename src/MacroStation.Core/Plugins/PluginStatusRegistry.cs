@@ -19,6 +19,13 @@ public sealed class PluginStatusRegistry
     internal void Set(string pluginId, string id, string text, StatusLevel level, string? icon, string? tooltip) =>
         _items[(pluginId, id)] = new PluginStatusEntry(pluginId, id, text, level, icon, tooltip, DateTimeOffset.UtcNow);
 
+    /// <summary>Drops every status item a plugin owns (it was unloaded).</summary>
+    internal void RemovePlugin(string pluginId)
+    {
+        foreach (var key in _items.Keys.Where(k => k.PluginId == pluginId).ToList())
+            _items.TryRemove(key, out _);
+    }
+
     public void SetCore(string id, string text, StatusLevel level, string? icon = null, string? tooltip = null) =>
         Set("core", id, text, level, icon, tooltip);
 }
