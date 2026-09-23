@@ -47,6 +47,31 @@
 
 * { box-sizing: border-box; }
 
+/* Editor-wide scrollbar — slim, rounded, transparent track; the thumb only lights up on hover so it
+ * stays out of the way of the panels. Chromium/WebView2 pseudo-elements (the host is WebView2). */
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+*::-webkit-scrollbar-track,
+*::-webkit-scrollbar-corner {
+  background: transparent;
+}
+*::-webkit-scrollbar-thumb {
+  background: var(--ms-border-strong);
+  border: 3px solid transparent;
+  background-clip: content-box;
+  border-radius: 999px;
+}
+*::-webkit-scrollbar-thumb:hover {
+  background: var(--ms-text-disabled);
+  background-clip: content-box;
+}
+*::-webkit-scrollbar-thumb:active {
+  background: var(--ms-accent);
+  background-clip: content-box;
+}
+
 html, body, #root {
   height: 100%;
   margin: 0;
