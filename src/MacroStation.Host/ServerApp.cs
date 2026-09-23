@@ -86,6 +86,8 @@ internal static class ServerApp
 
         builder.Services.AddSingleton<SessionRegistry>();
         builder.Services.AddSingleton<ToggleStateStore>();
+        builder.Services.AddSingleton<AssetStore>();
+        builder.Services.AddSingleton<LayoutSender>();
         builder.Services.AddSingleton<WidgetStateService>();
         builder.Services.AddHostedService(sp => sp.GetRequiredService<WidgetStateService>());
         builder.Services.AddSingleton<IActiveWindowSource, ForegroundWindowMonitor>();

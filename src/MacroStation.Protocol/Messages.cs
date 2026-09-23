@@ -2,8 +2,29 @@ namespace MacroStation.Protocol;
 
 // ---- client -> server ----
 /// <summary><paramref name="Pin"/> is only needed the first time (or after a re-pair): a device that
-/// already holds a valid <paramref name="Token"/> from a previous pairing never needs to send it.</summary>
-public sealed record HelloMessage(string DeviceId, string DeviceName, string? Token, string ClientVersion, string? Pin = null);
+/// already holds a valid <paramref name="Token"/> from a previous pairing never needs to send it.
+/// <paramref name="Capabilities"/> lists the optional protocol features the client understands (see
+/// <see cref="ClientCapabilities"/>); a client that sends none keeps getting the plain full layout with
+/// icons inlined.</summary>
+public sealed record HelloMessage(string DeviceId, string DeviceName, string? Token, string ClientVersion, string? Pin = null, string[]? Capabilities = null);
+
+/// <summary>Optional protocol features a client announces in <see cref="HelloMessage.Capabilities"/>.</summary>
+public static class ClientCapabilities
+{
+    /// <summary>Large <c>data:</c> values (icons, images) in a layout are replaced by <c>asset:&lt;hash&gt;</c>
+    /// references; the client fetches each one once with <c>asset.get</c> and caches it.</summary>
+    public const string Assets = "assets";
+
+    /// <summary>A saved profile edit is sent as a <c>layout.patch</c> (only the changed widgets) instead of a full layout.</summary>
+    public const string LayoutPatch = "layout.patch";
+}
+
+/// <summary>Client asks for the data of asset references it does not have cached yet.</summary>
+public sealed record AssetGetMessage(string[] Hashes);
+
+/// <summary>One asset's content. <paramref name="Data"/> (a <c>data:</c> URI) is null when the server no longer
+/// knows that hash, so the client can stop waiting for it.</summary>
+public sealed record AssetMessage(string Hash, string? Data);
 public sealed record WidgetEventMessage(string PageId, string WidgetId);
 public sealed record WidgetValueMessage(string PageId, string WidgetId, double Value);
 public sealed record PageChangeMessage(string PageId);

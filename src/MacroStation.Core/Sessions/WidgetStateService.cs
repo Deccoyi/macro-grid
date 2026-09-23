@@ -26,17 +26,19 @@ public sealed class WidgetStateService : IHostedService, IDisposable
     private readonly SessionRegistry _sessions;
     private readonly ProfileStore _profiles;
     private readonly ToggleStateStore _toggles;
+    private readonly LayoutSender _layouts;
     private readonly ILogger<WidgetStateService> _logger;
     private readonly HashSet<string> _dirtyVariables = [];
     private readonly Lock _dirtyLock = new();
     private Timer? _timer;
 
-    public WidgetStateService(VariableStore variables, SessionRegistry sessions, ProfileStore profiles, ToggleStateStore toggles, ILogger<WidgetStateService> logger)
+    public WidgetStateService(VariableStore variables, SessionRegistry sessions, ProfileStore profiles, ToggleStateStore toggles, LayoutSender layouts, ILogger<WidgetStateService> logger)
     {
         _variables = variables;
         _sessions = sessions;
         _profiles = profiles;
         _toggles = toggles;
+        _layouts = layouts;
         _logger = logger;
         _variables.Changed += OnVariableChanged;
     }
@@ -55,10 +57,19 @@ public sealed class WidgetStateService : IHostedService, IDisposable
 
     public void Dispose() => _variables.Changed -= OnVariableChanged;
 
+    /// <summary>Sends a profile's full layout to one client (see <see cref="LayoutSender"/>).</summary>
+    public Task SendLayoutAsync(ClientSession session, Profile profile, string pageId, CancellationToken ct = default) =>
+        _layouts.SendFullAsync(session, profile, pageId, ct);
+
+    /// <summary>Answers a client's <c>asset.get</c>.</summary>
+    public Task SendAssetsAsync(ClientSession session, IEnumerable<string> hashes, CancellationToken ct = default) =>
+        _layouts.SendAssetsAsync(session, hashes, ct);
+
     /// <summary>
-    /// Re-sends <c>layout.full</c> (plus the usual initial text/toggle/dynamic-style state) to every
-    /// connected client currently showing this profile, so an editor "Kaydet" reaches devices live
-    /// instead of requiring them to reconnect. A client on a page that no longer exists (deleted while
+    /// Brings every connected client currently showing this profile up to date after an editor "Kaydet", so
+    /// devices see the edit live instead of having to reconnect. A client that supports it gets a small
+    /// <c>layout.patch</c> with just the changed widgets, any other client the full layout; either way the usual
+    /// initial text/toggle/dynamic-style state follows. A client on a page that no longer exists (deleted while
     /// editing) falls back to the profile's first page, same as a fresh <c>hello</c> would.
     /// </summary>
     public async Task BroadcastProfileAsync(Profile profile, CancellationToken ct = default)
@@ -71,11 +82,26 @@ public sealed class WidgetStateService : IHostedService, IDisposable
             if (page is null) continue;
 
             session.PageId = page.Id;
-            session.SentTexts.Clear();
-            session.SentStyles.Clear();
-            session.SentValues.Clear();
 
-            await session.SendAsync(MessageTypes.LayoutFull, new LayoutFullPayload(profile, page.Id), ct);
+            var result = await _layouts.SendUpdateAsync(session, profile, page.Id, ct);
+            if (result.Kind == LayoutSendKind.Unchanged) continue;
+
+            if (result.Kind == LayoutSendKind.Full)
+            {
+                session.SentTexts.Clear();
+                session.SentStyles.Clear();
+                session.SentValues.Clear();
+            }
+            else
+            {
+                foreach (var id in result.ChangedWidgetIds)
+                {
+                    session.SentTexts.TryRemove(id, out _);
+                    session.SentStyles.TryRemove(id, out _);
+                    session.SentValues.TryRemove(id, out _);
+                }
+            }
+
             await SendInitialAsync(session, page, ct);
         }
     }

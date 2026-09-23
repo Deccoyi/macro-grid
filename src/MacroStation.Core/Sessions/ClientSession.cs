@@ -1,6 +1,7 @@
 using System.Collections.Concurrent;
 using System.Net.WebSockets;
 using System.Text;
+using System.Text.Json.Nodes;
 using MacroStation.Protocol;
 
 namespace MacroStation.Core.Sessions;
@@ -35,6 +36,19 @@ public sealed class ClientSession(WebSocket socket, string remoteAddress)
 
     /// <summary>Last pushed slider/knob live value per widget id (from its bound variable), so <see cref="WidgetStateService"/> only re-sends on an actual change.</summary>
     internal ConcurrentDictionary<string, double> SentValues { get; } = new();
+
+    /// <summary>Optional protocol features this client announced in its <c>hello</c> (see <see cref="ClientCapabilities"/>).</summary>
+    internal HashSet<string> Capabilities { get; set; } = [];
+
+    internal bool Supports(string capability) => Capabilities.Contains(capability);
+
+    /// <summary>The layout exactly as the client last received it (asset references and all), the baseline the next
+    /// <c>layout.patch</c> is computed against. Null until a full layout was sent, or for a client without patch support.</summary>
+    internal JsonObject? SentLayout { get; set; }
+
+    /// <summary>Layout sends for one client must not interleave, or a patch could be computed against a baseline
+    /// the client never received.</summary>
+    internal SemaphoreSlim LayoutLock { get; } = new(1, 1);
 
     internal WebSocket Socket => socket;
 

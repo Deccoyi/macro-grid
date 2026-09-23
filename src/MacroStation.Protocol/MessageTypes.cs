@@ -14,10 +14,13 @@ public static class MessageTypes
     public const string PagePrev = "page.prev";
     public const string ProfileChange = "profile.change";
     public const string ProfileLock = "profile.lock";
+    public const string AssetGet = "asset.get";
 
     // server -> client
     public const string Welcome = "welcome";
     public const string LayoutFull = "layout.full";
+    public const string LayoutPatch = "layout.patch";
+    public const string Asset = "asset";
     public const string PageShow = "page.show";
     public const string WidgetState = "widget.state";
     public const string ProfilesList = "profiles.list";

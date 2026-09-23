@@ -14,8 +14,6 @@ using Microsoft.Extensions.Logging;
 
 namespace MacroStation.Core.Sessions;
 
-public sealed record LayoutFullPayload(Profile Profile, string PageId);
-
 /// <summary>Runs the receive loop for every client WebSocket and routes protocol messages.</summary>
 public sealed class ClientHub(
     SessionRegistry sessions,
@@ -32,6 +30,7 @@ public sealed class ClientHub(
 {
     public const string ServerVersion = "0.2.0";
     private const int MaxMessageBytes = 64 * 1024;
+    private const int MaxAssetsPerRequest = 256;
 
     public IReadOnlyCollection<ClientSession> Sessions => sessions.All;
 
@@ -160,6 +159,10 @@ public sealed class ClientHub(
             case MessageTypes.WidgetValue:
                 EnqueueValue(session, envelope, queue);
                 break;
+            case MessageTypes.AssetGet:
+                if (envelope.DataAs<AssetGetMessage>() is { } request)
+                    await widgetState.SendAssetsAsync(session, request.Hashes.Take(MaxAssetsPerRequest), ct);
+                break;
             case MessageTypes.PageChange:
                 var page = envelope.DataAs<PageChangeMessage>();
                 if (page is not null) session.PageId = page.PageId;
@@ -221,6 +224,7 @@ public sealed class ClientHub(
 
         session.DeviceId = device.Id;
         session.DeviceName = deviceName;
+        session.Capabilities = [.. hello.Capabilities ?? []];
 
         // A device with no assigned profile (or one assigned to a profile that's since been deleted)
         // falls back to the app-wide default, then just the first profile — ProfileResolver.ResolveDefault.
@@ -233,7 +237,7 @@ public sealed class ClientHub(
         sessions.NotifyChanged();
 
         await session.SendAsync(MessageTypes.Welcome, new WelcomeMessage(Environment.MachineName, ServerVersion, issuedToken), ct);
-        await session.SendAsync(MessageTypes.LayoutFull, new LayoutFullPayload(profile, session.PageId ?? ""), ct);
+        await widgetState.SendLayoutAsync(session, profile, session.PageId ?? "", ct);
         await SendProfilesListAsync(session, device, ct);
         if (page is not null)
             await widgetState.SendInitialAsync(session, page, ct);
