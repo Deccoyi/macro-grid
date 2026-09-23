@@ -5,6 +5,7 @@ import type {
   ExportProfileResult,
   ImportProfileResult,
   OptionsResult,
+  IconPackInfo,
   PairedDeviceInfo,
   PairingQrInfo,
   PluginInfo,
@@ -86,6 +87,15 @@ export const api = {
     }).then((res) => json<void>(res)),
 
   listPlugins: (): Promise<PluginInfo[]> => req("/api/plugins").then((res) => json<PluginInfo[]>(res)),
+
+  listIconPacks: (): Promise<IconPackInfo[]> => req("/api/icon-packs").then((res) => json<IconPackInfo[]>(res)),
+
+  /** Raw SVG markup (not JSON) for one icon in a plugin-contributed pack. */
+  getIconPackIconSvg: (packId: string, iconName: string): Promise<string> =>
+    req(`/api/icon-packs/${encodeURIComponent(packId)}/${encodeURIComponent(iconName)}`).then((res) => {
+      if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
+      return res.text();
+    }),
 
   /** Shows a native "choose a folder" dialog on the server's desktop, validates plugin.json there, and
    * copies it into the server's plugins/ folder. Loading it still needs a server restart. */

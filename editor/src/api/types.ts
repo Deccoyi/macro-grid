@@ -81,6 +81,14 @@ export interface PluginInfo {
   hasSettings: boolean;
 }
 
+/** One icon pack contributed by a plugin via IPluginHost.RegisterIconPack — e.g. the PLC icon set.
+ * Lucide (bundled locally, see IconPicker.tsx) is not one of these; it's the picker's built-in default. */
+export interface IconPackInfo {
+  id: string;
+  displayName: string;
+  icons: string[];
+}
+
 export interface PluginInstallResult {
   installed: boolean;
   canceled?: boolean;

@@ -11,6 +11,7 @@ Bu dosya [Keep a Changelog](https://keepachangelog.com/) formatını takip eder.
 - **Pencere geneli durum çubuğu** (`StatusBar.tsx`, `PluginStatusRegistry`): solda sunucu sürümü ve bağlı cihaz sayısı, sağda plugin durumları (ör. OBS bağlantısı); tıklayınca plugin'in ayar penceresi açılıyor (`PluginSettingsWindow.tsx`).
 - Yeni uç noktalar: `GET /api/status`, `POST /api/actions/{type}/options/{sourceId}`, `GET /api/plugins/{id}/settings/schema`, `POST /api/plugins/{id}/settings/options/{sourceId}`, `POST /api/windows/plugin-settings/{id}`, `GET /api/icon-packs(/{packId}/{iconName})`. `GET /api/actions` artık kategori/açıklama/ikon/alanlar döndürüyor, `GET /api/plugins` `hasSettings` döndürüyor.
 - Editör ve araç pencereleri artık uygulama ikonunu kullanıyor.
+- **Plugin ikon paketleri:** ikon seçici, Lucide'ın yanında plugin'lerin `IPluginHost.RegisterIconPack` ile eklediği paketleri de ayrı kategori olarak listeliyor ("Tümü" dahil); kayıtlı bir ikon adı önce Lucide'da, sonra plugin paketlerinde aranıyor ve seçilen renkle boyanıyor. İlk paket: PLC İkonları (`macro-station-plugins/PLCIcons/`).
 
 ### Changed
 - OBS'e özel satır-içi ayar formu (`ObsSettingsInline`) kaldırıldı; ayarı olan her plugin genel ayar penceresini kullanıyor.
