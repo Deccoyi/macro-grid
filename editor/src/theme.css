@@ -228,6 +228,7 @@ hr.sep {
   justify-content: center;
   gap: 5px;
   aspect-ratio: 1 / 1;
+  min-width: 0;
   background: var(--ms-bg-inset);
   border: 1px solid var(--ms-border);
   border-radius: 4px;
@@ -238,7 +239,7 @@ hr.sep {
 .action-event-cell.on { border-color: var(--ms-accent); background: var(--ms-bg-canvas); }
 .action-event-cell svg { color: var(--ms-text-secondary); }
 .action-event-cell.on svg { color: var(--ms-accent); }
-.action-event-cell .cap { font-size: 9px; color: var(--ms-text-secondary); line-height: 1; white-space: nowrap; }
+.action-event-cell .cap { font-size: 9px; color: var(--ms-text-secondary); line-height: 1.15; text-align: center; overflow-wrap: break-word; }
 .action-event-cell.on .cap { color: var(--ms-text-primary); font-weight: 600; }
 .action-event-cell .dot { position: absolute; top: 4px; right: 4px; width: 5px; height: 5px; border-radius: 50%; background: var(--ms-accent); }
 
