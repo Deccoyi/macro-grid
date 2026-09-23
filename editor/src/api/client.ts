@@ -5,6 +5,7 @@ import type {
   ExportProfileResult,
   ImportProfileResult,
   PairedDeviceInfo,
+  ObsPluginSettings,
   PairingQrInfo,
   PluginInfo,
   PluginInstallResult,
@@ -77,6 +78,19 @@ export const api = {
    * copies it into the server's plugins/ folder. Loading it still needs a server restart. */
   installPluginDialog: (): Promise<PluginInstallResult> =>
     req("/api/plugins/install", { method: "POST" }).then((res) => json<PluginInstallResult>(res)),
+
+  /** Generic passthrough to a plugin's own settings.json (see docs/plugin-authoring.md — the host has no
+   * settings schema/UI for plugins, each plugin owns its own file). null means the plugin hasn't written
+   * one yet (not loaded, or hasn't run once). */
+  getObsSettings: (): Promise<ObsPluginSettings | null> =>
+    req("/api/plugins/obs/settings").then((res) => (res.status === 404 ? null : json<ObsPluginSettings>(res))),
+
+  saveObsSettings: (settings: ObsPluginSettings): Promise<void> =>
+    req("/api/plugins/obs/settings", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(settings),
+    }).then((res) => json<void>(res)),
 
   getPreferences: (): Promise<AppPreferences> => req("/api/preferences").then((res) => json<AppPreferences>(res)),
 

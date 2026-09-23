@@ -267,6 +267,31 @@ internal static class ServerApp
             return Results.Json(new { installed = true, id = manifest.Id, name = manifest.Name, requiresRestart = true });
         });
 
+        // Generic raw-JSON passthrough to a plugin's own settings.json (see docs/plugin-authoring.md §"Ayarlar" —
+        // the host has no per-plugin settings schema/UI, plugins own their settings file under their DataDirectory).
+        // The editor builds whatever form makes sense per plugin (e.g. OBS's host/port/password) on top of this.
+        api.MapGet("/plugins/{id}/settings", (string id) =>
+        {
+            var dir = ResolvePluginDir(pluginsRoot, id);
+            if (dir is null) return Results.NotFound();
+            var path = Path.Combine(dir, "settings.json");
+            return File.Exists(path) ? Results.Text(File.ReadAllText(path), "application/json") : Results.NotFound();
+        });
+
+        api.MapPut("/plugins/{id}/settings", async (string id, HttpRequest request) =>
+        {
+            var dir = ResolvePluginDir(pluginsRoot, id);
+            if (dir is null) return Results.NotFound();
+
+            using var reader = new StreamReader(request.Body);
+            var body = await reader.ReadToEndAsync();
+            try { JsonDocument.Parse(body); }
+            catch (JsonException) { return Results.BadRequest(new { error = "Geçersiz JSON." }); }
+
+            await File.WriteAllTextAsync(Path.Combine(dir, "settings.json"), body);
+            return Results.NoContent();
+        });
+
         api.MapPost("/windows/preferences", async (IUiWindowService windows) =>
         {
             await windows.ShowToolWindowAsync("preferences", "Tercihler", $"http://localhost:{Port}/editor/?window=preferences", 640, 520);
@@ -316,6 +341,16 @@ internal static class ServerApp
     }
 
     private sealed record AssignProfileRequest(string? ProfileId);
+
+    /// <summary>Resolves a plugin id from a URL segment to its install folder, rejecting anything that
+    /// isn't a plain single path segment (no traversal) and any id that isn't actually installed.</summary>
+    private static string? ResolvePluginDir(string pluginsRoot, string id)
+    {
+        if (string.IsNullOrWhiteSpace(id) || id.Contains("..") || id.Contains('/') || id.Contains('\\'))
+            return null;
+        var dir = Path.Combine(pluginsRoot, id);
+        return Directory.Exists(dir) ? dir : null;
+    }
 
     private static void CopyDirectory(string sourceDir, string destDir)
     {

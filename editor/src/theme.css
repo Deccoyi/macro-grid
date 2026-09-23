@@ -81,7 +81,7 @@ button.ghost:hover { background: var(--ms-bg-surface-raised); }
 button.active { border-color: var(--ms-accent); color: var(--ms-accent); }
 button.save-btn { min-width: 11ch; text-align: center; }
 
-input[type="text"], input[type="number"], input[type="url"], select, textarea {
+input[type="text"], input[type="number"], input[type="url"], input[type="password"], select, textarea {
   background: var(--ms-bg-inset);
   border: 1px solid var(--ms-border);
   border-radius: 4px;

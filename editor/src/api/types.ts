@@ -27,6 +27,15 @@ export interface PluginInfo {
   detail: string | null;
 }
 
+/** OBS plugin's own settings.json shape (see macro-station-plugins/OBS/src/ObsSettings.cs) — read/written
+ * through the generic `/api/plugins/{id}/settings` passthrough, not a host-side schema. */
+export interface ObsPluginSettings {
+  enabled: boolean;
+  host: string;
+  port: number;
+  password: string;
+}
+
 export interface PluginInstallResult {
   installed: boolean;
   canceled?: boolean;
