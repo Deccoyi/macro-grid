@@ -74,12 +74,10 @@ export function ActionEditor({ widget, actions, pages, profiles, variableCatalog
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-      {/* Fixed N-column grid — never wraps unevenly the way the old flex-wrap pill row did, since a
-         grid track never breaks mid-row (see docs/ui-guidelines.md: kompakt, öngörülebilir kontroller).
-         Each column is capped at 84px (via min(), not a bare 1fr) so a widget type with only one or two
-         events (slider/knob's single "Değer değişti") doesn't stretch into one giant square button —
-         cells stay left-aligned at their natural size instead of filling the row's leftover width. */}
-      <div style={{ display: "grid", gridTemplateColumns: `repeat(${events.length}, minmax(0, min(84px, 1fr)))`, gap: 6, justifyContent: "start" }}>
+      {/* Always 4 columns (the button's event count), regardless of how many events this widget type
+         has — so a slider's single "Değer değişti" cell or a toggle's two cells are exactly the same size
+         as a button's, instead of stretching to fill the row. */}
+      <div style={{ display: "grid", gridTemplateColumns: `repeat(${BUTTON_EVENTS.length}, minmax(0, 1fr))`, gap: 6 }}>
         {events.map((e) => {
           const Icon = e.icon;
           const bound = (widget.actions[e.event]?.length ?? 0) > 0;

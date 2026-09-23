@@ -291,6 +291,8 @@ export const tr = {
   "dynamic.operator.==": "eşit",
   "dynamic.operator.!=": "eşit değil",
   "dynamic.operator.between": "arasında",
+  "dynamic.value.placeholder": "50 ya da metin",
+  "dynamic.value.hint": "Tırnak işareti kullanmayın: sayıysa 50, metinse doğrudan live yazın.",
 
   // ---- Hotkey capture ----
   "hotkey.pressKey": "Bir tuşa basın…",

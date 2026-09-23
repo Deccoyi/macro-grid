@@ -114,7 +114,7 @@ export function App() {
 
       <DialogHost />
 
-      <div style={{ display: "grid", gridTemplateRows: "auto 1fr", minHeight: 0 }}>
+      <div style={{ display: "flex", flexDirection: "column", minHeight: 0, minWidth: 0 }}>
         {state.error && (
           <div style={{ padding: "6px 12px", background: "rgba(192,57,43,.15)", color: "var(--ms-danger)", fontSize: 12, display: "flex", justifyContent: "space-between" }}>
             <span>{state.error}</span>
@@ -122,7 +122,7 @@ export function App() {
           </div>
         )}
 
-      <div style={{ display: "grid", gridTemplateColumns: "200px 1fr 300px", minHeight: 0 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "200px 1fr 300px", flex: 1, minHeight: 0 }}>
         <div style={{ borderRight: "1px solid var(--ms-border)", display: "flex", flexDirection: "column", minHeight: 0 }}>
           <div style={{ flex: "0 0 45%", minHeight: 0, borderBottom: "1px solid var(--ms-border)" }}>
             <ProfilePagesPanel

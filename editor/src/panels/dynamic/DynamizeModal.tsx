@@ -145,8 +145,9 @@ export function DynamizeModal({ propertyLabel, binding, variableCatalog, resultK
                       type="text"
                       value={cond.value}
                       onChange={(e) => updateCase(i, (cc) => { cc.conditions[ci]!.value = e.target.value; })}
-                      placeholder="50"
-                      style={{ width: 52, textAlign: "center", fontFamily: "ui-monospace, monospace" }}
+                      placeholder={t("dynamic.value.placeholder")}
+                      title={t("dynamic.value.hint")}
+                      style={{ width: 108, textAlign: "center", fontFamily: "ui-monospace, monospace" }}
                     />
                     {cond.operator === "between" && (
                       <>
@@ -155,8 +156,9 @@ export function DynamizeModal({ propertyLabel, binding, variableCatalog, resultK
                           type="text"
                           value={cond.value2}
                           onChange={(e) => updateCase(i, (cc) => { cc.conditions[ci]!.value2 = e.target.value; })}
-                          placeholder="80"
-                          style={{ width: 52, textAlign: "center", fontFamily: "ui-monospace, monospace" }}
+                          placeholder={t("dynamic.value.placeholder")}
+                          title={t("dynamic.value.hint")}
+                          style={{ width: 108, textAlign: "center", fontFamily: "ui-monospace, monospace" }}
                         />
                       </>
                     )}
