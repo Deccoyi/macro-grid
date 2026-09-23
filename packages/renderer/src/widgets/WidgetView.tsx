@@ -19,7 +19,7 @@ export interface WidgetViewProps {
   /** Current slider/knob value; comes from widget.state or local drag state. */
   liveValue?: number;
   /** Resolved dynamic-style overrides (background/foreground/borderColor) from widget.state; merged on top of widget.style. */
-  liveStyle?: Partial<Pick<WidgetStyle, "background" | "foreground" | "borderColor">> & { animation?: string };
+  liveStyle?: Partial<Pick<WidgetStyle, "background" | "foreground" | "borderColor" | "icon">> & { animation?: string };
   onPress?: () => void;
   onRelease?: () => void;
   onLongPress?: () => void;

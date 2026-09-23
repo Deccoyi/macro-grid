@@ -83,6 +83,9 @@ public sealed class AssetStore
         }
     }
 
+    /// <summary>The same replacement for a single value (a style pushed in a <c>widget.state</c>).</summary>
+    public string ExternalizeValue(string value) => IsExternalizable(value) ? Put(value) : value;
+
     private static bool IsExternalizable(string text) =>
         text.Length >= MinExternalizedLength && text.StartsWith("data:", StringComparison.Ordinal);
 

@@ -76,7 +76,9 @@ provider host.
 - **Editor:** the Plugins window has install, reload and remove and never asks for a restart. The main editor refetches the
   action list, variable catalog and icon packs when its window regains focus.
 
+Live style values pushed in `widget.state` (a dynamic icon) are externalized too, per client (`LayoutSender.ForClient`), and the
+client resolves the references before applying the state.
+
 ## Not covered
 
 - The browser client (`webclient/`) does not announce capabilities yet, so it still receives the full layout with icons inline.
-- Icons chosen through dynamic rules or pushed in `widget.state` styles are not externalized yet (only the layout is).

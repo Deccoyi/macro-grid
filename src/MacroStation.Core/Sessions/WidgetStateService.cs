@@ -20,6 +20,7 @@ public sealed class WidgetStateService : IHostedService, IDisposable
         ["style.foreground"] = "foreground",
         ["style.borderColor"] = "borderColor",
         ["style.animation"] = "animation",
+        ["style.icon"] = "icon",
     };
 
     private readonly VariableStore _variables;
@@ -111,15 +112,11 @@ public sealed class WidgetStateService : IHostedService, IDisposable
     {
         foreach (var widget in page.Widgets)
         {
-            if (!string.IsNullOrEmpty(widget.Text))
+            var text = DynamicText.Resolve(widget, _variables);
+            if (text is not null)
             {
-                var template = Template.Parse(widget.Text);
-                if (template.VariableNames.Count > 0)
-                {
-                    var text = template.Render(_variables);
-                    session.SentTexts[widget.Id] = text;
-                    await session.SendAsync(MessageTypes.WidgetState, new WidgetStateMessage(widget.Id, Text: text), ct);
-                }
+                session.SentTexts[widget.Id] = text;
+                await session.SendAsync(MessageTypes.WidgetState, new WidgetStateMessage(widget.Id, Text: text), ct);
             }
 
             if (widget.Type == WidgetTypes.Toggle)
@@ -136,7 +133,7 @@ public sealed class WidgetStateService : IHostedService, IDisposable
             if (style is not null)
             {
                 session.SentStyles[widget.Id] = style;
-                await session.SendAsync(MessageTypes.WidgetState, new WidgetStateMessage(widget.Id, Style: style), ct);
+                await session.SendAsync(MessageTypes.WidgetState, new WidgetStateMessage(widget.Id, Style: _layouts.ForClient(session, style)), ct);
             }
         }
     }
@@ -215,16 +212,9 @@ public sealed class WidgetStateService : IHostedService, IDisposable
             foreach (var widget in page.Widgets)
             {
                 string? text = null;
-                if (!string.IsNullOrEmpty(widget.Text))
-                {
-                    var template = Template.Parse(widget.Text);
-                    if (template.VariableNames.Count > 0 && template.VariableNames.Any(dirty.Contains))
-                    {
-                        var rendered = template.Render(_variables);
-                        if (!session.SentTexts.TryGetValue(widget.Id, out var prevText) || prevText != rendered)
-                            text = rendered;
-                    }
-                }
+                if (DynamicText.Dependencies(widget).Any(dirty.Contains) && DynamicText.Resolve(widget, _variables) is { } rendered
+                    && (!session.SentTexts.TryGetValue(widget.Id, out var prevText) || prevText != rendered))
+                    text = rendered;
 
                 Dictionary<string, string>? style = null;
                 if (widget.Dynamic.Count > 0 && BindingsDependOn(widget.Dynamic.Values, dirty))
@@ -251,7 +241,7 @@ public sealed class WidgetStateService : IHostedService, IDisposable
 
                 try
                 {
-                    await session.SendAsync(MessageTypes.WidgetState, new WidgetStateMessage(widget.Id, Text: text, Value: value, Style: style));
+                    await session.SendAsync(MessageTypes.WidgetState, new WidgetStateMessage(widget.Id, Text: text, Value: value, Style: style is null ? null : _layouts.ForClient(session, style)));
                 }
                 catch (Exception ex) when (ex is IOException or ObjectDisposedException)
                 {

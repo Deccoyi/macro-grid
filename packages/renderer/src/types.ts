@@ -138,6 +138,6 @@ export interface WidgetState {
   text?: string;
   value?: number;
   active?: boolean;
-  /** From a dynamized property (see DynamicBinding server-side): property name to resolved value ("animation" is one of WidgetAnimation, the rest are CSS colors). */
-  style?: Partial<Record<"background" | "foreground" | "borderColor" | "animation", string>>;
+  /** From a dynamized property (see DynamicBinding server-side): property name to resolved value ("animation" is one of WidgetAnimation, "icon" is an image URL or an empty string for no icon, the rest are CSS colors). */
+  style?: Partial<Record<"background" | "foreground" | "borderColor" | "animation" | "icon", string>>;
 }

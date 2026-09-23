@@ -4,6 +4,7 @@ import type { Align, IconPosition, VAlign, WidgetStyle } from "@macro/renderer";
 import type { VariableInfo } from "../../api/types";
 import { useT } from "../../i18n/I18nContext";
 import { IconPicker, iconToDataUri } from "../IconPicker";
+import { DynamicFieldLabel } from "../dynamic/DynamicFieldLabel";
 import { VariablePicker } from "../VariablePicker";
 import type { FieldGroupProps } from "./AppearanceFields";
 import { ColorField, Seg } from "./controls";
@@ -46,7 +47,9 @@ export function TextFields({ widget, onChange, variableCatalog, showIcon = true 
     <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
       <div className="field">
         <div style={{ display: "flex", alignItems: "center" }}>
-          <span style={{ flex: 1 }}>{t("fields.text.label")}</span>
+          <span style={{ flex: 1 }}>
+            <DynamicFieldLabel label={t("fields.text.label")} propertyKey="text" widget={widget} variableCatalog={variableCatalog} onChange={onChange} resultKind="text" />
+          </span>
           <VariablePicker
             catalog={variableCatalog}
             onInsert={insertVariable}
@@ -107,14 +110,14 @@ export function TextFields({ widget, onChange, variableCatalog, showIcon = true 
       {showIcon && (
         <>
           <label className="field">
-            {t("fields.text.icon")}
+            <DynamicFieldLabel label={t("fields.text.icon")} propertyKey="style.icon" widget={widget} variableCatalog={variableCatalog} onChange={onChange} resultKind="icon" iconColor={style.foreground} />
             <IconPicker
               value={style.icon}
               color={style.foreground}
               onChange={(icon, iconName) => set((s) => { s.icon = icon; s.iconName = iconName; })}
             />
           </label>
-          {style.icon && (
+          {(style.icon || widget.dynamic?.["style.icon"]) && (
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
                 <label className="field">

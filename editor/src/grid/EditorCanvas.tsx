@@ -2,7 +2,7 @@ import { useCallback, useRef, useState } from "react";
 import { Grid, WidgetView, gridArea, type Page, type Widget } from "@macro/renderer";
 import { useT } from "../i18n/I18nContext";
 import { canPlace, clamp } from "./collision";
-import { evaluateWidgetDynamicStyle } from "./evaluateDynamic";
+import { evaluateWidgetDynamicStyle, evaluateWidgetDynamicText } from "./evaluateDynamic";
 
 export interface EditorCanvasProps {
   page: Page;
@@ -108,7 +108,7 @@ export function EditorCanvas({ page, selectedIds, onSelect, onToggleSelect, onRe
             <div style={{ position: "relative", width: "100%", height: "100%" }}>
               <WidgetView
                 widget={rect === widget ? widget : { ...widget, ...rect }}
-                liveText={renderPreviewText(widget.text, variables)}
+                liveText={renderPreviewText(evaluateWidgetDynamicText(widget, variables), variables)}
                 liveStyle={evaluateWidgetDynamicStyle(widget, variables)}
                 haptics={false}
                 style={{ pointerEvents: "none", opacity: isDraggingThis ? 0.55 : 1 }}

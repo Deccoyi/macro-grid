@@ -68,6 +68,13 @@ public sealed class LayoutSender(AssetStore assets)
         return new LayoutSendResult(LayoutSendKind.Patch, diff.ChangedWidgetIds);
     }
 
+    /// <summary>A live style value for one client: a large <c>data:</c> value becomes an asset reference if that
+    /// client understands them, everything else is returned unchanged.</summary>
+    public Dictionary<string, string> ForClient(ClientSession session, Dictionary<string, string> style) =>
+        session.Supports(ClientCapabilities.Assets)
+            ? style.ToDictionary(kv => kv.Key, kv => assets.ExternalizeValue(kv.Value))
+            : style;
+
     /// <summary>Answers an <c>asset.get</c>: one message per requested hash, with a null value for a hash the
     /// server no longer holds so the client does not wait for it.</summary>
     public async Task SendAssetsAsync(ClientSession session, IEnumerable<string> hashes, CancellationToken ct = default)

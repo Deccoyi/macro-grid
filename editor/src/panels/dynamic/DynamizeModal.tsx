@@ -3,6 +3,7 @@ import { ArrowRight, Plus, Trash2, Variable, X } from "lucide-react";
 import type { DynamicBinding } from "@macro/renderer";
 import type { VariableInfo } from "../../api/types";
 import { ColorField } from "../fields/controls";
+import { IconPicker } from "../IconPicker";
 import { useT } from "../../i18n/I18nContext";
 import type { DictKey } from "../../i18n/tr";
 import { VariablePicker } from "../VariablePicker";
@@ -19,24 +20,27 @@ const OPERATOR_KEYS: Record<EditCondition["operator"], DictKey> = {
   between: "dynamic.operator.between",
 };
 
-/** What each rule's "then" value is: a free color, or a fixed set of choices (e.g. animation names). */
-export type ResultKind = "color" | { select: { value: string; label: string }[] };
+/** What each rule's "then" value is: a free color, free text (may contain {variables}), an icon, or a fixed set of choices (e.g. animation names). */
+export type ResultKind = "color" | "text" | "icon" | { select: { value: string; label: string }[] };
 
 export interface DynamizeModalProps {
   propertyLabel: string;
   binding: DynamicBinding | undefined;
   variableCatalog: VariableInfo[];
   resultKind?: ResultKind;
+  /** Color the icon choices are baked with (the widget's text color), for the "icon" result kind. */
+  iconColor?: string;
   onSave: (binding: DynamicBinding | null) => void;
   onClose: () => void;
 }
 
 const COMBINATOR_KEYS: Record<EditCase["combinator"], DictKey> = { and: "dynamic.combinator.and", or: "dynamic.combinator.or", xor: "dynamic.combinator.xor" };
 
-export function DynamizeModal({ propertyLabel, binding, variableCatalog, resultKind = "color", onSave, onClose }: DynamizeModalProps) {
+export function DynamizeModal({ propertyLabel, binding, variableCatalog, resultKind = "color", iconColor, onSave, onClose }: DynamizeModalProps) {
   const { t } = useT();
   const backdrop = useBackdropClose(onClose);
-  const defaultResult = typeof resultKind === "object" ? (resultKind.select[0]?.value ?? "") : "#c0392b";
+  const defaultResult = typeof resultKind === "object" ? (resultKind.select[0]?.value ?? "") : resultKind === "color" ? "#c0392b" : "";
+  const wideResult = resultKind === "text" || resultKind === "icon";
   const [unsupported] = useState(() => binding !== undefined && binding.cases.some((c) => fromConditionNode(c.condition) === null));
   const [cases, setCases] = useState<EditCase[]>(() =>
     binding && !unsupported
@@ -189,8 +193,8 @@ export function DynamizeModal({ propertyLabel, binding, variableCatalog, resultK
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                 <Keyword muted>{t("dynamic.then")}</Keyword>
                 <ArrowRight size={13} color="var(--ms-border-strong)" />
-                <div style={{ width: 150 }}>
-                  <ResultInput value={c.result} onChange={(v) => updateCase(i, (cc) => { cc.result = v; })} kind={resultKind} />
+                <div style={{ width: wideResult ? 260 : 150 }}>
+                  <ResultInput value={c.result} onChange={(v) => updateCase(i, (cc) => { cc.result = v; })} kind={resultKind} iconColor={iconColor} />
                 </div>
                 <div style={{ flex: 1 }} />
                 {cases.length > 1 && (
@@ -214,8 +218,8 @@ export function DynamizeModal({ propertyLabel, binding, variableCatalog, resultK
           <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", border: "1px dashed var(--ms-border)" }}>
             <Keyword muted>{t("dynamic.else")}</Keyword>
             <div style={{ flex: 1, fontSize: 12, color: "var(--ms-text-disabled)" }}>{t("dynamic.elseHint")}</div>
-            <div style={{ width: 150 }}>
-              <ResultInput value={defaultValue} onChange={setDefaultValue} kind={resultKind} allowEmpty />
+            <div style={{ width: wideResult ? 260 : 150 }}>
+              <ResultInput value={defaultValue} onChange={setDefaultValue} kind={resultKind} iconColor={iconColor} allowEmpty />
             </div>
           </div>
         </div>
@@ -245,8 +249,23 @@ function Keyword({ children, muted }: { children: string; muted?: boolean }) {
 /** The rule's "then" value — a plain flat select for a fixed choice set, or the same ColorField
  * popover (native color wheel + hex + shared presets) every other color field in the app uses, instead
  * of a bespoke rounded/tinted pill. */
-function ResultInput({ value, onChange, kind, allowEmpty }: { value: string; onChange: (v: string) => void; kind: ResultKind; allowEmpty?: boolean }) {
+function ResultInput({ value, onChange, kind, iconColor, allowEmpty }: { value: string; onChange: (v: string) => void; kind: ResultKind; iconColor?: string; allowEmpty?: boolean }) {
   const { t } = useT();
+  if (kind === "text") {
+    return (
+      <input
+        type="text"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={allowEmpty ? t("dynamic.noChange") : t("fields.text.placeholder")}
+        style={{ width: "100%" }}
+      />
+    );
+  }
+  if (kind === "icon") {
+    // An empty case result means "no icon"; an empty else means "leave the widget's own icon" (allowEmpty).
+    return <IconPicker value={value || undefined} color={iconColor} onChange={(icon) => onChange(icon ?? "")} />;
+  }
   if (typeof kind === "object") {
     return (
       <select value={value} onChange={(e) => onChange(e.target.value)} style={{ width: "100%" }}>

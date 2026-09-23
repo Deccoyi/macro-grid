@@ -9,6 +9,7 @@ New features and fixes in Macro Station. For technical details, see [CHANGELOG-d
 - **Default profile:** You can choose a default profile in Preferences.
 - **Error alerts:** If a button fails, you now see an alert on your phone and in the editor's bottom bar.
 - **Remove plugins:** Plugins can now be removed from the editor.
+- **Dynamic text and icons:** Buttons, toggles and labels can now change their text or icon depending on a value, like the colors already can. Use the lightning-bolt button next to Text and Icon.
 - **No restart for plugins:** Installing, reloading or removing a plugin takes effect right away. A new "Reload" button is in the Plugins window.
 
 ### Changed
