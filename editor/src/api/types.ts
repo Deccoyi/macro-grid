@@ -1,6 +1,59 @@
+export type SettingFieldKind = "Text" | "Password" | "Number" | "Slider" | "Bool" | "Select" | "Segmented";
+
+export interface SettingOption {
+  value: string;
+  label: string;
+  group?: string | null;
+  icon?: string | null;
+}
+
+/** Mirrors MacroStation.Plugin.Abstractions.SettingField — one field of a schema-driven form (action
+ * settings or a plugin's own settings page), rendered generically by SchemaForm.tsx. */
+export interface SettingField {
+  key: string;
+  label: string;
+  kind: SettingFieldKind;
+  description?: string | null;
+  placeholder?: string | null;
+  default?: unknown;
+  min?: number | null;
+  max?: number | null;
+  step?: number | null;
+  options?: SettingOption[] | null;
+  optionsSource?: string | null;
+  dependsOn?: string[] | null;
+  allowVariables?: boolean;
+  visibleWhen?: string | null;
+}
+
+/** Mirrors MacroStation.Plugin.Abstractions.OptionsResult — the response of a dynamic-dropdown query. */
+export interface OptionsResult {
+  options: SettingOption[];
+  error?: string | null;
+}
+
 export interface ActionInfo {
   type: string;
   displayName: string;
+  category: string;
+  description?: string | null;
+  icon?: string | null;
+  pluginId?: string | null;
+  /** Present (non-empty) only when the action has no hand-written form — SchemaForm renders it. */
+  fields?: SettingField[] | null;
+}
+
+export type StatusLevel = "Idle" | "Ok" | "Busy" | "Warning" | "Error";
+
+/** One entry in the editor's window-wide status bar (see components/StatusBar.tsx). */
+export interface StatusEntry {
+  pluginId: string;
+  id: string;
+  text: string;
+  level: StatusLevel;
+  icon?: string | null;
+  tooltip?: string | null;
+  updatedAt: string;
 }
 
 export interface ProfileSummary {
@@ -25,15 +78,7 @@ export interface PluginInfo {
   version: string;
   status: "Loaded" | "Incompatible" | "Error";
   detail: string | null;
-}
-
-/** OBS plugin's own settings.json shape (see macro-station-plugins/OBS/src/ObsSettings.cs) — read/written
- * through the generic `/api/plugins/{id}/settings` passthrough, not a host-side schema. */
-export interface ObsPluginSettings {
-  enabled: boolean;
-  host: string;
-  port: number;
-  password: string;
+  hasSettings: boolean;
 }
 
 export interface PluginInstallResult {

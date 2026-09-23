@@ -1,9 +1,10 @@
 import { useState, type ElementType } from "react";
 import { ChevronUp, ChevronDown, Circle, CircleDot, SlidersHorizontal, Timer, ToggleLeft, ToggleRight, X } from "lucide-react";
 import type { ActionBinding, Page, Widget, WidgetEventName } from "@macro/renderer";
-import type { ActionInfo, ProfileSummary } from "../api/types";
+import type { ActionInfo, ProfileSummary, VariableInfo } from "../api/types";
 import { useT } from "../i18n/I18nContext";
 import type { DictKey } from "../i18n/tr";
+import { ActionPicker } from "./ActionPicker";
 import { formFor } from "./actionForms/forms";
 
 export interface ActionEditorProps {
@@ -11,6 +12,7 @@ export interface ActionEditorProps {
   actions: ActionInfo[];
   pages: Page[];
   profiles: ProfileSummary[];
+  variableCatalog: VariableInfo[];
   onChange: (event: WidgetEventName, bindings: ActionBinding[]) => void;
 }
 
@@ -41,7 +43,7 @@ const VALUE_EVENTS: { event: WidgetEventName; key: DictKey; icon: ElementType }[
   { event: "valueChange", key: "action.event.valueChange", icon: SlidersHorizontal },
 ];
 
-export function ActionEditor({ widget, actions, pages, profiles, onChange }: ActionEditorProps) {
+export function ActionEditor({ widget, actions, pages, profiles, variableCatalog, onChange }: ActionEditorProps) {
   const { t } = useT();
   const events =
     widget.type === "toggle" ? TOGGLE_EVENTS
@@ -55,11 +57,7 @@ export function ActionEditor({ widget, actions, pages, profiles, onChange }: Act
     onChange(activeEvent, copy);
   };
 
-  const addBinding = () => {
-    const first = actions[0];
-    if (!first) return;
-    onChange(activeEvent, [...bindings, { type: first.type, settings: {} }]);
-  };
+  const addBinding = (type: string) => onChange(activeEvent, [...bindings, { type, settings: {} }]);
 
   const removeBinding = (index: number) => onChange(activeEvent, bindings.filter((_, i) => i !== index));
 
@@ -77,8 +75,11 @@ export function ActionEditor({ widget, actions, pages, profiles, onChange }: Act
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
       {/* Fixed N-column grid — never wraps unevenly the way the old flex-wrap pill row did, since a
-         grid track never breaks mid-row (see docs/ui-guidelines.md: kompakt, öngörülebilir kontroller). */}
-      <div style={{ display: "grid", gridTemplateColumns: `repeat(${events.length}, 1fr)`, gap: 6 }}>
+         grid track never breaks mid-row (see docs/ui-guidelines.md: kompakt, öngörülebilir kontroller).
+         Each column is capped at 84px (via min(), not a bare 1fr) so a widget type with only one or two
+         events (slider/knob's single "Değer değişti") doesn't stretch into one giant square button —
+         cells stay left-aligned at their natural size instead of filling the row's leftover width. */}
+      <div style={{ display: "grid", gridTemplateColumns: `repeat(${events.length}, minmax(0, min(84px, 1fr)))`, gap: 6, justifyContent: "start" }}>
         {events.map((e) => {
           const Icon = e.icon;
           const bound = (widget.actions[e.event]?.length ?? 0) > 0;
@@ -107,19 +108,20 @@ export function ActionEditor({ widget, actions, pages, profiles, onChange }: Act
       {bindings.length === 0 && <div style={{ color: "var(--ms-text-secondary)", fontSize: 12 }}>{t("action.none")}</div>}
 
       {bindings.map((binding, index) => {
-        const Form = formFor(binding.type);
+        const actionInfo = actions.find((a) => a.type === binding.type);
+        const Form = formFor(binding.type, actionInfo);
         return (
           <div key={index} style={{ border: "1px solid var(--ms-border)", borderRadius: 4, padding: 8, display: "flex", flexDirection: "column", gap: 6 }}>
             <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-              <select
-                value={binding.type}
-                onChange={(e) => updateBinding(index, { type: e.target.value, settings: {} })}
-                style={{ flex: 1 }}
-              >
-                {actions.map((a) => (
-                  <option key={a.type} value={a.type}>{a.displayName}</option>
-                ))}
-              </select>
+              <ActionPicker
+                actions={actions}
+                onPick={(type) => updateBinding(index, { type, settings: {} })}
+                renderTrigger={(open) => (
+                  <button type="button" className="ghost" onClick={open} style={{ flex: 1, textAlign: "left", justifyContent: "flex-start" }}>
+                    {actionInfo?.displayName ?? binding.type}
+                  </button>
+                )}
+              />
               {bindings.length > 1 && (
                 <>
                   <button className="ghost" onClick={() => move(index, -1)} disabled={index === 0} title={t("action.moveUp")}><ChevronUp size={14} /></button>
@@ -128,14 +130,12 @@ export function ActionEditor({ widget, actions, pages, profiles, onChange }: Act
               )}
               <button className="ghost" onClick={() => removeBinding(index)} title={t("action.remove")}><X size={14} /></button>
             </div>
-            <Form binding={binding} pages={pages} profiles={profiles} onChange={(settings) => updateBinding(index, { settings })} />
+            <Form binding={binding} pages={pages} profiles={profiles} actionInfo={actionInfo} variableCatalog={variableCatalog} onChange={(settings) => updateBinding(index, { settings })} />
           </div>
         );
       })}
 
-      <button className="ghost" onClick={addBinding} disabled={actions.length === 0} style={{ alignSelf: "flex-start" }}>
-        {t("action.add")}
-      </button>
+      <ActionPicker actions={actions} onPick={addBinding} />
     </div>
   );
 }

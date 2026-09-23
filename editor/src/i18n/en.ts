@@ -42,13 +42,11 @@ export const en: Record<DictKey, string | ((...args: string[]) => string)> = {
   "plugins.install.hint": "Pick a folder containing a plugin.json. It's copied into place, but the server needs a restart to actually load it.",
   "plugins.install.success": (name: string) => `${name} copied. Restart the server for it to take effect.`,
   "plugins.settings": "Settings",
-  "plugins.obs.enabled": "Enabled",
-  "plugins.obs.host": "Host",
-  "plugins.obs.port": "Port",
-  "plugins.obs.password": "Password",
-  "plugins.obs.hint": "Turn on OBS's own server under Tools → WebSocket Server Settings; if you set a password there, enter the same one here. No server restart needed after saving — it reconnects within a few seconds.",
-  "plugins.obs.save": "Save",
-  "plugins.obs.saved": "Saved.",
+
+  // ---- Plugin settings window (schema-driven, IPluginSettingsPage) ----
+  "pluginSettings.none": "This plugin has no settings.",
+  "pluginSettings.save": "Save",
+  "pluginSettings.saved": "Saved.",
 
   "help.title": "Help",
   "help.licensesNote": "Third-party library license texts are in THIRD_PARTY_NOTICES.md.",
@@ -166,6 +164,15 @@ export const en: Record<DictKey, string | ((...args: string[]) => string)> = {
   "action.moveDown": "Move down",
   "action.remove": "Remove",
   "action.add": "+ Add action",
+
+  // ---- Action picker ----
+  "actionPicker.title": "Choose an action",
+  "actionPicker.searchPlaceholder": "Search actions…",
+  "actionPicker.noMatch": "No match.",
+
+  // ---- Schema form (SettingField-driven action/plugin settings) ----
+  "schemaForm.refresh": "Refresh",
+  "schemaForm.notFound": "(not found)",
 
   "css.label": "Custom CSS",
 

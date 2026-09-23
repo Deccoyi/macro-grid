@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { ActionBinding, Page, Profile, Widget, WidgetType } from "@macro/renderer";
 import { api } from "../api/client";
-import type { ActionInfo, ProfileSummary, VariableInfo, VariableSnapshot } from "../api/types";
+import type { ActionInfo, ProfileSummary, StatusEntry, VariableInfo, VariableSnapshot } from "../api/types";
 import { alertAsync, confirmAsync } from "../dialogs/dialogStore";
 import { findFreeCell } from "../grid/collision";
 import { useT } from "../i18n/I18nContext";
@@ -24,9 +24,11 @@ export function useEditorState() {
   const [variables, setVariables] = useState<VariableSnapshot>({});
   const [actions, setActions] = useState<ActionInfo[]>([]);
   const [variableCatalog, setVariableCatalog] = useState<VariableInfo[]>([]);
+  const [status, setStatus] = useState<StatusEntry[]>([]);
 
   const refreshVariables = useCallback(() => {
     api.variablesSnapshot().then(setVariables).catch(() => {});
+    api.getStatus().then(setStatus).catch(() => {});
   }, []);
 
   const loadProfileList = useCallback(async (selectId?: string) => {
@@ -406,6 +408,7 @@ export function useEditorState() {
     variables,
     actions,
     variableCatalog,
+    status,
     refreshVariables,
     setCurrentPageId,
     setSelectedIds,

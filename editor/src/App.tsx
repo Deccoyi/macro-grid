@@ -8,6 +8,7 @@ import { DevicePreviewFrame, type DeviceSize } from "./grid/DevicePreviewFrame";
 import { EditorCanvas } from "./grid/EditorCanvas";
 import { useT } from "./i18n/I18nContext";
 import type { DictKey } from "./i18n/tr";
+import { StatusBar } from "./components/StatusBar";
 import { ContextMenu, type ContextMenuItem } from "./panels/ContextMenu";
 import { Inspector } from "./panels/Inspector";
 import { MenuBar } from "./panels/MenuBar";
@@ -69,7 +70,7 @@ export function App() {
   }
 
   return (
-    <div style={{ display: "grid", gridTemplateRows: "auto auto 1fr", height: "100%" }}>
+    <div style={{ display: "grid", gridTemplateRows: "auto auto 1fr auto", height: "100%" }}>
       <MenuBar
         profile={profile}
         onImportProfile={(data: Profile) => state.importProfileFromJson(data)}
@@ -113,12 +114,13 @@ export function App() {
 
       <DialogHost />
 
-      {state.error && (
-        <div style={{ padding: "6px 12px", background: "rgba(192,57,43,.15)", color: "var(--ms-danger)", fontSize: 12, display: "flex", justifyContent: "space-between" }}>
-          <span>{state.error}</span>
-          <button className="ghost" onClick={state.clearError}>{t("header.close")}</button>
-        </div>
-      )}
+      <div style={{ display: "grid", gridTemplateRows: "auto 1fr", minHeight: 0 }}>
+        {state.error && (
+          <div style={{ padding: "6px 12px", background: "rgba(192,57,43,.15)", color: "var(--ms-danger)", fontSize: 12, display: "flex", justifyContent: "space-between" }}>
+            <span>{state.error}</span>
+            <button className="ghost" onClick={state.clearError}>{t("header.close")}</button>
+          </div>
+        )}
 
       <div style={{ display: "grid", gridTemplateColumns: "200px 1fr 300px", minHeight: 0 }}>
         <div style={{ borderRight: "1px solid var(--ms-border)", display: "flex", flexDirection: "column", minHeight: 0 }}>
@@ -186,6 +188,9 @@ export function App() {
           />
         </div>
       </div>
+      </div>
+
+      <StatusBar items={state.status} />
 
       {widgetMenu && (
         <ContextMenu

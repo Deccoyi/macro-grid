@@ -4,12 +4,14 @@ import type {
   AppPreferences,
   ExportProfileResult,
   ImportProfileResult,
+  OptionsResult,
   PairedDeviceInfo,
-  ObsPluginSettings,
   PairingQrInfo,
   PluginInfo,
   PluginInstallResult,
   ProfileSummary,
+  SettingField,
+  StatusEntry,
   VariableInfo,
   VariableSnapshot,
 } from "./types";
@@ -48,6 +50,17 @@ export const api = {
 
   listActions: (): Promise<ActionInfo[]> => req("/api/actions").then((res) => json<ActionInfo[]>(res)),
 
+  /** Dynamic dropdown options for an action's field (e.g. OBS's scene/audio-input lists) — `currentValues`
+   * is the current form state for the field's `dependsOn` keys. */
+  getActionOptions: (type: string, sourceId: string, currentValues: Record<string, unknown>): Promise<OptionsResult> =>
+    req(`/api/actions/${encodeURIComponent(type)}/options/${encodeURIComponent(sourceId)}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(currentValues),
+    }).then((res) => json<OptionsResult>(res)),
+
+  getStatus: (): Promise<StatusEntry[]> => req("/api/status").then((res) => json<StatusEntry[]>(res)),
+
   variablesSnapshot: (): Promise<VariableSnapshot> => req("/api/variables/snapshot").then((res) => json<VariableSnapshot>(res)),
 
   variableCatalog: (): Promise<VariableInfo[]> => req("/api/variables/catalog").then((res) => json<VariableInfo[]>(res)),
@@ -79,18 +92,27 @@ export const api = {
   installPluginDialog: (): Promise<PluginInstallResult> =>
     req("/api/plugins/install", { method: "POST" }).then((res) => json<PluginInstallResult>(res)),
 
-  /** Generic passthrough to a plugin's own settings.json (see docs/plugin-authoring.md — the host has no
-   * settings schema/UI for plugins, each plugin owns its own file). null means the plugin hasn't written
-   * one yet (not loaded, or hasn't run once). */
-  getObsSettings: (): Promise<ObsPluginSettings | null> =>
-    req("/api/plugins/obs/settings").then((res) => (res.status === 404 ? null : json<ObsPluginSettings>(res))),
+  /** A registered IPluginSettingsPage's form schema — 404 if the plugin has none (PluginInfo.hasSettings
+   * is false), in which case the editor has no generic fallback UI for that plugin's settings anymore. */
+  getPluginSettingsSchema: (id: string): Promise<SettingField[]> =>
+    req(`/api/plugins/${encodeURIComponent(id)}/settings/schema`).then((res) => json<SettingField[]>(res)),
 
-  saveObsSettings: (settings: ObsPluginSettings): Promise<void> =>
-    req("/api/plugins/obs/settings", {
+  getPluginSettings: (id: string): Promise<Record<string, unknown>> =>
+    req(`/api/plugins/${encodeURIComponent(id)}/settings`).then((res) => json<Record<string, unknown>>(res)),
+
+  savePluginSettings: (id: string, values: Record<string, unknown>): Promise<void> =>
+    req(`/api/plugins/${encodeURIComponent(id)}/settings`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(settings),
+      body: JSON.stringify(values),
     }).then((res) => json<void>(res)),
+
+  getPluginSettingsOptions: (id: string, sourceId: string, currentValues: Record<string, unknown>): Promise<OptionsResult> =>
+    req(`/api/plugins/${encodeURIComponent(id)}/settings/options/${encodeURIComponent(sourceId)}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(currentValues),
+    }).then((res) => json<OptionsResult>(res)),
 
   getPreferences: (): Promise<AppPreferences> => req("/api/preferences").then((res) => json<AppPreferences>(res)),
 
@@ -117,4 +139,7 @@ export const api = {
    * Preferences/Plugins are native windows, not in-page modals. */
   openToolWindow: (kind: "preferences" | "plugins" | "help" | "pairing"): Promise<void> =>
     req(`/api/windows/${kind}`, { method: "POST" }).then((res) => json<void>(res)),
+
+  openPluginSettingsWindow: (id: string): Promise<void> =>
+    req(`/api/windows/plugin-settings/${encodeURIComponent(id)}`, { method: "POST" }).then((res) => json<void>(res)),
 };

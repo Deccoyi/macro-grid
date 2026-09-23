@@ -1,14 +1,17 @@
 import type { ActionBinding, Page } from "@macro/renderer";
 import { api } from "../../api/client";
-import type { ProfileSummary } from "../../api/types";
+import type { ActionInfo, ProfileSummary, VariableInfo } from "../../api/types";
 import { useT } from "../../i18n/I18nContext";
 import { HotkeyCapture } from "./HotkeyCapture";
+import { SchemaForm } from "./SchemaForm";
 
 export interface ActionFormProps {
   binding: ActionBinding;
   onChange: (settings: Record<string, unknown>) => void;
   pages: Page[];
   profiles: ProfileSummary[];
+  actionInfo?: ActionInfo;
+  variableCatalog?: VariableInfo[];
 }
 
 const str = (v: unknown, fallback = "") => (typeof v === "string" ? v : fallback);
@@ -206,6 +209,22 @@ export const ACTION_FORMS: Record<string, (props: ActionFormProps) => JSX.Elemen
   "core.setMute": SetMuteActionForm,
 };
 
-export function formFor(type: string): (props: ActionFormProps) => JSX.Element {
-  return ACTION_FORMS[type] ?? GenericJsonForm;
+/** A plugin action with a declared schema (`ActionInfo.fields`, from IActionDescriptor) and no
+ * hand-written form renders through the generic SchemaForm instead of the raw-JSON fallback. */
+function SchemaActionForm({ binding, onChange, actionInfo, variableCatalog }: ActionFormProps) {
+  const fields = actionInfo?.fields;
+  if (!fields || fields.length === 0) return <GenericJsonForm binding={binding} onChange={onChange} pages={[]} profiles={[]} />;
+  return (
+    <SchemaForm
+      fields={fields}
+      values={binding.settings as Record<string, unknown>}
+      onChange={onChange}
+      fetchOptions={(sourceId, values) => api.getActionOptions(binding.type, sourceId, values)}
+      variableCatalog={variableCatalog}
+    />
+  );
+}
+
+export function formFor(type: string, actionInfo?: ActionInfo): (props: ActionFormProps) => JSX.Element {
+  return ACTION_FORMS[type] ?? (actionInfo?.fields?.length ? SchemaActionForm : GenericJsonForm);
 }

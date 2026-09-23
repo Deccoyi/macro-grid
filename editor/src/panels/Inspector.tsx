@@ -113,6 +113,7 @@ export function Inspector({
               actions={actions}
               pages={pages}
               profiles={profiles}
+              variableCatalog={variableCatalog}
               onChange={(event: WidgetEventName, bindings: ActionBinding[]) =>
                 onChange((w) => {
                   if (bindings.length === 0) delete w.actions[event];

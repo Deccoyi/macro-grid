@@ -18,6 +18,13 @@
   --ms-grid-gap: 10px;
 }
 
+@keyframes ms-spin {
+  to { transform: rotate(360deg); }
+}
+.spin {
+  animation: ms-spin 0.9s linear infinite;
+}
+
 /* Light theme — same editor-chrome roles as the dark palette above, applied via data-theme on <html>
  * (see Preferences). Widget colors are still always the user's own and never use these tokens. */
 :root[data-theme="light"] {

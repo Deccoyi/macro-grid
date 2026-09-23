@@ -42,13 +42,11 @@ export const tr = {
   "plugins.install.hint": "plugin.json içeren bir klasör seç. Kopyalanır, ama devreye girmesi için sunucunun yeniden başlatılması gerekir.",
   "plugins.install.success": (name: string) => `${name} kopyalandı. Devreye girmesi için sunucuyu yeniden başlat.`,
   "plugins.settings": "Ayarlar",
-  "plugins.obs.enabled": "Etkin",
-  "plugins.obs.host": "Sunucu",
-  "plugins.obs.port": "Port",
-  "plugins.obs.password": "Şifre",
-  "plugins.obs.hint": "OBS'te Araçlar → WebSocket Sunucu Ayarları'ndan sunucuyu açın; bir şifre belirlediyseniz aynısını buraya yazın. Kaydettikten sonra sunucuyu yeniden başlatmanıza gerek yok, birkaç saniye içinde bağlanır.",
-  "plugins.obs.save": "Kaydet",
-  "plugins.obs.saved": "Kaydedildi.",
+
+  // ---- Plugin settings window (schema-driven, IPluginSettingsPage) ----
+  "pluginSettings.none": "Bu eklentinin ayarı yok.",
+  "pluginSettings.save": "Kaydet",
+  "pluginSettings.saved": "Kaydedildi.",
 
   "help.title": "Yardım",
   "help.licensesNote": "Kullanılan üçüncü taraf kütüphanelerin lisans metinleri THIRD_PARTY_NOTICES.md dosyasındadır.",
@@ -175,6 +173,15 @@ export const tr = {
   "action.moveDown": "Aşağı taşı",
   "action.remove": "Kaldır",
   "action.add": "+ Aksiyon ekle",
+
+  // ---- Action picker ----
+  "actionPicker.title": "Aksiyon seç",
+  "actionPicker.searchPlaceholder": "Aksiyon ara…",
+  "actionPicker.noMatch": "Eşleşme yok.",
+
+  // ---- Schema form (SettingField-driven action/plugin settings) ----
+  "schemaForm.refresh": "Yenile",
+  "schemaForm.notFound": "(bulunamadı)",
 
   // ---- CSS editor ----
   "css.label": "Özel CSS",
