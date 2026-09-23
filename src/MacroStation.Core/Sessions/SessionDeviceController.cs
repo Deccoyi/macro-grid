@@ -19,7 +19,21 @@ public sealed class SessionDeviceController(ClientSession session, ProfileStore 
     public Task BackAsync() =>
         session.PageHistory.Count > 0 ? NavigateAsync(session.PageHistory.Pop(), pushHistory: false) : Task.CompletedTask;
 
-    public async Task SwitchProfileAsync(string profileId)
+    /// <summary>A plain user pick — drawer or a <c>core.profile</c> button. Records the switch as this
+    /// session's new auto-switch base (docs/auto-profile-switch.md's "Elle seçim") before applying it.
+    /// <see cref="Sessions.AutoProfileSwitcher"/> does not call this overload: it updates
+    /// <see cref="ClientSession.AutoSwitch"/> itself (Auto origin) and calls <see cref="ApplyProfileAsync"/>
+    /// directly, so a rule match is never also recorded as a manual pick.</summary>
+    public Task SwitchProfileAsync(string profileId)
+    {
+        session.AutoSwitch.OnManual(profileId);
+        return ApplyProfileAsync(profileId);
+    }
+
+    /// <summary>The actual "push this profile's layout to the device" work, with no auto-switch stack
+    /// side effect — shared by the public Manual entry point above and by
+    /// <see cref="Sessions.AutoProfileSwitcher"/>, which manages the stack itself.</summary>
+    internal async Task ApplyProfileAsync(string profileId)
     {
         var profile = profiles.Get(profileId);
         var page = profile?.Pages.FirstOrDefault();

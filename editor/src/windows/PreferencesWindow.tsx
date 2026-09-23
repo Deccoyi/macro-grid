@@ -1,26 +1,34 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Trash2 } from "lucide-react";
+import type { ProfileSummary } from "../api/types";
+import { api } from "../api/client";
 import { useT } from "../i18n/I18nContext";
 import { SectionLabel, Seg } from "../panels/fields/controls";
 import { usePreferences } from "../preferences/PreferencesContext";
 import { ToolWindowLayout } from "./ToolWindowLayout";
 
-type Category = "appearance" | "language" | "previewProfiles";
+type Category = "appearance" | "language" | "previewProfiles" | "profiles";
 
 /** The whole page of the "Tercihler" tool window (see ToolWindow.cs) — a real separate, non-modal OS
  * window, not an in-page dialog. */
 export function PreferencesWindow() {
   const { t, lang, setLang } = useT();
-  const { theme, setTheme, previewProfiles, addPreviewProfile, removePreviewProfile } = usePreferences();
+  const { theme, setTheme, previewProfiles, addPreviewProfile, removePreviewProfile, defaultProfileId, setDefaultProfileId } = usePreferences();
   const [category, setCategory] = useState<Category>("appearance");
   const [name, setName] = useState("");
   const [width, setWidth] = useState(390);
   const [height, setHeight] = useState(844);
+  const [profiles, setProfiles] = useState<ProfileSummary[]>([]);
+
+  useEffect(() => {
+    api.listProfiles().then(setProfiles).catch(() => {});
+  }, []);
 
   const categories = [
     { id: "appearance", label: t("preferences.category.appearance") },
     { id: "language", label: t("preferences.category.language") },
     { id: "previewProfiles", label: t("preferences.category.previewProfiles") },
+    { id: "profiles", label: t("preferences.category.profiles") },
   ];
 
   return (
@@ -77,6 +85,27 @@ export function PreferencesWindow() {
               {t("preferences.previewProfiles.add")}
             </button>
           </div>
+        </div>
+      )}
+
+      {category === "profiles" && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 16, maxWidth: 360 }}>
+          <SectionLabel>{t("preferences.category.profiles")}</SectionLabel>
+          <label className="field">
+            {t("preferences.defaultProfile")}
+            <select
+              value={defaultProfileId ?? ""}
+              onChange={(e) => setDefaultProfileId(e.target.value || null)}
+            >
+              <option value="">{t("preferences.defaultProfile.none")}</option>
+              {profiles.map((p) => (
+                <option key={p.id} value={p.id}>{p.name}</option>
+              ))}
+            </select>
+          </label>
+          <p style={{ fontSize: 11.5, color: "var(--ms-text-secondary)", margin: 0 }}>
+            {t("preferences.defaultProfile.hint")}
+          </p>
         </div>
       )}
     </ToolWindowLayout>

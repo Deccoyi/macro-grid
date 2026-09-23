@@ -20,6 +20,11 @@ public sealed class AppPreferences
     public string Language { get; set; } = "tr";
     public List<PreviewProfile> PreviewProfiles { get; set; } = [];
 
+    /// <summary>Fallback profile a device resolves to when it has no explicit assignment and no
+    /// auto-switch rule currently applies (docs/auto-profile-switch.md). Null means "no preference set" —
+    /// falls back to <c>ProfileStore.First()</c>, same as before this existed.</summary>
+    public string? DefaultProfileId { get; set; }
+
     /// <summary>Whether each Inspector section ("appearance", "typeFields", "actions", "css") is
     /// collapsed — only entries the user actually toggled are stored; a missing key falls back to that
     /// section's own hardcoded default (see Inspector.tsx's SECTION_DEFAULTS).</summary>

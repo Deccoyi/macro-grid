@@ -72,6 +72,32 @@ public sealed class DeviceStore
         return true;
     }
 
+    /// <summary>Sets whether this device's session auto-switches profile based on the server's foreground
+    /// window. Returns false if the device isn't paired.</summary>
+    public bool SetFollowActiveWindow(string deviceId, bool follow)
+    {
+        lock (_lock)
+        {
+            if (!_devices.TryGetValue(deviceId, out var device)) return false;
+            device.FollowActiveWindow = follow;
+        }
+        Save();
+        return true;
+    }
+
+    /// <summary>Sets the drawer's auto-switch lock, persisted so it survives a reconnect. Returns false if
+    /// the device isn't paired.</summary>
+    public bool SetAutoSwitchLocked(string deviceId, bool locked)
+    {
+        lock (_lock)
+        {
+            if (!_devices.TryGetValue(deviceId, out var device)) return false;
+            device.AutoSwitchLocked = locked;
+        }
+        Save();
+        return true;
+    }
+
     public bool Revoke(string deviceId)
     {
         lock (_lock)

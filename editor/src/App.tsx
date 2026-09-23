@@ -131,6 +131,8 @@ export function App() {
               pages={profile.pages}
               currentPageId={state.currentPageId}
               onSelectProfile={state.selectProfile}
+              appMatches={profile.appMatches ?? []}
+              onAppMatchesChange={state.setAppMatches}
               onCreateProfile={state.createProfile}
               onRenameProfile={state.renameProfile}
               onDeleteProfile={() => state.deleteProfile(profile.id)}

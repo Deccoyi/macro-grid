@@ -122,6 +122,18 @@ export function PairingWindow() {
                   <option key={p.id} value={p.id}>{p.name}</option>
                 ))}
               </select>
+              <label title={t("pairing.followActiveWindow.hint")} style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11, color: "var(--ms-text-secondary)", whiteSpace: "nowrap" }}>
+                <input
+                  type="checkbox"
+                  checked={d.followActiveWindow}
+                  onChange={(e) => {
+                    const followActiveWindow = e.target.checked;
+                    setDevices((prev) => prev?.map((x) => (x.id === d.id ? { ...x, followActiveWindow } : x)) ?? prev);
+                    api.setDeviceFollowActiveWindow(d.id, followActiveWindow).catch(refreshDevices);
+                  }}
+                />
+                {t("pairing.followActiveWindow")}
+              </label>
               <button
                 type="button"
                 className="ghost"

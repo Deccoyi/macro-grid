@@ -14,6 +14,7 @@ using MacroStation.Protocol;
 using MacroStation.Windows.Audio;
 using MacroStation.Windows.Input;
 using MacroStation.Windows.Variables;
+using MacroStation.Windows.Windows;
 
 namespace MacroStation.Host;
 
@@ -91,6 +92,9 @@ internal static class ServerApp
         builder.Services.AddSingleton<ToggleStateStore>();
         builder.Services.AddSingleton<WidgetStateService>();
         builder.Services.AddHostedService(sp => sp.GetRequiredService<WidgetStateService>());
+        builder.Services.AddSingleton<IActiveWindowSource, ForegroundWindowMonitor>();
+        builder.Services.AddSingleton<AutoProfileSwitcher>();
+        builder.Services.AddHostedService(sp => sp.GetRequiredService<AutoProfileSwitcher>());
         builder.Services.AddSingleton<ClientHub>();
 
         var app = builder.Build();
@@ -450,7 +454,7 @@ internal static class ServerApp
         api.MapPost("/pairing/qr/regenerate", (PairingService pairing) => BuildPairingQr(pairing.Regenerate(), pairing.ExpiresAt));
 
         api.MapGet("/devices", (DeviceStore devices) =>
-            devices.All.Select(d => new { d.Id, d.Name, d.PairedAt, d.LastSeenAt, d.AssignedProfileId }));
+            devices.All.Select(d => new { d.Id, d.Name, d.PairedAt, d.LastSeenAt, d.AssignedProfileId, d.FollowActiveWindow, d.AutoSwitchLocked }));
 
         api.MapDelete("/devices/{id}", (string id, DeviceStore devices) =>
             devices.Revoke(id) ? Results.NoContent() : Results.NotFound());
@@ -463,9 +467,30 @@ internal static class ServerApp
 
             return devices.AssignProfile(id, body?.ProfileId) ? Results.NoContent() : Results.NotFound();
         });
+
+        api.MapPut("/devices/{id}/follow-window", async (string id, HttpRequest request, DeviceStore devices, SessionRegistry sessions, AutoProfileSwitcher autoSwitcher) =>
+        {
+            FollowWindowRequest? body;
+            try { body = await JsonSerializer.DeserializeAsync<FollowWindowRequest>(request.Body, ProtocolJson.Options); }
+            catch (JsonException) { return Results.BadRequest(); }
+            if (body is null) return Results.BadRequest();
+
+            if (!devices.SetFollowActiveWindow(id, body.FollowActiveWindow)) return Results.NotFound();
+
+            // Applies to the live session too, not just future connections — re-evaluate against the
+            // current foreground window right away if it was just turned on.
+            var session = sessions.All.FirstOrDefault(s => s.DeviceId == id);
+            if (session is not null && body.FollowActiveWindow)
+                await autoSwitcher.ReevaluateAsync(session);
+
+            return Results.NoContent();
+        });
+
+        api.MapGet("/system/windows", (IActiveWindowSource windowSource) => windowSource.ListVisibleWindows());
     }
 
     private sealed record AssignProfileRequest(string? ProfileId);
+    private sealed record FollowWindowRequest(bool FollowActiveWindow);
 
     /// <summary>Resolves a plugin id from a URL segment to its install folder, rejecting anything that
     /// isn't a plain single path segment (no traversal) and any id that isn't actually installed.</summary>

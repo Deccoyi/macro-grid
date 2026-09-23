@@ -111,6 +111,18 @@ export interface PairedDeviceInfo {
   pairedAt: string;
   lastSeenAt: string;
   assignedProfileId: string | null;
+  /** Opt-in: this device's session auto-switches profile based on the server's foreground window — see
+   * docs/auto-profile-switch.md. */
+  followActiveWindow: boolean;
+  /** The drawer's auto-switch pause, persisted so it survives a reconnect. */
+  autoSwitchLocked: boolean;
+}
+
+/** One process currently owning a visible top-level window — GET /api/system/windows, for the "çalışan
+ * uygulamadan seç" picker on a profile's auto-switch rules. */
+export interface RunningWindowInfo {
+  processName: string;
+  title: string;
 }
 
 /** Pairing QR payload. `text` is the `macrostation://pair?...` URI to encode — empty if the server
@@ -138,6 +150,9 @@ export interface AppPreferences {
   language: "tr" | "en";
   previewProfiles: PreviewProfileInfo[];
   collapsedInspectorSections: Record<string, boolean>;
+  /** Fallback profile a device resolves to with no explicit assignment and no auto-switch rule currently
+   * applying — see docs/auto-profile-switch.md. Null means "no preference set". */
+  defaultProfileId: string | null;
 }
 
 export interface ImportProfileResult {

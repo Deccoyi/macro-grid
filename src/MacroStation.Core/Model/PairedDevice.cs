@@ -15,4 +15,12 @@ public sealed class PairedDevice
     /// existed. Not validated against <c>ProfileStore</c> here: a dangling id (the assigned profile was
     /// deleted) is treated as unset by <c>ClientHub.OnHelloAsync</c>'s lookup, not an error.</summary>
     public string? AssignedProfileId { get; set; }
+
+    /// <summary>Opt-in: whether this device's session auto-switches profile based on the foreground window
+    /// on the server machine (docs/auto-profile-switch.md). Off by default — most devices never want this.</summary>
+    public bool FollowActiveWindow { get; set; }
+
+    /// <summary>User-set pause on auto-switching (the drawer's lock) — persisted so it survives a
+    /// reconnect. Manual profile switches from the drawer/a button still work while locked.</summary>
+    public bool AutoSwitchLocked { get; set; }
 }

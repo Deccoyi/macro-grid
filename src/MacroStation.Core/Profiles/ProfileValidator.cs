@@ -25,6 +25,9 @@ public static class ProfileValidator
             return false;
         }
 
+        if (!ValidateAppMatches(profile, out error))
+            return false;
+
         var pageIds = new HashSet<string>();
         foreach (var page in profile.Pages)
         {
@@ -42,6 +45,29 @@ public static class ProfileValidator
 
             if (!ValidatePlacement(page, out error))
                 return false;
+        }
+
+        error = null;
+        return true;
+    }
+
+    private static bool ValidateAppMatches(Profile profile, out string? error)
+    {
+        var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var match in profile.AppMatches)
+        {
+            if (string.IsNullOrWhiteSpace(match.ProcessName))
+            {
+                error = "Otomatik geçiş kuralı için uygulama adı (ör. \"Spotify.exe\") boş olamaz.";
+                return false;
+            }
+
+            var key = match.ProcessName.Trim() + "\u0000" + (match.TitleContains?.Trim() ?? "");
+            if (!seen.Add(key))
+            {
+                error = $"'{match.ProcessName}' için yinelenen otomatik geçiş kuralı.";
+                return false;
+            }
         }
 
         error = null;

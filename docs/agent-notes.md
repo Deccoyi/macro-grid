@@ -116,7 +116,7 @@ Bu projede çalışan AI agent'lar (ve geliştiriciler) için bağlam, kurallar 
 
 ## Kullanıcı tercihleri
 - Kullanıcı Türkçe konuşuyor; kullanıcıya dönük metinler (UI, hata mesajları) Türkçe, kod/yorumlar İngilizce.
-- Profil **aktif pencereye göre otomatik değişmeyecek** (yayında aktif pencere OBS olmuyor). Profil seçimi client'ta kenardan swipe drawer + `profile.switch` aksiyonu ile.
+- Profil seçimi client'ta kenardan swipe drawer + `profile.switch` aksiyonu ile. **Güncelleme (2026-09-23):** eski karar ("aktif pencereye göre otomatik değişmeyecek") tersine döndü — kullanıcı Spotify/media player gibi uygulamalar öne gelince otomatik geçiş istedi. Bkz. `docs/auto-profile-switch.md`: opt-in (`PairedDevice.FollowActiveWindow`), yığın tabanlı (`AutoSwitchState`), drawer'da kilit.
 - Widget'lar yalnızca buton değil: slider, web/chat penceresi, plugin HTML widget'ları da grid'e oturur.
 - JS plugin'lerinde güvenlik şart (Jint sandbox, izin manifesti, kaynak limitleri).
 - Planlar ve agent notları bu `docs/` klasöründe tutulur.

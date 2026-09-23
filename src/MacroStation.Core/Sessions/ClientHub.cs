@@ -6,6 +6,7 @@ using MacroStation.Core.Actions;
 using MacroStation.Core.Devices;
 using MacroStation.Core.Model;
 using MacroStation.Core.Plugins;
+using MacroStation.Core.Preferences;
 using MacroStation.Core.Profiles;
 using MacroStation.Plugin.Abstractions;
 using MacroStation.Protocol;
@@ -25,6 +26,8 @@ public sealed class ClientHub(
     DeviceStore devices,
     PairingService pairing,
     PluginStatusRegistry statusRegistry,
+    PreferencesStore preferences,
+    AutoProfileSwitcher autoSwitcher,
     ILogger<ClientHub> logger)
 {
     public const string ServerVersion = "0.2.0";
@@ -172,6 +175,17 @@ public sealed class ClientHub(
                 if (change is not null)
                     await new SessionDeviceController(session, profiles, widgetState).SwitchProfileAsync(change.ProfileId);
                 break;
+            case MessageTypes.ProfileLock:
+                var lockMsg = envelope.DataAs<ProfileLockMessage>();
+                if (lockMsg is not null && session.DeviceId is not null)
+                {
+                    devices.SetAutoSwitchLocked(session.DeviceId, lockMsg.Locked);
+                    session.AutoSwitch.SetLocked(lockMsg.Locked);
+                    if (!lockMsg.Locked) await autoSwitcher.ReevaluateAsync(session);
+                    if (devices.All.FirstOrDefault(d => d.Id == session.DeviceId) is { } device)
+                        await SendProfilesListAsync(session, device, ct);
+                }
+                break;
             default:
                 logger.LogDebug("Ignoring message type {Type}", envelope.Type);
                 break;
@@ -209,20 +223,28 @@ public sealed class ClientHub(
         session.DeviceName = deviceName;
 
         // A device with no assigned profile (or one assigned to a profile that's since been deleted)
-        // falls back to the first profile — same "just works" behavior as before per-device assignment existed.
-        var profile = (device.AssignedProfileId is { } assignedId ? profiles.Get(assignedId) : null) ?? profiles.First();
+        // falls back to the app-wide default, then just the first profile — ProfileResolver.ResolveDefault.
+        var profile = ProfileResolver.ResolveDefault(device, profiles, preferences);
         session.ProfileId = profile.Id;
+        session.AutoSwitch.OnManual(profile.Id); // the resolved-default profile is this session's manual base.
+        session.AutoSwitch.SetLocked(device.AutoSwitchLocked);
         var page = profile.Pages.FirstOrDefault();
         session.PageId = page?.Id;
         sessions.NotifyChanged();
 
         await session.SendAsync(MessageTypes.Welcome, new WelcomeMessage(Environment.MachineName, ServerVersion, issuedToken), ct);
         await session.SendAsync(MessageTypes.LayoutFull, new LayoutFullPayload(profile, session.PageId ?? ""), ct);
-        // Every profile, not just the assigned one, so the client can offer a profile-switcher drawer.
-        await session.SendAsync(MessageTypes.ProfilesList, new ProfilesListPayload(profiles.All.Select(p => new ProfileSummary(p.Id, p.Name)).ToList()), ct);
+        await SendProfilesListAsync(session, device, ct);
         if (page is not null)
             await widgetState.SendInitialAsync(session, page, ct);
     }
+
+    /// <summary>Every profile, not just the current one, so the client can offer a profile-switcher
+    /// drawer — plus this device's auto-switch opt-in/lock state, re-sent whenever either changes.</summary>
+    private Task SendProfilesListAsync(ClientSession session, PairedDevice device, CancellationToken ct) =>
+        session.SendAsync(MessageTypes.ProfilesList, new ProfilesListPayload(
+            profiles.All.Select(p => new ProfileSummary(p.Id, p.Name)).ToList(),
+            new AutoSwitchInfo(device.FollowActiveWindow, device.AutoSwitchLocked)), ct);
 
     private Widget? FindWidget(ClientSession session, string pageId, string widgetId, out Page? page)
     {

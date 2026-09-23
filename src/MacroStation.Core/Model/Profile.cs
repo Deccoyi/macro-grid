@@ -14,9 +14,25 @@ public sealed class Profile
     /// was deleted in Tercihler) the editor falls back to free on its own — this field is left as-is.</summary>
     public string? PreviewDeviceId { get; set; }
 
+    /// <summary>Foreground-window rules that auto-switch an opted-in device to this profile — see
+    /// docs/auto-profile-switch.md. Empty means this profile never triggers an automatic switch.</summary>
+    public List<AppMatch> AppMatches { get; set; } = [];
+
     public Page? FindPage(string pageId) => Pages.FirstOrDefault(p => p.Id == pageId);
 
     public static string NewId() => Guid.NewGuid().ToString("N")[..12];
+}
+
+/// <summary>One "switch to this profile when this app is in the foreground" rule (docs/auto-profile-switch.md).</summary>
+public sealed class AppMatch
+{
+    /// <summary>Executable name, e.g. "Spotify.exe" — matched case-insensitively against the foreground
+    /// window's owning process.</summary>
+    public string ProcessName { get; set; } = "";
+
+    /// <summary>Optional extra filter: the window title must contain this (case-insensitive) too. Null/empty
+    /// means any window of that process matches.</summary>
+    public string? TitleContains { get; set; }
 }
 
 public sealed class Page

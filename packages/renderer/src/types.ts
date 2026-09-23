@@ -121,6 +121,15 @@ export interface Profile {
   /** Editor-only: which "Önizleme" preset to switch to when this profile is opened. Ignored by the
    * renderer itself and by the phone client. */
   previewDeviceId?: string;
+  /** Editor-only: foreground-window rules that auto-switch an opted-in device to this profile — see
+   * docs/auto-profile-switch.md. Ignored by the renderer itself. */
+  appMatches?: AppMatch[];
+}
+
+/** One "switch to this profile when this app is in the foreground" rule (docs/auto-profile-switch.md). */
+export interface AppMatch {
+  processName: string;
+  titleContains?: string | null;
 }
 
 /** Live push from the server (widget.state): only the fields that changed are present. */

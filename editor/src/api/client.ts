@@ -12,6 +12,7 @@ import type {
   PluginInstallResult,
   PluginUninstallResult,
   ProfileSummary,
+  RunningWindowInfo,
   SettingField,
   StatusEntry,
   VariableInfo,
@@ -86,6 +87,15 @@ export const api = {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ profileId }),
     }).then((res) => json<void>(res)),
+
+  setDeviceFollowActiveWindow: (id: string, followActiveWindow: boolean): Promise<void> =>
+    req(`/api/devices/${id}/follow-window`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ followActiveWindow }),
+    }).then((res) => json<void>(res)),
+
+  listRunningWindows: (): Promise<RunningWindowInfo[]> => req("/api/system/windows").then((res) => json<RunningWindowInfo[]>(res)),
 
   listPlugins: (): Promise<PluginInfo[]> => req("/api/plugins").then((res) => json<PluginInfo[]>(res)),
 

@@ -13,6 +13,7 @@ public static class MessageTypes
     public const string PageNext = "page.next";
     public const string PagePrev = "page.prev";
     public const string ProfileChange = "profile.change";
+    public const string ProfileLock = "profile.lock";
 
     // server -> client
     public const string Welcome = "welcome";

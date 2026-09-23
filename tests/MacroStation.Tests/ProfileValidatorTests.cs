@@ -88,4 +88,34 @@ public class ProfileValidatorTests
         Assert.False(ProfileValidator.Validate(profile, out var error));
         Assert.Contains("Yinelenen widget", error);
     }
+
+    [Fact]
+    public void Accepts_distinct_app_matches()
+    {
+        var profile = Profile();
+        profile.AppMatches = [new AppMatch { ProcessName = "Spotify.exe" }, new AppMatch { ProcessName = "Discord.exe" }];
+
+        Assert.True(ProfileValidator.Validate(profile, out var error));
+        Assert.Null(error);
+    }
+
+    [Fact]
+    public void Rejects_app_match_with_empty_process_name()
+    {
+        var profile = Profile();
+        profile.AppMatches = [new AppMatch { ProcessName = "  " }];
+
+        Assert.False(ProfileValidator.Validate(profile, out var error));
+        Assert.NotNull(error);
+    }
+
+    [Fact]
+    public void Rejects_duplicate_app_matches()
+    {
+        var profile = Profile();
+        profile.AppMatches = [new AppMatch { ProcessName = "Spotify.exe" }, new AppMatch { ProcessName = "spotify.exe" }];
+
+        Assert.False(ProfileValidator.Validate(profile, out var error));
+        Assert.Contains("yinelenen", error);
+    }
 }

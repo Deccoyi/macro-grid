@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import type { ActionBinding, Page, Profile, Widget, WidgetType } from "@macro/renderer";
+import type { ActionBinding, AppMatch, Page, Profile, Widget, WidgetType } from "@macro/renderer";
 import { api } from "../api/client";
 import type { ActionInfo, ProfileSummary, StatusEntry, VariableInfo, VariableSnapshot } from "../api/types";
 import { choiceAsync, confirmAsync } from "../dialogs/dialogStore";
@@ -195,6 +195,12 @@ export function useEditorState() {
   /** Remembers which "Önizleme" preset this profile should open with — see Profile.PreviewDeviceId. */
   const setPreviewDevice = useCallback(
     (id: string) => mutate((draft) => ({ ...draft, previewDeviceId: id === "free" ? undefined : id })),
+    [mutate],
+  );
+
+  /** Foreground-window auto-switch rules for this profile — see docs/auto-profile-switch.md. */
+  const setAppMatches = useCallback(
+    (appMatches: AppMatch[]) => mutate((draft) => ({ ...draft, appMatches })),
     [mutate],
   );
 
@@ -436,6 +442,7 @@ export function useEditorState() {
     deleteProfile,
     renameProfile,
     setPreviewDevice,
+    setAppMatches,
     save,
     addPage,
     renamePage,

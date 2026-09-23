@@ -6,7 +6,7 @@ export type Theme = "dark" | "light";
 export type Language = "tr" | "en";
 export type PreviewProfile = PreviewProfileInfo;
 
-const DEFAULTS: AppPreferences = { theme: "dark", language: "tr", previewProfiles: [], collapsedInspectorSections: {} };
+const DEFAULTS: AppPreferences = { theme: "dark", language: "tr", previewProfiles: [], collapsedInspectorSections: {}, defaultProfileId: null };
 
 interface PreferencesContextValue {
   theme: Theme;
@@ -18,6 +18,8 @@ interface PreferencesContextValue {
   removePreviewProfile: (id: string) => void;
   collapsedInspectorSections: Record<string, boolean>;
   setInspectorSectionCollapsed: (id: string, collapsed: boolean) => void;
+  defaultProfileId: string | null;
+  setDefaultProfileId: (id: string | null) => void;
 }
 
 const PreferencesContext = createContext<PreferencesContextValue | null>(null);
@@ -101,6 +103,11 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
     [prefs, persist],
   );
 
+  const setDefaultProfileId = useCallback(
+    (defaultProfileId: string | null) => persist({ ...prefs, defaultProfileId }),
+    [prefs, persist],
+  );
+
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", prefs.theme);
   }, [prefs.theme]);
@@ -116,8 +123,10 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
       removePreviewProfile,
       collapsedInspectorSections: prefs.collapsedInspectorSections,
       setInspectorSectionCollapsed,
+      defaultProfileId: prefs.defaultProfileId,
+      setDefaultProfileId,
     }),
-    [prefs, setTheme, setLanguage, addPreviewProfile, removePreviewProfile, setInspectorSectionCollapsed],
+    [prefs, setTheme, setLanguage, addPreviewProfile, removePreviewProfile, setInspectorSectionCollapsed, setDefaultProfileId],
   );
 
   return <PreferencesContext.Provider value={value}>{children}</PreferencesContext.Provider>;

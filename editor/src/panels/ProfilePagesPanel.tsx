@@ -1,9 +1,10 @@
 import { useState } from "react";
-import { Copy, Pencil, Plus, Trash2 } from "lucide-react";
-import type { Page } from "@macro/renderer";
+import { AppWindow, Copy, Pencil, Plus, Trash2 } from "lucide-react";
+import type { AppMatch, Page } from "@macro/renderer";
 import type { ProfileSummary } from "../api/types";
 import { confirmAsync, promptAsync } from "../dialogs/dialogStore";
 import { useT } from "../i18n/I18nContext";
+import { AppMatchesEditor } from "./AppMatchesEditor";
 import { SectionLabel } from "./fields/controls";
 
 export interface ProfilePagesPanelProps {
@@ -11,6 +12,8 @@ export interface ProfilePagesPanelProps {
   profiles: ProfileSummary[];
   pages: Page[];
   currentPageId: string | null;
+  appMatches: AppMatch[];
+  onAppMatchesChange: (matches: AppMatch[]) => void;
   onSelectProfile: (id: string) => void;
   onCreateProfile: () => void;
   onRenameProfile: (name: string) => void;
@@ -31,6 +34,8 @@ export function ProfilePagesPanel({
   profiles,
   pages,
   currentPageId,
+  appMatches,
+  onAppMatchesChange,
   onSelectProfile,
   onCreateProfile,
   onRenameProfile,
@@ -45,6 +50,7 @@ export function ProfilePagesPanel({
 }: ProfilePagesPanelProps) {
   const { t } = useT();
   const [hoveredPageId, setHoveredPageId] = useState<string | null>(null);
+  const [autoSwitchOpen, setAutoSwitchOpen] = useState(false);
 
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
@@ -81,7 +87,16 @@ export function ProfilePagesPanel({
           >
             <Trash2 size={13} />
           </button>
+          <button
+            className="ghost"
+            title={t("profile.autoSwitch")}
+            onClick={() => setAutoSwitchOpen((v) => !v)}
+            style={{ flex: 1, padding: "5px 0", display: "flex", justifyContent: "center", color: appMatches.length > 0 ? "var(--ms-accent, #60a5fa)" : undefined }}
+          >
+            <AppWindow size={13} />
+          </button>
         </div>
+        {autoSwitchOpen && <AppMatchesEditor matches={appMatches} onChange={onAppMatchesChange} />}
       </div>
 
       <hr className="sep" style={{ margin: "0 0 6px" }} />

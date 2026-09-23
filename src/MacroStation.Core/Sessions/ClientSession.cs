@@ -23,6 +23,10 @@ public sealed class ClientSession(WebSocket socket, string remoteAddress)
     /// <summary>Pages this client navigated away from, for <c>core.page</c> "back". Only touched by this session's own single-threaded action queue.</summary>
     internal Stack<string> PageHistory { get; } = new();
 
+    /// <summary>This session's auto-profile-switch stack (docs/auto-profile-switch.md) — always present,
+    /// but only ever driven by <c>AutoProfileSwitcher</c> for a device with <c>FollowActiveWindow</c> on.</summary>
+    internal AutoSwitchState AutoSwitch { get; } = new();
+
     /// <summary>Last text sent per widget id, so <see cref="WidgetStateService"/> only re-sends on an actual change.</summary>
     internal ConcurrentDictionary<string, string> SentTexts { get; } = new();
 
