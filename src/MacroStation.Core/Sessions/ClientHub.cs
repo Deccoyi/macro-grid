@@ -5,6 +5,7 @@ using System.Threading.Channels;
 using MacroStation.Core.Actions;
 using MacroStation.Core.Devices;
 using MacroStation.Core.Model;
+using MacroStation.Core.Plugins;
 using MacroStation.Core.Profiles;
 using MacroStation.Plugin.Abstractions;
 using MacroStation.Protocol;
@@ -23,6 +24,7 @@ public sealed class ClientHub(
     WidgetStateService widgetState,
     DeviceStore devices,
     PairingService pairing,
+    PluginStatusRegistry statusRegistry,
     ILogger<ClientHub> logger)
 {
     public const string ServerVersion = "0.2.0";
@@ -48,7 +50,17 @@ public sealed class ClientHub(
         var worker = Task.Run(async () =>
         {
             await foreach (var work in queue.Reader.ReadAllAsync())
-                await work();
+            {
+                try
+                {
+                    await work();
+                }
+                catch (Exception ex)
+                {
+                    // A bug in dispatch/reporting must not silently kill this session's action queue.
+                    logger.LogError(ex, "Unhandled exception in action queue for session {Session}", session.Id);
+                }
+            }
         });
 
         try
@@ -239,12 +251,28 @@ public sealed class ClientHub(
             {
                 var active = toggles.Toggle(widget.Id);
                 await BroadcastToggleAsync(session.ProfileId, msg.PageId, widget.Id, active);
-                await dispatcher.DispatchAsync(widget, active ? WidgetEvents.ToggleOn : WidgetEvents.ToggleOff, context, CancellationToken.None);
+                var errors = await dispatcher.DispatchAsync(widget, active ? WidgetEvents.ToggleOn : WidgetEvents.ToggleOff, context, CancellationToken.None);
+                await ReportActionErrorsAsync(session, errors);
             });
             return;
         }
 
-        queue.TryWrite(() => dispatcher.DispatchAsync(widget, eventName, context, CancellationToken.None));
+        queue.TryWrite(async () =>
+        {
+            var errors = await dispatcher.DispatchAsync(widget, eventName, context, CancellationToken.None);
+            await ReportActionErrorsAsync(session, errors);
+        });
+    }
+
+    /// <summary>Surfaces a failed action both to the device that triggered it (toast, via the same "error"
+    /// envelope pairing failures already use) and in the editor's status bar — a stale binding (e.g. a
+    /// button pointed at a since-deleted OBS scene) must never fail silently.</summary>
+    private async Task ReportActionErrorsAsync(ClientSession session, IReadOnlyList<string> errors)
+    {
+        if (errors.Count == 0) return;
+        var message = errors[0];
+        statusRegistry.SetCore("actionError", message, StatusLevel.Warning, "triangle-alert");
+        await session.SendAsync(MessageTypes.Error, new ErrorMessage("action_failed", message));
     }
 
     /// <summary>A slider/knob drag commit — same dispatch as <see cref="Enqueue"/>, just carrying the live
@@ -259,7 +287,11 @@ public sealed class ClientHub(
 
         var device = new SessionDeviceController(session, profiles, widgetState);
         var context = new ActionContext(session.DeviceId!, msg.PageId, msg.WidgetId, device, Value: msg.Value);
-        queue.TryWrite(() => dispatcher.DispatchAsync(widget, WidgetEvents.ValueChange, context, CancellationToken.None));
+        queue.TryWrite(async () =>
+        {
+            var errors = await dispatcher.DispatchAsync(widget, WidgetEvents.ValueChange, context, CancellationToken.None);
+            await ReportActionErrorsAsync(session, errors);
+        });
     }
 
     private async Task BroadcastToggleAsync(string profileId, string pageId, string widgetId, bool active)

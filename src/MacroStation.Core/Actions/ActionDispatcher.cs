@@ -14,13 +14,16 @@ public sealed class ActionDispatcher(IEnumerable<IActionHandler> handlers, ILogg
 
     /// <summary>
     /// Runs the actions bound to <paramref name="eventName"/> sequentially.
-    /// A failing action is logged and does not stop the following ones.
+    /// A failing action is logged and does not stop the following ones; its message is collected so the
+    /// caller can surface it too (editor status bar, a toast on the device that pressed the widget) —
+    /// a stale binding should be visibly wrong, never a silent no-op.
     /// </summary>
-    public async Task DispatchAsync(Widget widget, string eventName, ActionContext context, CancellationToken cancellationToken)
+    public async Task<IReadOnlyList<string>> DispatchAsync(Widget widget, string eventName, ActionContext context, CancellationToken cancellationToken)
     {
         if (!widget.Actions.TryGetValue(eventName, out var bindings) || bindings.Count == 0)
-            return;
+            return [];
 
+        List<string>? errors = null;
         foreach (var binding in bindings)
         {
             if (!_handlers.TryGetValue(binding.Type, out var handler))
@@ -36,7 +39,9 @@ public sealed class ActionDispatcher(IEnumerable<IActionHandler> handlers, ILogg
             catch (Exception ex) when (ex is not OperationCanceledException)
             {
                 logger.LogError(ex, "Action {Type} failed on widget {WidgetId}", binding.Type, widget.Id);
+                (errors ??= []).Add(ex.Message);
             }
         }
+        return (IReadOnlyList<string>?)errors ?? [];
     }
 }

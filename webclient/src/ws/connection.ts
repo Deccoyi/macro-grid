@@ -46,6 +46,7 @@ export interface ConnectionEvents {
   onWidgetState: (state: WidgetState) => void;
   onProfiles: (profiles: ProfileSummary[]) => void;
   onPaired: (token: string) => void;
+  onActionError: (message: string) => void;
 }
 
 const CLIENT_VERSION = "0.1.0";
@@ -172,6 +173,7 @@ export class ServerConnection {
       case "error": {
         const data = envelope.data as ErrorData;
         if (data.code === "pairing_required") this.events.onStatusChange("pairing_required");
+        else if (data.code === "action_failed") this.events.onActionError(data.message);
         break;
       }
       default:

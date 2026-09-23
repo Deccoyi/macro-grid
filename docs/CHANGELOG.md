@@ -4,6 +4,7 @@ Bu dosya [Keep a Changelog](https://keepachangelog.com/) formatını takip eder.
 
 ## [Unreleased]
 ### Added
+- **Başarısız bir widget aksiyonu artık görünür bir uyarı:** Önceden yalnızca sunucu log dosyasına yazılıyordu (ör. silinmiş bir OBS sahnesine bağlı buton). Şimdi `ActionDispatcher.DispatchAsync` hata mesajlarını topluyor, `ClientHub` bunları iki yere iletiyor: editörün durum çubuğunda `core.actionError` bir uyarı olarak (`StatusBar.tsx` zaten jenerik olduğu için ek kod gerekmedi), ve aksiyonu tetikleyen cihaza `error`/`action_failed` zarfıyla — hem web/tarayıcı client'ında (`webclient/`, kırmızı toast, 4sn) hem gerçek Android uygulamasında (`macro-station-client`, aynı toast deseni) gösteriliyor. Gerçek OBS + gerçek cihazla (USB `adb`) uçtan uca doğrulandı.
 - **Plugin kaldırma (uninstall):** `DELETE /api/plugins/{id}` (`ServerApp.cs`), `%AppData%/MacroStation/plugins/<id>/` klasörünü siler. Plugin o an yüklüyse (DLL hâlâ çalışan sürecin `PluginLoadContext`'inde memory-map'li) klasör anında silinemeyebilir — bu durumda bir `.uninstall` işaret dosyası bırakılır, `PluginLoader.LoadAll` bir sonraki açılışta bu işaretli klasörleri hiçbir şey yüklemeden önce siler. Editörde "Eklentiler" penceresindeki her satıra bir Kaldır düğmesi eklendi (`PluginsWindow.tsx`, `Trash2` ikonu), yıkıcı olduğu için `confirmAsync` ile onay isteniyor (`dialogStore.ts`'teki app-styled confirm, native `confirm()` değil). Kurulum gibi bu da devreye girmesi için sunucunun yeniden başlatılmasını gerektiriyor.
 
 ## [0.2.0] - 2026-09-23
