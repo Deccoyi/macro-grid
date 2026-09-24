@@ -83,6 +83,11 @@ Flip order on the day (minutes apart): server, client, plugin, then enable Pages
 11. ✅ (packed and verified against a scratch feed; owner does the `nuget push`, O5) Prepare NuGet packaging of `MacroGrid.Plugin.Abstractions` (`PackageId`, metadata, README, symbol package, `Version` 0.3.0) and switch plugin csproj files to a `PackageReference` with a documented local-feed/ProjectReference fallback for developers working on both repos. The owner does the actual `nuget push`.
 12. ✅ Enable Dependabot config (`dependabot.yml`) for nuget, npm, gradle, github-actions.
 
+12b. ⏳ **Known issues to fix before the flip (found 2026-09-24):**
+    - The OBS test `ExitStarted_event_ends_the_session_promptly_instead_of_waiting_on_a_dead_socket` (`macro-grid-plugin/OBS/tests/.../ObsConnectionTests.cs`) is flaky: it failed once and passed on re-run. Investigate the timing (fixed wait vs. event/signal based waiting) and make it deterministic so CI does not go randomly red.
+    - `macro-grid-plugin/docs/plugin-authoring.md` still shows the old `ProjectReference` setup; point it to `docs/using-the-sdk-package.md` (or the docs site) and `macro-grid/docs/versioning.md` still says the SDK is not a package.
+    - In-place builds of the plugin projects and of the server `bin\` fail on the dev machine with "Access denied" (unknown local cause, building to another output folder works). Confirm the builds pass in CI or on a clean machine.
+
 **C. Documentation site (in `macro-grid-plugin`, deployed with GitHub Pages)**
 13. ✅ Tool: VitePress (Node/Vite already used in the project, Markdown-native, built-in search, dark mode). Site source in `macro-grid-plugin/website/`; deployed by a `pages.yml` workflow (upload-pages-artifact + deploy-pages). Base path `/macro-grid-plugin/` until a custom domain exists.
 14. ✅ (20 pages) Content structure:
