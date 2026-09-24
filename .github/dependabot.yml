@@ -3,41 +3,46 @@ version: 2
 updates:
   - package-ecosystem: nuget
     directory: /
+    target-branch: dev
     schedule:
       interval: monthly
     open-pull-requests-limit: 2
     groups:
-      all-updates:
+      deps:
         patterns: ["*"]
   - package-ecosystem: npm
     directory: /editor
+    target-branch: dev
     schedule:
       interval: monthly
     open-pull-requests-limit: 2
     groups:
-      all-updates:
+      deps:
         patterns: ["*"]
   - package-ecosystem: npm
     directory: /webclient
+    target-branch: dev
     schedule:
       interval: monthly
     open-pull-requests-limit: 2
     groups:
-      all-updates:
+      deps:
         patterns: ["*"]
   - package-ecosystem: npm
     directory: /packages/renderer
+    target-branch: dev
     schedule:
       interval: monthly
     open-pull-requests-limit: 2
     groups:
-      all-updates:
+      deps:
         patterns: ["*"]
   - package-ecosystem: github-actions
     directory: /
+    target-branch: dev
     schedule:
       interval: monthly
     open-pull-requests-limit: 2
     groups:
-      all-updates:
+      deps:
         patterns: ["*"]
