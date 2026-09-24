@@ -16,5 +16,20 @@ $candidates = @(
 ) | Where-Object { $_ -and (Test-Path $_) }
 if (-not $candidates) { throw "Inno Setup 6 was not found. Install it from https://jrsoftware.org/isinfo.php and run this again." }
 
-& ($candidates | Select-Object -First 1) "/DAppVersion=$version" "/DSourceDir=$publish" "/DOutputDir=$(Join-Path $root 'artifacts')" (Join-Path $PSScriptRoot "MacroGrid.iss")
+# Microsoft's WebView2 "Evergreen bootstrapper" (about 1.7 MB). The installer runs it only on PCs that lack the WebView2 Runtime.
+# It is downloaded from Microsoft's official link on the first build and kept in artifacts\redist (git-ignored, never committed).
+$redist = Join-Path $root "artifacts\redist"
+$bootstrapper = Join-Path $redist "MicrosoftEdgeWebview2Setup.exe"
+if (-not (Test-Path $bootstrapper)) {
+    New-Item -ItemType Directory -Force $redist | Out-Null
+    Write-Host "Downloading the WebView2 bootstrapper from Microsoft..."
+    Invoke-WebRequest -Uri "https://go.microsoft.com/fwlink/p/?LinkId=2124703" -OutFile $bootstrapper -UseBasicParsing
+}
+$signature = Get-AuthenticodeSignature $bootstrapper
+if ($signature.Status -ne "Valid" -or $signature.SignerCertificate.Subject -notmatch "O=Microsoft Corporation") {
+    Remove-Item $bootstrapper -Force
+    throw "The WebView2 bootstrapper is not signed by Microsoft (status $($signature.Status)); it was deleted."
+}
+
+& ($candidates | Select-Object -First 1) "/DAppVersion=$version" "/DSourceDir=$publish" "/DOutputDir=$(Join-Path $root 'artifacts')" "/DWebView2Setup=$bootstrapper" (Join-Path $PSScriptRoot "MacroGrid.iss")
 if ($LASTEXITCODE) { throw "Inno Setup failed" }

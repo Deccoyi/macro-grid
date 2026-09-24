@@ -16,6 +16,7 @@ New features and fixes in Macro Grid. For technical details, see [CHANGELOG-deve
 - **No restart for plugins:** Installing, reloading or removing a plugin takes effect right away. A new "Reload" button is in the Plugins window.
 
 ### Changed
+- The installer now sets up the web component that the editor window needs, on PCs where it is missing.
 - The **Remove** button in the Plugins window works again (its confirmation box was not shown, so nothing happened).
 - The editor's screens can now only be used on the PC itself. This keeps other devices on your network from changing your profiles or reading your pairing code.
 - Text typed into action fields that allow values (for example an OBS text source) now shows the current value instead of the raw `{name}`.

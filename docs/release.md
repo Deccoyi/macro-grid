@@ -34,7 +34,7 @@ Client and plugin releases follow the same shape in their own repositories: bump
 ## 1. Build the release folder
 
 The server ships as a Windows installer that wraps a self-contained single-file `MacroGrid.exe` (the .NET runtime and
-ASP.NET are bundled). The target PC needs nothing installed except the WebView2 Runtime, which is part of current Windows.
+ASP.NET are bundled). The target PC needs nothing installed. The editor window uses the WebView2 Runtime, which is part of current Windows; the installer also bundles Microsoft's small WebView2 bootstrapper and runs it only when the runtime is missing (that needs an internet connection). `installer\build-installer.ps1` downloads the bootstrapper from Microsoft on the first build into `artifacts\redist`, checks that it is signed by Microsoft and never commits it.
 
 ## 1. Build the release folder
 
