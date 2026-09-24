@@ -22,15 +22,15 @@ duration, ...) and presses keys, types text, opens programs, changes the volume 
 > install, which devices you pair, which plugins you run and which buttons you press. The installer and the app ask you to accept the
 > [user agreement](installer/license-agreement.txt). See also [LICENSE](LICENSE) (MIT).
 
-**Website and user guide: <https://deccoyi.github.io/macro-grid/>** (getting started, tutorials, reference).
+**Website and user guide: <https://deccoyi.github.io/macro-grid/>** (getting started, tutorials, reference). **[Download](https://deccoyi.github.io/macro-grid/download)** · **[Phone app](https://deccoyi.github.io/macro-grid-client/)** · **[Plugin store](https://deccoyi.github.io/macro-grid-plugin/store/)**
 
 This repository is the **server and editor**. The three parts are versioned independently:
 
 | Repository | What it is |
 |---|---|
 | [Deccoyi/macro-grid](https://github.com/Deccoyi/macro-grid) (this one) | Windows server, editor, browser deck, plugin SDK |
-| [Deccoyi/macro-grid-client](https://github.com/Deccoyi/macro-grid-client) | Android phone and tablet app |
-| [Deccoyi/macro-grid-plugin](https://github.com/Deccoyi/macro-grid-plugin) | Plugins (OBS, PLC icons, ...) and the plugin authoring docs |
+| [Deccoyi/macro-grid-client](https://github.com/Deccoyi/macro-grid-client) ([site](https://deccoyi.github.io/macro-grid-client/)) | Android phone and tablet app |
+| [Deccoyi/macro-grid-plugin](https://github.com/Deccoyi/macro-grid-plugin) ([store](https://deccoyi.github.io/macro-grid-plugin/store/)) | Plugins (OBS, PLC icons, ...) and the plugin authoring docs |
 
 ## Screenshots
 
@@ -64,10 +64,9 @@ All communication stays on your local network.
 
 ## Install
 
-Download the latest Windows installer (`MacroGrid-Setup-<version>.exe`) or the zip from the
-[GitHub Releases](https://github.com/Deccoyi/macro-grid/releases) page and run it. The first public alpha (`server-v0.2.0-alpha`) is being prepared; until it
-is published, build from source (below). The installer is not code-signed yet, so Windows SmartScreen may warn on first run. How releases are made:
-[docs/release.md](docs/release.md).
+Get the latest Windows installer (`MacroGrid-Setup-<version>.exe`) from the [download page](https://deccoyi.github.io/macro-grid/download), which also lists the
+previous versions, or from the [GitHub Releases](https://github.com/Deccoyi/macro-grid/releases) page, and run it. You can also build from source (below). The installer is not
+code-signed yet, so Windows SmartScreen may warn on first run. How releases are made: [docs/release.md](docs/release.md).
 
 ## Getting started
 
@@ -76,7 +75,7 @@ is published, build from source (below). The installer is not code-signed yet, s
 3. On the phone, open the app, then scan the QR code (or enter the PC's address and the PIN). The device is paired and shows the profile.
 4. Design your pages in the editor. Saving updates connected devices immediately.
 
-The phone app's screens and the browser deck are currently in Turkish; the editor is available in Turkish (default) and English (Preferences).
+Macro Grid speaks Turkish and English. The editor, the tray menu and the plugins' texts follow your Windows display language (Turkish on a Turkish Windows, English otherwise) until you pick a language in Preferences; the browser deck and the phone app follow the language of the browser or phone.
 
 ## Build from source
 
