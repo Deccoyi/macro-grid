@@ -9,6 +9,9 @@
     <Description>Plugin SDK for Macro Grid: the IPlugin entry point, action/variable/settings/icon-pack interfaces and the plugin manifest types that C# plugins compile against. The Macro Grid server supplies the runtime copy of this assembly.</Description>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageIcon>icon.png</PackageIcon>
+    <Copyright>Copyright (c) 2026 Deccoyi</Copyright>
+    <PackageReleaseNotes>See https://github.com/Deccoyi/macro-grid/blob/main/docs/CHANGELOG-developer.md for the changes in each SDK version.</PackageReleaseNotes>
     <PackageTags>macrogrid;macro-grid;plugin;sdk;streamdeck;macro-pad</PackageTags>
     <PackageProjectUrl>https://github.com/Deccoyi/macro-grid</PackageProjectUrl>
     <RepositoryUrl>https://github.com/Deccoyi/macro-grid</RepositoryUrl>
@@ -27,5 +30,6 @@
 
   <ItemGroup>
     <None Include="README.md" Pack="true" PackagePath="\" />
+    <None Include="icon.png" Pack="true" PackagePath="\" />
   </ItemGroup>
 </Project>

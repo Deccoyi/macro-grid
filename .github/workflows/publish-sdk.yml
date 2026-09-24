@@ -1,0 +1,58 @@
+name: Publish SDK
+
+# Publishes MacroGrid.Plugin.Abstractions to nuget.org with Trusted Publishing: no API key is stored anywhere.
+# nuget.org exchanges this run's GitHub identity for a short-lived key. The file name of this workflow is part of the
+# trusted-publishing policy on nuget.org, so do not rename it.
+#
+# Release: bump <Version> in src/MacroGrid.Plugin.Abstractions/MacroGrid.Plugin.Abstractions.csproj (and PluginSdk.Version),
+# commit, then push the tag:  git tag sdk-v0.3.0 && git push origin sdk-v0.3.0
+on:
+  push:
+    tags: ["sdk-v*"]
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    name: Pack and push
+    runs-on: ubuntu-latest
+    environment: nuget
+    permissions:
+      contents: read
+      id-token: write   # lets NuGet/login request the OIDC token
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Check that the tag matches the package version
+        shell: bash
+        run: |
+          project=src/MacroGrid.Plugin.Abstractions/MacroGrid.Plugin.Abstractions.csproj
+          version=$(sed -n 's:.*<Version>\(.*\)</Version>.*:\1:p' "$project" | head -n1)
+          sdk=$(sed -n 's:.*Version = "\(.*\)";.*:\1:p' src/MacroGrid.Plugin.Abstractions/PluginSdk.cs | head -n1)
+          tag="${GITHUB_REF_NAME#sdk-v}"
+          echo "tag=$tag csproj=$version PluginSdk.Version=$sdk"
+          test -n "$version" && test "$tag" = "$version" && test "$sdk" = "$version" \
+            || { echo "::error::Tag, <Version> in the csproj and PluginSdk.Version must be identical."; exit 1; }
+
+      - name: Pack
+        run: dotnet pack src/MacroGrid.Plugin.Abstractions -c Release -o artifacts/nuget
+
+      - name: Log in to nuget.org (trusted publishing)
+        id: login
+        uses: NuGet/login@v1
+        with:
+          # The nuget.org user name (profile name), not the e-mail address.
+          user: ${{ secrets.NUGET_USER }}
+
+      # The temporary key is valid for one hour, so push right after logging in. The .snupkg goes along automatically.
+      - name: Push
+        run: >
+          dotnet nuget push "artifacts/nuget/*.nupkg"
+          --api-key "${{ steps.login.outputs.NUGET_API_KEY }}"
+          --source https://api.nuget.org/v3/index.json
+          --skip-duplicate

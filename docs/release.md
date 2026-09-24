@@ -71,3 +71,23 @@ first install / upgrade / uninstall test on a clean PC before publishing it.
 
 - The installer is not code-signed, so Windows SmartScreen will warn on first run. Signing needs a code-signing certificate.
 - No update check inside the app; upgrading is running a newer installer over the old one.
+
+## Publishing the plugin SDK to NuGet
+
+`MacroGrid.Plugin.Abstractions` is published from CI with NuGet Trusted Publishing, so no API key is stored in GitHub or on
+any machine. The workflow is `.github/workflows/publish-sdk.yml` (its file name is part of the policy on nuget.org: do not
+rename it) and it runs when a tag `sdk-vX.Y.Z` is pushed.
+
+One-time setup:
+
+1. nuget.org, account menu > Trusted Publishing: add a policy with owner `Deccoyi`, repository `macro-grid`, workflow file
+   `publish-sdk.yml` and environment `nuget`. While the repository is private the policy is only temporarily active and
+   becomes permanent after the first successful push.
+2. GitHub, repository settings: create the environment `nuget` and add the secret `NUGET_USER` (your nuget.org user name,
+   not the e-mail address).
+
+Each release: set `<Version>` in `src/MacroGrid.Plugin.Abstractions/MacroGrid.Plugin.Abstractions.csproj` and
+`PluginSdk.Version` to the same value, commit, then `git tag sdk-vX.Y.Z` and `git push origin sdk-vX.Y.Z`. The workflow checks
+that the tag and both versions match, packs, logs in to nuget.org and pushes the `.nupkg` and the `.snupkg` symbols.
+A published version can never be replaced or deleted on nuget.org, only unlisted.
+
