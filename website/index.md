@@ -1,6 +1,9 @@
 ---
 layout: home
 title: Macro Grid
+heroImage:
+  src: /img/deck-phone.png
+  alt: A Macro Grid deck on a phone
 hero:
   name: Macro Grid
   text: A macro deck for your Windows PC, on your phone

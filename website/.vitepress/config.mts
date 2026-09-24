@@ -1,25 +1,17 @@
 import { defineConfig } from 'vitepress'
+import { sharedConfig } from './shared'
 
 const repo = 'https://github.com/Deccoyi/macro-grid'
-const pluginSite = 'https://deccoyi.github.io/macro-grid-plugin/'
-const clientSite = 'https://deccoyi.github.io/macro-grid-client/'
+const shared = sharedConfig('/macro-grid/', '#d97706')
 
 export default defineConfig({
+  ...shared,
   title: 'Macro Grid',
   description: 'Turn a phone or tablet into a customizable macro deck for your Windows PC. Features, tutorials and help.',
   base: '/macro-grid/',
-  lang: 'en-US',
-  cleanUrls: true,
-  lastUpdated: false,
-  appearance: true,
-  head: [
-    ['link', { rel: 'icon', type: 'image/png', href: '/macro-grid/favicon.png' }],
-    ['meta', { name: 'theme-color', content: '#d97706' }],
-  ],
 
   themeConfig: {
-    logo: '/logo.png',
-    search: { provider: 'local' },
+    ...shared.themeConfig,
     nav: [
       { text: 'Guide', link: '/guide/', activeMatch: '/guide/' },
       {
@@ -37,8 +29,6 @@ export default defineConfig({
         activeMatch: '/developers/|/ecosystem',
         items: [
           { text: 'Overview', link: '/ecosystem' },
-          { text: 'Plugin store', link: pluginSite + 'store/' },
-          { text: 'Phone app', link: clientSite },
           { text: 'For developers', link: '/developers/' },
         ],
       },
@@ -109,10 +99,5 @@ export default defineConfig({
     },
     socialLinks: [{ icon: 'github', link: repo }],
     editLink: { pattern: `${repo}/edit/dev/website/:path`, text: 'Suggest a change on GitHub' },
-    outline: { level: [2, 3] },
-    footer: {
-      message: 'Macro Grid sites: <a href="https://deccoyi.github.io/macro-grid/">Server</a> &middot; <a href="https://deccoyi.github.io/macro-grid-client/">Phone app</a> &middot; <a href="https://deccoyi.github.io/macro-grid-plugin/">Plugins</a><br>Released under the MIT License. Alpha software, written entirely by an AI assistant, provided as is without warranty.',
-      copyright: 'Copyright (c) 2026 Deccoyi',
-    },
   },
 })
