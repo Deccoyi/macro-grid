@@ -1,3 +1,4 @@
+import type { JSX } from "react";
 import type { ActionBinding, Page } from "@macro/renderer";
 import { api } from "../../api/client";
 import type { ActionInfo, ProfileSummary, VariableInfo } from "../../api/types";

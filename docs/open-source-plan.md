@@ -45,7 +45,7 @@ Flip to public only when **every** item is true:
 | G6 | Plugin SDK `0.3.0` published to NuGet (or an equally public feed), plugin projects build from a clean clone without sibling repos | Claude prepares, owner publishes |
 | G7 | Docs site builds locally and both tutorials (JS hello world, C# hello world) were followed verbatim on a clean setup and work | Claude writes, owner runs them |
 | G8 | ✅ CI green on `dev` and `main` in all three repos (runs on pull requests and `main`); required check and branch protection come after the flip |
-| G9 | ⏳ alpha tags and draft releases are made after the flip (workflows and notes are ready) |
+| G9 | ✅ the five alpha pre-releases are published (see the audit) |
 | G10 | AI-generated icons/logos disclosed, generator terms checked, no brand look-alikes (O3) | Owner, Claude assists |
 
 Flip order on the day (minutes apart): server, client, plugin, then enable Pages, publish releases, verify links.
@@ -63,8 +63,8 @@ Flip order on the day (minutes apart): server, client, plugin, then enable Pages
 | G5 | ⏳ debug APK (`com.macrogrid.client`) installed on a real phone and paired with the renamed server on 2026-09-24: CPU/RAM live values, the mute button, adding buttons, switching profiles and installing plugins work (✅ owner-tested); signed release APK `MacroGrid-0.1.0.apk` built with `scriptsuild-release-apk.ps1`, verified with `apksigner` (signer CN=Macro Grid) and installed on the phone (keystore kept outside the repos, owner must back it up); paired with the server and working (✅ owner-tested), keystore backed up by the owner (moved to a `signing` folder in the user profile; `android/keystore.properties` is git-ignored and points there). Remaining for G5: nothing except a final run against the release server build |
 | G6 | ✅ `MacroGrid.Plugin.Abstractions` 0.3.0 published on nuget.org on 2026-09-24 through Trusted Publishing (`publish-sdk.yml`, tag `sdk-v0.3.0`, no API key). The plugin projects restore it from nuget.org; a clean copy built with an empty package cache passes (both plugins, OBS tests 7/7) and the plugin CI no longer needs the server repository |
 | G7 | ⏳ site builds, examples load; owner runs the tutorials on a clean setup |
-| G8 | ⏳ CI is green on `dev` in all three repos (2026-09-24). Runs only on pull requests and on `main` (plus manual). Still open: the first run on `main`, which does not exist yet in the plugin repo, and making CI a required check |
-| G9 | ⏳ release workflows and notes drafts written; tags/releases by owner |
+| G8 | ✅ CI is green on `dev` and `main` in all three repos and is a required check on `main` (`protect-main` ruleset, verified through the API on 2026-09-24). Runs on pull requests and on `main` (plus manual) |
+| G9 | ✅ five alpha pre-releases are published (server, client, OBS, PLC Icons, HelloJs); see [pre-flip-audit.md](pre-flip-audit.md) |
 | G10 | ✅ terms read by owner; brand scan done |
 
 **A. Repo hygiene (all three)**
@@ -126,9 +126,9 @@ Flip order on the day (minutes apart): server, client, plugin, then enable Pages
   - Confirm no bundled fonts, screenshots or sounds have unclear licences, and that no code came from a private/company source.
 - **O4 Clean-machine tests:** compile the installer (install Inno Setup 6), run install / upgrade / uninstall on a clean Windows PC; build and sign the release APK (create the keystore, keep it out of git, back it up), install it on a real phone and pair against the release build.
 - **O5 Publish packages:** create a nuget.org account/API key and push `MacroGrid.Plugin.Abstractions` `0.3.0`. Credentials stay with the owner.
-- **O6 GitHub settings (after flip):** set repo descriptions/topics, default branch `main`, branch protection (require CI), enable Discussions, private vulnerability reporting, Dependabot alerts, secret scanning + push protection, Pages source = GitHub Actions; add repo secrets (signing keystore) if release CI should sign. Optional: social preview image, custom domain.
-- **O7 The flip:** Settings > Danger Zone > Change visibility for each repo, in the order above, then publish the prepared release drafts.
-- **O7b Right after the flip (SDK publishing lock-down, details in [pre-flip-audit.md](pre-flip-audit.md)):** add a tag ruleset for `sdk-v*` on the server repo (only the admin may create, update or delete such tags; otherwise anyone with write access can publish to nuget.org by pushing a tag), turn on Required reviewers for the `nuget` environment, and ask nuget.org to reserve the `MacroGrid.` package ID prefix. Rulesets are not enforced on a private repo with the current plan, so this cannot be done earlier.
+- ✅ **O6 GitHub settings (after flip), verified through the API on 2026-09-24:** repo descriptions and topics, default branch `main`, branch protection with CI required (`protect-main` ruleset), private vulnerability reporting, Dependabot alerts, secret scanning + push protection, approval for workflows from outside contributors, Pages source = GitHub Actions (plugin repo). Not done: Discussions (off), the signing secrets (`gh secret list` shows no secret in any repo, so the client `release.yml` builds without signing; the signed APK is built locally and uploaded by hand, and the installer is unsigned), social preview image, custom domain.
+- ✅ **O7 The flip:** all three repos are public and the five pre-releases are published.
+- **O7b Right after the flip (SDK publishing lock-down, details in [pre-flip-audit.md](pre-flip-audit.md)):** ✅ tag ruleset `protect-tags` (creation, update, deletion and non-fast-forward blocked for everyone except the repository admin; it covers all tags, not only `sdk-v*`). Still open and optional: Required reviewers for the `nuget` environment (it has only a deployment branch policy today) and the `MacroGrid.` package ID prefix reservation on nuget.org.
 - **O8 After the flip:** watch first issues, decide response policy (alpha, best-effort), announce (optional).
 
 ## Timeline (suggested)
