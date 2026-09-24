@@ -3,6 +3,9 @@
 This file follows the [Keep a Changelog](https://keepachangelog.com/) format. For versioning rules, see [versioning.md](versioning.md). The short, public changelog is [CHANGELOG.md](CHANGELOG.md).
 
 ## [Unreleased]
+### Added
+- **Documentation website:** a VitePress site in `website/` (landing page, user guide, tutorials, reference, a small developers section), built and deployed to GitHub Pages by `.github/workflows/pages.yml` on pushes to `main` that touch `website/`. The screenshots are in `website/public/img/`. The README points to it.
+
 ### Changed
 - **Fixed (installed build):** WebView2 needs a user data folder it can write to; the default one next to the exe is under Program Files after an install and failed with `E_ACCESSDENIED` (0x80070005). `WebViewEnvironment.AttachAsync` (used by the editor and every tool window) now tries `%LocalAppData%\MacroGrid\WebView2`, then `%AppData%\MacroGrid\WebView2`, then the temp folder, and the first that starts wins. When none does, the error dialog lists every folder with its exception and HRESULT and the same text goes to `%TEMP%\MacroGrid-webview-error.txt`. Found on a clean domain-joined PC where the first attempt (LocalAppData only) still failed.
 - **Fixed (single-file publish):** `PluginLoadContext` hands a plugin the host's own copy of `MacroGrid.Plugin.Abstractions` whatever assembly version the plugin was built against. Before, a plugin built against SDK 0.3.0 failed to load on a server with SDK 0.3.1 in the single-file build (`FileNotFoundException` for version 0.3.0.0). Compatibility stays decided by the manifest's `sdkVersion` range. Covered by `PluginLoadContextTests`.
