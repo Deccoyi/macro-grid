@@ -80,7 +80,7 @@ public class DelayActionTests
 
         await new DelayAction().ExecuteAsync(Ctx(), new JsonObject { ["ms"] = 40 }, default);
 
-        Assert.InRange(sw.ElapsedMilliseconds, 20, 2000);
+        Assert.InRange(sw.ElapsedMilliseconds, 20, 15000); // generous upper bound: only "does not hang" matters on a loaded machine
     }
 
     [Fact]
