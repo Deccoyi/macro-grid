@@ -9,7 +9,8 @@ Where the project stands. The project is before 1.0.0 and under active developme
   two-way value, dynamic rules for colors, animation, icon and text.
 - **Editor:** profiles and pages, drag-and-drop widget design with snapping and overlap checks, a style panel, custom CSS with sanitizer warnings, action
   assignment (press, long press, double tap), variable insertion, live preview, device list, plugin list, `.msprofile` export and import, preferences (language,
-  theme, default profile), automatic profile switching rules.
+  theme, default profile, start with Windows and what a start does: tray only or open the editor window), automatic profile switching rules, settings windows
+  that block the editor while open, a Help window with the disclaimer, the user agreement and all bundled license texts.
 - **Pairing and devices:** PIN and QR pairing, per-device tokens, a device list with revoke, a profile per device.
 - **Automatic profile switching** by the active window, with a lock on the phone ([design/auto-profile-switch.md](design/auto-profile-switch.md)).
 - **Layout patches and cached assets:** an editor save sends only what changed, icons cross the wire once
@@ -18,7 +19,8 @@ Where the project stands. The project is before 1.0.0 and under active developme
   items, icon packs, and JavaScript plugins in a sandbox with user-approved permissions ([design/js-plugin-runtime.md](design/js-plugin-runtime.md)).
   Official plugins live in the plugin repository: OBS, an icon pack and a JavaScript example.
 - **Browser deck** served by the server at `/deck/`.
-- **Packaging:** a single-file release build and an installer definition ([release.md](release.md)), a signed release build of the phone app.
+- **Packaging:** a single-file release build and a Windows installer with a user agreement, tested on a clean company PC (install, WebView2 setup, start with
+  Windows, upgrade, uninstall; [release.md](release.md)); a signed release build of the phone app; the plugin SDK is published on NuGet.
 - **Phone app** (its own repository): connection with saved servers and QR pairing, the profile drawer, page swipes, kiosk mode and orientation lock,
   keep-awake, automatic reconnection and an offline layout cache.
 
@@ -33,9 +35,9 @@ Where the project stands. The project is before 1.0.0 and under active developme
 
 ## Before a first public release
 
-- Compile the installer with Inno Setup and test install, upgrade and uninstall on a clean PC (the script has not been compiled yet).
-- Create the real signing key for the phone app (see the client repository's `docs/release.md`) and decide on code signing for the installer.
-- Decide the version: the server is at `0.2.0` while several features since that release are new (see the changelogs).
+- Decide on code signing for the installer (it is unsigned, so Windows shows an unknown-publisher warning).
+- Publish the first release as an alpha (`server-v0.2.0-alpha`, `client-v0.1.0-alpha`): merge `dev` into `main`, tag, attach the installer and the APK to the draft releases.
+- After the repositories are public: turn on private vulnerability reporting, the tag protection for `sdk-v*` and the documentation site.
 
 ## Known gaps
 
