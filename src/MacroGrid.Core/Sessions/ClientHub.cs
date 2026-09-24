@@ -43,7 +43,7 @@ public sealed class ClientHub(
 
     public async Task HandleAsync(WebSocket socket, string remoteAddress, CancellationToken cancellationToken)
     {
-        var session = new ClientSession(socket, remoteAddress);
+        var session = new ClientSession(socket);
         sessions.Add(session);
         logger.LogInformation("Client {Session} connected from {Remote}", session.Id, remoteAddress);
 

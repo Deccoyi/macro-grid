@@ -7,13 +7,11 @@ using MacroGrid.Protocol;
 namespace MacroGrid.Core.Sessions;
 
 /// <summary>One connected client (phone, tablet or browser).</summary>
-public sealed class ClientSession(WebSocket socket, string remoteAddress)
+public sealed class ClientSession(WebSocket socket)
 {
     private readonly SemaphoreSlim _sendLock = new(1, 1);
 
     public string Id { get; } = Guid.NewGuid().ToString("N")[..8];
-    public string RemoteAddress { get; } = remoteAddress;
-    public DateTimeOffset ConnectedAt { get; } = DateTimeOffset.Now;
 
     public bool IsIdentified => DeviceId is not null;
     public string? DeviceId { get; internal set; }
