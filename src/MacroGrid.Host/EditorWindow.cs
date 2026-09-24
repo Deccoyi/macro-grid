@@ -28,7 +28,7 @@ internal sealed class EditorWindow : Form
     {
         try
         {
-            await _webView.EnsureCoreWebView2Async();
+            await _webView.EnsureCoreWebView2Async(await WebViewEnvironment.GetAsync());
             _webView.CoreWebView2.Navigate(url);
         }
         catch (Exception ex)
