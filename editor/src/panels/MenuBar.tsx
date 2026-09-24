@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import type { Profile } from "@macro/renderer";
 import { api } from "../api/client";
 import { alertAsync } from "../dialogs/dialogStore";
+import { useServerVersion } from "../state/useServerVersion";
 import { useT, type Language } from "../i18n/I18nContext";
 import { ContextMenu, type ContextMenuItem } from "./ContextMenu";
 
@@ -9,8 +10,6 @@ export interface MenuBarProps {
   profile: Profile | null;
   onImportProfile: (data: Profile) => Promise<void>;
 }
-
-const APP_VERSION = "0.1.0";
 
 // Access-key letters (Windows mnemonic convention: Alt+letter opens the menu, and the letter is
 // underlined in the label while Alt is held) — one map per language since the underlined letter has
@@ -41,6 +40,7 @@ function mnemonicLabel(label: string, letter: string | undefined, show: boolean)
  * native Open/Save dialogs on the server's desktop instead of browser download/upload. */
 export function MenuBar({ profile, onImportProfile }: MenuBarProps) {
   const { t, lang } = useT();
+  const serverVersion = useServerVersion();
   const [openMenu, setOpenMenu] = useState<{ id: string; x: number; y: number } | null>(null);
   const [mnemonicsVisible, setMnemonicsVisible] = useState(false);
   const refs = useRef<Record<string, HTMLButtonElement | null>>({});
@@ -89,7 +89,7 @@ export function MenuBar({ profile, onImportProfile }: MenuBarProps) {
   const settingsItems: ContextMenuItem[] = [{ label: t("menu.settings.open"), onSelect: () => api.openToolWindow("preferences") }];
   const pluginsItems: ContextMenuItem[] = [{ label: t("menu.plugins.manage"), onSelect: () => api.openToolWindow("plugins") }];
   const helpItems: ContextMenuItem[] = [
-    { label: t("menu.help.version", APP_VERSION), disabled: true, onSelect: () => {} },
+    { label: t("menu.help.version", serverVersion), disabled: true, onSelect: () => {} },
     { label: t("menu.help.licenses"), onSelect: () => api.openToolWindow("help") },
     { label: t("menu.help.agreement"), onSelect: () => api.openToolWindow("help") },
   ];

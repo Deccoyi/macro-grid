@@ -20,7 +20,7 @@ import type {
 } from "./types";
 
 /** Every editor API call must bypass the HTTP cache — a GET right after a save must never return a
- * stale cached body (see docs/agent-notes.md: same trap as the editor's own HTML/JS bundle caching). */
+ * stale cached body (the same trap as the editor's own HTML/JS bundle caching, see docs/development.md). */
 function req(url: string, init?: RequestInit): Promise<Response> {
   return fetch(url, { ...init, cache: "no-store" });
 }
@@ -61,6 +61,9 @@ export const api = {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(currentValues),
     }).then((res) => json<OptionsResult>(res)),
+
+  /** The running server's version, the one place it is defined (ClientHub.ServerVersion). */
+  getVersion: (): Promise<{ version: string }> => req("/api/version").then((res) => json<{ version: string }>(res)),
 
   getStatus: (): Promise<StatusEntry[]> => req("/api/status").then((res) => json<StatusEntry[]>(res)),
 

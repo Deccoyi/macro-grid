@@ -418,6 +418,8 @@ internal static class ServerApp
 
         api.MapGet("/status", (PluginStatusRegistry statusRegistry) => statusRegistry.All);
 
+        api.MapGet("/version", () => new { version = ClientHub.ServerVersion });
+
         api.MapPost("/windows/preferences", async (IUiWindowService windows) =>
         {
             await windows.ShowToolWindowAsync("preferences", "Tercihler", $"http://localhost:{Port}/editor/?window=preferences", 640, 520);
