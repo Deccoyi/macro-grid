@@ -25,6 +25,13 @@ $version = $Matches[1]
 Write-Host "Macro Grid server $version"
 
 if (-not $SkipEditor) {
+    # The editor and the deck import @macro/renderer from packages/renderer, whose own dependencies (postcss, ...)
+    # must be installed too, or the bundle build cannot resolve them on a clean checkout.
+    Push-Location (Join-Path $root "packages/renderer")
+    try {
+        if (-not (Test-Path "node_modules")) { npm ci; if ($LASTEXITCODE) { throw "npm ci failed (renderer)" } }
+    } finally { Pop-Location }
+
     Push-Location (Join-Path $root "editor")
     try {
         if (-not (Test-Path "node_modules")) { npm ci; if ($LASTEXITCODE) { throw "npm ci failed" } }
