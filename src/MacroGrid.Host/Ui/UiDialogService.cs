@@ -1,4 +1,4 @@
-namespace MacroGrid.Host;
+namespace MacroGrid.Host.Ui;
 
 /// <summary>
 /// Shows native Windows dialogs from an ASP.NET Core request handler. Common dialogs (OpenFileDialog)

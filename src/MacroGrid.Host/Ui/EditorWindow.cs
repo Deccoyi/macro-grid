@@ -1,4 +1,4 @@
-namespace MacroGrid.Host;
+namespace MacroGrid.Host.Ui;
 
 /// <summary>
 /// The editor lives only here, never in the system's default browser (a deliberate product

@@ -2,6 +2,7 @@ using MacroGrid.Core.Devices;
 using MacroGrid.Core.Plugins;
 using MacroGrid.Core.Profiles;
 using MacroGrid.Core.Sessions;
+using MacroGrid.Host.Ui;
 using MacroGrid.Host.Api;
 using MacroGrid.Host.Logging;
 using MacroGrid.Plugin.Abstractions;

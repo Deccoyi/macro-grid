@@ -1,4 +1,5 @@
 using MacroGrid.Core.Preferences;
+using MacroGrid.Host.Ui;
 
 namespace MacroGrid.Host;
 

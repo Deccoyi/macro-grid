@@ -1,4 +1,4 @@
-namespace MacroGrid.Host;
+namespace MacroGrid.Host.Ui;
 
 /// <summary>
 /// A tool window (Tercihler, Eklentiler, ...) — a real separate OS window with its own WebView2 and native
