@@ -159,7 +159,7 @@ main ─────────●──[tag]───●──[tag]
   Packages from any other source are always third-party, even if signed.
 - Plugins repo changes: hash + signature steps in `release.yml`, publish releases
   instead of drafts, release from `main`, regenerate `macrogrid-index.json` on `main`,
-  make `main` the default branch (`main` does not exist yet; see `open-source-plan.md` G8).
+  make `main` the default branch (already done: `main` is the default in all three repositories).
 
 ## 5. Host install pipeline
 

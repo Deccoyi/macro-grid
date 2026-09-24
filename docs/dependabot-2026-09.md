@@ -29,6 +29,9 @@ Code fixes needed by React 19 and TypeScript 7:
 | `gradlew` was stored as mode 100644, so "Assemble debug APK" failed with exit 126 | macro-grid-client `d176e78` sets mode 100755. `ci.yml` run by hand with `build_apk=true` (run 36029157697) passed, including "Assemble debug APK" and the artifact upload. `release.yml` uses the same `./gradlew`, so it is fixed too |
 | Dependabot read `main` (old versions) and would reopen the same pull requests | macro-grid `7a88e5e` and macro-grid-plugin `363cfb5` add `target-branch: dev` to every block (the client already had it) |
 | Client `dependabot.yml`: `open-pull-requests-limit` written twice per block, long branch names | macro-grid-client `4159fcd` keeps the limit of 2 and renames the group `all-updates` to `deps`; the same rename is in the other two repos to keep branch names short |
+| Merged `dev` into `main` in all three repos (PRs macro-grid #11, client #7, plugin #7) | CI on `main` is green everywhere, and the plugin `Documentation site` deploy passed with the new Pages actions (configure-pages v6, upload-pages-artifact v5, deploy-pages v5) |
+| Bot opened new pull requests against `dev` right after the config change (proof that `target-branch` works) | Client #8 (Gradle 9.5.1 to 9.7.1) closed: it breaks with AGP 8.13. Client `482024c` ignores minor and major Gradle wrapper updates until AGP 9. Plugin #8 (Test.Sdk 18.10.1, xunit.runner 4.0.0, the same versions the server already uses) merged into `dev` as `fe536d2` |
+| Failing "Dependabot Updates" security jobs on `main`, and open security alerts on old vite and esbuild | The cause was `packages/renderer/demo`, still on React 18, vite 5 and plugin-react 4. macro-grid `d09cc51` and client `788ca0e` move it to React 19.3, vite 8.3 and plugin-react 6.1 (same as the editor). Client #9 (react bump of the demo only) closed as superseded. The client lockfile now has a single vite 8.3.1 |
 | Pre-flip audit and open-source plan out of date | Both documents now record the post-flip GitHub settings, read back with `gh api` (rulesets, secret scanning, fork pull request approval, private vulnerability reporting, five pre-releases, Pages) and list what is still open |
 
 ## Not taken
@@ -38,9 +41,9 @@ Code fixes needed by React 19 and TypeScript 7:
 
 ## Left
 
-- **Watch the plugin Pages deploy** (configure-pages v6, upload-pages-artifact v5, deploy-pages v5). The new action versions are on `dev` only; the last deploy on `main` (workflow run 36011602591) used the old ones. It runs for the first time on the next docs push to `main`.
+- **Merge the newest `dev` commits into `main`** (demo update, Gradle ignore rule, plugin test packages), waiting for green CI first. After that the Dependabot security alerts on the old demo manifests should close; if the failing "Dependabot Updates" runs on `main` or open alerts remain a few hours later, look at them again.
+- **Open alert without a fix here:** `uuid` 7.0.3 in the client lockfile, pulled in by the Capacitor CLI (`xcode`). It is a dev tool dependency and does not ship in the app.
 - **Watch the first real client release** with `release.yml`. `client-v0.1.0` was released with an APK uploaded by hand. No repository has any secret, so the workflow builds without signing; the signed APK is still built locally. The Android SDK step (setup-android v4) passed in the manual CI run.
-- **Dev to main:** `dev` carries all of the changes above; `main` is protected (pull request with 1 approval and required checks). Merging is the owner's decision and is not done automatically.
 - **AGP 9 upgrade** (to allow Gradle 9.7+), only if wanted.
 - Tutorials are still untested on a clean setup (G7).
 
