@@ -31,7 +31,7 @@ inside the program (`ClientHub.ServerVersion`) stays plain `0.2.0`; the suffix e
 
 Client and plugin releases follow the same shape in their own repositories: bump, changelogs, merge to `main`, tag, draft release.
 
-## 1. Build the release folder
+## What ships
 
 The server ships as a Windows installer that wraps a self-contained single-file `MacroGrid.exe` (the .NET runtime and
 ASP.NET are bundled). The target PC needs nothing installed. The editor window uses the WebView2 Runtime, which is part of current Windows; the installer also bundles Microsoft's small WebView2 bootstrapper and runs it only when the runtime is missing (that needs an internet connection). `installer\build-installer.ps1` downloads the bootstrapper from Microsoft on the first build into `artifacts\redist`, checks that it is signed by Microsoft and never commits it.
@@ -64,8 +64,10 @@ It produces `artifacts\MacroGrid-Setup-<version>.exe`. The installer (`installer
 
 `AppId` in the `.iss` file must never change; it is how upgrades and the uninstaller find the app.
 
-The installer script has not been compiled on the development machine yet (Inno Setup was not installed there), so do a
-first install / upgrade / uninstall test on a clean PC before publishing it.
+Always do an install / upgrade / uninstall test on a clean PC before publishing an installer. The clean-PC checks are: the
+editor window opens (the WebView2 bootstrapper ran if the runtime was missing), a phone pairs, "Start Macro Grid when I sign in"
+works after a restart, running the new installer over the old one keeps profiles and paired devices, the entry in the installed
+programs list shows the plain name "Macro Grid", and quitting from the tray icon ends the process in Task Manager.
 
 ## Not done yet
 
