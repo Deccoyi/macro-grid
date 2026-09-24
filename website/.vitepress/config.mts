@@ -2,6 +2,7 @@ import { defineConfig } from 'vitepress'
 
 const repo = 'https://github.com/Deccoyi/macro-grid'
 const pluginSite = 'https://deccoyi.github.io/macro-grid-plugin/'
+const clientSite = 'https://deccoyi.github.io/macro-grid-client/'
 
 export default defineConfig({
   title: 'Macro Grid',
@@ -21,11 +22,12 @@ export default defineConfig({
     search: { provider: 'local' },
     nav: [
       { text: 'Guide', link: '/guide/', activeMatch: '/guide/' },
-      { text: 'Ecosystem', link: '/ecosystem' },
       { text: 'Tutorials', link: '/tutorials/volume-slider', activeMatch: '/tutorials/' },
       { text: 'Reference', link: '/reference/actions', activeMatch: '/reference/' },
-      { text: 'Plugins', link: pluginSite },
+      { text: 'Ecosystem', link: '/ecosystem' },
       { text: 'Download', link: '/download' },
+      { text: 'Plugins', link: pluginSite + 'store/' },
+      { text: 'Phone app', link: clientSite },
       { text: 'Developers', link: '/developers/', activeMatch: '/developers/' },
     ],
     sidebar: {
@@ -96,7 +98,7 @@ export default defineConfig({
     editLink: { pattern: `${repo}/edit/dev/website/:path`, text: 'Suggest a change on GitHub' },
     outline: { level: [2, 3] },
     footer: {
-      message: 'Released under the MIT License. Alpha software, written entirely by an AI assistant, provided as is without warranty.',
+      message: 'Macro Grid sites: <a href="https://deccoyi.github.io/macro-grid/">Server</a> &middot; <a href="https://deccoyi.github.io/macro-grid-client/">Phone app</a> &middot; <a href="https://deccoyi.github.io/macro-grid-plugin/">Plugins</a><br>Released under the MIT License. Alpha software, written entirely by an AI assistant, provided as is without warranty.',
       copyright: 'Copyright (c) 2026 Deccoyi',
     },
   },

@@ -9,7 +9,7 @@ The Android app draws the deck full screen and sends your touches to the server.
 ## Install
 
 1. Install and start the [server](/guide/install) first.
-2. Download the APK from the [client Releases page](https://github.com/Deccoyi/macro-grid-client/releases) and open it on the phone. Allow installing from your browser or file manager when Android asks.
+2. Download the APK from the [phone app download page](https://deccoyi.github.io/macro-grid-client/download) and open it on the phone. Allow installing from your browser or file manager when Android asks.
 
 ## Connect
 
