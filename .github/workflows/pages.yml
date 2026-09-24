@@ -15,6 +15,10 @@ on:
   # Regenerate the download page when a release changes.
   release:
     types: [published, edited, deleted]
+  # The download data is read from the GitHub releases at build time; a scheduled rebuild is the safety net
+  # for a release change that did not fire the release event (scheduled runs use the default branch).
+  schedule:
+    - cron: "23 */6 * * *"
   workflow_dispatch:
 
 permissions:
@@ -30,6 +34,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event_name == 'release' && 'main' || github.ref }}
 
       - name: Set up Node.js
         uses: actions/setup-node@v7
