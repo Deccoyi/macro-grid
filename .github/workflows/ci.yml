@@ -1,0 +1,72 @@
+name: CI
+
+on:
+  # CI runs on pull requests and on pushes to main, not on every push to dev (dev is the working branch).
+  # Changes that only touch documentation or license texts do not need a build. Add [skip ci] to a commit
+  # message to skip a run entirely, or start it by hand from the Actions tab (workflow_dispatch).
+  push:
+    branches: [main]
+    paths-ignore: ["**.md", "docs/**", "licenses/**", "THIRD_PARTY_NOTICES.md", ".github/ISSUE_TEMPLATE/**", ".github/PULL_REQUEST_TEMPLATE.md"]
+  pull_request:
+    branches: [main, dev]
+    paths-ignore: ["**.md", "docs/**", "licenses/**", "THIRD_PARTY_NOTICES.md", ".github/ISSUE_TEMPLATE/**", ".github/PULL_REQUEST_TEMPLATE.md"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  server:
+    name: Server (build and test)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: 10.x
+      - name: Restore
+        run: dotnet restore
+      - name: Build
+        run: dotnet build --no-restore -c Release
+      - name: Test
+        run: dotnet test --no-build -c Release
+
+  frontend:
+    name: ${{ matrix.project }} (typecheck, build, test)
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        project: [packages/renderer, editor, webclient]
+    defaults:
+      run:
+        working-directory: ${{ matrix.project }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: ${{ matrix.project }}/package-lock.json
+      - name: Install
+        run: npm ci
+      - name: Install the renderer dependencies
+        # The editor and the deck import @macro/renderer from source; its own dependencies (react, postcss, ...) live in
+        # packages/renderer/node_modules and must exist for the typecheck and the bundle build to resolve them.
+        if: matrix.project != 'packages/renderer'
+        working-directory: packages/renderer
+        run: npm ci
+      - name: Typecheck
+        run: npm run typecheck
+      - name: Build
+        # The renderer package has no build script (it is consumed from source); the editor and the deck do.
+        if: matrix.project != 'packages/renderer'
+        run: npm run build
+      - name: Test
+        # Only the renderer has tests today.
+        if: matrix.project == 'packages/renderer'
+        run: npm test

@@ -1,6 +1,6 @@
 /**
  * Maps a physical KeyboardEvent.code to the normalized key names the server's HotkeyParser/KnownKeys
- * accept (see server/src/MacroStation.Core/Input/KnownKeys.cs). Using `code` (physical key) rather than
+ * accept (see server/src/MacroGrid.Core/Input/KnownKeys.cs). Using `code` (physical key) rather than
  * `key` (layout-dependent character) means the captured shortcut is the same regardless of keyboard layout.
  */
 const CODE_TO_NAME: Record<string, string> = {

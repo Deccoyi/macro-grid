@@ -46,13 +46,15 @@ pnpm-debug.log*
 
 # Built by `npm run build` in editor/ and copied into the .NET host's
 # wwwroot at deploy time — regenerate from source, don't commit the output.
-src/MacroStation.Host/wwwroot/editor/
+src/MacroGrid.Host/wwwroot/editor/
+
+# Same for webclient/ — built and copied into wwwroot/deck/ at deploy time.
+src/MacroGrid.Host/wwwroot/deck/
 
 # ============================================================
 # Logs
 # ============================================================
 *.log
-%AppData%/MacroStation/logs/
 
 # ============================================================
 # OS / editor / IDE
@@ -62,3 +64,24 @@ src/MacroStation.Host/wwwroot/editor/
 *.iml
 .DS_Store
 Thumbs.db
+
+# ============================================================
+# Signing keys and secrets (never commit these)
+# ============================================================
+*.pfx
+*.p12
+*.snk
+*.key
+*.pem
+
+# ============================================================
+# Local tooling state (per-machine)
+# ============================================================
+.claude/settings.local.json
+.claude/scheduled_tasks.lock
+
+# ============================================================
+# Scratch
+# ============================================================
+*.tmp
+*.bak

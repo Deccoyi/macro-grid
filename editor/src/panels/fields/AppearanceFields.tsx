@@ -13,11 +13,6 @@ export interface AppearanceFieldsProps extends FieldGroupProps {
   variableCatalog: VariableInfo[];
 }
 
-const SWATCHES = [
-  "#374151", "#475569", "#b91c1c", "#c2410c", "#b45309", "#84761f", "#15803d", "#0f766e",
-  "#0e7490", "#1d4ed8", "#4338ca", "#6d28d9", "#a21caf", "#be185d", "#78350f", "#111827",
-];
-
 /** Background/foreground/border/radius/animation — every widget type has a box, so these always apply
  * and always come first, in this order, for every widget type (the panel's "common language"). */
 export function AppearanceFields({ widget, onChange, variableCatalog }: AppearanceFieldsProps) {
@@ -46,18 +41,6 @@ export function AppearanceFields({ widget, onChange, variableCatalog }: Appearan
           <DynamicFieldLabel label={t("fields.appearance.foreground")} propertyKey="style.foreground" widget={widget} variableCatalog={variableCatalog} onChange={onChange} />
           <ColorField value={style.foreground} onChange={(v) => set((s) => { s.foreground = v; })} />
         </label>
-      </div>
-
-      <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
-        {SWATCHES.map((hex) => (
-          <button
-            key={hex}
-            type="button"
-            onClick={() => set((s) => { s.background = hex; })}
-            title={hex}
-            style={{ width: 15, height: 15, padding: 0, background: hex, border: "1px solid rgba(255,255,255,.14)", borderRadius: 3 }}
-          />
-        ))}
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>

@@ -14,10 +14,12 @@ export interface DynamicFieldLabelProps {
   onChange: (fn: (widget: Widget) => void) => void;
   /** What kind of value each rule resolves to; defaults to a color picker. */
   resultKind?: ResultKind;
+  /** For the "icon" result kind: the color the icon choices are baked with. */
+  iconColor?: string;
 }
 
 /** A field label with a small lightning-bolt button that opens the "make this depend on a variable" modal; lit up (accent color) once dynamized. */
-export function DynamicFieldLabel({ label, propertyKey, widget, variableCatalog, onChange, resultKind }: DynamicFieldLabelProps) {
+export function DynamicFieldLabel({ label, propertyKey, widget, variableCatalog, onChange, resultKind, iconColor }: DynamicFieldLabelProps) {
   const { t } = useT();
   const [open, setOpen] = useState(false);
   const binding = widget.dynamic?.[propertyKey];
@@ -40,6 +42,7 @@ export function DynamicFieldLabel({ label, propertyKey, widget, variableCatalog,
           propertyLabel={label}
           binding={binding}
           resultKind={resultKind}
+          iconColor={iconColor}
           variableCatalog={variableCatalog}
           onClose={() => setOpen(false)}
           onSave={(next) =>

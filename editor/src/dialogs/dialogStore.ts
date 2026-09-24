@@ -21,7 +21,22 @@ export interface AlertRequest {
   resolve: () => void;
 }
 
-export type DialogRequest = ConfirmRequest | PromptRequest | AlertRequest;
+export interface ChoiceOption {
+  value: string;
+  label: string;
+  primary?: boolean;
+  danger?: boolean;
+}
+
+export interface ChoiceRequest {
+  kind: "choice";
+  message: string;
+  title?: string;
+  options: ChoiceOption[];
+  resolve: (value: string | null) => void;
+}
+
+export type DialogRequest = ConfirmRequest | PromptRequest | AlertRequest | ChoiceRequest;
 
 let listener: ((request: DialogRequest | null) => void) | null = null;
 
@@ -53,5 +68,13 @@ export function promptAsync(message: string, defaultValue = "", opts?: { title?:
 export function alertAsync(message: string, opts?: { title?: string }): Promise<void> {
   return new Promise((resolve) => {
     listener?.({ kind: "alert", message, title: opts?.title, resolve });
+  });
+}
+
+/** A modal with several caller-defined buttons (plus Cancel) — e.g. "Rename / Overwrite" on an import
+ * name clash. Resolves the chosen option's value, or null on cancel. */
+export function choiceAsync(message: string, options: ChoiceOption[], opts?: { title?: string }): Promise<string | null> {
+  return new Promise((resolve) => {
+    listener?.({ kind: "choice", message, title: opts?.title, options, resolve });
   });
 }

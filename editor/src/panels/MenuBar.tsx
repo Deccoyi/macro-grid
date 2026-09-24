@@ -1,15 +1,15 @@
 import { useEffect, useRef, useState } from "react";
 import type { Profile } from "@macro/renderer";
 import { api } from "../api/client";
+import { alertAsync } from "../dialogs/dialogStore";
+import { useServerVersion } from "../state/useServerVersion";
 import { useT, type Language } from "../i18n/I18nContext";
 import { ContextMenu, type ContextMenuItem } from "./ContextMenu";
 
 export interface MenuBarProps {
   profile: Profile | null;
-  onImportProfile: (data: Profile) => void;
+  onImportProfile: (data: Profile) => Promise<void>;
 }
-
-const APP_VERSION = "0.1.0";
 
 // Access-key letters (Windows mnemonic convention: Alt+letter opens the menu, and the letter is
 // underlined in the label while Alt is held) — one map per language since the underlined letter has
@@ -40,6 +40,7 @@ function mnemonicLabel(label: string, letter: string | undefined, show: boolean)
  * native Open/Save dialogs on the server's desktop instead of browser download/upload. */
 export function MenuBar({ profile, onImportProfile }: MenuBarProps) {
   const { t, lang } = useT();
+  const serverVersion = useServerVersion();
   const [openMenu, setOpenMenu] = useState<{ id: string; x: number; y: number } | null>(null);
   const [mnemonicsVisible, setMnemonicsVisible] = useState(false);
   const refs = useRef<Record<string, HTMLButtonElement | null>>({});
@@ -53,16 +54,31 @@ export function MenuBar({ profile, onImportProfile }: MenuBarProps) {
 
   const exportProfile = async () => {
     if (!profile) return;
-    await api.exportProfileDialog(`${profile.name || "profile"}.json`, JSON.stringify(profile, null, 2));
+    try {
+      await api.exportProfileDialog(profile);
+    } catch (err) {
+      await alertAsync(err instanceof Error ? err.message : String(err), { title: t("profile.exportFailedTitle") });
+    }
   };
 
   const importProfile = async () => {
-    const { content } = await api.importProfileDialog();
-    if (!content) return;
+    let result;
     try {
-      onImportProfile(JSON.parse(content));
-    } catch {
-      // Malformed file — silently ignored rather than showing a raw parser error to the user.
+      result = await api.importProfileDialog();
+    } catch (err) {
+      // The server says why the file is unusable (damaged, empty, made by a newer version...).
+      await alertAsync(err instanceof Error ? err.message : String(err), { title: t("profile.importFailedTitle") });
+      return;
+    }
+    if (!result.profile) return;
+
+    await onImportProfile(result.profile);
+
+    const missing = result.missingPlugins?.map((p) => p.name) ?? [];
+    const covered = new Set(result.missingPlugins?.flatMap((p) => p.actionTypes) ?? []);
+    const unknown = (result.unknownActionTypes ?? []).filter((type) => !covered.has(type));
+    if (missing.length > 0 || unknown.length > 0) {
+      await alertAsync(t("profile.importMissing", missing.join(", "), unknown.join(", ")), { title: t("profile.importMissingTitle") });
     }
   };
 
@@ -73,9 +89,10 @@ export function MenuBar({ profile, onImportProfile }: MenuBarProps) {
   const settingsItems: ContextMenuItem[] = [{ label: t("menu.settings.open"), onSelect: () => api.openToolWindow("preferences") }];
   const pluginsItems: ContextMenuItem[] = [{ label: t("menu.plugins.manage"), onSelect: () => api.openToolWindow("plugins") }];
   const helpItems: ContextMenuItem[] = [
-    { label: t("menu.help.version", APP_VERSION), disabled: true, onSelect: () => {} },
-    { label: t("menu.help.licenses"), onSelect: () => api.openToolWindow("help") },
-    { label: t("menu.help.agreement"), onSelect: () => api.openToolWindow("help") },
+    { label: t("menu.help.version", serverVersion), disabled: true, onSelect: () => {} },
+    { label: t("menu.help.about"), onSelect: () => api.openToolWindow("help", "about") },
+    { label: t("menu.help.agreement"), onSelect: () => api.openToolWindow("help", "agreement") },
+    { label: t("menu.help.licenses"), onSelect: () => api.openToolWindow("help", "licenses") },
   ];
 
   const menus: { id: string; label: string; items: ContextMenuItem[] }[] = [

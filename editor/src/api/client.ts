@@ -4,15 +4,23 @@ import type {
   AppPreferences,
   ExportProfileResult,
   ImportProfileResult,
+  OptionsResult,
+  IconPackInfo,
   PairedDeviceInfo,
   PairingQrInfo,
+  PluginInfo,
+  PluginInstallResult,
+  PluginUninstallResult,
   ProfileSummary,
+  RunningWindowInfo,
+  SettingField,
+  StatusEntry,
   VariableInfo,
   VariableSnapshot,
 } from "./types";
 
 /** Every editor API call must bypass the HTTP cache — a GET right after a save must never return a
- * stale cached body (see docs/agent-notes.md: same trap as the editor's own HTML/JS bundle caching). */
+ * stale cached body (the same trap as the editor's own HTML/JS bundle caching, see docs/development.md). */
 function req(url: string, init?: RequestInit): Promise<Response> {
   return fetch(url, { ...init, cache: "no-store" });
 }
@@ -25,6 +33,14 @@ async function json<T>(res: Response): Promise<T> {
   // 204 (and any other empty-body success, e.g. Results.Ok() with no payload) has nothing to parse.
   const text = await res.text();
   return (text ? JSON.parse(text) : undefined) as T;
+}
+
+/** The legal texts that ship with the app (GET /api/legal); a text is null when its file is missing, as in a development build. */
+export interface LegalOverview {
+  agreement: string | null;
+  projectLicense: string | null;
+  notices: string | null;
+  libraries: string[];
 }
 
 export const api = {
@@ -45,6 +61,20 @@ export const api = {
 
   listActions: (): Promise<ActionInfo[]> => req("/api/actions").then((res) => json<ActionInfo[]>(res)),
 
+  /** Dynamic dropdown options for an action's field (e.g. OBS's scene/audio-input lists) — `currentValues`
+   * is the current form state for the field's `dependsOn` keys. */
+  getActionOptions: (type: string, sourceId: string, currentValues: Record<string, unknown>): Promise<OptionsResult> =>
+    req(`/api/actions/${encodeURIComponent(type)}/options/${encodeURIComponent(sourceId)}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(currentValues),
+    }).then((res) => json<OptionsResult>(res)),
+
+  /** The running server's version, the one place it is defined (ClientHub.ServerVersion). */
+  getVersion: (): Promise<{ version: string }> => req("/api/version").then((res) => json<{ version: string }>(res)),
+
+  getStatus: (): Promise<StatusEntry[]> => req("/api/status").then((res) => json<StatusEntry[]>(res)),
+
   variablesSnapshot: (): Promise<VariableSnapshot> => req("/api/variables/snapshot").then((res) => json<VariableSnapshot>(res)),
 
   variableCatalog: (): Promise<VariableInfo[]> => req("/api/variables/catalog").then((res) => json<VariableInfo[]>(res)),
@@ -62,7 +92,85 @@ export const api = {
 
   revokeDevice: (id: string): Promise<void> => req(`/api/devices/${id}`, { method: "DELETE" }).then((res) => json<void>(res)),
 
+  assignDeviceProfile: (id: string, profileId: string | null): Promise<void> =>
+    req(`/api/devices/${id}/profile`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ profileId }),
+    }).then((res) => json<void>(res)),
+
+  setDeviceFollowActiveWindow: (id: string, followActiveWindow: boolean): Promise<void> =>
+    req(`/api/devices/${id}/follow-window`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ followActiveWindow }),
+    }).then((res) => json<void>(res)),
+
+  listRunningWindows: (): Promise<RunningWindowInfo[]> => req("/api/system/windows").then((res) => json<RunningWindowInfo[]>(res)),
+
+  listPlugins: (): Promise<PluginInfo[]> => req("/api/plugins").then((res) => json<PluginInfo[]>(res)),
+
+  listIconPacks: (): Promise<IconPackInfo[]> => req("/api/icon-packs").then((res) => json<IconPackInfo[]>(res)),
+
+  /** Raw SVG markup (not JSON) for one icon in a plugin-contributed pack. */
+  getIconPackIconSvg: (packId: string, iconName: string): Promise<string> =>
+    req(`/api/icon-packs/${encodeURIComponent(packId)}/${encodeURIComponent(iconName)}`).then((res) => {
+      if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
+      return res.text();
+    }),
+
+  /** Shows a native "choose a folder" dialog on the server's desktop, validates plugin.json there, copies it
+   * into the server's plugins/ folder and loads it right away (no restart). Installing over an existing id
+   * replaces that plugin. */
+  installPluginDialog: (): Promise<PluginInstallResult> =>
+    req("/api/plugins/install", { method: "POST" }).then((res) => json<PluginInstallResult>(res)),
+
+  /** Unloads a plugin (its actions, variables and status items disappear immediately) and deletes its
+   * folder under %AppData%. `pending` means a file was still in use and the folder goes at the next start. */
+  uninstallPlugin: (id: string): Promise<PluginUninstallResult> =>
+    req(`/api/plugins/${encodeURIComponent(id)}`, { method: "DELETE" }).then((res) => json<PluginUninstallResult>(res)),
+
+  /** Approves the permissions a JS plugin declares and starts it. */
+  approvePlugin: (id: string): Promise<PluginInfo> =>
+    req(`/api/plugins/${encodeURIComponent(id)}/approve`, { method: "POST" }).then((res) => json<PluginInfo>(res)),
+
+  /** Unloads a plugin and loads it again from its folder, picking up a replaced DLL or changed manifest. */
+  reloadPlugin: (id: string): Promise<PluginInfo> =>
+    req(`/api/plugins/${encodeURIComponent(id)}/reload`, { method: "POST" }).then((res) => json<PluginInfo>(res)),
+
+  /** A registered IPluginSettingsPage's form schema — 404 if the plugin has none (PluginInfo.hasSettings
+   * is false), in which case the editor has no generic fallback UI for that plugin's settings anymore. */
+  getPluginSettingsSchema: (id: string): Promise<SettingField[]> =>
+    req(`/api/plugins/${encodeURIComponent(id)}/settings/schema`).then((res) => json<SettingField[]>(res)),
+
+  getPluginSettings: (id: string): Promise<Record<string, unknown>> =>
+    req(`/api/plugins/${encodeURIComponent(id)}/settings`).then((res) => json<Record<string, unknown>>(res)),
+
+  savePluginSettings: (id: string, values: Record<string, unknown>): Promise<void> =>
+    req(`/api/plugins/${encodeURIComponent(id)}/settings`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(values),
+    }).then((res) => json<void>(res)),
+
+  getPluginSettingsOptions: (id: string, sourceId: string, currentValues: Record<string, unknown>): Promise<OptionsResult> =>
+    req(`/api/plugins/${encodeURIComponent(id)}/settings/options/${encodeURIComponent(sourceId)}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(currentValues),
+    }).then((res) => json<OptionsResult>(res)),
+
   getPreferences: (): Promise<AppPreferences> => req("/api/preferences").then((res) => json<AppPreferences>(res)),
+
+  /** Whether Macro Grid starts when the person signs in to Windows (the per-user Run entry the installer's task also writes). */
+  getAutostart: (): Promise<{ enabled: boolean }> => req("/api/system/autostart").then((res) => json<{ enabled: boolean }>(res)),
+
+  setAutostart: (enabled: boolean): Promise<{ enabled: boolean }> =>
+    req("/api/system/autostart", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ enabled }),
+    }).then((res) => json<{ enabled: boolean }>(res)),
 
   savePreferences: (preferences: AppPreferences): Promise<void> =>
     req("/api/preferences", {
@@ -71,20 +179,32 @@ export const api = {
       body: JSON.stringify(preferences),
     }).then((res) => json<void>(res)),
 
-  /** Shows a native "Open" dialog on the server's desktop and reads the chosen JSON file. */
+  /** Shows a native "Open" dialog on the server's desktop and reads the chosen .msprofile (or plain profile JSON)
+   * file; the server validates it and reports which plugins it needs that are missing. */
   importProfileDialog: (): Promise<ImportProfileResult> =>
     req("/api/browse/import-profile", { method: "POST" }).then((res) => json<ImportProfileResult>(res)),
 
-  /** Shows a native "Save As" dialog on the server's desktop and writes the profile JSON there. */
-  exportProfileDialog: (fileName: string, content: string): Promise<ExportProfileResult> =>
+  /** Shows a native "Save As" dialog on the server's desktop and writes the profile there as a .msprofile
+   * package (the profile plus a manifest naming the plugins it needs). */
+  exportProfileDialog: (profile: Profile): Promise<ExportProfileResult> =>
     req("/api/browse/export-profile", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ fileName, content }),
+      body: JSON.stringify(profile),
     }).then((res) => json<ExportProfileResult>(res)),
 
   /** Opens (or focuses) a real, separate OS window for a tool panel — see docs/ui-guidelines.md:
    * Preferences/Plugins are native windows, not in-page modals. */
-  openToolWindow: (kind: "preferences" | "plugins" | "help"): Promise<void> =>
-    req(`/api/windows/${kind}`, { method: "POST" }).then((res) => json<void>(res)),
+  openToolWindow: (kind: "preferences" | "plugins" | "help" | "pairing", tab?: string): Promise<void> =>
+    req(`/api/windows/${kind}${tab ? `?tab=${encodeURIComponent(tab)}` : ""}`, { method: "POST" }).then((res) => json<void>(res)),
+
+  /** The agreement, the project license, the third-party notice index and the names of the bundled libraries (null when a file is missing, as in a development build). */
+  getLegal: (): Promise<LegalOverview> => req("/api/legal").then((res) => json<LegalOverview>(res)),
+
+  /** The original license text of one bundled library. */
+  getLegalLibrary: (name: string): Promise<string> =>
+    req(`/api/legal/library/${encodeURIComponent(name)}`).then((res) => res.text()),
+
+  openPluginSettingsWindow: (id: string): Promise<void> =>
+    req(`/api/windows/plugin-settings/${encodeURIComponent(id)}`, { method: "POST" }).then((res) => json<void>(res)),
 };

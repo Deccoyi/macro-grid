@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import type { ActionBinding, Page, Profile, Widget, WidgetType } from "@macro/renderer";
+import type { ActionBinding, AppMatch, Page, Profile, Widget, WidgetType } from "@macro/renderer";
 import { api } from "../api/client";
-import type { ActionInfo, ProfileSummary, VariableInfo, VariableSnapshot } from "../api/types";
-import { alertAsync, confirmAsync } from "../dialogs/dialogStore";
+import type { ActionInfo, ProfileSummary, StatusEntry, VariableInfo, VariableSnapshot } from "../api/types";
+import { choiceAsync, confirmAsync } from "../dialogs/dialogStore";
 import { findFreeCell } from "../grid/collision";
 import { useT } from "../i18n/I18nContext";
+import { invalidateIconPacks } from "../panels/IconPicker";
 
 let nextTempId = 1;
 /** Client-generated ids only ever need to be unique within this editing session; the server assigns real ones on first save of a brand new widget/page... */
@@ -24,9 +25,17 @@ export function useEditorState() {
   const [variables, setVariables] = useState<VariableSnapshot>({});
   const [actions, setActions] = useState<ActionInfo[]>([]);
   const [variableCatalog, setVariableCatalog] = useState<VariableInfo[]>([]);
+  const [status, setStatus] = useState<StatusEntry[]>([]);
 
   const refreshVariables = useCallback(() => {
     api.variablesSnapshot().then(setVariables).catch(() => {});
+    api.getStatus().then(setStatus).catch(() => {});
+  }, []);
+
+  const refreshCatalogs = useCallback(() => {
+    invalidateIconPacks();
+    api.listActions().then(setActions).catch(() => {});
+    api.variableCatalog().then(setVariableCatalog).catch(() => {});
   }, []);
 
   const loadProfileList = useCallback(async (selectId?: string) => {
@@ -44,10 +53,16 @@ export function useEditorState() {
 
   useEffect(() => {
     loadProfileList().catch((e) => setError(String(e)));
-    api.listActions().then(setActions).catch(() => {});
-    api.variableCatalog().then(setVariableCatalog).catch(() => {});
+    refreshCatalogs();
     refreshVariables();
-  }, [loadProfileList, refreshVariables]);
+  }, [loadProfileList, refreshVariables, refreshCatalogs]);
+
+  // Plugins are installed / reloaded / removed live from the separate "Eklentiler" window, which changes the
+  // action list, variable picker and icon packs. Coming back to this window is the cheap moment to refetch.
+  useEffect(() => {
+    window.addEventListener("focus", refreshCatalogs);
+    return () => window.removeEventListener("focus", refreshCatalogs);
+  }, [refreshCatalogs]);
 
   // Auto-poll so the canvas's dynamic-style preview (evaluateWidgetDynamicStyle) actually reacts to
   // live values like system.cpu instead of only updating when the user clicks "Değişkenleri yenile" —
@@ -134,28 +149,45 @@ export function useEditorState() {
     await loadProfileList(created.id);
   }, [confirmDiscardIfDirty, loadProfileList]);
 
-  /** "Dosya > Profili İçe Aktar": creates a brand-new profile then overwrites it with the imported
-   * content under the new id, so an imported file can never collide with (or overwrite) an existing one.
-   * A name collision with an existing profile is resolved by appending _1, _2, ... (never silently
-   * overwriting, never silently dropping the user's chosen name without telling them). */
+  /** "Dosya > Profili İçe Aktar": normally creates a brand-new profile then overwrites it with the
+   * imported content under the new id. If a profile with the same name already exists the user is asked
+   * (never decided silently): "Üzerine yaz" replaces that profile's content in place (keeping its id),
+   * "Adı değiştir" imports as a new profile named name_1, name_2, ... and Cancel aborts the import. */
   const importProfileFromJson = useCallback(
     async (data: Profile) => {
       if (!(await confirmDiscardIfDirty())) return;
-      const existingNames = new Set(profiles.map((p) => p.name));
       const originalName = data.name || "Profil";
+      const existing = profiles.find((p) => p.name === originalName);
       let name = originalName;
-      let suffix = 1;
-      while (existingNames.has(name)) {
-        name = `${originalName}_${suffix}`;
-        suffix += 1;
+
+      if (existing) {
+        const choice = await choiceAsync(
+          t("profile.importConflict", originalName),
+          [
+            { value: "overwrite", label: t("profile.importOverwrite"), danger: true },
+            { value: "rename", label: t("profile.importRename"), primary: true },
+          ],
+          { title: t("profile.importConflictTitle") },
+        );
+        if (choice === null) return;
+
+        if (choice === "overwrite") {
+          await api.saveProfile({ ...data, id: existing.id, name: originalName });
+          await loadProfileList(existing.id);
+          return;
+        }
+
+        const existingNames = new Set(profiles.map((p) => p.name));
+        let suffix = 1;
+        while (existingNames.has(name)) {
+          name = `${originalName}_${suffix}`;
+          suffix += 1;
+        }
       }
 
       const created = await api.createProfile();
-      const imported: Profile = { ...data, id: created.id, name };
-      await api.saveProfile(imported);
+      await api.saveProfile({ ...data, id: created.id, name });
       await loadProfileList(created.id);
-
-      if (name !== originalName) await alertAsync(t("profile.importRenamed", originalName, name));
     },
     [confirmDiscardIfDirty, loadProfileList, profiles, t],
   );
@@ -176,6 +208,12 @@ export function useEditorState() {
   /** Remembers which "Önizleme" preset this profile should open with — see Profile.PreviewDeviceId. */
   const setPreviewDevice = useCallback(
     (id: string) => mutate((draft) => ({ ...draft, previewDeviceId: id === "free" ? undefined : id })),
+    [mutate],
+  );
+
+  /** Foreground-window auto-switch rules for this profile — see docs/auto-profile-switch.md. */
+  const setAppMatches = useCallback(
+    (appMatches: AppMatch[]) => mutate((draft) => ({ ...draft, appMatches })),
     [mutate],
   );
 
@@ -406,6 +444,7 @@ export function useEditorState() {
     variables,
     actions,
     variableCatalog,
+    status,
     refreshVariables,
     setCurrentPageId,
     setSelectedIds,
@@ -416,6 +455,7 @@ export function useEditorState() {
     deleteProfile,
     renameProfile,
     setPreviewDevice,
+    setAppMatches,
     save,
     addPage,
     renamePage,

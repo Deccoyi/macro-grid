@@ -16,7 +16,7 @@ const page: Page = {
     { id: "slider", actions: {}, type: "slider", x: 0, y: 1, w: 2, h: 1, text: "Ses", props: { min: 0, max: 100 }, style: { background: "#232529", foreground: "#e6e7ea" } },
     { id: "knob", actions: {}, type: "knob", x: 2, y: 1, w: 1, h: 2, text: "Gain", props: { min: 0, max: 100 }, style: { background: "#232529", foreground: "#e6e7ea" } },
     { id: "image", actions: {}, type: "image", x: 3, y: 1, w: 1, h: 1, text: "Logo", props: { src: "" }, style: { background: "#111827", foreground: "#9a9ea6" } },
-    { id: "web", actions: {}, type: "web", x: 0, y: 2, w: 2, h: 1, text: "Twitch Chat", style: { background: "#232529", foreground: "#9a9ea6" } },
+    { id: "web", actions: {}, type: "web", x: 0, y: 2, w: 2, h: 1, text: "Web Chat", style: { background: "#232529", foreground: "#9a9ea6" } },
   ],
 };
 

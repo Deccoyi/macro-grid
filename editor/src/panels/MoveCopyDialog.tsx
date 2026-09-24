@@ -3,6 +3,7 @@ import type { Page } from "@macro/renderer";
 import { api } from "../api/client";
 import type { ProfileSummary } from "../api/types";
 import { useT } from "../i18n/I18nContext";
+import { useBackdropClose } from "../components/useBackdropClose";
 
 export interface MoveCopyDialogProps {
   title: string;
@@ -21,6 +22,7 @@ export interface MoveCopyDialogProps {
  * profiles in memory at once. */
 export function MoveCopyDialog({ title, profiles, currentProfileId, currentProfilePages, wholePage, onClose, onConfirm }: MoveCopyDialogProps) {
   const { t } = useT();
+  const backdrop = useBackdropClose(onClose);
   const [targetProfileId, setTargetProfileId] = useState(currentProfileId);
   const [pages, setPages] = useState<Page[]>(currentProfilePages);
   const [targetPageId, setTargetPageId] = useState(currentProfilePages[0]?.id ?? "");
@@ -44,7 +46,7 @@ export function MoveCopyDialog({ title, profiles, currentProfileId, currentProfi
   }, [targetProfileId, currentProfileId, currentProfilePages]);
 
   return (
-    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.5)", zIndex: 80, display: "flex", alignItems: "center", justifyContent: "center" }} onClick={onClose}>
+    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.5)", zIndex: 80, display: "flex", alignItems: "center", justifyContent: "center" }} {...backdrop}>
       <div
         onClick={(e) => e.stopPropagation()}
         style={{ width: 340, background: "var(--ms-bg-surface)", border: "1px solid var(--ms-border)", borderRadius: 10, boxShadow: "0 24px 60px rgba(0,0,0,.5)" }}

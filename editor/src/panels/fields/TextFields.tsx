@@ -4,9 +4,10 @@ import type { Align, IconPosition, VAlign, WidgetStyle } from "@macro/renderer";
 import type { VariableInfo } from "../../api/types";
 import { useT } from "../../i18n/I18nContext";
 import { IconPicker, iconToDataUri } from "../IconPicker";
+import { DynamicFieldLabel } from "../dynamic/DynamicFieldLabel";
 import { VariablePicker } from "../VariablePicker";
 import type { FieldGroupProps } from "./AppearanceFields";
-import { Seg } from "./controls";
+import { ColorField, Seg } from "./controls";
 
 export interface TextFieldsProps extends FieldGroupProps {
   variableCatalog: VariableInfo[];
@@ -44,8 +45,21 @@ export function TextFields({ widget, onChange, variableCatalog, showIcon = true 
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-      <label className="field">
-        {t("fields.text.label")}
+      <div className="field">
+        <div style={{ display: "flex", alignItems: "center" }}>
+          <span style={{ flex: 1 }}>
+            <DynamicFieldLabel label={t("fields.text.label")} propertyKey="text" widget={widget} variableCatalog={variableCatalog} onChange={onChange} resultKind="text" />
+          </span>
+          <VariablePicker
+            catalog={variableCatalog}
+            onInsert={insertVariable}
+            renderTrigger={(open) => (
+              <button type="button" className="ghost" onClick={open} style={{ padding: "2px 6px", fontSize: 11 }}>
+                {t("variable.add")}
+              </button>
+            )}
+          />
+        </div>
         <textarea
           ref={textRef}
           rows={2}
@@ -53,8 +67,7 @@ export function TextFields({ widget, onChange, variableCatalog, showIcon = true 
           onChange={(e) => onChange((w) => { w.text = e.target.value; })}
           placeholder={t("fields.text.placeholder")}
         />
-      </label>
-      <VariablePicker catalog={variableCatalog} onInsert={insertVariable} />
+      </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
         <label className="field">
@@ -97,38 +110,42 @@ export function TextFields({ widget, onChange, variableCatalog, showIcon = true 
       {showIcon && (
         <>
           <label className="field">
-            {t("fields.text.icon")}
+            <DynamicFieldLabel label={t("fields.text.icon")} propertyKey="style.icon" widget={widget} variableCatalog={variableCatalog} onChange={onChange} resultKind="icon" iconColor={style.foreground} />
             <IconPicker
               value={style.icon}
               color={style.foreground}
               onChange={(icon, iconName) => set((s) => { s.icon = icon; s.iconName = iconName; })}
             />
           </label>
-          {style.icon && (
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
-              <label className="field">
-                {t("fields.text.iconSize")}
-                <input type="number" min={12} max={96} value={style.iconSize ?? 28} onChange={(e) => set((s) => { s.iconSize = Number(e.target.value); })} />
-              </label>
-              <label className="field">
-                {t("fields.text.iconPosition")}
-                <select value={style.iconPosition ?? "top"} onChange={(e) => set((s) => { s.iconPosition = e.target.value as IconPosition; })}>
-                  <option value="top">{t("fields.text.iconPosition.top")}</option>
-                  <option value="bottom">{t("fields.text.iconPosition.bottom")}</option>
-                  <option value="left">{t("fields.text.iconPosition.left")}</option>
-                  <option value="right">{t("fields.text.iconPosition.right")}</option>
-                </select>
-              </label>
+          {(style.icon || widget.dynamic?.["style.icon"]) && (
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                <label className="field">
+                  {t("fields.text.iconSize")}
+                  <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                    <input type="number" min={12} max={96} value={style.iconSize ?? 28} onChange={(e) => set((s) => { s.iconSize = Number(e.target.value); })} />
+                    <span style={{ fontSize: 11, color: "var(--ms-text-secondary)", flexShrink: 0 }}>px</span>
+                  </div>
+                </label>
+                <label className="field">
+                  {t("fields.text.iconPosition")}
+                  <select value={style.iconPosition ?? "top"} onChange={(e) => set((s) => { s.iconPosition = e.target.value as IconPosition; })}>
+                    <option value="top">{t("fields.text.iconPosition.top")}</option>
+                    <option value="bottom">{t("fields.text.iconPosition.bottom")}</option>
+                    <option value="left">{t("fields.text.iconPosition.left")}</option>
+                    <option value="right">{t("fields.text.iconPosition.right")}</option>
+                  </select>
+                </label>
+              </div>
               <label className="field">
                 {t("fields.text.iconColor")}
-                <input
-                  type="color"
+                <ColorField
                   disabled={!style.iconName}
                   title={style.iconName ? undefined : t("fields.text.iconColorHint")}
                   value={/^#([0-9a-f]{6})$/i.test(style.foreground ?? "") ? style.foreground : "#e6e7ea"}
-                  onChange={async (e) => {
+                  onChange={async (hex) => {
                     if (!style.iconName) return;
-                    const uri = await iconToDataUri(style.iconName, e.target.value);
+                    const uri = await iconToDataUri(style.iconName, hex);
                     if (uri) set((s) => { s.icon = uri; });
                   }}
                 />

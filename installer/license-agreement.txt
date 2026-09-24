@@ -1,0 +1,98 @@
+MACRO GRID - LICENSE AGREEMENT AND IMPORTANT NOTICES
+
+Please read this text. To install Macro Grid you must accept it.
+
+------------------------------------------------------------------------
+IMPORTANT NOTICES
+------------------------------------------------------------------------
+
+1. Pre-release (alpha) software. Macro Grid is an early version. It can
+   contain errors, change without notice, lose settings or stop working. Do
+   not rely on it for anything where a failure could cause harm, loss or
+   damage.
+
+2. No warranty. The software is provided "AS IS", without warranty of any
+   kind, express or implied, including but not limited to merchantability,
+   fitness for a particular purpose, accuracy, availability and
+   non-infringement. No advice or information, oral or written, creates a
+   warranty.
+
+3. Limitation of liability. To the fullest extent permitted by law, the
+   authors and copyright holders are not liable for any claim, damages or
+   other liability of any kind, whether direct, indirect, incidental,
+   special, consequential or punitive, including loss of data, loss of
+   profit, business interruption, or damage to hardware, software or other
+   property, arising from the installation, use or inability to use the
+   software, even if they were told such damage was possible. You use the
+   software entirely at your own risk. Nothing in this agreement excludes
+   liability that cannot be excluded by law.
+
+4. What the software does. Macro Grid runs a server on your computer that
+   phones and other devices on your network connect to. It can send
+   keystrokes, open programs and web addresses, change the volume and run
+   plugins on your computer, and it opens a network port (TCP 9820) for
+   that purpose. It is designed for a home or office network you trust, and
+   its traffic is not encrypted. You are responsible for who can reach it,
+   for which devices you pair, and for which plugins you install. Plugins
+   are separate programs and can do whatever your user account can do; the
+   authors do not review or vouch for plugins written by others.
+
+5. Automatic input. Buttons can press keys and run commands on your
+   computer. You are responsible for checking what a button does before you
+   use it, and for any consequence of pressing it.
+
+6. Third-party software and names. Macro Grid contains and uses software
+   from other authors under their own licenses; the license texts are in
+   the "licenses" folder of the installation and listed in
+   THIRD_PARTY_NOTICES.md. Product and company names that appear in the
+   software or its documentation belong to their owners and are used only
+   to describe compatibility. Macro Grid is an independent project and is
+   not affiliated with, endorsed by or sponsored by them.
+
+7. AI-generated software. The whole software, including its source code,
+   documentation and artwork, was created by artificial intelligence tools.
+   It has not been reviewed line by line by a human and has not been audited
+   for security, safety, accuracy or legality. It can contain errors,
+   security vulnerabilities and material that resembles someone else's work,
+   and the legal status of AI-generated material can differ between
+   countries. You accept all of these risks.
+
+8. No support, no obligation. The authors have no obligation to provide
+   support, updates or fixes.
+
+9. Your responsibility. You are responsible for complying with the laws and
+   rules that apply to you when you use the software, including the terms
+   of your employer, your network and the programs you control with it.
+
+10. Release from claims. To the extent permitted by law you release the
+   authors and contributors from all claims arising from your use of the
+   software and you agree to hold them harmless from claims made by third
+   parties that result from the way you use it.
+
+------------------------------------------------------------------------
+MIT LICENSE
+------------------------------------------------------------------------
+
+Copyright (c) 2026 Deccoyi
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+------------------------------------------------------------------------
+By clicking "I accept the agreement" you confirm that you have read and
+understood this text and agree to it.

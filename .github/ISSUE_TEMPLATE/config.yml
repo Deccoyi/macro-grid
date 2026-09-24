@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Report a security vulnerability
+    url: https://github.com/Deccoyi/macro-grid/security/advisories/new
+    about: Please report security problems privately, not in a public issue. See SECURITY.md.
+  - name: Phone app issues
+    url: https://github.com/Deccoyi/macro-grid-client/issues/new/choose
+    about: Problems with the Android app belong in the macro-grid-client repository.
+  - name: Plugin issues
+    url: https://github.com/Deccoyi/macro-grid-plugin/issues/new/choose
+    about: Problems with a plugin (OBS, PLC Icons, ...) or the plugin SDK docs belong in the macro-grid-plugin repository.

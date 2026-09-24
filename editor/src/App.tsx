@@ -1,17 +1,18 @@
 import { useEffect, useState } from "react";
 import type { Profile } from "@macro/renderer";
 import { Copy, Smartphone, Trash2 } from "lucide-react";
+import { api } from "./api/client";
 import { confirmAsync, promptAsync } from "./dialogs/dialogStore";
 import { DialogHost } from "./dialogs/DialogHost";
 import { DevicePreviewFrame, type DeviceSize } from "./grid/DevicePreviewFrame";
 import { EditorCanvas } from "./grid/EditorCanvas";
 import { useT } from "./i18n/I18nContext";
 import type { DictKey } from "./i18n/tr";
+import { StatusBar } from "./components/StatusBar";
 import { ContextMenu, type ContextMenuItem } from "./panels/ContextMenu";
 import { Inspector } from "./panels/Inspector";
 import { MenuBar } from "./panels/MenuBar";
 import { MoveCopyDialog } from "./panels/MoveCopyDialog";
-import { PairingPanel } from "./panels/PairingPanel";
 import { ProfilePagesPanel } from "./panels/ProfilePagesPanel";
 import { WidgetPalette } from "./panels/WidgetPalette";
 import { usePreferences } from "./preferences/PreferencesContext";
@@ -33,7 +34,6 @@ export function App() {
   const { previewProfiles } = usePreferences();
   const state = useEditorState();
   const { profile, currentPage } = state;
-  const [pairingOpen, setPairingOpen] = useState(false);
   const [devicePresetId, setDevicePresetId] = useState("free");
   const [customSize, setCustomSize] = useState<DeviceSize>({ width: 390, height: 844 });
   const devicePresets = [
@@ -70,7 +70,7 @@ export function App() {
   }
 
   return (
-    <div style={{ display: "grid", gridTemplateRows: "auto auto 1fr", height: "100%" }}>
+    <div style={{ display: "grid", gridTemplateRows: "auto auto 1fr auto", height: "100%" }}>
       <MenuBar
         profile={profile}
         onImportProfile={(data: Profile) => state.importProfileFromJson(data)}
@@ -104,7 +104,7 @@ export function App() {
         )}
 
         <button className="ghost" onClick={state.refreshVariables}>{t("header.refreshVariables")}</button>
-        <button className="ghost" onClick={() => setPairingOpen(true)} style={{ display: "flex", alignItems: "center", gap: 5 }}>
+        <button className="ghost" onClick={() => api.openToolWindow("pairing")} style={{ display: "flex", alignItems: "center", gap: 5 }}>
           <Smartphone size={13} /> {t("header.pairing")}
         </button>
         <button className="primary save-btn" onClick={state.save} disabled={!state.dirty || state.saving}>
@@ -112,17 +112,17 @@ export function App() {
         </button>
       </header>
 
-      {pairingOpen && <PairingPanel onClose={() => setPairingOpen(false)} />}
       <DialogHost />
 
-      {state.error && (
-        <div style={{ padding: "6px 12px", background: "rgba(192,57,43,.15)", color: "var(--ms-danger)", fontSize: 12, display: "flex", justifyContent: "space-between" }}>
-          <span>{state.error}</span>
-          <button className="ghost" onClick={state.clearError}>{t("header.close")}</button>
-        </div>
-      )}
+      <div style={{ display: "flex", flexDirection: "column", minHeight: 0, minWidth: 0 }}>
+        {state.error && (
+          <div style={{ padding: "6px 12px", background: "rgba(192,57,43,.15)", color: "var(--ms-danger)", fontSize: 12, display: "flex", justifyContent: "space-between" }}>
+            <span>{state.error}</span>
+            <button className="ghost" onClick={state.clearError}>{t("header.close")}</button>
+          </div>
+        )}
 
-      <div style={{ display: "grid", gridTemplateColumns: "200px 1fr 300px", minHeight: 0 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "200px 1fr 300px", flex: 1, minHeight: 0 }}>
         <div style={{ borderRight: "1px solid var(--ms-border)", display: "flex", flexDirection: "column", minHeight: 0 }}>
           <div style={{ flex: "0 0 45%", minHeight: 0, borderBottom: "1px solid var(--ms-border)" }}>
             <ProfilePagesPanel
@@ -131,6 +131,8 @@ export function App() {
               pages={profile.pages}
               currentPageId={state.currentPageId}
               onSelectProfile={state.selectProfile}
+              appMatches={profile.appMatches ?? []}
+              onAppMatchesChange={state.setAppMatches}
               onCreateProfile={state.createProfile}
               onRenameProfile={state.renameProfile}
               onDeleteProfile={() => state.deleteProfile(profile.id)}
@@ -188,6 +190,9 @@ export function App() {
           />
         </div>
       </div>
+      </div>
+
+      <StatusBar items={state.status} />
 
       {widgetMenu && (
         <ContextMenu

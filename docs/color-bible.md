@@ -1,64 +1,77 @@
-# Renk Sistemi (Color Bible)
+# Color system
 
-[ui-guidelines.md](ui-guidelines.md)'nin somut karşılığı. İki ayrı renk sistemi var ve **karıştırılmamalı**:
+The concrete side of [ui-guidelines.md](ui-guidelines.md). There are two color systems and they must not be mixed:
 
-1. **Editör chrome paleti** — pencere, kenar çubuğu, araç çubuğu, panel, form, ikon rengi. Neredeyse tamamen gri tonları + tek bir vurgu rengi. Bu belge asıl bunu tanımlıyor.
-2. **Widget/ikon içerik paleti** — kullanıcının butonlarına/ikon paketlerine seçtiği renkler. Bu, kullanıcının kendi seçimi olduğu için geniş ve renkli olabilir (guideline'daki "widget'ların kendi rengi kullanıcıya ait, bu istisna" maddesi). Editöre bir **başlangıç swatch seti** olarak sunulacak 16 renk aşağıda ayrıca tanımlı.
+1. **Editor chrome palette:** window, sidebar, toolbar, panels, forms, icon color. Almost entirely grays plus a single accent color. This is
+   what this document defines. The source of truth is `editor/src/theme.css` (the tokens below are copied from it).
+2. **Widget and icon content palette:** the colors a user picks for their buttons and icons. These belong to the user, so they can be wide and
+   colorful. The editor offers 16 starting swatches (below); the user can always enter any hex value.
 
-Neden mavi/mor/camgöbeği/neon **editör chrome'unda** yok ama vurgu rengi olarak amber (kehribar) seçildi: amber, endüstriyel/ölçüm cihazı (gösterge ışığı, kadran) çağrışımı yapıyor, "AI SaaS" mor-mavi-camgöbeği gradyan klişesine hiç girmiyor, ve tek başına kullanıldığında ölçülü kalıyor.
+Why amber for the accent: it evokes industrial instruments (indicator lights, dials), it stays out of the purple/blue/cyan gradient cliche, and it
+stays restrained when used alone. Blue, purple, cyan and neon do not appear in the editor chrome.
 
-## Editör chrome — koyu tema (varsayılan)
-CSS custom property adları `--ms-` önekiyle; editör projesi kurulunca (Aşama 4) `:root` içine bu şekilde tanımlanacak.
+The phone app and the renderer never use the chrome tokens: a widget is drawn only with the colors in its own `style`.
 
-| Token | Hex | Kullanım |
+## Editor chrome, dark theme (default)
+
+The CSS custom properties use the `--ms-` prefix.
+
+| Token | Hex | Use |
 |---|---|---|
-| `--ms-bg-canvas` | `#1c1e22` | Ana çalışma alanı (grid tuvali) arka planı |
-| `--ms-bg-surface` | `#232529` | Panel, kenar çubuğu, araç çubuğu arka planı |
+| `--ms-bg-canvas` | `#1c1e22` | Main workspace (grid canvas) background |
+| `--ms-bg-surface` | `#232529` | Panel, sidebar and toolbar background |
 | `--ms-bg-surface-raised` | `#2b2e33` | Popover, dropdown, dialog |
-| `--ms-bg-inset` | `#16171a` | Input alanı, kod editörü (CSS kutusu) arka planı |
-| `--ms-border` | `#35383e` | Varsayılan ayırıcı/kenarlık |
-| `--ms-border-strong` | `#46494f` | Vurgulu kenarlık, focus ring tabanı |
-| `--ms-text-primary` | `#e6e7ea` | Ana metin |
-| `--ms-text-secondary` | `#9a9ea6` | İkincil metin, ikon rengi (varsayılan) |
-| `--ms-text-disabled` | `#5b5e64` | Devre dışı metin/ikon |
-| `--ms-accent` | `#d97706` | Aktif navigasyon, seçili öğe, birincil eylem, focus, "dikkat" durumu |
-| `--ms-accent-hover` | `#f59e0b` | Accent öğesinin hover'ı |
-| `--ms-accent-bg-muted` | `rgba(217,119,6,.15)` | Seçili satır arka planı gibi düşük yoğunluklu accent zemin |
-| `--ms-accent-on` | `#1c1e22` | Accent zemin üzerindeki metin/ikon rengi |
-| `--ms-success` | `#3f9142` | Bağlı cihaz, "aktif" toggle göstergesi |
-| `--ms-danger` | `#c0392b` | Hata, bağlantı kopması, silme eylemi |
+| `--ms-bg-inset` | `#16171a` | Input fields, code editor (CSS box) background |
+| `--ms-border` | `#35383e` | Default divider and border |
+| `--ms-border-strong` | `#46494f` | Emphasized border, focus ring base |
+| `--ms-text-primary` | `#e6e7ea` | Main text |
+| `--ms-text-secondary` | `#9a9ea6` | Secondary text, default icon color |
+| `--ms-text-disabled` | `#5b5e64` | Disabled text and icons |
+| `--ms-accent` | `#d97706` | Active navigation, selection, primary action, focus, "attention" |
+| `--ms-accent-hover` | `#f59e0b` | Hover of an accent element |
+| `--ms-accent-bg-muted` | `rgba(217,119,6,.15)` | Low-intensity accent background, such as a selected row |
+| `--ms-accent-on` | `#1c1e22` | Text and icons on an accent background |
+| `--ms-success` | `#3f9142` | Connected device, active toggle indicator |
+| `--ms-danger` | `#c0392b` | Error, lost connection, delete action |
 
-**Kural:** `--ms-accent`, `--ms-success`, `--ms-danger` dışında chrome'da **doygun renk yok**. Her buton/ikon/panel'i renklendirme — bu üç renk yalnızca durum/etkileşim anlatır.
+**Rule:** apart from `--ms-accent`, `--ms-success` and `--ms-danger` there is no saturated color in the chrome. Do not color every button, icon or
+panel: those three colors only express state and interaction.
 
-## Editör chrome — açık tema
-Aynı token'lar, ters gri skala + aynı üç anlamlı renk (kontrast için hafif koyulaştırılmış):
+## Editor chrome, light theme
+
+The same roles on an inverted gray scale, with the three meaningful colors slightly darkened for contrast:
 
 | Token | Hex |
 |---|---|
-| `--ms-bg-canvas` | `#f4f5f6` |
+| `--ms-bg-canvas` | `#f3f4f6` |
 | `--ms-bg-surface` | `#ffffff` |
-| `--ms-bg-surface-raised` | `#ffffff` (gölge ile ayrışır, `0 2px 8px rgba(0,0,0,.12)`) |
-| `--ms-bg-inset` | `#eceef0` |
-| `--ms-border` | `#d8dade` |
-| `--ms-border-strong` | `#c2c5ca` |
+| `--ms-bg-surface-raised` | `#eceef1` |
+| `--ms-bg-inset` | `#e5e7eb` |
+| `--ms-border` | `#d4d7dc` |
+| `--ms-border-strong` | `#b7bbc2` |
 | `--ms-text-primary` | `#1c1e22` |
-| `--ms-text-secondary` | `#5b5e64` |
-| `--ms-text-disabled` | `#a3a6ab` |
+| `--ms-text-secondary` | `#565b63` |
+| `--ms-text-disabled` | `#9a9ea6` |
 | `--ms-accent` | `#b45f04` |
-| `--ms-accent-hover` | `#9a5203` |
-| `--ms-accent-bg-muted` | `rgba(180,95,4,.10)` |
+| `--ms-accent-hover` | `#d97706` |
+| `--ms-accent-bg-muted` | `rgba(180,95,4,.12)` |
 | `--ms-accent-on` | `#ffffff` |
-| `--ms-success` | `#2f7a32` |
-| `--ms-danger` | `#a8321f` |
+| `--ms-success` | `#2f7a33` |
+| `--ms-danger` | `#b02e21` |
 
-## İkon kuralları
-- **Chrome ikonları** (menü, araç çubuğu, panel başlığı): tek renk, `currentColor` veya `--ms-text-secondary`; aktif/seçili durumda `--ms-accent`. Sabit stroke kalınlığı (2px, 20/24px kutu), dolgu değil çizgi tabanlı (outline) ikon seti. Renkli/3D/gölgeli ikon yok.
-- **Widget/ikon paketi ikonları** (kullanıcının butonuna koyduğu ikon): serbest — düz (flat) renkli SVG/PNG olabilir, kullanıcının widget rengiyle uyumlu olması onun tercihi. Yine de gradient/3D-bevel/gölge/parlama efekti **önerilmez** (guideline'daki genel "flat, dekoratif değil" ilkesi burada da geçerli, sadece renk sınırı yok).
+## Icons
 
-## Widget varsayılan swatch seti (16 renk)
-Editörde renk seçiciye "hazır palet" olarak sunulacak, düz (flat), beyaz metinle yeterli kontrastta 16 renk — Stream Deck / Notion etiket paleti mantığına yakın, ama neon değil:
+- **Chrome icons** (menus, toolbar, panel headers): one color, `currentColor` or `--ms-text-secondary`, and `--ms-accent` when active or selected.
+  A constant stroke width, an outline icon set (Lucide), no filled, colored, 3D or shadowed icons.
+- **Widget icons** (the icon a user puts on a button, including plugin icon packs): free. Flat colored SVGs are fine and matching the widget's
+  color is the user's choice. Gradients, 3D bevels, shadows and glow effects are discouraged.
 
-| Ad | Hex | | Ad | Hex |
+## Default widget swatches (16)
+
+Offered in the editor's color picker as a ready-made palette: flat colors with enough contrast against white text, in the spirit of label colors
+but not neon. The list is `SWATCHES` in `editor/src/panels/fields/controls.tsx`.
+
+| Name | Hex | | Name | Hex |
 |---|---|---|---|---|
 | Graphite | `#374151` | | Slate | `#475569` |
 | Red | `#b91c1c` | | Orange | `#c2410c` |
@@ -68,8 +81,3 @@ Editörde renk seçiciye "hazır palet" olarak sunulacak, düz (flat), beyaz met
 | Indigo | `#4338ca` | | Violet | `#6d28d9` |
 | Magenta | `#a21caf` | | Pink | `#be185d` |
 | Brown | `#78350f` | | Charcoal | `#111827` |
-
-Bu 16 renk sadece **başlangıç önerisi**; kullanıcı her widget için serbest hex girebilir (plandaki "buton rengi customize edilebilir" maddesi).
-
-## Uygulama notu
-Bu token'lar Aşama 4'te editör projesi kurulunca gerçek bir CSS dosyasına (`server/editor/src/theme.css` gibi) geçirilecek. `client/packages/renderer` widget'ların **kendi** render'ını yapar ve editör chrome renklerini bilmez/kullanmaz — sadece widget'ın kendi `style` alanındaki renkleri uygular.

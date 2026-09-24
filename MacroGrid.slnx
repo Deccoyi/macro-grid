@@ -1,0 +1,13 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/MacroGrid.Core/MacroGrid.Core.csproj" />
+    <Project Path="src/MacroGrid.Host/MacroGrid.Host.csproj" />
+    <Project Path="src/MacroGrid.Plugin.Abstractions/MacroGrid.Plugin.Abstractions.csproj" />
+    <Project Path="src/MacroGrid.Protocol/MacroGrid.Protocol.csproj" />
+    <Project Path="src/MacroGrid.Windows/MacroGrid.Windows.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/MacroGrid.Tests/MacroGrid.Tests.csproj" />
+    <Project Path="tests/MacroGrid.Tests.StubPlugin/MacroGrid.Tests.StubPlugin.csproj" />
+  </Folder>
+</Solution>

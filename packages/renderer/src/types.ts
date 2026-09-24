@@ -1,5 +1,5 @@
 /**
- * Mirrors server/src/MacroStation.Core/Model/Profile.cs and MacroStation.Protocol/Messages.cs.
+ * Mirrors server/src/MacroGrid.Core/Model/Profile.cs and MacroGrid.Protocol/Messages.cs.
  * Field names are camelCase because the server serializes with JsonSerializerDefaults.Web.
  * Keep this in sync by hand for now; a generated-types step can replace it later.
  */
@@ -35,7 +35,7 @@ export interface WidgetStyle {
   animation?: WidgetAnimation;
 }
 
-export type WidgetEventName = "press" | "release" | "longPress" | "doubleTap" | "toggleOn" | "toggleOff";
+export type WidgetEventName = "press" | "release" | "longPress" | "doubleTap" | "toggleOn" | "toggleOff" | "valueChange";
 
 export type ConditionKind = "compare" | "and" | "or" | "xor" | "not";
 export type CompareOperator = ">" | ">=" | "<" | "<=" | "==" | "!=" | "between";
@@ -121,6 +121,15 @@ export interface Profile {
   /** Editor-only: which "Önizleme" preset to switch to when this profile is opened. Ignored by the
    * renderer itself and by the phone client. */
   previewDeviceId?: string;
+  /** Editor-only: foreground-window rules that auto-switch an opted-in device to this profile — see
+   * docs/auto-profile-switch.md. Ignored by the renderer itself. */
+  appMatches?: AppMatch[];
+}
+
+/** One "switch to this profile when this app is in the foreground" rule (docs/auto-profile-switch.md). */
+export interface AppMatch {
+  processName: string;
+  titleContains?: string | null;
 }
 
 /** Live push from the server (widget.state): only the fields that changed are present. */
@@ -129,6 +138,6 @@ export interface WidgetState {
   text?: string;
   value?: number;
   active?: boolean;
-  /** From a dynamized property (see DynamicBinding server-side): property name to resolved value ("animation" is one of WidgetAnimation, the rest are CSS colors). */
-  style?: Partial<Record<"background" | "foreground" | "borderColor" | "animation", string>>;
+  /** From a dynamized property (see DynamicBinding server-side): property name to resolved value ("animation" is one of WidgetAnimation, "icon" is an image URL or an empty string for no icon, the rest are CSS colors). */
+  style?: Partial<Record<"background" | "foreground" | "borderColor" | "animation" | "icon", string>>;
 }

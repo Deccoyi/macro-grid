@@ -6,7 +6,15 @@ export type Theme = "dark" | "light";
 export type Language = "tr" | "en";
 export type PreviewProfile = PreviewProfileInfo;
 
-const DEFAULTS: AppPreferences = { theme: "dark", language: "tr", previewProfiles: [], collapsedInspectorSections: {} };
+const DEFAULTS: AppPreferences = {
+  theme: "dark",
+  language: "tr",
+  previewProfiles: [],
+  collapsedInspectorSections: {},
+  defaultProfileId: null,
+  launchMode: "window",
+  autostartMode: "tray",
+};
 
 interface PreferencesContextValue {
   theme: Theme;
@@ -18,6 +26,12 @@ interface PreferencesContextValue {
   removePreviewProfile: (id: string) => void;
   collapsedInspectorSections: Record<string, boolean>;
   setInspectorSectionCollapsed: (id: string, collapsed: boolean) => void;
+  defaultProfileId: string | null;
+  setDefaultProfileId: (id: string | null) => void;
+  launchMode: AppPreferences["launchMode"];
+  setLaunchMode: (mode: AppPreferences["launchMode"]) => void;
+  autostartMode: AppPreferences["autostartMode"];
+  setAutostartMode: (mode: AppPreferences["autostartMode"]) => void;
 }
 
 const PreferencesContext = createContext<PreferencesContextValue | null>(null);
@@ -31,7 +45,7 @@ const PreferencesContext = createContext<PreferencesContextValue | null>(null);
 // since they don't share React state. BroadcastChannel gives same-origin windows an instant push where
 // the platform supports it; the focus/visibility refetch below is the reliable fallback either way (e.g.
 // switching back to the main window after changing something in Tercihler always picks up the change).
-const CHANNEL_NAME = "macro-station-preferences";
+const CHANNEL_NAME = "macro-grid-preferences";
 
 export function PreferencesProvider({ children }: { children: ReactNode }) {
   const [prefs, setPrefs] = useState<AppPreferences>(DEFAULTS);
@@ -101,6 +115,21 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
     [prefs, persist],
   );
 
+  const setDefaultProfileId = useCallback(
+    (defaultProfileId: string | null) => persist({ ...prefs, defaultProfileId }),
+    [prefs, persist],
+  );
+
+  const setLaunchMode = useCallback(
+    (launchMode: AppPreferences["launchMode"]) => persist({ ...prefs, launchMode }),
+    [prefs, persist],
+  );
+
+  const setAutostartMode = useCallback(
+    (autostartMode: AppPreferences["autostartMode"]) => persist({ ...prefs, autostartMode }),
+    [prefs, persist],
+  );
+
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", prefs.theme);
   }, [prefs.theme]);
@@ -116,8 +145,14 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
       removePreviewProfile,
       collapsedInspectorSections: prefs.collapsedInspectorSections,
       setInspectorSectionCollapsed,
+      defaultProfileId: prefs.defaultProfileId,
+      setDefaultProfileId,
+      launchMode: prefs.launchMode,
+      setLaunchMode,
+      autostartMode: prefs.autostartMode,
+      setAutostartMode,
     }),
-    [prefs, setTheme, setLanguage, addPreviewProfile, removePreviewProfile, setInspectorSectionCollapsed],
+    [prefs, setTheme, setLanguage, addPreviewProfile, removePreviewProfile, setInspectorSectionCollapsed, setDefaultProfileId, setLaunchMode, setAutostartMode],
   );
 
   return <PreferencesContext.Provider value={value}>{children}</PreferencesContext.Provider>;

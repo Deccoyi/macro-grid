@@ -5,7 +5,7 @@ import type { ConditionNode, DynamicBinding, Widget } from "@macro/renderer";
  * property against the one-shot variable snapshot without a round trip. The server's evaluation is
  * always the one that actually runs for real devices — this only needs to be "close enough" for WYSIWYG.
  */
-type DynamizableStyleKey = "background" | "foreground" | "borderColor" | "animation";
+type DynamizableStyleKey = "background" | "foreground" | "borderColor" | "animation" | "icon";
 
 export function evaluateWidgetDynamicStyle(widget: Widget, variables: Record<string, unknown>): Partial<Record<DynamizableStyleKey, string>> | undefined {
   if (!widget.dynamic) return undefined;
@@ -27,7 +27,15 @@ const PROPERTY_TO_STYLE_KEY: Record<string, DynamizableStyleKey> = {
   "style.foreground": "foreground",
   "style.borderColor": "borderColor",
   "style.animation": "animation",
+  "style.icon": "icon",
 };
+
+/** The widget's text template after its "text" rules were applied (the first matching case, else the binding's default, else the static text). */
+export function evaluateWidgetDynamicText(widget: Widget, variables: Record<string, unknown>): string | undefined {
+  const binding = widget.dynamic?.text;
+  if (!binding) return widget.text;
+  return evaluateBinding(binding, variables) ?? widget.text;
+}
 
 function evaluateBinding(binding: DynamicBinding, variables: Record<string, unknown>): string | undefined {
   for (const c of binding.cases) {

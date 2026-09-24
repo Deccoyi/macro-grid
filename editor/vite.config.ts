@@ -7,11 +7,11 @@ export default defineConfig({
   resolve: {
     // @macro/renderer is linked via "file:.." (npm symlink). Without this, module resolution can
     // find a SECOND react/react-dom inside the renderer package's own node_modules instead of this
-    // app's copy, and two React instances end up on the page — see docs/agent-notes.md, Stage 3.
+    // app's copy, and two React instances end up on the page (see docs/development.md, Pitfalls).
     dedupe: ["react", "react-dom"],
   },
   build: {
-    // Copied into the Host's wwwroot at build time (see docs/agent-notes.md, Stage 4) and served
+    // Copied into the Host's wwwroot at build time (see docs/development.md) and served
     // same-origin, so the packaged app never needs the dev proxy below.
     outDir: "dist",
   },

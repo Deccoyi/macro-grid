@@ -113,6 +113,7 @@ export function Inspector({
               actions={actions}
               pages={pages}
               profiles={profiles}
+              variableCatalog={variableCatalog}
               onChange={(event: WidgetEventName, bindings: ActionBinding[]) =>
                 onChange((w) => {
                   if (bindings.length === 0) delete w.actions[event];
@@ -235,7 +236,7 @@ function renderTypeFields(widget: Widget, onChange: InspectorProps["onChange"], 
       return <WebFields widget={widget} onChange={onChange} />;
     case "slider":
     case "knob":
-      return <RangeFields widget={widget} onChange={onChange} />;
+      return <RangeFields widget={widget} onChange={onChange} variableCatalog={variableCatalog} />;
     case "button":
     case "toggle":
     case "label":

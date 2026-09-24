@@ -1,30 +1,85 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Trash2 } from "lucide-react";
+import type { ProfileSummary } from "../api/types";
+import { api } from "../api/client";
 import { useT } from "../i18n/I18nContext";
 import { SectionLabel, Seg } from "../panels/fields/controls";
 import { usePreferences } from "../preferences/PreferencesContext";
 import { ToolWindowLayout } from "./ToolWindowLayout";
 
-type Category = "appearance" | "language" | "previewProfiles";
+type Category = "general" | "appearance" | "language" | "previewProfiles" | "profiles";
 
 /** The whole page of the "Tercihler" tool window (see ToolWindow.cs) — a real separate, non-modal OS
  * window, not an in-page dialog. */
 export function PreferencesWindow() {
   const { t, lang, setLang } = useT();
-  const { theme, setTheme, previewProfiles, addPreviewProfile, removePreviewProfile } = usePreferences();
-  const [category, setCategory] = useState<Category>("appearance");
+  const {
+    theme, setTheme, previewProfiles, addPreviewProfile, removePreviewProfile, defaultProfileId, setDefaultProfileId,
+    launchMode, setLaunchMode, autostartMode, setAutostartMode,
+  } = usePreferences();
+  const [category, setCategory] = useState<Category>("general");
   const [name, setName] = useState("");
   const [width, setWidth] = useState(390);
   const [height, setHeight] = useState(844);
+  const [profiles, setProfiles] = useState<ProfileSummary[]>([]);
+  const [autostart, setAutostart] = useState<boolean | null>(null);
+  const [autostartError, setAutostartError] = useState<string | null>(null);
+
+  useEffect(() => {
+    api.listProfiles().then(setProfiles).catch(() => {});
+    api.getAutostart().then((r) => setAutostart(r.enabled)).catch(() => {});
+  }, []);
+
+  const changeAutostart = async (enabled: boolean) => {
+    setAutostartError(null);
+    try {
+      setAutostart((await api.setAutostart(enabled)).enabled);
+    } catch (err) {
+      setAutostartError(t("preferences.autostart.failed", err instanceof Error ? err.message : String(err)));
+    }
+  };
 
   const categories = [
+    { id: "general", label: t("preferences.category.general") },
     { id: "appearance", label: t("preferences.category.appearance") },
     { id: "language", label: t("preferences.category.language") },
     { id: "previewProfiles", label: t("preferences.category.previewProfiles") },
+    { id: "profiles", label: t("preferences.category.profiles") },
   ];
 
   return (
     <ToolWindowLayout categories={categories} activeId={category} onSelect={(id) => setCategory(id as Category)}>
+      {category === "general" && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 16, maxWidth: 420 }}>
+          <SectionLabel>{t("preferences.category.general")}</SectionLabel>
+          <label style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <input
+              type="checkbox"
+              checked={autostart === true}
+              disabled={autostart === null}
+              onChange={(e) => changeAutostart(e.target.checked)}
+            />
+            {t("preferences.autostart")}
+          </label>
+          <p style={{ fontSize: 11.5, color: "var(--ms-text-secondary)", margin: 0 }}>{t("preferences.autostart.hint")}</p>
+          {autostartError && <p style={{ fontSize: 12, color: "var(--ms-danger)", margin: 0 }}>{autostartError}</p>}
+          <label className="field">
+            {t("preferences.autostartMode")}
+            <select value={autostartMode} onChange={(e) => setAutostartMode(e.target.value as typeof autostartMode)}>
+              <option value="tray">{t("preferences.autostartMode.tray")}</option>
+              <option value="window">{t("preferences.autostartMode.window")}</option>
+            </select>
+          </label>
+          <label className="field">
+            {t("preferences.launchMode")}
+            <select value={launchMode} onChange={(e) => setLaunchMode(e.target.value as typeof launchMode)}>
+              <option value="window">{t("preferences.launchMode.window")}</option>
+              <option value="tray">{t("preferences.launchMode.tray")}</option>
+            </select>
+          </label>
+        </div>
+      )}
+
       {category === "appearance" && (
         <div style={{ display: "flex", flexDirection: "column", gap: 16, maxWidth: 360 }}>
           <SectionLabel>{t("preferences.category.appearance")}</SectionLabel>
@@ -77,6 +132,27 @@ export function PreferencesWindow() {
               {t("preferences.previewProfiles.add")}
             </button>
           </div>
+        </div>
+      )}
+
+      {category === "profiles" && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 16, maxWidth: 360 }}>
+          <SectionLabel>{t("preferences.category.profiles")}</SectionLabel>
+          <label className="field">
+            {t("preferences.defaultProfile")}
+            <select
+              value={defaultProfileId ?? ""}
+              onChange={(e) => setDefaultProfileId(e.target.value || null)}
+            >
+              <option value="">{t("preferences.defaultProfile.none")}</option>
+              {profiles.map((p) => (
+                <option key={p.id} value={p.id}>{p.name}</option>
+              ))}
+            </select>
+          </label>
+          <p style={{ fontSize: 11.5, color: "var(--ms-text-secondary)", margin: 0 }}>
+            {t("preferences.defaultProfile.hint")}
+          </p>
         </div>
       )}
     </ToolWindowLayout>

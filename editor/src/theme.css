@@ -18,6 +18,13 @@
   --ms-grid-gap: 10px;
 }
 
+@keyframes ms-spin {
+  to { transform: rotate(360deg); }
+}
+.spin {
+  animation: ms-spin 0.9s linear infinite;
+}
+
 /* Light theme — same editor-chrome roles as the dark palette above, applied via data-theme on <html>
  * (see Preferences). Widget colors are still always the user's own and never use these tokens. */
 :root[data-theme="light"] {
@@ -39,6 +46,31 @@
 }
 
 * { box-sizing: border-box; }
+
+/* Editor-wide scrollbar — slim, rounded, transparent track; the thumb only lights up on hover so it
+ * stays out of the way of the panels. Chromium/WebView2 pseudo-elements (the host is WebView2). */
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+*::-webkit-scrollbar-track,
+*::-webkit-scrollbar-corner {
+  background: transparent;
+}
+*::-webkit-scrollbar-thumb {
+  background: var(--ms-border-strong);
+  border: 3px solid transparent;
+  background-clip: content-box;
+  border-radius: 999px;
+}
+*::-webkit-scrollbar-thumb:hover {
+  background: var(--ms-text-disabled);
+  background-clip: content-box;
+}
+*::-webkit-scrollbar-thumb:active {
+  background: var(--ms-accent);
+  background-clip: content-box;
+}
 
 html, body, #root {
   height: 100%;
@@ -81,7 +113,7 @@ button.ghost:hover { background: var(--ms-bg-surface-raised); }
 button.active { border-color: var(--ms-accent); color: var(--ms-accent); }
 button.save-btn { min-width: 11ch; text-align: center; }
 
-input[type="text"], input[type="number"], input[type="url"], select, textarea {
+input[type="text"], input[type="number"], input[type="url"], input[type="password"], select, textarea {
   background: var(--ms-bg-inset);
   border: 1px solid var(--ms-border);
   border-radius: 4px;
@@ -128,9 +160,9 @@ hr.sep {
 }
 
 /* Collapsible Inspector sections (Appearance, type fields, Actions, Custom CSS) — same compact,
-   hairline-divided grouping Figma's right-sidebar properties panel uses instead of boxed cards. A
+   hairline-divided grouping a design tool's side properties panel uses instead of boxed cards. A
    top-level section header reads as its own tier above the small-caps field labels inside it (bold,
-   normal case, full-strength text color — see the Figma reference: "Position"/"Layout"/"Appearance"
+   normal case, full-strength text color — like a design tool's properties panel: "Position"/"Layout"/"Appearance"
    are plain bold text, not tiny gray caps like a field's own label). */
 .collapsible-summary {
   display: flex;
@@ -178,6 +210,63 @@ hr.sep {
   min-width: 0;
 }
 .color-field input[type="text"]:focus { outline: none; }
+
+/* ColorField's own popover (replaces the native OS color dialog) — right-aligned so it hugs the
+   trigger's right edge and stays inside the narrow Properties panel instead of overflowing past it. */
+.color-field-popover {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  width: 186px;
+  /* Portaled to document.body (see ColorField in controls.tsx), so this has to outrank every modal
+     overlay that might be open above it — DynamizeModal is zIndex 60, DialogHost is 80. */
+  z-index: 90;
+  background: var(--ms-bg-surface-raised);
+  border: 1px solid var(--ms-border-strong);
+  border-radius: 4px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, .35);
+  padding: 9px;
+}
+.swatch-grid {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 4px;
+}
+.swatch {
+  width: 16px;
+  height: 16px;
+  padding: 0;
+  border-radius: 3px;
+  border: 1px solid rgba(255, 255, 255, .14);
+  cursor: pointer;
+}
+.swatch.on { outline: 1.5px solid var(--ms-accent); outline-offset: 1px; }
+
+/* Actions section's event picker (press/release/long-press/double-tap, or toggleOn/toggleOff) — a fixed
+   grid of square cells, never a flex-wrap pill row (see docs/ui-guidelines.md: predictable, never
+   reflows unevenly at panel width). */
+.action-event-cell {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  aspect-ratio: 1 / 1;
+  min-width: 0;
+  background: var(--ms-bg-inset);
+  border: 1px solid var(--ms-border);
+  border-radius: 4px;
+  padding: 6px 2px;
+  cursor: pointer;
+}
+.action-event-cell:hover { border-color: var(--ms-border-strong); }
+.action-event-cell.on { border-color: var(--ms-accent); background: var(--ms-bg-canvas); }
+.action-event-cell svg { color: var(--ms-text-secondary); }
+.action-event-cell.on svg { color: var(--ms-accent); }
+.action-event-cell .cap { font-size: 9px; color: var(--ms-text-secondary); line-height: 1.15; text-align: center; overflow-wrap: break-word; }
+.action-event-cell.on .cap { color: var(--ms-text-primary); font-weight: 600; }
+.action-event-cell .dot { position: absolute; top: 4px; right: 4px; width: 5px; height: 5px; border-radius: 50%; background: var(--ms-accent); }
 
 .seg {
   display: inline-flex;

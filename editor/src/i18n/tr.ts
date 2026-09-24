@@ -4,12 +4,13 @@ export const tr = {
   // ---- App shell / menu bar ----
   "app.loading": "Yükleniyor…",
   "menu.file": "Dosya",
-  "menu.file.exportProfile": "Profili Dışa Aktar (.json)",
-  "menu.file.importProfile": "Profili İçe Aktar (.json)…",
+  "menu.file.exportProfile": "Profili Dışa Aktar (.msprofile)",
+  "menu.file.importProfile": "Profili İçe Aktar (.msprofile / .json)…",
   "menu.settings": "Ayarlar",
   "menu.settings.open": "Tercihler…",
   "menu.help": "Yardım",
   "menu.help.version": (v: string) => `Sürüm ${v}`,
+  "menu.help.about": "Hakkında ve Sorumluluk Reddi",
   "menu.help.licenses": "Üçüncü Taraf Lisansları",
   "menu.help.agreement": "Kullanıcı Sözleşmesi",
   "menu.plugins": "Eklentiler",
@@ -17,9 +18,23 @@ export const tr = {
   "menu.plugins.comingSoon": "Eklenti yönetimi yakında",
 
   "preferences.title": "Tercihler",
+  "preferences.category.general": "Genel",
+  "preferences.autostart": "Windows'a giriş yaptığımda Macro Grid'i başlat",
+  "preferences.launchMode": "Macro Grid'i ben açtığımda",
+  "preferences.launchMode.window": "Düzenleyici penceresini aç",
+  "preferences.launchMode.tray": "Yalnızca sistem tepsisinde başlat",
+  "preferences.autostartMode": "Windows Macro Grid'i başlattığında",
+  "preferences.autostartMode.tray": "Yalnızca sistem tepsisinde başlat",
+  "preferences.autostartMode.window": "Düzenleyici penceresini aç",
+  "preferences.autostart.hint": "Macro Grid oturum açtığınızda bildirim alanında kendiliğinden çalışır, böylece telefonunuz önce uygulamayı açmadan bağlanabilir.",
+  "preferences.autostart.failed": (reason: string) => `Başlangıç ayarı değiştirilemedi: ${reason}`,
   "preferences.category.appearance": "Görünüm",
   "preferences.category.language": "Dil",
   "preferences.category.previewProfiles": "Önizleme Profilleri",
+  "preferences.category.profiles": "Profiller",
+  "preferences.defaultProfile": "Varsayılan profil",
+  "preferences.defaultProfile.none": "— seçilmedi —",
+  "preferences.defaultProfile.hint": "Bir cihazın kendi ataması ve hiçbir otomatik geçiş kuralı yokken açılacak profil.",
   "preferences.theme": "Tema",
   "preferences.theme.dark": "Koyu",
   "preferences.theme.light": "Açık",
@@ -35,11 +50,43 @@ export const tr = {
   "plugins.title": "Eklentiler",
   "plugins.category.installed": "Yüklü Eklentiler",
   "plugins.category.discover": "Keşfet",
-  "plugins.comingSoon.body": "Eklenti yükleme/kaldırma sistemi henüz hazır değil — bu ayrı bir geliştirme aşaması olarak planlandı.",
+  "plugins.comingSoon.body": "Bir plugin katalogu/keşif sayfası henüz yok — plugin'ler şimdilik klasörden elle yükleniyor (\"Yüklü Eklentiler\" sekmesi).",
+  "plugins.refresh": "Yenile",
+  "plugins.none": "Yüklü eklenti yok.",
+  "plugins.install.browse": "Klasörden Yükle…",
+  "plugins.install.hint": "plugin.json içeren bir klasör seç. Kopyalanır ve hemen devreye girer; aynı kimlikli bir eklenti varsa yenisiyle değiştirilir.",
+  "plugins.install.success": (name: string) => `${name} yüklendi.`,
+  "plugins.install.failed": (name: string, detail: string) => `${name} kopyalandı ama yüklenemedi: ${detail}`,
+  "plugins.reload": "Yeniden yükle",
+  "plugins.approve": "İzin ver ve etkinleştir",
+  "plugins.approve.intro": "Bu eklenti çalışmak için şu izinleri istiyor:",
+  "plugins.approve.success": (name: string) => `${name} etkinleştirildi.`,
+  "plugins.permission.variables": "Değişkenleri okumak ve kendi değişkenlerini yayınlamak",
+  "plugins.permission.actions": "Kendi aksiyonlarını eklemek",
+  "plugins.permission.input": "Bu bilgisayarda tuşlara basmak ve yazı yazmak",
+  "plugins.permission.http": (target: string) => `${target} adresine web istekleri göndermek`,
+  "plugins.permission.unknown": (name: string) => name,
+  "plugins.reload.success": (name: string) => `${name} yeniden yüklendi.`,
+  "plugins.settings": "Ayarlar",
+  "plugins.uninstall": "Kaldır",
+  "plugins.uninstall.confirm": (name: string) => `"${name}" kaldırılsın mı? Plugin klasörü silinir, bu geri alınamaz.`,
+  "plugins.uninstall.success": (name: string) => `${name} kaldırıldı.`,
+  "plugins.uninstall.pending": (name: string) => `${name} devre dışı bırakıldı ama bir dosyası kullanımda olduğu için klasörü hemen silinemedi; sunucu bir sonraki açılışta silecek.`,
+
+  // ---- Plugin settings window (schema-driven, IPluginSettingsPage) ----
+  "pluginSettings.none": "Bu eklentinin ayarı yok.",
+  "pluginSettings.save": "Kaydet",
+  "pluginSettings.saved": "Kaydedildi.",
 
   "help.title": "Yardım",
-  "help.licensesNote": "Kullanılan üçüncü taraf kütüphanelerin lisans metinleri THIRD_PARTY_NOTICES.md dosyasındadır.",
-  "help.agreementNote": "Bu yazılım olduğu gibi sağlanır; kullanım koşulları için proje deposundaki LICENSE dosyasına bakın.",
+  "help.about.aiNotice": "Macro Grid yapay zekânın yardımıyla oluşturuldu: kaynak kodu, dokümantasyonu ve görselleri yapay zekâ ürünüdür. Profesyonel bir yazılım veya güvenlik denetiminden geçmemiştir.",
+  "help.about.noWarranty": "Bu, ön sürüm (alfa) bir yazılımdır ve \"olduğu gibi\", hiçbir garanti verilmeden sunulur. Yazarlar, kurulumundan veya kullanımından doğan hasar, veri kaybı, kötüye kullanım ya da güvenlik sorunları dahil hiçbir konuda sorumluluk kabul etmez.",
+  "help.about.risk": "Macro Grid'i tamamen kendi sorumluluğunuzda kullanırsınız. Hangi cihazları eşleştireceğinize, hangi eklentileri kuracağınıza ve hangi düğmelere basacağınıza siz karar verirsiniz. Bu penceredeki kullanıcı sözleşmesini ve üçüncü taraf lisanslarını okuyun.",
+  "help.unavailable": "Bu metin bu sürümde bulunmuyor.",
+  "help.projectLicense": "Macro Grid lisansı (MIT)",
+  "help.thirdPartyNotices": "Üçüncü taraf bildirimleri (özet)",
+  "help.libraries": "Kullanılan her kütüphanenin özgün lisans metni:",
+  "help.libraries.choose": "Bir kütüphane seçin…",
 
   "header.preview": "Önizleme",
   "header.refreshVariables": "Değişkenleri yenile",
@@ -63,6 +110,12 @@ export const tr = {
   "profile.new": "Yeni profil",
   "profile.delete": "Profili sil",
   "profile.deleteConfirm": (name: string) => `"${name}" profili silinsin mi?`,
+  "profile.autoSwitch": "Otomatik geçiş kuralları",
+  "profile.autoSwitch.hint": "Bu uygulamalardan biri öne gelince, takip eden cihazlar bu profile geçer.",
+  "profile.autoSwitch.remove": "Kuralı kaldır",
+  "profile.autoSwitch.pickRunning": "Çalışan uygulamadan seç…",
+  "profile.autoSwitch.manualPlaceholder": "Uygulama adı (ör. Player.exe)",
+  "profile.autoSwitch.add": "Ekle",
   "pages.label": "Sayfalar",
   "page.add": "Sayfa",
   "page.duplicate": "Sayfayı çoğalt",
@@ -129,8 +182,19 @@ export const tr = {
   "dialog.confirm": "Onayla",
   "dialog.ok": "Tamam",
   "dialog.discardChanges": "Kaydedilmemiş değişiklikler kaybolacak. Devam edilsin mi?",
-  "profile.importRenamed": (original: string, renamed: string) =>
-    `"${original}" isimli bir profil zaten var. İçe aktarılan profil "${renamed}" olarak adlandırıldı.`,
+  "profile.importConflictTitle": "Profil zaten var",
+  "profile.importConflict": (name: string) =>
+    `"${name}" isimli bir profil zaten var. Mevcut profilin üzerine yazılsın mı, yoksa içe aktarılan profil yeni bir adla mı eklensin?`,
+  "profile.importFailedTitle": "Profil içe aktarılamadı",
+  "profile.exportFailedTitle": "Profil dışa aktarılamadı",
+  "profile.importMissingTitle": "Bazı aksiyonlar henüz çalışmaz",
+  "profile.importMissing": (plugins: string, types: string) =>
+    [
+      plugins && `Bu profil yüklü olmayan eklentilere ihtiyaç duyuyor: ${plugins}. Eklentiler penceresinden kurunca düğmeleri çalışır.`,
+      types && `Bu sunucuda karşılığı olmayan aksiyonlar: ${types}.`,
+    ].filter(Boolean).join("\n\n"),
+  "profile.importRename": "Adı değiştir",
+  "profile.importOverwrite": "Üzerine yaz",
 
   // ---- Pairing panel ----
   "pairing.title": "Eşleştirme",
@@ -142,7 +206,13 @@ export const tr = {
   "pairing.loading": "Yükleniyor…",
   "pairing.noDevices": "Henüz eşleşmiş cihaz yok.",
   "pairing.lastSeen": (date: string) => `Son görülme: ${date}`,
+  "pairing.followActiveWindow": "Aktif pencereyi takip et",
+  "pairing.followActiveWindow.hint": "Açık: bilgisayarda öne gelen uygulamaya göre (profildeki kurallar üzerinden) bu cihaz otomatik profil değiştirir.",
   "pairing.revoke": "Eşleşmeyi kaldır",
+  "pairing.browser": "Tarayıcıdan bağlan",
+  "pairing.browser.hint": "Telefon uygulaması kurmadan, aynı ağdaki herhangi bir cihazın tarayıcısından bu adrese girerek deck'i açabilirsiniz. PIN yine sorulur.",
+  "pairing.deviceProfile": "Bu cihazda açılacak profil",
+  "pairing.deviceProfile.default": "Varsayılan (ilk profil)",
 
   // ---- Action editor ----
   "action.event.press": "Basınca",
@@ -150,6 +220,7 @@ export const tr = {
   "action.event.longPress": "Uzun basınca",
   "action.event.doubleTap": "Çift dokununca",
   "action.event.toggleOn": "Açılınca",
+  "action.event.valueChange": "Değer değişti",
   "action.event.toggleOff": "Kapanınca",
   "action.warning.longDouble": "Uyarı: \"Uzun basınca\"/\"Çift dokununca\" ayrıca çalışır, \"Basınca\"/\"Bırakınca\"nın yerine geçmez — her dokunuş zaten bir basıştır, o yüzden ikisi de tetiklenir.",
   "action.none": "Bu olaya bağlı aksiyon yok.",
@@ -157,6 +228,15 @@ export const tr = {
   "action.moveDown": "Aşağı taşı",
   "action.remove": "Kaldır",
   "action.add": "+ Aksiyon ekle",
+
+  // ---- Action picker ----
+  "actionPicker.title": "Aksiyon seç",
+  "actionPicker.searchPlaceholder": "Aksiyon ara…",
+  "actionPicker.noMatch": "Eşleşme yok.",
+
+  // ---- Schema form (SettingField-driven action/plugin settings) ----
+  "schemaForm.refresh": "Yenile",
+  "schemaForm.notFound": "(bulunamadı)",
 
   // ---- CSS editor ----
   "css.label": "Özel CSS",
@@ -167,7 +247,7 @@ export const tr = {
   "icon.pickTitle": "İkon seç",
   "icon.remove": "Kaldır",
   "icon.searchPlaceholder": (n: string) => `${n} ikon içinde ara… (İngilizce, örn. "volume", "play")`,
-  "icon.footer": "lucide.dev · ISC lisans · plugin ile ikon paketi eklenebilir (ileride)",
+  "icon.footer": "lucide.dev · ISC lisans · plugin'ler ikon paketi ekleyebilir",
   "icon.noMatch": "Eşleşme yok.",
 
   // ---- Picker shell ----
@@ -204,7 +284,10 @@ export const tr = {
   "fields.range.min": "Min",
   "fields.range.max": "Maks",
   "fields.range.step": "Adım",
-  "fields.range.note": "Bu widget'ın sürüklenen değerini şu an hiçbir şey kullanmıyor — ses seviyesi gibi gerçek bir bağlantı, o değeri işleyecek bir plugin (Aşama 6, \"Ses\" plugin'i) kurulunca çalışacak. \"Basınca\"/\"Uzun basınca\" gibi olaylara aksiyon bağlamak (ör. sustur) yine de çalışır.",
+  "fields.range.valueVariable": "Konumu gösteren değişken",
+  "fields.range.valueVariable.none": "Seçilmedi (yalnızca yerel)",
+  "fields.range.valueVariable.clear": "Kaldır",
+  "fields.range.note": "Sürükleme bittiğinde (bırakınca) \"Değer değişti\" olayına bağlanan aksiyon çalışır — Aksiyonlar bölümünden bağlayın (ör. \"Ana ses seviyesi\"). Yukarıdaki değişken seçiliyse widget'ın konumu o değişkenin canlı değerini (başka bir cihazdan ya da Windows'un kendisinden değişse bile) gösterir; seçilmezse konum yalnızca bu cihazdaki son sürüklemeyi yansıtır.",
 
   // ---- Text fields ----
   "fields.text.label": "Metin",
@@ -219,7 +302,7 @@ export const tr = {
   "fields.text.valign.bottom": "Alt",
   "fields.text.fontSize": "Font boyutu (px)",
   "fields.text.icon": "İkon",
-  "fields.text.iconSize": "İkon boyutu (px)",
+  "fields.text.iconSize": "İkon boyutu",
   "fields.text.iconPosition": "İkon konumu",
   "fields.text.iconPosition.top": "Metnin üstünde",
   "fields.text.iconPosition.bottom": "Metnin altında",
@@ -230,7 +313,7 @@ export const tr = {
 
   // ---- Web fields ----
   "fields.web.url": "Sayfa URL'si",
-  "fields.web.urlPlaceholder": "https://twitch.tv/örnek/chat?parent=...",
+  "fields.web.urlPlaceholder": "https://example.com/chat?parent=...",
   "fields.web.note": "Bu widget şu an düzenleyicide ve telefonda yer tutucu olarak görünür — gerçek gömülü sayfa (iframe/WebView) Aşama 5-6'da eklenecek.",
 
   // ---- Dynamic field / dynamize modal ----
@@ -263,6 +346,8 @@ export const tr = {
   "dynamic.operator.==": "eşit",
   "dynamic.operator.!=": "eşit değil",
   "dynamic.operator.between": "arasında",
+  "dynamic.value.placeholder": "50 ya da metin",
+  "dynamic.value.hint": "Tırnak işareti kullanmayın: sayıysa 50, metinse doğrudan live yazın.",
 
   // ---- Hotkey capture ----
   "hotkey.pressKey": "Bir tuşa basın…",
@@ -287,6 +372,10 @@ export const tr = {
   "form.openUrl.label": "URL (varsayılan tarayıcıda açılır)",
   "form.openUrl.invalid": "http:// veya https:// ile başlamalı.",
   "form.delay.label": "Gecikme (ms, en fazla 60000)",
+  "form.noSettings": "Ek ayar gerekmiyor.",
+  "form.setMute.label": "Ses",
+  "form.setMute.mute": "Sustur",
+  "form.setMute.unmute": "Aç",
   "form.json.label": "Ayarlar (JSON)",
 
   // ---- useEditorState defaults / errors ----

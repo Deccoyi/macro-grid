@@ -1,0 +1,43 @@
+# Monthly, and all updates of one folder in a single pull request, to keep CI runs and mail down.
+version: 2
+updates:
+  - package-ecosystem: nuget
+    directory: /
+    schedule:
+      interval: monthly
+    open-pull-requests-limit: 2
+    groups:
+      all-updates:
+        patterns: ["*"]
+  - package-ecosystem: npm
+    directory: /editor
+    schedule:
+      interval: monthly
+    open-pull-requests-limit: 2
+    groups:
+      all-updates:
+        patterns: ["*"]
+  - package-ecosystem: npm
+    directory: /webclient
+    schedule:
+      interval: monthly
+    open-pull-requests-limit: 2
+    groups:
+      all-updates:
+        patterns: ["*"]
+  - package-ecosystem: npm
+    directory: /packages/renderer
+    schedule:
+      interval: monthly
+    open-pull-requests-limit: 2
+    groups:
+      all-updates:
+        patterns: ["*"]
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+    open-pull-requests-limit: 2
+    groups:
+      all-updates:
+        patterns: ["*"]
