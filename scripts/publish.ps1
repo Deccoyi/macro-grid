@@ -68,6 +68,8 @@ Get-ChildItem $out -Filter "*.xml" | Remove-Item -Force
 
 Copy-Item (Join-Path $root "LICENSE") $out
 Copy-Item (Join-Path $root "THIRD_PARTY_NOTICES.md") $out
+# The agreement the installer asks the person to accept; the Help window shows it too.
+Copy-Item (Join-Path $root "installer\license-agreement.txt") $out
 # Original license texts of every third-party library (indexed by THIRD_PARTY_NOTICES.md).
 Copy-Item (Join-Path $root "licenses") (Join-Path $out "licenses") -Recurse -Force
 Set-Content (Join-Path $out "version.txt") $version -NoNewline

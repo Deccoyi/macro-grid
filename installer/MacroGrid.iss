@@ -33,12 +33,14 @@ ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
 PrivilegesRequired=admin
 WizardStyle=modern
+; The person has to accept this text (no warranty, limitation of liability, MIT license) before anything is installed.
+LicenseFile=license-agreement.txt
 ; Close a running server before replacing its files.
 CloseApplications=yes
 RestartApplications=no
 
 [Tasks]
-Name: "desktopicon"; Description: "Create a &desktop shortcut"; Flags: unchecked
+Name: "desktopicon"; Description: "Create a &desktop shortcut"
 Name: "autostart"; Description: "Start Macro Grid when I sign in to Windows"; Flags: unchecked
 
 [Files]
@@ -57,24 +59,41 @@ Name: "{group}\Uninstall {#AppName}"; Filename: "{uninstallexe}"
 Name: "{autodesktop}\{#AppName}"; Filename: "{app}\{#AppExe}"; Tasks: desktopicon
 
 [Registry]
-; Per-user autostart, so it follows the person who chose it.
-Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\Run"; ValueType: string; ValueName: "MacroGrid"; ValueData: """{app}\{#AppExe}"""; Flags: uninsdeletevalue; Tasks: autostart
+; Per-user autostart, so it follows the person who chose it. The argument tells the app that Windows started it, so the
+; "when Windows starts Macro Grid" preference applies (tray by default) instead of the "when I open it" one.
+Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\Run"; ValueType: string; ValueName: "MacroGrid"; ValueData: """{app}\{#AppExe}"" --autostart"; Flags: uninsdeletevalue; Tasks: autostart
 
 [Run]
 #ifdef WebView2Setup
 Filename: "{tmp}\MicrosoftEdgeWebview2Setup.exe"; Parameters: "/silent /install"; StatusMsg: "Installing the WebView2 Runtime (needs an internet connection)..."; Flags: waituntilterminated; Check: not WebView2Installed
 #endif
-; Phones connect over the local network on port 9820; allow it on private networks only.
-Filename: "{sys}\netsh.exe"; Parameters: "advfirewall firewall add rule name=""Macro Grid"" dir=in action=allow protocol=TCP localport=9820 profile=private program=""{app}\{#AppExe}"""; Flags: runhidden; StatusMsg: "Allowing phones on your private network..."
+; Phones connect over the local network on port 9820; allow it on private and domain (company) networks, never on public ones.
+Filename: "{sys}\netsh.exe"; Parameters: "advfirewall firewall add rule name=""Macro Grid"" dir=in action=allow protocol=TCP localport=9820 profile=domain,private program=""{app}\{#AppExe}"""; Flags: runhidden; StatusMsg: "Allowing phones on your private network..."
 Filename: "{app}\{#AppExe}"; Description: "Start {#AppName}"; Flags: nowait postinstall skipifsilent
 
 ; Profiles, paired devices, plugins and logs live in %AppData%\MacroGrid and are deliberately left in place
 ; on uninstall, so a reinstall picks up where the user left off.
 
 [UninstallRun]
+; A running server locks its files, and the uninstaller would leave folders behind. Close it first.
+Filename: "{sys}\taskkill.exe"; Parameters: "/F /IM {#AppExe}"; Flags: runhidden; RunOnceId: "StopApp"
 Filename: "{sys}\netsh.exe"; Parameters: "advfirewall firewall delete rule name=""Macro Grid"""; Flags: runhidden; RunOnceId: "RemoveFirewallRule"
 
+[UninstallDelete]
+; Files the installer did not place itself (an older build let WebView2 write MacroGrid.exe.WebView2 next to the exe) would
+; otherwise stay behind. The program folder holds no user data: profiles, devices, plugins and logs live in %AppData%\MacroGrid.
+Type: filesandordirs; Name: "{app}"
+
 [Code]
+{ Close a running Macro Grid before files are replaced, so an upgrade does not stop on locked files or leave a half-installed folder. }
+function PrepareToInstall(var NeedsRestart: Boolean): String;
+var
+  ResultCode: Integer;
+begin
+  Exec(ExpandConstant('{sys}\taskkill.exe'), '/F /IM {#AppExe}', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
+  Result := '';
+end;
+
 const
   WebView2ClientKey = 'SOFTWARE\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}';
 
