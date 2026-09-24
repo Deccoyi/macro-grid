@@ -25,6 +25,10 @@
   .VPNavBarSearch .DocSearch-Button { min-width: 0; padding: 0 12px; }
 }
 
+/* The language is chosen with our own switch (LangSwitcher), not with VitePress' language dropdown. */
+.VPNavBarTranslations,
+.VPNavScreenTranslations { display: none !important; }
+
 /* Footer: links in the accent color. */
 .VPFooter a { color: var(--vp-c-brand-1); text-decoration: none; }
 .VPFooter a:hover { text-decoration: underline; }

@@ -1,25 +1,29 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useData } from 'vitepress'
+import { UI, langOf, siteHref } from '../i18n'
 
 // Segmented control that moves between the three Macro Grid sites, always in the same tab.
 // `bar` is shown in the header on wide screens, `screen` in the mobile menu.
 defineProps<{ placement: 'bar' | 'screen' }>()
 
-const { site } = useData()
+const { site, lang } = useData()
+const current = computed(() => langOf(lang.value))
+const t = computed(() => UI[current.value])
 
-const products = [
-  { label: 'PC', base: '/macro-grid/', href: 'https://deccoyi.github.io/macro-grid/' },
-  { label: 'Phone', base: '/macro-grid-client/', href: 'https://deccoyi.github.io/macro-grid-client/' },
-  { label: 'Plugins', base: '/macro-grid-plugin/', href: 'https://deccoyi.github.io/macro-grid-plugin/store/' },
-]
+// The links keep the visitor's language: the Turkish pages of the other sites live under tr/.
+const products = computed(() => [
+  { label: t.value.productPc, base: '/macro-grid/', href: siteHref('/macro-grid/', '', current.value) },
+  { label: t.value.productPhone, base: '/macro-grid-client/', href: siteHref('/macro-grid-client/', '', current.value) },
+  { label: t.value.productPlugins, base: '/macro-grid-plugin/', href: siteHref('/macro-grid-plugin/', 'store/', current.value) },
+])
 
 // Compare with the trailing slash: '/macro-grid/' is a prefix of the other two bases.
 const currentBase = computed(() => (site.value.base.endsWith('/') ? site.value.base : site.value.base + '/'))
 </script>
 
 <template>
-  <nav class="site-switcher" :class="placement" aria-label="Macro Grid products">
+  <nav class="site-switcher" :class="placement" :aria-label="t.switcherAria">
     <a
       v-for="p in products"
       :key="p.base"
