@@ -20,18 +20,23 @@ export function useProfileDocument() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  /** Makes `full` the open profile: first page, no selection, nothing unsaved. */
+  const openProfile = useCallback((full: Profile) => {
+    setProfile(full);
+    setCurrentPageId(full.pages[0]?.id ?? null);
+    setSelectedIds([]);
+    setDirty(false);
+  }, []);
+
   const loadProfileList = useCallback(async (selectId?: string) => {
     const list = await api.listProfiles();
     setProfiles(list);
     const id = selectId ?? list[0]?.id;
     if (id) {
       const full = await api.getProfile(id);
-      setProfile(full);
-      setCurrentPageId(full.pages[0]?.id ?? null);
-      setSelectedIds([]);
-      setDirty(false);
+      openProfile(full);
     }
-  }, []);
+  }, [openProfile]);
 
   useEffect(() => {
     loadProfileList().catch((e) => setError(String(e)));
@@ -98,12 +103,9 @@ export function useProfileDocument() {
     async (id: string) => {
       if (!(await confirmDiscardIfDirty())) return;
       const full = await api.getProfile(id);
-      setProfile(full);
-      setCurrentPageId(full.pages[0]?.id ?? null);
-      setSelectedIds([]);
-      setDirty(false);
+      openProfile(full);
     },
-    [confirmDiscardIfDirty],
+    [confirmDiscardIfDirty, openProfile],
   );
 
   const createProfile = useCallback(async () => {
