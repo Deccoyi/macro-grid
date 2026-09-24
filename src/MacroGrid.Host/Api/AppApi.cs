@@ -1,12 +1,10 @@
 using System.Text.Json;
 using System.Text.Json.Nodes;
-using MacroGrid.Core.Actions;
 using MacroGrid.Core.Devices;
 using MacroGrid.Core.Model;
 using MacroGrid.Core.Plugins;
 using MacroGrid.Core.Preferences;
 using MacroGrid.Core.Sessions;
-using MacroGrid.Plugin.Abstractions;
 using MacroGrid.Protocol;
 using MacroGrid.Windows.Autostart;
 using Microsoft.AspNetCore.Routing;
