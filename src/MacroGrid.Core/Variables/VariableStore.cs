@@ -1,4 +1,5 @@
 using MacroGrid.Plugin.Abstractions;
+using MacroGrid.Core.Widgets;
 
 namespace MacroGrid.Core.Variables;
 

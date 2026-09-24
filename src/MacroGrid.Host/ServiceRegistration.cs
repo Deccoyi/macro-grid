@@ -12,6 +12,7 @@ using MacroGrid.Windows.Autostart;
 using MacroGrid.Windows.Input;
 using MacroGrid.Windows.Variables;
 using MacroGrid.Windows.Windows;
+using MacroGrid.Core.Widgets;
 
 namespace MacroGrid.Host;
 

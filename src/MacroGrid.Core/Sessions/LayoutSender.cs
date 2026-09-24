@@ -2,6 +2,7 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using MacroGrid.Core.Model;
 using MacroGrid.Protocol;
+using MacroGrid.Core.Widgets;
 
 namespace MacroGrid.Core.Sessions;
 

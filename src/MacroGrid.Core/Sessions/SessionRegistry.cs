@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using MacroGrid.Core.Widgets;
 
 namespace MacroGrid.Core.Sessions;
 

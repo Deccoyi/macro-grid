@@ -1,4 +1,4 @@
-using MacroGrid.Core.Sessions;
+using MacroGrid.Core.Widgets;
 
 namespace MacroGrid.Tests;
 

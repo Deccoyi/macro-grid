@@ -3,6 +3,7 @@ using System.Text;
 using MacroGrid.Core.Model;
 using MacroGrid.Core.Sessions;
 using MacroGrid.Protocol;
+using MacroGrid.Core.Widgets;
 
 namespace MacroGrid.Tests;
 

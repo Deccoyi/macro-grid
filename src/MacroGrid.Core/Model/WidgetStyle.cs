@@ -1,3 +1,4 @@
+
 namespace MacroGrid.Core.Model;
 
 public sealed class WidgetStyle

@@ -3,6 +3,7 @@ using System.Net.WebSockets;
 using System.Text;
 using System.Text.Json.Nodes;
 using MacroGrid.Protocol;
+using MacroGrid.Core.Widgets;
 
 namespace MacroGrid.Core.Sessions;
 

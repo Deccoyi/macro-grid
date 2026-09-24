@@ -5,6 +5,7 @@ using MacroGrid.Core.Model;
 using MacroGrid.Core.Plugins;
 using MacroGrid.Core.Profiles;
 using MacroGrid.Core.Sessions;
+using MacroGrid.Core.Widgets;
 
 namespace MacroGrid.Host.Api;
 
