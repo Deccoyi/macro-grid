@@ -29,7 +29,7 @@ public sealed class ClientHub(
     ILogger<ClientHub> logger,
     PluginLocalizer localizer)
 {
-    public const string ServerVersion = "0.2.0";
+    public const string ServerVersion = "0.2.1";
     private const int MaxMessageBytes = 64 * 1024;
     private const int MaxAssetsPerRequest = 256;
 

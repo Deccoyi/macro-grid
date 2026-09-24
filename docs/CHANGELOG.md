@@ -3,6 +3,8 @@
 New features and fixes in Macro Grid. For technical details, see [CHANGELOG-developer.md](CHANGELOG-developer.md).
 
 ## Unreleased
+
+## 0.2.1 - 2026-09-24
 ### New
 - **Default language:** Macro Grid opens in Turkish on a Turkish Windows and in English on any other. Once you pick a language in Preferences, that choice is kept.
 - **Plugin languages:** Plugins can ship their own translations. The tray menu, window titles and plugin texts now follow the language you choose.
