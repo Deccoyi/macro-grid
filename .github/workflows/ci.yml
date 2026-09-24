@@ -2,14 +2,13 @@ name: CI
 
 on:
   # CI runs on pull requests and on pushes to main, not on every push to dev (dev is the working branch).
-  # Changes that only touch documentation or license texts do not need a build. Add [skip ci] to a commit
+  # Pushes to main that only touch documentation or license texts do not need a build; pull requests always run, because the required checks of the main ruleset must report on every PR (otherwise a docs-only or site-only PR waits forever). Add [skip ci] to a commit
   # message to skip a run entirely, or start it by hand from the Actions tab (workflow_dispatch).
   push:
     branches: [main]
     paths-ignore: ["**.md", "docs/**", "licenses/**", "THIRD_PARTY_NOTICES.md", ".github/ISSUE_TEMPLATE/**", ".github/PULL_REQUEST_TEMPLATE.md"]
   pull_request:
     branches: [main, dev]
-    paths-ignore: ["**.md", "docs/**", "licenses/**", "THIRD_PARTY_NOTICES.md", ".github/ISSUE_TEMPLATE/**", ".github/PULL_REQUEST_TEMPLATE.md"]
   workflow_dispatch:
 
 permissions:
