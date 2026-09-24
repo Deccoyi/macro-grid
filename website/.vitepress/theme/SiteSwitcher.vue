@@ -24,6 +24,7 @@ const currentBase = computed(() => (site.value.base.endsWith('/') ? site.value.b
       v-for="p in products"
       :key="p.base"
       :href="p.href"
+      target="_self"
       :class="{ current: p.base === currentBase }"
       :aria-current="p.base === currentBase ? 'true' : undefined"
     >{{ p.label }}</a>

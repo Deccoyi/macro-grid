@@ -4,7 +4,7 @@
     <span class="long">
       Nothing has been reviewed line by line by a human or security-audited. No warranty, no liability: you use it at your own risk.
     </span>
-    <a href="https://deccoyi.github.io/macro-grid/guide/security">Read more</a>
+    <a target="_self" href="https://deccoyi.github.io/macro-grid/guide/security">Read more</a>
   </div>
 </template>
 
