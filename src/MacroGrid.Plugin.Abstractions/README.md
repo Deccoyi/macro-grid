@@ -43,3 +43,9 @@ Register actions, variable providers, a settings page, status items or icon pack
 Macro Grid servers whose SDK is `0.3.x`. Breaking rules are in the server repo's `docs/versioning.md`.
 
 Target framework: `net10.0`. License: MIT.
+
+## AI-generated code
+
+This package, like the rest of Macro Grid, was written entirely with AI assistance: the code, the documentation and the
+icon. A human directs, reviews and tests the work and is responsible for the releases, but no line was written by hand.
+It is provided as is under the MIT license, so review it as you would any third-party dependency before relying on it.
