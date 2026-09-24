@@ -60,7 +60,7 @@ Flip order on the day (minutes apart): server, client, plugin, then enable Pages
 | G2 | ✅ LICENSE, README, SECURITY, CONTRIBUTING, issue/PR templates, code of conduct, third-party notices in all three repos; needs owner review |
 | G3 | ✅ tracked files and full history scanned clean for employer, personal, e-mail, IP and profile-path strings; secrets scan by grep only (no gitleaks yet) |
 | G4 | ⏳ owner: installer never compiled/tested (the server itself was built and run from the renamed sources: ✅) |
-| G5 | ⏳ debug APK (`com.macrogrid.client`) installed on a real phone and paired with the renamed server on 2026-09-24: CPU/RAM live values and the mute button work (✅ owner-tested); signed release APK + keystore still open |
+| G5 | ⏳ debug APK (`com.macrogrid.client`) installed on a real phone and paired with the renamed server on 2026-09-24: CPU/RAM live values, the mute button, adding buttons, switching profiles and installing plugins work (✅ owner-tested); signed release APK + keystore still open |
 | G6 | ⏳ SDK packed and verified, `nuget push` by owner pending |
 | G7 | ⏳ site builds, examples load; owner runs the tutorials on a clean setup |
 | G8 | ⏳ workflows written and YAML-checked, not yet run on GitHub |
