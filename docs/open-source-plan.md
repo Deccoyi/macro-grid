@@ -35,7 +35,7 @@ Flip to public only when **every** item is true:
 
 | # | Gate | Who verifies |
 |---|---|---|
-| G1 | Identity scrub done (O2): history rewritten (✅ done locally), GitHub repos recreated (⏳ pending), scan finds no employer name, old email or real name anywhere in tree or history | Claude scans, owner executes |
+| G1 | Identity scrub done (O2): history rewritten (✅ done locally), GitHub repos recreated (✅ done 2026-09-24, private), scan finds no employer name, old email or real name anywhere in tree or history | Claude scans, owner executes |
 | G2 | Every repo has LICENSE, README with correct status, SECURITY.md, CONTRIBUTING.md, issue templates, third-party notices | Claude prepares, owner reviews |
 | G3 | No secrets/PII/company references in tracked files or history (scan clean) | Claude scans, owner confirms |
 | G4 | Server installer compiled and install/upgrade/uninstall tested on a clean Windows PC | Owner |
@@ -91,7 +91,7 @@ Flip order on the day (minutes apart): server, client, plugin, then enable Pages
 - **O2 Identity scrub (decided: full scrub, history is rewritten).** Nothing that names the employer or the old personal email or real name may remain in any repo, commit metadata or file, in any past commit.
   1. ✅ (Decided) Commits use the project mailbox `macrogrid.app@gmail.com` directly (not the noreply address). Add it to the GitHub account, tick "Block command line pushes that expose my email" only if the noreply variant is preferred later; the mailbox is public in every commit, so keep it a dedicated project address. Update the global git config on every machine that commits (a personal/employer email is still in the global config on the dev machine).
   2. ✅ **DONE (local).** History rewritten with `git filter-branch` (git-filter-repo is not installed) on fresh clones, author/committer forced to the identity above, employer domain stripped from `docs/agent-notes.md`; result applied to the working repos (branches `dev`/`main`, old remote-tracking refs, reflogs and unreachable objects removed). Untouched backup mirrors with the OLD history are in the session scratchpad (`bak/`); delete them after the flip.
-  3. Owner reviews the result, then, instead of force-pushing over the old private repos, **delete the three GitHub repos and recreate them empty and private, then push the rewritten history**. Force-push alone can leave the old commits reachable by SHA on GitHub's side. Update `origin` in the local clones.
+  3. ✅ **DONE (2026-09-24).** Owner deleted and recreated the three private repos; the rewritten history was pushed (server and client: `dev` + `main`, plugin: `dev`). Original text: Owner reviews the result, then, instead of force-pushing over the old private repos, **delete the three GitHub repos and recreate them empty and private, then push the rewritten history**. Force-push alone can leave the old commits reachable by SHA on GitHub's side. Update `origin` in the local clones.
   4. Old local clones and the backup mirrors (they contain the old identity) are kept off any public place and deleted after the flip. Also check that the Windows user profile name is not present in tracked files (scan already clean for `C:\Users\`).
   5. The "author" of AI-assisted commits keeps the `Co-Authored-By` trailer; those carry no personal data.
 - **O3 Legal/asset checks:**
