@@ -6,7 +6,15 @@ export type Theme = "dark" | "light";
 export type Language = "tr" | "en";
 export type PreviewProfile = PreviewProfileInfo;
 
-const DEFAULTS: AppPreferences = { theme: "dark", language: "tr", previewProfiles: [], collapsedInspectorSections: {}, defaultProfileId: null };
+const DEFAULTS: AppPreferences = {
+  theme: "dark",
+  language: "tr",
+  previewProfiles: [],
+  collapsedInspectorSections: {},
+  defaultProfileId: null,
+  launchMode: "window",
+  autostartMode: "tray",
+};
 
 interface PreferencesContextValue {
   theme: Theme;
@@ -20,6 +28,10 @@ interface PreferencesContextValue {
   setInspectorSectionCollapsed: (id: string, collapsed: boolean) => void;
   defaultProfileId: string | null;
   setDefaultProfileId: (id: string | null) => void;
+  launchMode: AppPreferences["launchMode"];
+  setLaunchMode: (mode: AppPreferences["launchMode"]) => void;
+  autostartMode: AppPreferences["autostartMode"];
+  setAutostartMode: (mode: AppPreferences["autostartMode"]) => void;
 }
 
 const PreferencesContext = createContext<PreferencesContextValue | null>(null);
@@ -108,6 +120,16 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
     [prefs, persist],
   );
 
+  const setLaunchMode = useCallback(
+    (launchMode: AppPreferences["launchMode"]) => persist({ ...prefs, launchMode }),
+    [prefs, persist],
+  );
+
+  const setAutostartMode = useCallback(
+    (autostartMode: AppPreferences["autostartMode"]) => persist({ ...prefs, autostartMode }),
+    [prefs, persist],
+  );
+
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", prefs.theme);
   }, [prefs.theme]);
@@ -125,8 +147,12 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
       setInspectorSectionCollapsed,
       defaultProfileId: prefs.defaultProfileId,
       setDefaultProfileId,
+      launchMode: prefs.launchMode,
+      setLaunchMode,
+      autostartMode: prefs.autostartMode,
+      setAutostartMode,
     }),
-    [prefs, setTheme, setLanguage, addPreviewProfile, removePreviewProfile, setInspectorSectionCollapsed, setDefaultProfileId],
+    [prefs, setTheme, setLanguage, addPreviewProfile, removePreviewProfile, setInspectorSectionCollapsed, setDefaultProfileId, setLaunchMode, setAutostartMode],
   );
 
   return <PreferencesContext.Provider value={value}>{children}</PreferencesContext.Provider>;

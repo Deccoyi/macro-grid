@@ -35,6 +35,14 @@ async function json<T>(res: Response): Promise<T> {
   return (text ? JSON.parse(text) : undefined) as T;
 }
 
+/** The legal texts that ship with the app (GET /api/legal); a text is null when its file is missing, as in a development build. */
+export interface LegalOverview {
+  agreement: string | null;
+  projectLicense: string | null;
+  notices: string | null;
+  libraries: string[];
+}
+
 export const api = {
   listProfiles: (): Promise<ProfileSummary[]> => req("/api/profiles").then((res) => json<ProfileSummary[]>(res)),
 
@@ -154,6 +162,16 @@ export const api = {
 
   getPreferences: (): Promise<AppPreferences> => req("/api/preferences").then((res) => json<AppPreferences>(res)),
 
+  /** Whether Macro Grid starts when the person signs in to Windows (the per-user Run entry the installer's task also writes). */
+  getAutostart: (): Promise<{ enabled: boolean }> => req("/api/system/autostart").then((res) => json<{ enabled: boolean }>(res)),
+
+  setAutostart: (enabled: boolean): Promise<{ enabled: boolean }> =>
+    req("/api/system/autostart", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ enabled }),
+    }).then((res) => json<{ enabled: boolean }>(res)),
+
   savePreferences: (preferences: AppPreferences): Promise<void> =>
     req("/api/preferences", {
       method: "PUT",
@@ -177,8 +195,15 @@ export const api = {
 
   /** Opens (or focuses) a real, separate OS window for a tool panel — see docs/ui-guidelines.md:
    * Preferences/Plugins are native windows, not in-page modals. */
-  openToolWindow: (kind: "preferences" | "plugins" | "help" | "pairing"): Promise<void> =>
-    req(`/api/windows/${kind}`, { method: "POST" }).then((res) => json<void>(res)),
+  openToolWindow: (kind: "preferences" | "plugins" | "help" | "pairing", tab?: string): Promise<void> =>
+    req(`/api/windows/${kind}${tab ? `?tab=${encodeURIComponent(tab)}` : ""}`, { method: "POST" }).then((res) => json<void>(res)),
+
+  /** The agreement, the project license, the third-party notice index and the names of the bundled libraries (null when a file is missing, as in a development build). */
+  getLegal: (): Promise<LegalOverview> => req("/api/legal").then((res) => json<LegalOverview>(res)),
+
+  /** The original license text of one bundled library. */
+  getLegalLibrary: (name: string): Promise<string> =>
+    req(`/api/legal/library/${encodeURIComponent(name)}`).then((res) => res.text()),
 
   openPluginSettingsWindow: (id: string): Promise<void> =>
     req(`/api/windows/plugin-settings/${encodeURIComponent(id)}`, { method: "POST" }).then((res) => json<void>(res)),

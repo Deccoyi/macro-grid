@@ -10,6 +10,9 @@ internal sealed class EditorWindow : Form
 {
     private static EditorWindow? _instance;
 
+    /// <summary>The open editor window, or null. Tool windows use it as their owner (see <see cref="ToolWindow"/>).</summary>
+    internal static EditorWindow? Current => _instance is { IsDisposed: false } ? _instance : null;
+
     private EditorWindow(string url)
     {
         Text = "Macro Grid Editörü";

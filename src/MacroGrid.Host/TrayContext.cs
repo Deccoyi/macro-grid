@@ -12,7 +12,7 @@ internal sealed class TrayContext : ApplicationContext
     private readonly ClientHub _hub;
     private readonly SynchronizationContext _ui;
 
-    public TrayContext(WebApplication server)
+    public TrayContext(WebApplication server, bool openEditor)
     {
         _ui = SynchronizationContext.Current ?? new WindowsFormsSynchronizationContext();
         _hub = server.Services.GetRequiredService<ClientHub>();
@@ -47,7 +47,10 @@ internal sealed class TrayContext : ApplicationContext
         _hub.SessionsChanged += () => _ui.Post(_ => UpdateClients(), null);
         UpdateClients();
 
-        _icon.ShowBalloonTip(3000, "Macro Grid çalışıyor", $"Telefondan bağlan: {addressText}", ToolTipIcon.Info);
+        if (openEditor)
+            OpenEditor();
+        else
+            _icon.ShowBalloonTip(3000, "Macro Grid çalışıyor", $"Telefondan bağlan: {addressText}", ToolTipIcon.Info);
     }
 
     private void UpdateClients()

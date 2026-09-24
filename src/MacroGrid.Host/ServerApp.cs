@@ -12,6 +12,7 @@ using MacroGrid.Host.Logging;
 using MacroGrid.Plugin.Abstractions;
 using MacroGrid.Protocol;
 using MacroGrid.Windows.Audio;
+using MacroGrid.Windows.Autostart;
 using MacroGrid.Windows.Input;
 using MacroGrid.Windows.Variables;
 using MacroGrid.Windows.Windows;
@@ -41,6 +42,8 @@ internal static class ServerApp
 
         builder.Services.AddSingleton(new ProfileStore(dataDir));
         builder.Services.AddSingleton(new PreferencesStore(dataDir));
+        builder.Services.AddSingleton(new LegalDocuments(AppContext.BaseDirectory));
+        builder.Services.AddSingleton(new AutostartService(Environment.ProcessPath ?? Application.ExecutablePath));
         builder.Services.AddSingleton<IInputService, WindowsInputService>();
         builder.Services.AddSingleton<IActionHandler, HotkeyAction>();
         builder.Services.AddSingleton<IActionHandler, TypeTextAction>();
@@ -226,6 +229,31 @@ internal static class ServerApp
 
             preferences.Save(parsed);
             return Results.NoContent();
+        });
+
+        api.MapGet("/legal", (LegalDocuments legal) => Results.Json(legal.GetOverview(), ProtocolJson.Options));
+
+        api.MapGet("/legal/library/{name}", (string name, LegalDocuments legal) =>
+            legal.GetLibrary(name) is { } text ? Results.Text(text, "text/plain; charset=utf-8") : Results.NotFound());
+
+        api.MapGet("/system/autostart", (AutostartService autostart) => Results.Json(new { enabled = autostart.IsEnabled() }));
+
+        api.MapPut("/system/autostart", async (HttpRequest request, AutostartService autostart) =>
+        {
+            JsonNode? body;
+            try
+            {
+                body = await JsonNode.ParseAsync(request.Body);
+            }
+            catch (JsonException)
+            {
+                return Results.BadRequest(new { error = "Geçersiz JSON." });
+            }
+            if (body?["enabled"] is not JsonValue value || !value.TryGetValue<bool>(out var enabled))
+                return Results.BadRequest(new { error = "\"enabled\" (true/false) gerekli." });
+
+            autostart.SetEnabled(enabled);
+            return Results.Json(new { enabled = autostart.IsEnabled() });
         });
 
         api.MapGet("/actions", (ActionDispatcher dispatcher, PluginManager plugins) =>
@@ -440,9 +468,11 @@ internal static class ServerApp
             return Results.NoContent();
         });
 
-        api.MapPost("/windows/help", async (IUiWindowService windows) =>
+        api.MapPost("/windows/help", async (HttpRequest request, IUiWindowService windows) =>
         {
-            await windows.ShowToolWindowAsync("help", "Yardım", $"http://localhost:{Port}/editor/?window=help", 640, 520);
+            var tab = request.Query["tab"].ToString();
+            var tabQuery = tab is "about" or "agreement" or "licenses" ? $"&tab={tab}" : "";
+            await windows.ShowToolWindowAsync("help", "Yardım", $"http://localhost:{Port}/editor/?window=help{tabQuery}", 760, 560);
             return Results.NoContent();
         });
 

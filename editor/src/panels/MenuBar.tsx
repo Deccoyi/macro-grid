@@ -90,8 +90,9 @@ export function MenuBar({ profile, onImportProfile }: MenuBarProps) {
   const pluginsItems: ContextMenuItem[] = [{ label: t("menu.plugins.manage"), onSelect: () => api.openToolWindow("plugins") }];
   const helpItems: ContextMenuItem[] = [
     { label: t("menu.help.version", serverVersion), disabled: true, onSelect: () => {} },
-    { label: t("menu.help.licenses"), onSelect: () => api.openToolWindow("help") },
-    { label: t("menu.help.agreement"), onSelect: () => api.openToolWindow("help") },
+    { label: t("menu.help.about"), onSelect: () => api.openToolWindow("help", "about") },
+    { label: t("menu.help.agreement"), onSelect: () => api.openToolWindow("help", "agreement") },
+    { label: t("menu.help.licenses"), onSelect: () => api.openToolWindow("help", "licenses") },
   ];
 
   const menus: { id: string; label: string; items: ContextMenuItem[] }[] = [

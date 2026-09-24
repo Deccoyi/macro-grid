@@ -1,3 +1,5 @@
+using MacroGrid.Core.Preferences;
+
 namespace MacroGrid.Host;
 
 internal static class Program
@@ -33,7 +35,8 @@ internal static class Program
             return;
         }
 
-        Application.Run(new TrayContext(server));
+        var openEditor = StartupPolicy.ShouldOpenEditor(args, server.Services.GetRequiredService<PreferencesStore>().Get());
+        Application.Run(new TrayContext(server, openEditor));
 
         // The tray icon is gone at this point. If stopping the server hangs (for example a hosted service waiting for
         // the UI thread, whose message loop has just ended) or a foreground thread survives, the process would stay

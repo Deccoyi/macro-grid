@@ -157,6 +157,10 @@ export interface AppPreferences {
   /** Fallback profile a device resolves to with no explicit assignment and no auto-switch rule currently
    * applying — see docs/auto-profile-switch.md. Null means "no preference set". */
   defaultProfileId: string | null;
+  /** What happens when the person opens Macro Grid themselves: the editor window ("window", default) or only the tray icon ("tray"). */
+  launchMode: "window" | "tray";
+  /** What happens when Windows starts Macro Grid at sign-in: only the tray icon ("tray", default) or also the editor window ("window"). */
+  autostartMode: "window" | "tray";
 }
 
 /** A plugin a packaged profile needs (from the manifest of a .msprofile file). */

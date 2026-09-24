@@ -24,6 +24,14 @@ public sealed class AppPreferences
     /// falls back to <c>ProfileStore.First()</c>, same as before this existed.</summary>
     public string? DefaultProfileId { get; set; }
 
+    /// <summary>What happens when the person opens Macro Grid themselves (Start menu, shortcut): <c>"window"</c> opens
+    /// the editor window (default), <c>"tray"</c> only starts in the notification area. See <see cref="StartupPolicy"/>.</summary>
+    public string LaunchMode { get; set; } = StartupPolicy.Window;
+
+    /// <summary>What happens when Windows starts Macro Grid at sign-in: <c>"tray"</c> only starts in the notification area
+    /// (default), <c>"window"</c> also opens the editor window. See <see cref="StartupPolicy"/>.</summary>
+    public string AutostartMode { get; set; } = StartupPolicy.Tray;
+
     /// <summary>Whether each Inspector section ("appearance", "typeFields", "actions", "css") is
     /// collapsed — only entries the user actually toggled are stored; a missing key falls back to that
     /// section's own hardcoded default (see Inspector.tsx's SECTION_DEFAULTS).</summary>
