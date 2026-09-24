@@ -86,8 +86,38 @@ One-time setup:
 2. GitHub, repository settings: create the environment `nuget` and add the secret `NUGET_USER` (your nuget.org user name,
    not the e-mail address).
 
-Each release: set `<Version>` in `src/MacroGrid.Plugin.Abstractions/MacroGrid.Plugin.Abstractions.csproj` and
-`PluginSdk.Version` to the same value, commit, then `git tag sdk-vX.Y.Z` and `git push origin sdk-vX.Y.Z`. The workflow checks
-that the tag and both versions match, packs, logs in to nuget.org and pushes the `.nupkg` and the `.snupkg` symbols.
-A published version can never be replaced or deleted on nuget.org, only unlisted.
+### Releasing a new SDK version
+
+A published version can never be replaced or deleted on nuget.org, only unlisted. Check everything before the tag.
+
+1. **Pick the version.** The server loads a plugin only if its SDK satisfies the plugin's `sdkVersion` as a caret range
+   (`SemVer.SatisfiesCaret`). While the SDK is `0.x`, a minor bump (`0.3.x` to `0.4.0`) makes every existing plugin
+   incompatible, so use a patch bump (`0.3.1`) for additive, non-breaking changes and a minor bump only for breaking ones.
+   Use a pre-release suffix (`0.4.0-preview.1`) for anything not final; the tag then is `sdk-v0.4.0-preview.1`.
+2. **Set the version in two places, identically:** `<Version>` in
+   `src/MacroGrid.Plugin.Abstractions/MacroGrid.Plugin.Abstractions.csproj` and `PluginSdk.Version` in
+   `src/MacroGrid.Plugin.Abstractions/PluginSdk.cs`.
+3. **Update the changelogs** (`docs/CHANGELOG-developer.md`, and `docs/CHANGELOG.md` if users notice the change) and the SDK
+   `README.md` if the reference snippet shows the version.
+4. **Commit and push to `dev`** and wait for CI to be green. The tag must point at a commit that is already on `dev` or
+   `main`; the workflow refuses anything else.
+5. **Tag and push** (only the owner does this; there is no API key to hand out):
+   `git tag sdk-vX.Y.Z` and `git push origin sdk-vX.Y.Z`.
+6. **Watch** Actions > "Publish SDK". It checks that the tag and both versions match, packs, logs in to nuget.org (short-lived
+   key) and pushes the `.nupkg` and the `.snupkg` symbols. `--skip-duplicate` makes a re-run of the same version harmless.
+7. **Verify** after 5 to 30 minutes: https://www.nuget.org/packages/MacroGrid.Plugin.Abstractions shows the new version, or
+   `https://api.nuget.org/v3-flatcontainer/macrogrid.plugin.abstractions/index.json` lists it.
+8. **Move the plugins over:** in the plugin repository set `MacroGridSdkVersion` in `Directory.Build.props` to the new
+   version, and raise `sdkVersion` in each `plugin.json` that uses the new API. Build and run the plugin CI.
+
+If the publish fails:
+
+- Version check fails: the tag, `<Version>` and `PluginSdk.Version` differ. Fix the files; delete the tag locally and on
+  GitHub (`git tag -d sdk-vX.Y.Z`, `git push origin :refs/tags/sdk-vX.Y.Z`) and tag again. Nothing was published.
+- Branch check fails: the tagged commit is not on `dev` or `main`. Push the commit first, then re-tag as above.
+- Login fails: the trusted-publishing policy on nuget.org does not match (owner `Deccoyi`, repository `macro-grid`, workflow
+  `publish-sdk.yml`, environment `nuget`), the policy is inactive, or the `NUGET_USER` secret is missing or is an e-mail
+  address.
+- Push rejected with 409 or "already exists": that version is on nuget.org already. Bump the version; it cannot be reused.
+- A broken version got out: unlist it on nuget.org (package page > Manage > Listing) and publish a fixed patch version.
 
