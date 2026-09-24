@@ -13,9 +13,9 @@ public sealed class OpenAction(ILogger<OpenAction> logger) : IActionHandler, IAc
     public const string TypeId = "core.open";
 
     public string Type => TypeId;
-    public string DisplayName => "Uygulama aç";
-    public string Category => "Sistem";
-    public string? Description => "Bir uygulama veya dosya açar";
+    public string DisplayName => "Open app";
+    public string Category => "System";
+    public string? Description => "Opens an app or a file";
     public string? Icon => "app-window";
     public IReadOnlyList<SettingField> Fields => [];
 
@@ -34,7 +34,7 @@ public sealed class OpenAction(ILogger<OpenAction> logger) : IActionHandler, IAc
         }
         catch (Exception ex) when (ex is Win32Exception or FileNotFoundException)
         {
-            logger.LogWarning(ex, "core.open: '{Target}' açılamadı", target);
+            logger.LogWarning(ex, "core.open: '{Target}' could not be opened", target);
         }
 
         return Task.CompletedTask;
@@ -50,9 +50,9 @@ public sealed class OpenUrlAction(ILogger<OpenUrlAction> logger) : IActionHandle
     public const string TypeId = "core.openUrl";
 
     public string Type => TypeId;
-    public string DisplayName => "URL aç";
-    public string Category => "Sistem";
-    public string? Description => "Varsayılan tarayıcıda bir adres açar";
+    public string DisplayName => "Open URL";
+    public string Category => "System";
+    public string? Description => "Opens an address in the default browser";
     public string? Icon => "link";
     public IReadOnlyList<SettingField> Fields => [];
 
@@ -64,7 +64,7 @@ public sealed class OpenUrlAction(ILogger<OpenUrlAction> logger) : IActionHandle
         // Shell-execute on an http(s) URL always hands off to the OS default browser, never this process.
         if (!Uri.TryCreate(url, UriKind.Absolute, out var uri) || (uri.Scheme != Uri.UriSchemeHttp && uri.Scheme != Uri.UriSchemeHttps))
         {
-            logger.LogWarning("core.openUrl: '{Url}' geçerli bir http(s) adresi değil", url);
+            logger.LogWarning("core.openUrl: '{Url}' is not a valid http(s) address", url);
             return Task.CompletedTask;
         }
 
@@ -74,7 +74,7 @@ public sealed class OpenUrlAction(ILogger<OpenUrlAction> logger) : IActionHandle
         }
         catch (Win32Exception ex)
         {
-            logger.LogWarning(ex, "core.openUrl: '{Url}' açılamadı", url);
+            logger.LogWarning(ex, "core.openUrl: '{Url}' could not be opened", url);
         }
 
         return Task.CompletedTask;
@@ -90,9 +90,9 @@ public sealed class DelayAction : IActionHandler, IActionDescriptor
     private const int MaxMs = 60_000;
 
     public string Type => TypeId;
-    public string DisplayName => "Bekle";
-    public string Category => "Sistem";
-    public string? Description => "Çoklu aksiyon içinde bekler";
+    public string DisplayName => "Wait";
+    public string Category => "System";
+    public string? Description => "Waits inside a multi-action";
     public string? Icon => "clock";
     public IReadOnlyList<SettingField> Fields => [];
 

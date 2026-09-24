@@ -10,7 +10,7 @@ export interface MoveCopyDialogProps {
   profiles: ProfileSummary[];
   currentProfileId: string;
   currentProfilePages: Page[];
-  /** When true, this is "copy a whole page to another profile" — no target-page picker, no Taşı (moving
+  /** When true, this is "copy a whole page to another profile" — no target-page picker, no Move (moving
    * a whole page out of its profile is just "delete after copying", already its own separate action). */
   wholePage?: boolean;
   onClose: () => void;
@@ -18,7 +18,7 @@ export interface MoveCopyDialogProps {
 }
 
 /** Modal for "move/copy N widgets" and "copy this page" — pick a target profile (+ page), then Kopyala
- * or Taşı. A non-active profile's pages are fetched on demand since the editor never holds two
+ * or Move. A non-active profile's pages are fetched on demand since the editor never holds two
  * profiles in memory at once. */
 export function MoveCopyDialog({ title, profiles, currentProfileId, currentProfilePages, wholePage, onClose, onConfirm }: MoveCopyDialogProps) {
   const { t } = useT();

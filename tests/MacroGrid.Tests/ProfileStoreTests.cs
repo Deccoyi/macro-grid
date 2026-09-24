@@ -1,3 +1,4 @@
+using MacroGrid.Core;
 using MacroGrid.Core.Actions;
 using MacroGrid.Core.Model;
 using MacroGrid.Core.Profiles;
@@ -29,17 +30,17 @@ public sealed class ProfileStoreTests : IDisposable
         var store = new ProfileStore(_dir);
         var profile = store.First();
         var clockWidget = profile.Pages[0].Widgets[0];
-        clockWidget.Text = "Değişti {system.time}";
+        clockWidget.Text = "Changed {system.time}";
         clockWidget.W = 3;
         store.Save(profile);
 
         var reloaded = new ProfileStore(_dir).Get(profile.Id)!;
         var reloadedClock = reloaded.Pages[0].FindWidget(clockWidget.Id)!;
 
-        Assert.Equal("Değişti {system.time}", reloadedClock.Text);
+        Assert.Equal("Changed {system.time}", reloadedClock.Text);
         Assert.Equal(3, reloadedClock.W);
 
-        var macroWidget = reloaded.Pages[1].Widgets.Single(w => w.Text == "Tümünü kopyala");
+        var macroWidget = reloaded.Pages[1].Widgets.Single(w => w.Actions.ContainsKey(WidgetEvents.Press) && w.Actions[WidgetEvents.Press].Count == 3);
         var bindings = macroWidget.Actions[WidgetEvents.Press];
         Assert.Equal(3, bindings.Count);
         Assert.Equal(HotkeyAction.TypeId, bindings[0].Type);
@@ -52,10 +53,10 @@ public sealed class ProfileStoreTests : IDisposable
         var profile = new ProfileStore(_dir).First();
 
         Assert.Equal(2, profile.Pages.Count);
-        var toPage2 = profile.Pages[0].Widgets.Single(w => w.Text == "Sayfa 2 →");
+        var toPage2 = profile.Pages[0].Widgets.Single(w => w.Text == AppLanguage.Pick("Page 2 →", "Sayfa 2 →"));
         Assert.Equal(profile.Pages[1].Id, toPage2.Actions[WidgetEvents.Press][0].Settings["pageId"]!.GetValue<string>());
 
-        var back = profile.Pages[1].Widgets.Single(w => w.Text == "← Geri");
+        var back = profile.Pages[1].Widgets.Single(w => w.Text == AppLanguage.Pick("← Back", "← Geri"));
         Assert.Equal(PageAction.TypeId, back.Actions[WidgetEvents.Press][0].Type);
     }
 
@@ -84,7 +85,7 @@ public sealed class ProfileStoreTests : IDisposable
     {
         var store = new ProfileStore(_dir);
         var first = store.First();
-        var second = new Profile { Name = "İkinci" };
+        var second = new Profile { Name = "Second" };
         store.Save(second);
 
         Assert.True(store.Delete(second.Id));

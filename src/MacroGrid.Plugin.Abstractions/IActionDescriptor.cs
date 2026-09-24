@@ -5,7 +5,7 @@ namespace MacroGrid.Plugin.Abstractions;
 /// without this keeps its own hand-written form (looked up by <c>Type</c> in the editor).</summary>
 public interface IActionDescriptor
 {
-    /// <summary>Groups actions in the picker, e.g. "OBS", "Klavye", "Sayfa &amp; Profil".</summary>
+    /// <summary>Groups actions in the picker, e.g. "OBS", "Keyboard", "Page &amp; Profile".</summary>
     string Category { get; }
 
     string? Description { get; }

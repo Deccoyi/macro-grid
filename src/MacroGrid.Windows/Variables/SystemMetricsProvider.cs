@@ -10,16 +10,16 @@ namespace MacroGrid.Windows.Variables;
 /// </summary>
 public sealed class SystemMetricsProvider : IVariableProvider, IVariableCatalogSource
 {
-    private const string Category = "Sistem";
+    private const string Category = "System";
 
     public IEnumerable<VariableInfo> Describe() =>
     [
-        new("system.time", "Şu anki saat ve tarih", "{system.time|HH:mm:ss}", Category),
-        new("system.uptime", "Bilgisayarın açık kalma süresi", "{system.uptime}", Category),
-        new("system.cpu", "İşlemci kullanımı (%)", "{system.cpu|0}%", Category),
-        new("system.ram", "RAM kullanımı (%)", "{system.ram|0}%", Category),
-        new("system.ram.used", "Kullanılan RAM (GB)", "{system.ram.used|0.#} GB", Category),
-        new("system.ram.total", "Toplam RAM (GB)", "{system.ram.total|0.#} GB", Category),
+        new("system.time", "Current time and date", "{system.time|HH:mm:ss}", Category),
+        new("system.uptime", "How long the computer has been running", "{system.uptime}", Category),
+        new("system.cpu", "CPU usage (%)", "{system.cpu|0}%", Category),
+        new("system.ram", "RAM usage (%)", "{system.ram|0}%", Category),
+        new("system.ram.used", "Used RAM (GB)", "{system.ram.used|0.#} GB", Category),
+        new("system.ram.total", "Total RAM (GB)", "{system.ram.total|0.#} GB", Category),
     ];
 
     public async Task RunAsync(IVariableStore store, CancellationToken cancellationToken)

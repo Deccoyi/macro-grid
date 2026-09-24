@@ -4,18 +4,20 @@ import { RefreshCw, Smartphone, Trash2 } from "lucide-react";
 import { api } from "../api/client";
 import type { PairedDeviceInfo, PairingQrInfo, ProfileSummary } from "../api/types";
 import { useT } from "../i18n/I18nContext";
+import { useDocumentTitle } from "../i18n/useDocumentTitle";
 import { SectionLabel } from "../panels/fields/controls";
 import { ToolWindowLayout } from "./ToolWindowLayout";
 
 type Category = "code" | "devices";
 
-/** The whole page of the "Eşleştirme" tool window (see ToolWindow.cs) — a real separate, non-modal OS
+/** The whole page of the "Pairing" tool window (see ToolWindow.cs) — a real separate, non-modal OS
  * window using the same left-categories/right-content shell as Plugins/Preferences/Help, instead of the
  * old centered modal-over-a-dark-backdrop (see docs/ui-guidelines.md: Device Manager-style screens get
  * their own window, never an in-page overlay). A fresh, short-lived PIN/QR is issued every time this
  * window opens: a static code that stayed valid would defeat the point of scanning it. */
 export function PairingWindow() {
   const { t, lang } = useT();
+  useDocumentTitle("pairing.title");
   const [category, setCategory] = useState<Category>("code");
   const [qr, setQr] = useState<PairingQrInfo | null>(null);
   const [qrImage, setQrImage] = useState<string | null>(null);

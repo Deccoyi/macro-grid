@@ -41,8 +41,7 @@ Where the project stands. The project is before 1.0.0 and under active developme
 
 ## Known gaps
 
-- **Localization is incomplete.** The editor is available in Turkish (default) and English, but the tray menu, some native dialogs and the default text of a
-  boolean in a template (`Açık` / `Kapalı`) are Turkish only, and the phone app's screens are Turkish only.
+- **Localization covers Turkish and English only.** The editor, the tray menu, native dialogs, plugin texts and the phone app follow the language (Windows display language by default, then the preference). Setting field labels of a plugin need an entry in the plugin's `locales/<language>.json` to be translated; texts built at run time (for example a per-item variable description) stay in the plugin's default language.
 - **The browser deck** does not announce the `assets` and `layout.patch` capabilities yet, so it receives full layouts with icons inline.
 - **The CSS editor** is a plain text box with sanitizer warnings, without syntax highlighting.
 - **Windows only.** The server depends on Windows APIs.

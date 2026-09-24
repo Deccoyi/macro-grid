@@ -31,7 +31,7 @@ public sealed class WindowsInputService : IInputService
 
     public void TypeText(string text)
     {
-        // KEYEVENTF_UNICODE types any character (ş, ğ, emoji surrogates) regardless of keyboard layout.
+        // KEYEVENTF_UNICODE types any character (any accented letter, emoji surrogates) regardless of keyboard layout.
         var inputs = new List<INPUT>(text.Length * 2);
         foreach (var ch in text.ReplaceLineEndings("\r"))
         {

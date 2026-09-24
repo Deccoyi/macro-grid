@@ -36,13 +36,16 @@
   </style>
 </head>
 <body>
-  <header><span class="dot" id="dot"></span><span id="status">Bağlanıyor…</span></header>
+  <header><span class="dot" id="dot"></span><span id="status"></span></header>
   <div id="grid"></div>
 <script>
 (() => {
+  const tr = (navigator.language || '').toLowerCase().startsWith('tr');
+  const t = (english, turkish) => (tr ? turkish : english);
   const grid = document.getElementById('grid');
   const dot = document.getElementById('dot');
   const statusEl = document.getElementById('status');
+  statusEl.textContent = t('Connecting…', 'Bağlanıyor…');
 
   let deviceId;
   try { deviceId = localStorage.getItem('ms.deviceId'); } catch {}
@@ -60,7 +63,7 @@
 
   const send = (type, data) => ws && ws.readyState === 1 && ws.send(JSON.stringify({ type, data }));
   const setStatus = (on, text) => { dot.classList.toggle('on', on); statusEl.textContent = text; };
-  const sendHello = (pin) => send('hello', { deviceId, deviceName: 'Tarayıcı (' + (navigator.platform || 'web') + ')', token, clientVersion: 'test-0.1', pin });
+  const sendHello = (pin) => send('hello', { deviceId, deviceName: t('Browser', 'Tarayıcı') + ' (' + (navigator.platform || 'web') + ')', token, clientVersion: 'test-0.1', pin });
 
   function connect() {
     ws = new WebSocket(`ws://${location.host}/ws`);
@@ -78,14 +81,14 @@
       else if (msg.type === 'page.show') renderPage(msg.data.pageId);
       else if (msg.type === 'widget.state') applyWidgetState(msg.data);
       else if (msg.type === 'error' && msg.data.code === 'pairing_required') {
-        setStatus(false, 'Eşleştirme gerekli');
-        const pin = prompt('Düzenleyicideki "Eşleştirme" penceresinde gösterilen 6 haneli PIN\'i girin:');
+        setStatus(false, t('Pairing required', 'Eşleştirme gerekli'));
+        const pin = prompt(t('Enter the 6-digit PIN shown in the "Pairing" window of the editor:', 'Düzenleyicideki "Eşleştirme" penceresinde gösterilen 6 haneli PIN\'i girin:'));
         if (pin) sendHello(pin);
       }
       else if (msg.type === 'error') console.warn('server error', msg.data);
     };
     ws.onclose = () => {
-      setStatus(false, 'Bağlantı yok, yeniden deneniyor…');
+      setStatus(false, t('Not connected, retrying…', 'Bağlantı yok, yeniden deneniyor…'));
       setTimeout(connect, Math.min(1000 * 2 ** retry++, 10000));
     };
   }

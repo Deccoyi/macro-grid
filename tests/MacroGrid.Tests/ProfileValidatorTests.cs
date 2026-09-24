@@ -54,7 +54,7 @@ public class ProfileValidatorTests
         profile.Name = "  ";
 
         Assert.False(ProfileValidator.Validate(profile, out var error));
-        Assert.Contains("adı", error);
+        Assert.Contains("name", error);
     }
 
     [Fact]
@@ -63,7 +63,7 @@ public class ProfileValidatorTests
         var profile = new Profile { Name = "Test", Pages = [] };
 
         Assert.False(ProfileValidator.Validate(profile, out var error));
-        Assert.Contains("sayfa", error);
+        Assert.Contains("page", error);
     }
 
     [Theory]
@@ -86,7 +86,7 @@ public class ProfileValidatorTests
         var profile = Profile(a, b);
 
         Assert.False(ProfileValidator.Validate(profile, out var error));
-        Assert.Contains("Yinelenen widget", error);
+        Assert.Contains("Duplicate widget", error);
     }
 
     [Fact]
@@ -116,6 +116,6 @@ public class ProfileValidatorTests
         profile.AppMatches = [new AppMatch { ProcessName = "Player.exe" }, new AppMatch { ProcessName = "player.exe" }];
 
         Assert.False(ProfileValidator.Validate(profile, out var error));
-        Assert.Contains("yinelenen", error);
+        Assert.Contains("Duplicate", error);
     }
 }

@@ -1,6 +1,6 @@
 namespace MacroGrid.Core.Preferences;
 
-/// <summary>A user-defined "cihaz önizleme" size the editor's Önizleme dropdown offers alongside the
+/// <summary>A user-defined "device preview" size the editor's Preview dropdown offers alongside the
 /// built-in phone/tablet presets.</summary>
 public sealed class PreviewProfile
 {
@@ -16,7 +16,9 @@ public sealed class PreviewProfile
 public sealed class AppPreferences
 {
     public string Theme { get; set; } = "dark";
-    public string Language { get; set; } = "tr";
+    /// <summary>"tr" or "en". Until the person picks one it follows the Windows display language: Turkish for a Turkish
+    /// system, English for everything else. A saved preference always wins.</summary>
+    public string Language { get; set; } = AppLanguage.SystemDefault();
     public List<PreviewProfile> PreviewProfiles { get; set; } = [];
 
     /// <summary>Fallback profile a device resolves to when it has no explicit assignment and no

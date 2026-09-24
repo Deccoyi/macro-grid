@@ -22,7 +22,7 @@ public readonly record struct AutoSwitchResult(bool Changed, bool ToDefault, str
 /// nothing about ProfileStore, ObsConnection-style live OBS state, or the actual foreground window; it is
 /// only ever told "process X came to the foreground and resolves to profile Y" or "prune anything whose
 /// process no longer has a visible window", by <see cref="AutoProfileSwitcher"/>. Kept side-effect-free
-/// so the whole stack/lock/manual-base interplay (docs/auto-profile-switch.md's "Davranış modeli") can be
+/// so the whole stack/lock/manual-base interplay (docs/auto-profile-switch.md's "Behavior model") can be
 /// unit tested without any Windows dependency or live session.
 /// </summary>
 public sealed class AutoSwitchState
@@ -91,7 +91,7 @@ public sealed class AutoSwitchState
 
     /// <summary>Locking/unlocking never changes the stack itself — on unlock, the caller re-checks the
     /// live foreground window and calls <see cref="OnForeground"/>/<see cref="Prune"/> again ("kilit
-    /// açıldığında durum bir kez yeniden değerlendirilir").</summary>
+    /// the state is re-evaluated once when the lock is released").</summary>
     public void SetLocked(bool locked) => Locked = locked;
 
     public string? CurrentProfileId => _stack.Count > 0 ? _stack[^1].ProfileId : null;

@@ -111,8 +111,8 @@ form from its `Fields`; text fields marked `AllowVariables` have their `{variabl
 setting a value equal to the current one does nothing.
 
 A widget's text is a template: `Live: {obs.stream.duration}`, with optional formats: `{system.cpu|0}%`, `{system.time|HH:mm}`. `{{` and `}}`
-produce literal braces. Numbers default to `0.##`, dates to `HH:mm`, durations to `hh:mm:ss`, and a boolean renders as the Turkish words `Açık` and `Kapalı` unless you give
-it a format such as `{obs.streaming|ON/OFF}` (making the default follow the language is a known gap). A missing variable renders as an empty string. `WidgetStateService` remembers which widget uses which variable, and when a value changes it renders
+produce literal braces. Numbers default to `0.##`, dates to `HH:mm`, durations to `hh:mm:ss`, and a boolean renders as `On` / `Off` (`Açık` / `Kapalı` when the language is Turkish, see `AppLanguage`) unless you give
+it a format such as `{obs.streaming|ON/OFF}`. A missing variable renders as an empty string. `WidgetStateService` remembers which widget uses which variable, and when a value changes it renders
 only the affected widgets and sends the ones whose text really changed.
 
 A slider or knob with `props.valueVariable` shows that variable's value and, when dragged, sends `widget.value`, so a slider can control the

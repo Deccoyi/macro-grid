@@ -24,9 +24,10 @@ internal static class WebViewEnvironment
     // The folder that worked once, reused by every later window so they all share one browser environment.
     private static string? _workingFolder;
 
-    /// <summary>Creates a WebView2 control inside <paramref name="host"/> and navigates it to <paramref name="url"/>.
+    /// <summary>Creates a WebView2 control inside <paramref name="host"/> and navigates it to <paramref name="url"/>. With
+    /// <paramref name="followDocumentTitle"/> the window title tracks the page's document title.
     /// Call it from the UI thread. Shows an error dialog when no user data folder works.</summary>
-    public static async Task AttachAsync(Form host, string url)
+    public static async Task AttachAsync(Form host, string url, bool followDocumentTitle = true)
     {
         var failures = new StringBuilder();
         var folders = _workingFolder is null ? CandidateFolders() : [_workingFolder];
@@ -39,8 +40,20 @@ internal static class WebViewEnvironment
             {
                 Directory.CreateDirectory(folder);
                 host.Controls.Add(view);
-                var environment = await CoreWebView2Environment.CreateAsync(browserExecutableFolder: null, userDataFolder: folder);
+                var environment = await CoreWebView2Environment.CreateAsync(
+                    browserExecutableFolder: null, userDataFolder: folder,
+                    options: new CoreWebView2EnvironmentOptions { Language = HostText.Language == "tr" ? "tr-TR" : "en-US" });
                 await view.EnsureCoreWebView2Async(environment);
+                // The editor sets document.title from the language preference, so the native title bar follows it.
+                if (followDocumentTitle)
+                {
+                    view.CoreWebView2.DocumentTitleChanged += (_, _) =>
+                    {
+                        if (!host.IsDisposed && !string.IsNullOrWhiteSpace(view.CoreWebView2.DocumentTitle))
+                            host.Text = view.CoreWebView2.DocumentTitle;
+                    };
+                }
+                view.CoreWebView2.ContextMenuRequested += (_, e) => ShowLocalizedContextMenu(view, e);
                 view.CoreWebView2.Navigate(url);
                 _workingFolder = folder;
                 return;
@@ -62,12 +75,47 @@ internal static class WebViewEnvironment
 
         MessageBox.Show(
             host,
-            "WebView2 çalışma zamanı başlatılamadı. Microsoft Edge WebView2 Runtime kurulu olmalı:\n" +
+            HostText.Get("webview.missing") +
             "https://developer.microsoft.com/microsoft-edge/webview2/\n\n" + report +
-            "\n(Bu metin " + Path.Combine(Path.GetTempPath(), "MacroGrid-webview-error.txt") + " dosyasına da yazıldı.)",
+            "\n" + HostText.Get("webview.writtenTo", Path.Combine(Path.GetTempPath(), "MacroGrid-webview-error.txt")),
             "Macro Grid",
             MessageBoxButtons.OK,
             MessageBoxIcon.Error);
+    }
+
+    // WebView2 draws its right-click menu in the language it was started with and cannot switch it while running, so the
+    // menu is drawn here instead: only the editing and navigation commands, named from HostText (the menu follows the
+    // language preference live). Anything else the browser offers (developer tools, save as, print, ...) is left out.
+    private static void ShowLocalizedContextMenu(WebView2 view, CoreWebView2ContextMenuRequestedEventArgs e)
+    {
+        var entries = new List<(string? Text, int CommandId, bool Enabled)>();
+        foreach (var item in e.MenuItems)
+        {
+            if (item.Kind == CoreWebView2ContextMenuItemKind.Separator)
+            {
+                if (entries.Count > 0 && entries[^1].Text is not null) entries.Add((null, 0, false));
+                continue;
+            }
+            var key = "menu." + item.Name;
+            if (item.Kind != CoreWebView2ContextMenuItemKind.Command || !HostText.Has(key)) continue;
+            entries.Add((HostText.Get(key), item.CommandId, item.IsEnabled));
+        }
+        while (entries.Count > 0 && entries[^1].Text is null) entries.RemoveAt(entries.Count - 1);
+
+        e.Handled = true;
+        if (entries.Count == 0) return;
+
+        var deferral = e.GetDeferral();
+        var menu = new ContextMenuStrip();
+        foreach (var (text, commandId, enabled) in entries)
+        {
+            if (text is null) { menu.Items.Add(new ToolStripSeparator()); continue; }
+            var id = commandId;
+            menu.Items.Add(new ToolStripMenuItem(text, null, (_, _) => e.SelectedCommandId = id) { Enabled = enabled });
+        }
+        // Closed is raised before the click of the chosen item is handled; completing later keeps the choice.
+        menu.Closed += (_, _) => view.BeginInvoke(() => { deferral.Complete(); menu.Dispose(); });
+        menu.Show(view, e.Location);
     }
 
     private static bool IsElevated()

@@ -15,7 +15,7 @@ internal sealed class EditorWindow : Form
 
     private EditorWindow(string url)
     {
-        Text = "Macro Grid Editörü";
+        Text = "Macro Grid Editor";
         Width = 1280;
         Height = 800;
         StartPosition = FormStartPosition.CenterScreen;

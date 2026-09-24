@@ -84,7 +84,7 @@ export interface IconPickerProps {
   onChange: (dataUri: string | undefined, iconName: string | undefined) => void;
 }
 
-/** "İkon seç…" button + a search modal over lucide-react (ISC licensed, bundled locally) plus any
+/** "Pick icon…" button + a search modal over lucide-react (ISC licensed, bundled locally) plus any
  * plugin-contributed icon packs (fetched from the server, e.g. the PLC icon pack). */
 /** Falls back to the editor's own current text color (not a hardcoded dark-theme hex) so icon previews
  * stay visible against `--ms-bg-inset` in both themes — a fixed "#e6e7ea" (light gray) used to render
@@ -115,7 +115,7 @@ export function IconPicker({ value, color, onChange }: IconPickerProps) {
     [pluginPacks],
   );
 
-  // Each entry carries its own pack id so "Tümü" can mix lucide names with plugin-pack names that might
+  // Each entry carries its own pack id so "All" can mix lucide names with plugin-pack names that might
   // collide (e.g. two packs both having a "play" icon) without ambiguity.
   const entries = useMemo(() => {
     const q = picker.query.trim().toLowerCase();

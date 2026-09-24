@@ -76,10 +76,10 @@ public sealed class DeviceStoreTests : IDisposable
         var originalLastSeen = device.LastSeenAt;
 
         Thread.Sleep(10);
-        store.Touch("device-1", "Telefon (yeniden adlandırıldı)");
+        store.Touch("device-1", "Phone (renamed)");
 
         var updated = store.FindByToken(device.Token)!;
-        Assert.Equal("Telefon (yeniden adlandırıldı)", updated.Name);
+        Assert.Equal("Phone (renamed)", updated.Name);
         Assert.True(updated.LastSeenAt > originalLastSeen);
     }
 }

@@ -104,7 +104,7 @@ public sealed class Template
             var words = format.Split('/', 2);
             return value ? words[0] : words[1];
         }
-        return value ? "Açık" : "Kapalı";
+        return value ? AppLanguage.Pick("On", "Açık") : AppLanguage.Pick("Off", "Kapalı");
     }
 
     private sealed record VariableRef(string Name, string? Format);

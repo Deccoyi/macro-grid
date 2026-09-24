@@ -9,9 +9,9 @@ public sealed class PageAction : IActionHandler, IActionDescriptor
     public const string TypeId = "core.page";
 
     public string Type => TypeId;
-    public string DisplayName => "Sayfa değiştir";
-    public string Category => "Sayfa & Profil";
-    public string? Description => "Cihazın gösterdiği sayfayı değiştirir";
+    public string DisplayName => "Switch page";
+    public string Category => "Page & Profile";
+    public string? Description => "Changes the page the device shows";
     public string? Icon => "layout-grid";
     public IReadOnlyList<SettingField> Fields => [];
 
@@ -45,9 +45,9 @@ public sealed class ProfileAction : IActionHandler, IActionDescriptor
     public const string TypeId = "core.profile";
 
     public string Type => TypeId;
-    public string DisplayName => "Profil değiştir";
-    public string Category => "Sayfa & Profil";
-    public string? Description => "Cihazın profilini değiştirir";
+    public string DisplayName => "Switch profile";
+    public string Category => "Page & Profile";
+    public string? Description => "Changes the profile of the device";
     public string? Icon => "user-cog";
     public IReadOnlyList<SettingField> Fields => [];
 

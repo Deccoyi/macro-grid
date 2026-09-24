@@ -33,14 +33,14 @@ public static class HotkeyParser
         error = null;
         if (string.IsNullOrWhiteSpace(text))
         {
-            error = "Kısayol boş.";
+            error = "The hotkey is empty.";
             return false;
         }
 
         var tokens = text.Split('+', StringSplitOptions.TrimEntries);
         if (tokens.Any(t => t.Length == 0))
         {
-            error = $"Geçersiz kısayol: '{text}'. '+' tuşu için 'plus' yazın.";
+            error = $"Invalid hotkey: '{text}'. Write 'plus' for the '+' key.";
             return false;
         }
 
@@ -56,7 +56,7 @@ public static class HotkeyParser
 
             if (key is not null)
             {
-                error = $"Birden fazla tuş var: '{key}' ve '{raw}'.";
+                error = $"More than one key: '{key}' and '{raw}'.";
                 return false;
             }
 
@@ -64,7 +64,7 @@ public static class HotkeyParser
             key = KeyAliases.GetValueOrDefault(normalized, normalized);
             if (!KnownKeys.All.Contains(key))
             {
-                error = $"Bilinmeyen tuş: '{raw}'.";
+                error = $"Unknown key: '{raw}'.";
                 return false;
             }
         }
@@ -74,7 +74,7 @@ public static class HotkeyParser
         {
             if (tokens.Length != 1)
             {
-                error = "Kısayolda modifier dışında bir tuş olmalı.";
+                error = "A hotkey needs a key besides the modifiers.";
                 return false;
             }
             key = ModifierAliases[tokens[0]].ToString().ToLowerInvariant();

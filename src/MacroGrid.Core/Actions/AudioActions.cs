@@ -10,9 +10,9 @@ public sealed class SetVolumeAction(IAudioService audio) : IActionHandler, IActi
 {
     public const string TypeId = "core.setVolume";
     public string Type => TypeId;
-    public string DisplayName => "Ana ses seviyesi";
-    public string Category => "Ses";
-    public string? Description => "Slider/knob ile ana ses seviyesini ayarlar";
+    public string DisplayName => "Master volume";
+    public string Category => "Audio";
+    public string? Description => "Sets the master volume with a slider/knob";
     public string? Icon => "volume-2";
     public IReadOnlyList<SettingField> Fields => [];
 
@@ -29,9 +29,9 @@ public sealed class SetMuteAction(IAudioService audio) : IActionHandler, IAction
 {
     public const string TypeId = "core.setMute";
     public string Type => TypeId;
-    public string DisplayName => "Sesi kapat/aç";
-    public string Category => "Ses";
-    public string? Description => "Ana sesi belirli bir duruma getirir";
+    public string DisplayName => "Set mute";
+    public string Category => "Audio";
+    public string? Description => "Sets the master sound to a specific state";
     public string? Icon => "volume-x";
     public IReadOnlyList<SettingField> Fields => [];
 
@@ -49,9 +49,9 @@ public sealed class ToggleMuteAction(IAudioService audio) : IActionHandler, IAct
 {
     public const string TypeId = "core.toggleMute";
     public string Type => TypeId;
-    public string DisplayName => "Sesi sessize al/aç";
-    public string Category => "Ses";
-    public string? Description => "Ana sesi mute/unmute arasında değiştirir";
+    public string DisplayName => "Toggle mute";
+    public string Category => "Audio";
+    public string? Description => "Switches the master sound between muted and unmuted";
     public string? Icon => "volume-1";
     public IReadOnlyList<SettingField> Fields => [];
 
