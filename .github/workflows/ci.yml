@@ -54,6 +54,12 @@ jobs:
           cache-dependency-path: ${{ matrix.project }}/package-lock.json
       - name: Install
         run: npm ci
+      - name: Install the renderer dependencies
+        # The editor and the deck import @macro/renderer from source; its own dependencies (react, postcss, ...) live in
+        # packages/renderer/node_modules and must exist for the typecheck and the bundle build to resolve them.
+        if: matrix.project != 'packages/renderer'
+        working-directory: packages/renderer
+        run: npm ci
       - name: Typecheck
         run: npm run typecheck
       - name: Build
