@@ -4,6 +4,7 @@ This file follows the [Keep a Changelog](https://keepachangelog.com/) format. Fo
 
 ## [Unreleased]
 ### Changed
+- **Plugins window:** `PluginsWindow` mounts its own `DialogHost`. It is a separate native window (`?window=plugins`), and the host in `App.tsx` does not exist there, so `confirmAsync` for "Remove" never resolved.
 - **Product renamed from "Macro Station" to "Macro Grid":** namespaces, projects, assemblies (`MacroGrid.*`), solution, installer script/exe, repo names (`macro-grid`, `macro-grid-client`, `macro-grid-plugin`) and the npm package names were renamed. Migration remark: the user-data folder changed from `%APPDATA%\MacroStation` to `%APPDATA%\MacroGrid` and the browser-deck localStorage keys from `macro-station.*` to `macro-grid.*`; there is no migration code because there are no users yet (move the old folder by hand on a dev machine if needed). The SDK assembly is now `MacroGrid.Plugin.Abstractions`.
 
 ### Added

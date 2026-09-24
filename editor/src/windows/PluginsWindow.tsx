@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { FolderOpen, RefreshCw, RotateCw, Settings, Trash2 } from "lucide-react";
 import { api } from "../api/client";
 import type { PluginInfo } from "../api/types";
+import { DialogHost } from "../dialogs/DialogHost";
 import { confirmAsync } from "../dialogs/dialogStore";
 import { useT } from "../i18n/I18nContext";
 import { SectionLabel } from "../panels/fields/controls";
@@ -205,6 +206,8 @@ export function PluginsWindow() {
           </p>
         </>
       )}
+      {/* This window is a separate native window; the confirm dialog of "Remove" is drawn by its own host. */}
+      <DialogHost />
     </ToolWindowLayout>
   );
 }
