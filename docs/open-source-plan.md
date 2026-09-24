@@ -108,7 +108,7 @@ Flip order on the day (minutes apart): server, client, plugin, then enable Pages
 **D. Release prep**
 17. ✅ Write `docs/open-source-plan.md` (this file, English) and a `docs/release.md` update (release checklist, versioning, tag naming `server-v0.2.0`, `client-v0.x`, `plugin-obs-v0.2.0` style).
 18. ✅ Draft GitHub Release notes from the public `CHANGELOG.md` files.
-19. Final pre-flip audit report: gate table with pass/fail evidence.
+19. ✅ (first version 2026-09-24: [pre-flip-audit.md](pre-flip-audit.md); refresh it right before the flip) Final pre-flip audit report: gate table with pass/fail evidence.
 
 ## Owner's tasks (things only the owner can do)
 
