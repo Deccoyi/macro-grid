@@ -4,6 +4,7 @@ New features and fixes in Macro Grid. For technical details, see [CHANGELOG-deve
 
 ## Unreleased
 ### New
+- **Website:** A new website has a quick start, a full guide, tutorials and downloads for Macro Grid.
 - **Start with Windows:** Preferences has a new General section. Turn on "Start Macro Grid when I sign in to Windows" and choose what happens at that start: only the tray icon (default) or also the editor window.
 - **When you open Macro Grid:** Choose whether it opens the editor window (default) or only starts in the notification area.
 - **Settings windows block the editor:** While Preferences, Plugins or another settings window is open, the editor behind it cannot be used, like in other desktop programs.

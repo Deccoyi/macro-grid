@@ -22,6 +22,8 @@ duration, ...) and presses keys, types text, opens programs, changes the volume 
 > install, which devices you pair, which plugins you run and which buttons you press. The installer and the app ask you to accept the
 > [user agreement](installer/license-agreement.txt). See also [LICENSE](LICENSE) (MIT).
 
+**Website and user guide: <https://deccoyi.github.io/macro-grid/>** (getting started, tutorials, reference).
+
 This repository is the **server and editor**. The three parts are versioned independently:
 
 | Repository | What it is |
@@ -32,11 +34,9 @@ This repository is the **server and editor**. The three parts are versioned inde
 
 ## Screenshots
 
-_Screenshots will be added before the first public release._
+![The editor](website/public/img/editor-overview.png)
 
-<!-- ![The editor](docs/images/editor.png) -->
-<!-- ![A deck on a phone](docs/images/deck-phone.png) -->
-<!-- ![The pairing window](docs/images/pairing.png) -->
+<img src="website/public/img/deck-phone.png" alt="A deck on a phone" height="480">
 
 ## What it does
 
@@ -108,6 +108,7 @@ Details are in [docs/architecture.md](docs/architecture.md#security-model). To r
 
 ## Documentation
 
+- [Website and user guide](https://deccoyi.github.io/macro-grid/): getting started, tutorials and reference for users (its source is in `website/`)
 - [Architecture](docs/architecture.md): how it is put together, the protocol and the security model
 - [Development](docs/development.md): building, running, testing and the pitfalls
 - [Roadmap](docs/roadmap.md): what is done and what is next

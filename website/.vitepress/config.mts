@@ -21,19 +21,25 @@ export default defineConfig({
     search: { provider: 'local' },
     nav: [
       { text: 'Guide', link: '/guide/', activeMatch: '/guide/' },
+      { text: 'Ecosystem', link: '/ecosystem' },
       { text: 'Tutorials', link: '/tutorials/volume-slider', activeMatch: '/tutorials/' },
       { text: 'Reference', link: '/reference/actions', activeMatch: '/reference/' },
       { text: 'Plugins', link: pluginSite },
-      {
-        text: 'Downloads',
-        items: [
-          { text: 'Server (Windows)', link: `${repo}/releases` },
-          { text: 'Phone app (Android)', link: 'https://github.com/Deccoyi/macro-grid-client/releases' },
-          { text: 'Plugins', link: 'https://github.com/Deccoyi/macro-grid-plugin' },
-        ],
-      },
+      { text: 'Download', link: '/download' },
+      { text: 'Developers', link: '/developers/', activeMatch: '/developers/' },
     ],
-    sidebar: [
+    sidebar: {
+      '/developers/': [
+        {
+          text: 'For developers',
+          items: [
+            { text: 'Overview', link: '/developers/' },
+            { text: 'Build from source', link: '/developers/build' },
+            { text: 'Technical reference', link: '/developers/reference' },
+          ],
+        },
+      ],
+      '/': [
       {
         text: 'Getting started',
         items: [
@@ -84,7 +90,8 @@ export default defineConfig({
           { text: 'FAQ', link: '/reference/faq' },
         ],
       },
-    ],
+      ],
+    },
     socialLinks: [{ icon: 'github', link: repo }],
     editLink: { pattern: `${repo}/edit/dev/website/:path`, text: 'Suggest a change on GitHub' },
     outline: { level: [2, 3] },

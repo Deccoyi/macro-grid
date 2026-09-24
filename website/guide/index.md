@@ -13,7 +13,7 @@ Macro Grid is in public alpha and was written entirely by an AI assistant. Featu
 
 ## 1. Install the server
 
-Download `MacroGrid-Setup-<version>.exe` from the [Releases page](https://github.com/Deccoyi/macro-grid/releases) and run it. Details and building from source: [Install the server](/guide/install).
+Download `MacroGrid-Setup-<version>.exe` from the [Releases page](https://github.com/Deccoyi/macro-grid/releases) and run it. Details: [Install the server](/guide/install).
 
 Macro Grid starts as a **tray icon** near the clock. Double-click it (or use its menu) to open the editor.
 
@@ -29,7 +29,7 @@ More: [Pair a device](/guide/pairing).
 
 1. Click **Add widget** and choose **Button**. It lands on a free cell of the grid.
 2. Select it and set its **Text**, for example `CPU {system.cpu|0}%`. The `{...}` part is a live value.
-3. Under **Actions**, on **Press**, click **+ Add action** and pick **Shortcut** (`core.hotkey`). Click the field and press your combination, for example `Ctrl+Shift+S`.
+3. Under **Actions**, on **Press**, click **+ Add action** and pick **Shortcut**. Click the field and press your combination, for example `Ctrl+Shift+S`.
 4. Click **Save**. The phone updates right away. Press the button and the PC receives the shortcut.
 
 ::: tip Several actions, one macro
