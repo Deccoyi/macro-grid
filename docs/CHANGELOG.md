@@ -8,6 +8,7 @@ New features and fixes in Macro Grid. For technical details, see [CHANGELOG-deve
 ### New
 - **Default language:** Macro Grid opens in Turkish on a Turkish Windows and in English on any other. Once you pick a language in Preferences, that choice is kept.
 - **Plugin languages:** Plugins can ship their own translations. The tray menu, window titles and plugin texts now follow the language you choose.
+- **Website:** A new website has a quick start, a full guide, tutorials and downloads for Macro Grid.
 - **Start with Windows:** Preferences has a new General section. Turn on "Start Macro Grid when I sign in to Windows" and choose what happens at that start: only the tray icon (default) or also the editor window.
 - **When you open Macro Grid:** Choose whether it opens the editor window (default) or only starts in the notification area.
 - **Settings windows block the editor:** While Preferences, Plugins or another settings window is open, the editor behind it cannot be used, like in other desktop programs.
