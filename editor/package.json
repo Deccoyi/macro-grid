@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "@macro/renderer": "file:../packages/renderer",
-    "lucide-react": "^0.460.0",
+    "lucide-react": "^1.47.0",
     "qrcode": "^1.5.4",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
@@ -19,8 +19,8 @@
     "@types/qrcode": "^1.5.6",
     "@types/react": "^18.3.11",
     "@types/react-dom": "^18.3.1",
-    "@vitejs/plugin-react": "^4.3.2",
+    "@vitejs/plugin-react": "^6.1.1",
     "typescript": "^5.6.3",
-    "vite": "^5.4.9"
+    "vite": "^8.3.0"
   }
 }
