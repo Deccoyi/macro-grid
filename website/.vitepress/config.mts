@@ -22,13 +22,26 @@ export default defineConfig({
     search: { provider: 'local' },
     nav: [
       { text: 'Guide', link: '/guide/', activeMatch: '/guide/' },
-      { text: 'Tutorials', link: '/tutorials/volume-slider', activeMatch: '/tutorials/' },
-      { text: 'Reference', link: '/reference/actions', activeMatch: '/reference/' },
-      { text: 'Ecosystem', link: '/ecosystem' },
+      {
+        text: 'Learn',
+        activeMatch: '^/(tutorials|reference)/',
+        items: [
+          { text: 'Tutorials', link: '/tutorials/volume-slider' },
+          { text: 'Reference', link: '/reference/actions' },
+          { text: 'FAQ', link: '/reference/faq' },
+        ],
+      },
       { text: 'Download', link: '/download' },
-      { text: 'Plugins', link: pluginSite + 'store/' },
-      { text: 'Phone app', link: clientSite },
-      { text: 'Developers', link: '/developers/', activeMatch: '/developers/' },
+      {
+        text: 'Ecosystem',
+        activeMatch: '/developers/|/ecosystem',
+        items: [
+          { text: 'Overview', link: '/ecosystem' },
+          { text: 'Plugin store', link: pluginSite + 'store/' },
+          { text: 'Phone app', link: clientSite },
+          { text: 'For developers', link: '/developers/' },
+        ],
+      },
     ],
     sidebar: {
       '/developers/': [
