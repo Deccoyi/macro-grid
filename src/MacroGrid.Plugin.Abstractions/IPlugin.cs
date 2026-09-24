@@ -41,7 +41,7 @@ public interface IPluginHost
     void RegisterSettingsPage(IPluginSettingsPage page);
 
     /// <summary>Creates one entry the plugin owns in the editor's window-wide status bar. Call once per
-    /// logical status ("obs-connection"); reuse the returned item across the plugin's lifetime.</summary>
+    /// logical status ("demo-connection"); reuse the returned item across the plugin's lifetime.</summary>
     IPluginStatusItem CreateStatusItem(string id);
 
     /// <summary>Registers a set of icons the plugin contributes to the editor's icon picker.</summary>

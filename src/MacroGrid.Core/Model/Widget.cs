@@ -15,7 +15,7 @@ public sealed class Widget
     public int W { get; set; } = 1;
     public int H { get; set; } = 1;
 
-    /// <summary>Display text; may contain variable templates such as "Live: {obs.stream.duration}".</summary>
+    /// <summary>Display text; may contain variable templates such as "Live: {demo.stream.duration}".</summary>
     public string? Text { get; set; }
 
     public WidgetStyle Style { get; set; } = new();

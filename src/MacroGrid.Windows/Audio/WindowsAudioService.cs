@@ -49,7 +49,7 @@ public sealed class WindowsAudioService : IAudioService
         catch (COMException)
         {
             // No active playback device (none plugged in, or Windows Audio service stopped) — treat as
-            // "no volume to report", same as OBS/any other external dependency being unavailable.
+            // "no volume to report", same as any other external dependency being unavailable.
             return null;
         }
     }

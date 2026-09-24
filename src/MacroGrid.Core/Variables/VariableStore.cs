@@ -4,7 +4,7 @@ using MacroGrid.Core.Widgets;
 namespace MacroGrid.Core.Variables;
 
 /// <summary>
-/// Process-wide store of live values (system.cpu, obs.stream.duration, ...).
+/// Process-wide store of live values (system.cpu, demo.stream.duration, ...).
 /// <see cref="WidgetStateService"/> in a separate assembly cannot see this class directly? No —
 /// it lives in Core too and subscribes to <see cref="Changed"/> to know which widgets need a refresh.
 /// </summary>

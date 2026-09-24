@@ -294,7 +294,7 @@ public sealed class ClientHub(
 
     /// <summary>Surfaces a failed action both to the device that triggered it (toast, via the same "error"
     /// envelope pairing failures already use) and in the editor's status bar — a stale binding (e.g. a
-    /// button pointed at a since-deleted OBS scene) must never fail silently.</summary>
+    /// button pointed at a since-deleted scene of a plugin) must never fail silently.</summary>
     private async Task ReportActionErrorsAsync(ClientSession session, IReadOnlyList<string> errors)
     {
         if (errors.Count == 0) return;
