@@ -1,6 +1,9 @@
-import { useEffect, useRef, useState, type CSSProperties } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Grid, WidgetView, type Profile, type WidgetState } from "@macro/renderer";
 import { getDeviceId } from "./deviceId";
+import { ActionErrorToast } from "./components/ActionErrorToast";
+import { ConnectScreen } from "./components/ConnectScreen";
+import { TopBar } from "./components/TopBar";
 import { t } from "./i18n";
 import { ConnectionStatus, ProfileSummary, ServerConnection } from "./ws/connection";
 
@@ -16,7 +19,7 @@ export function App() {
   const actionErrorTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
-    const connection = new ServerConnection(getDeviceId(), t("Browser", "Tarayıcı"), {
+    const connection = new ServerConnection(getDeviceId(), t("device.name"), {
       onStatusChange: setStatus,
       onLayout: (nextProfile, nextPageId) => {
         setProfile(nextProfile);
@@ -94,141 +97,6 @@ export function App() {
         />
       </div>
       {actionError && <ActionErrorToast message={actionError} />}
-    </div>
-  );
-}
-
-function ActionErrorToast({ message }: { message: string }) {
-  return (
-    <div
-      style={{
-        position: "fixed", left: "50%", bottom: 24, transform: "translateX(-50%)",
-        maxWidth: "min(420px, calc(100vw - 32px))", padding: "10px 16px", borderRadius: 10,
-        background: "rgba(127,29,29,.95)", color: "#fecaca", fontSize: 13, lineHeight: 1.4,
-        boxShadow: "0 4px 16px rgba(0,0,0,.4)", zIndex: 1000,
-      }}
-    >
-      {message}
-    </div>
-  );
-}
-
-function TopBar({
-  status,
-  profiles,
-  currentProfileId,
-  onPickProfile,
-  pageName,
-  canNav,
-  onPrevPage,
-  onNextPage,
-}: {
-  status: ConnectionStatus;
-  profiles: ProfileSummary[];
-  currentProfileId: string;
-  onPickProfile: (id: string) => void;
-  pageName: string;
-  canNav: boolean;
-  onPrevPage: () => void;
-  onNextPage: () => void;
-}) {
-  return (
-    <div
-      style={{
-        display: "flex", alignItems: "center", gap: 10, padding: "8px 12px",
-        background: "#16181c", borderBottom: "1px solid #2d3136", flexWrap: "wrap",
-      }}
-    >
-      <span style={{ color: "#e6e7ea", fontSize: 13, fontWeight: 600 }}>Macro Grid</span>
-
-      {profiles.length > 1 && (
-        <select
-          value={currentProfileId}
-          onChange={(e) => onPickProfile(e.target.value)}
-          style={{ background: "#0b0d10", color: "#e6e7ea", border: "1px solid #2d3136", borderRadius: 6, padding: "4px 8px", fontSize: 12.5 }}
-        >
-          {profiles.map((p) => (
-            <option key={p.id} value={p.id}>{p.name}</option>
-          ))}
-        </select>
-      )}
-
-      {canNav && (
-        <div style={{ display: "flex", alignItems: "center", gap: 6, marginLeft: "auto" }}>
-          <button onClick={onPrevPage} style={navButtonStyle}>←</button>
-          <span style={{ color: "#9aa0a8", fontSize: 12, minWidth: 60, textAlign: "center" }}>{pageName}</span>
-          <button onClick={onNextPage} style={navButtonStyle}>→</button>
-        </div>
-      )}
-
-      <span
-        style={{
-          marginLeft: canNav ? 0 : "auto", fontSize: 11, padding: "3px 8px", borderRadius: 999,
-          background: status === "connected" ? "rgba(34,197,94,.15)" : "rgba(239,68,68,.15)",
-          color: status === "connected" ? "#4ade80" : status === "connecting" ? "#facc15" : "#ef4444",
-        }}
-      >
-        {status === "connected" ? t("Connected", "Bağlı") : status === "connecting" ? t("Connecting…", "Bağlanıyor…") : t("Offline", "Çevrimdışı")}
-      </span>
-    </div>
-  );
-}
-
-const navButtonStyle: CSSProperties = {
-  padding: "4px 10px", fontSize: 14, borderRadius: 6, border: "1px solid #2d3136",
-  background: "transparent", color: "#e6e7ea", cursor: "pointer",
-};
-
-function ConnectScreen({ status, onSubmitPin }: { status: ConnectionStatus; onSubmitPin: (pin: string) => void }) {
-  const [pin, setPin] = useState("");
-  const pairing = status === "pairing_required";
-
-  return (
-    <div
-      style={{
-        display: "flex", flexDirection: "column", gap: 14, alignItems: "center", justifyContent: "center",
-        minHeight: "100vh", background: "#0b0d10", color: "#e6e7ea", fontFamily: "system-ui, sans-serif", padding: 24,
-        boxSizing: "border-box",
-      }}
-    >
-      <h1 style={{ fontSize: 20, margin: 0 }}>Macro Grid</h1>
-
-      {!pairing && <p style={{ color: "#9aa0a8", fontSize: 13 }}>{status === "connecting" ? t("Connecting…", "Bağlanıyor…") : t("Connection lost, retrying…", "Bağlantı koptu, yeniden deneniyor…")}</p>}
-
-      {pairing && (
-        <>
-          <p style={{ color: "#9aa0a8", fontSize: 13, textAlign: "center", margin: 0, maxWidth: 320 }}>
-            {t(
-              'This browser is not paired yet. Open "Pairing" in the Macro Grid editor on your computer and enter the 6-digit PIN shown there.',
-              'Bu tarayıcı henüz eşleşmemiş. Bilgisayarındaki Macro Grid düzenleyicisinde "Eşleştirme"ye tıkla ve orada gösterilen 6 haneli PIN\'i buraya gir.',
-            )}
-          </p>
-          <input
-            value={pin}
-            onChange={(e) => setPin(e.target.value.replace(/\D/g, "").slice(0, 6))}
-            onKeyDown={(e) => e.key === "Enter" && pin.length === 6 && onSubmitPin(pin)}
-            placeholder="000000"
-            inputMode="numeric"
-            autoFocus
-            style={{
-              width: "100%", maxWidth: 200, padding: "10px 12px", fontSize: 28, borderRadius: 8, textAlign: "center",
-              letterSpacing: ".2em", fontFamily: "ui-monospace, monospace",
-              border: "1px solid #2d3136", background: "#16181c", color: "#e6e7ea",
-            }}
-          />
-          <button
-            onClick={() => onSubmitPin(pin)}
-            disabled={pin.length !== 6}
-            style={{
-              padding: "10px 24px", fontSize: 15, borderRadius: 8, border: "none",
-              background: pin.length === 6 ? "#3b82f6" : "#2d3136", color: "white",
-              cursor: pin.length === 6 ? "pointer" : "default",
-            }}
-          >
-            {t("Pair", "Eşleştir")}
-          </button>
-        </>
-      )}
     </div>
   );
 }
