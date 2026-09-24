@@ -1,21 +1,11 @@
-/* Brand colors follow the editor: amber accent on a neutral dark (docs/color-bible.md). */
+/* Shared look of the three Macro Grid sites. Everything except the accent colors.
+   This file is copied byte-for-byte into each repo. Keep the copies identical.
+   The accent (brand and button colors) lives in accent.css. */
 :root {
   --vp-layout-top-height: 44px;
-  --vp-c-brand-1: #b45f04;
-  --vp-c-brand-2: #d97706;
-  --vp-c-brand-3: #d97706;
-  --vp-c-brand-soft: rgba(217, 119, 6, 0.14);
-  --vp-button-brand-bg: #d97706;
-  --vp-button-brand-hover-bg: #f59e0b;
-  --vp-button-brand-active-bg: #b45f04;
-  --vp-button-brand-text: #1c1e22;
-  --vp-button-brand-hover-text: #1c1e22;
-  --vp-button-brand-active-text: #ffffff;
   --vp-home-hero-name-color: var(--vp-c-brand-1);
 }
 .dark {
-  --vp-c-brand-1: #f59e0b;
-  --vp-c-brand-2: #d97706;
   --vp-c-bg: #1c1e22;
   --vp-c-bg-alt: #16171a;
   --vp-c-bg-elv: #232529;
@@ -24,6 +14,23 @@
 @media (max-width: 720px) {
   :root { --vp-layout-top-height: 40px; }
 }
+
+/* Header: keep the logo and title on one line next to the product switcher. */
+.VPNavBarTitle .title { white-space: nowrap; }
+
+/* Header on tablets: search shrinks to its icon so the switcher and the menu fit. */
+@media (min-width: 768px) and (max-width: 1099px) {
+  .VPNavBarSearch .DocSearch-Button-Placeholder,
+  .VPNavBarSearch .DocSearch-Button-Keys { display: none; }
+  .VPNavBarSearch .DocSearch-Button { min-width: 0; padding: 0 12px; }
+}
+
+/* Footer: links in the accent color. */
+.VPFooter a { color: var(--vp-c-brand-1); text-decoration: none; }
+.VPFooter a:hover { text-decoration: underline; }
+
+/* Code blocks: same corner radius as the rest of the chrome. */
+.vp-doc div[class*='language-'] { border-radius: 10px; }
 
 /* Home: plain, no card chrome. */
 .VPHero .image-bg { display: none; }
