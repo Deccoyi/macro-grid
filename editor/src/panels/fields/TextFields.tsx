@@ -9,7 +9,7 @@ import { VariablePicker } from "../VariablePicker";
 import type { FieldGroupProps } from "./AppearanceFields";
 import { ColorField, Seg } from "./controls";
 
-export interface TextFieldsProps extends FieldGroupProps {
+interface TextFieldsProps extends FieldGroupProps {
   variableCatalog: VariableInfo[];
   /** Set false to hide the icon picker (image widgets show their own picture instead). */
   showIcon?: boolean;

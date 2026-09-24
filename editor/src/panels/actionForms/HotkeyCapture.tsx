@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 import { useT } from "../../i18n/I18nContext";
 import { codeToKeyName, codeToModifier, formatCombo } from "./keyCapture";
 
-export interface HotkeyCaptureProps {
+interface HotkeyCaptureProps {
   value: string;
   onChange: (combo: string) => void;
 }

@@ -21,7 +21,7 @@ function ActionIcon({ name }: { name?: string | null }) {
   );
 }
 
-export interface ActionPickerProps {
+interface ActionPickerProps {
   actions: ActionInfo[];
   onPick: (type: string) => void;
   /** Custom trigger in place of the default "+ Add action" button (e.g. a binding row's type button). */

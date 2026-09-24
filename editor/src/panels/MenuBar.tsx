@@ -6,7 +6,7 @@ import { useServerVersion } from "../state/useServerVersion";
 import { useT, type Language } from "../i18n/I18nContext";
 import { ContextMenu, type ContextMenuItem } from "./ContextMenu";
 
-export interface MenuBarProps {
+interface MenuBarProps {
   profile: Profile | null;
   onImportProfile: (data: Profile) => Promise<void>;
 }

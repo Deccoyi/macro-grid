@@ -40,7 +40,7 @@ interface ProfilesListData {
 
 export type ConnectionStatus = "connecting" | "connected" | "disconnected" | "pairing_required";
 
-export interface ConnectionEvents {
+interface ConnectionEvents {
   onStatusChange: (status: ConnectionStatus) => void;
   onLayout: (profile: Profile, pageId: string) => void;
   onPageChange: (pageId: string) => void;

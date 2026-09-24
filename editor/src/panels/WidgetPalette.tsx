@@ -12,7 +12,7 @@ const PALETTE: { type: WidgetType; key: DictKey }[] = [
   { type: "web", key: "widget.type.web" },
 ];
 
-export interface WidgetPaletteProps {
+interface WidgetPaletteProps {
   onAdd: (type: WidgetType) => void;
 }
 

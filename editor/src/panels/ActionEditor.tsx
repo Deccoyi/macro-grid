@@ -8,7 +8,7 @@ import type { DictKey } from "../i18n/tr";
 import { ActionPicker } from "./ActionPicker";
 import { formFor } from "./actionForms/forms";
 
-export interface ActionEditorProps {
+interface ActionEditorProps {
   widget: Widget;
   actions: ActionInfo[];
   pages: Page[];

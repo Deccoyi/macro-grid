@@ -4,7 +4,7 @@ import { useT } from "../../i18n/I18nContext";
 import { usePreferences } from "../../preferences/PreferencesContext";
 
 /** Shared preset palette offered by every color field's popover (see ColorField below). */
-export const SWATCHES = [
+const SWATCHES = [
   "#374151", "#475569", "#b91c1c", "#c2410c", "#b45309", "#84761f", "#15803d", "#0f766e",
   "#0e7490", "#1d4ed8", "#4338ca", "#6d28d9", "#a21caf", "#be185d", "#78350f", "#111827",
 ];
@@ -138,7 +138,7 @@ export function ColorField({ value, onChange, disabled, title }: { value?: strin
   );
 }
 
-export interface SegOption<T extends string> {
+interface SegOption<T extends string> {
   value: T;
   label: ReactNode;
   title?: string;

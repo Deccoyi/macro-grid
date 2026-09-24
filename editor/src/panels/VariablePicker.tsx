@@ -5,7 +5,7 @@ import { useCatalogText } from "../i18n/catalogText";
 import { useT } from "../i18n/I18nContext";
 import { PickerShell, usePickerFilter, usePickerOpenState } from "./PickerShell";
 
-export interface VariablePickerProps {
+interface VariablePickerProps {
   catalog: VariableInfo[];
   /** Inserts the token (e.g. "{system.cpu|0}") at the caller's current cursor position. */
   onInsert: (token: string) => void;
