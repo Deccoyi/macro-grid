@@ -35,7 +35,7 @@ jobs:
           dotnet-version: 10.x
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24
 
       - name: Test
         run: dotnet test -c Release

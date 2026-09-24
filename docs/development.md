@@ -7,7 +7,7 @@ How to build, run and test the server and editor, and the pitfalls that are easy
 
 - Windows 10 or 11 (the server is Windows-only: WinForms tray app, WebView2, `SendInput`, core audio).
 - [.NET 10 SDK](https://dotnet.microsoft.com/download).
-- [Node.js](https://nodejs.org/) 20 or newer, for the editor and the browser deck.
+- [Node.js](https://nodejs.org/) 20 or newer (CI and the maintainers use 24), for the editor and the browser deck.
 - The [WebView2 Runtime](https://developer.microsoft.com/microsoft-edge/webview2/) (already part of current Windows).
 
 `nuget.config` pins nuget.org as the only package source; keep it.
