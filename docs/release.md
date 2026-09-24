@@ -10,7 +10,7 @@ scripts\publish.ps1
 ```
 
 Builds the editor, then publishes `artifacts\server\` (`MacroStation.exe`, about 62 MB, plus its `wwwroot` folder and
-`version.txt`). The version is read from `ClientHub.ServerVersion`; bump it there first (see `versioning.md`).
+`version.txt`, `LICENSE`, `THIRD_PARTY_NOTICES.md` and the `licenses/` folder with the original license texts of all third-party libraries). The version is read from `ClientHub.ServerVersion`; bump it there first (see `versioning.md`).
 `-SkipEditor` reuses an editor bundle that is already built.
 
 ## 2. Build the installer

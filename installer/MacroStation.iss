@@ -40,6 +40,7 @@ Name: "desktopicon"; Description: "Create a &desktop shortcut"; Flags: unchecked
 Name: "autostart"; Description: "Start Macro Station when I sign in to Windows"; Flags: unchecked
 
 [Files]
+; The publish folder already contains LICENSE, THIRD_PARTY_NOTICES.md and the licenses folder; the wildcard below installs them next to the exe.
 Source: "{#SourceDir}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [Icons]

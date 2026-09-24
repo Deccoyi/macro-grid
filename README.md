@@ -95,4 +95,8 @@ See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## License
 
-[MIT](LICENSE). Third-party components are listed in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+[MIT](LICENSE).
+
+## Third-party licenses
+
+Macro Station uses open-source libraries. The full list with versions, licenses and copyright holders is in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md), and the original license text of every library is in the [licenses/](licenses/) folder. The installer and the release folder include both, plus the [LICENSE](LICENSE) file. The app icons are AI-generated.
