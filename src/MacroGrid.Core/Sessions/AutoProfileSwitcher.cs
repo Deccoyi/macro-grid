@@ -24,7 +24,7 @@ public sealed class AutoProfileSwitcher(
     ILogger<AutoProfileSwitcher> logger) : BackgroundService
 {
     /// <summary>How often a dead process is pruned from a session's stack while at least one session has
-    /// a live Rule entry — "Yığında kural yokken timer çalışmaz" means this loop is cheap to just always
+    /// a live Rule entry — "the timer does not run while the stack has no rule" means this loop is cheap to just always
     /// run; the work inside is skipped instantly when nothing has a Rule entry.</summary>
     private static readonly TimeSpan PruneInterval = TimeSpan.FromSeconds(2);
 
@@ -48,7 +48,7 @@ public sealed class AutoProfileSwitcher(
     }
 
     /// <summary>Re-applies the current foreground window to one session right after it unlocks —
-    /// "kilit açıldığında durum bir kez yeniden değerlendirilir". A no-op for a session that isn't
+    /// "when the lock is released, the state is re-evaluated once". A no-op for a session that isn't
     /// opted in or has no known current foreground window yet.</summary>
     public async Task ReevaluateAsync(ClientSession session)
     {
@@ -117,7 +117,7 @@ public sealed class AutoProfileSwitcher(
     }
 
     /// <summary>First profile (in <see cref="ProfileStore.All"/> order — name-sorted) whose <c>AppMatches</c>
-    /// matches this window. Null for an undefined window — "tanımsız pencere → hiçbir şey olmaz".</summary>
+    /// matches this window. Null for an undefined window — "an undefined window does nothing".</summary>
     private string? ResolveProfileFor(ForegroundWindow window) =>
         profiles.All.FirstOrDefault(p => p.AppMatches.Any(m => Matches(m, window)))?.Id;
 

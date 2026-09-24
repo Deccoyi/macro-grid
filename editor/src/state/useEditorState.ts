@@ -5,6 +5,7 @@ import type { ActionInfo, ProfileSummary, StatusEntry, VariableInfo, VariableSna
 import { choiceAsync, confirmAsync } from "../dialogs/dialogStore";
 import { findFreeCell } from "../grid/collision";
 import { useT } from "../i18n/I18nContext";
+import { usePreferences } from "../preferences/PreferencesContext";
 import { invalidateIconPacks } from "../panels/IconPicker";
 
 let nextTempId = 1;
@@ -15,6 +16,7 @@ function tempId(prefix: string): string {
 
 export function useEditorState() {
   const { t } = useT();
+  const { savedLanguage } = usePreferences();
   const [profiles, setProfiles] = useState<ProfileSummary[]>([]);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [currentPageId, setCurrentPageId] = useState<string | null>(null);
@@ -57,6 +59,12 @@ export function useEditorState() {
     refreshVariables();
   }, [loadProfileList, refreshVariables, refreshCatalogs]);
 
+  // Plugin texts are translated by the server, so a saved language change needs a fresh copy of them.
+  useEffect(() => {
+    refreshCatalogs();
+    refreshVariables();
+  }, [savedLanguage, refreshCatalogs, refreshVariables]);
+
   // Plugins are installed / reloaded / removed live from the separate "Eklentiler" window, which changes the
   // action list, variable picker and icon packs. Coming back to this window is the cheap moment to refetch.
   useEffect(() => {
@@ -65,7 +73,7 @@ export function useEditorState() {
   }, [refreshCatalogs]);
 
   // Auto-poll so the canvas's dynamic-style preview (evaluateWidgetDynamicStyle) actually reacts to
-  // live values like system.cpu instead of only updating when the user clicks "Değişkenleri yenile" —
+  // live values like system.cpu instead of only updating when the user clicks "Refresh variables" —
   // this is a one-shot REST snapshot, not a push, since the editor isn't a real device session.
   useEffect(() => {
     const timer = setInterval(refreshVariables, 2000);
@@ -149,14 +157,14 @@ export function useEditorState() {
     await loadProfileList(created.id);
   }, [confirmDiscardIfDirty, loadProfileList]);
 
-  /** "Dosya > Profili İçe Aktar": normally creates a brand-new profile then overwrites it with the
+  /** "File > Import Profile": normally creates a brand-new profile then overwrites it with the
    * imported content under the new id. If a profile with the same name already exists the user is asked
-   * (never decided silently): "Üzerine yaz" replaces that profile's content in place (keeping its id),
-   * "Adı değiştir" imports as a new profile named name_1, name_2, ... and Cancel aborts the import. */
+   * (never decided silently): "Overwrite" replaces that profile's content in place (keeping its id),
+   * "Rename" imports as a new profile named name_1, name_2, ... and Cancel aborts the import. */
   const importProfileFromJson = useCallback(
     async (data: Profile) => {
       if (!(await confirmDiscardIfDirty())) return;
-      const originalName = data.name || "Profil";
+      const originalName = data.name || t("profile.defaultName");
       const existing = profiles.find((p) => p.name === originalName);
       let name = originalName;
 
@@ -205,7 +213,7 @@ export function useEditorState() {
     [mutate],
   );
 
-  /** Remembers which "Önizleme" preset this profile should open with — see Profile.PreviewDeviceId. */
+  /** Remembers which "Preview" preset this profile should open with — see Profile.PreviewDeviceId. */
   const setPreviewDevice = useCallback(
     (id: string) => mutate((draft) => ({ ...draft, previewDeviceId: id === "free" ? undefined : id })),
     [mutate],

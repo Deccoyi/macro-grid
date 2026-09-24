@@ -73,23 +73,23 @@ public class DynamicRuleEvaluatorTests
         {
             Cases =
             [
-                new DynamicCase(Compare("v", ">", "80"), "kırmızı"),
-                new DynamicCase(Compare("v", ">", "50"), "sarı"),
+                new DynamicCase(Compare("v", ">", "80"), "red"),
+                new DynamicCase(Compare("v", ">", "50"), "yellow"),
             ],
-            Default = "yeşil",
+            Default = "green",
         };
 
-        Assert.Equal("sarı", DynamicRuleEvaluator.Evaluate(binding, StoreWith("v", 60.0)));
-        Assert.Equal("kırmızı", DynamicRuleEvaluator.Evaluate(binding, StoreWith("v", 90.0)));
-        Assert.Equal("yeşil", DynamicRuleEvaluator.Evaluate(binding, StoreWith("v", 10.0)));
+        Assert.Equal("yellow", DynamicRuleEvaluator.Evaluate(binding, StoreWith("v", 60.0)));
+        Assert.Equal("red", DynamicRuleEvaluator.Evaluate(binding, StoreWith("v", 90.0)));
+        Assert.Equal("green", DynamicRuleEvaluator.Evaluate(binding, StoreWith("v", 10.0)));
     }
 
     [Fact]
     public void String_equality_is_case_insensitive()
     {
-        var binding = new DynamicBinding { Cases = [new DynamicCase(Compare("mode", "==", "Recording"), "kırmızı")] };
+        var binding = new DynamicBinding { Cases = [new DynamicCase(Compare("mode", "==", "Recording"), "red")] };
 
-        Assert.Equal("kırmızı", DynamicRuleEvaluator.Evaluate(binding, StoreWith("mode", "recording")));
+        Assert.Equal("red", DynamicRuleEvaluator.Evaluate(binding, StoreWith("mode", "recording")));
     }
 
     [Fact]

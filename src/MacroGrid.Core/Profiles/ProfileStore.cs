@@ -104,28 +104,28 @@ public sealed class ProfileStore
 
         var page2 = new Page
         {
-            Name = "Sayfa 2",
+            Name = AppLanguage.Pick("Page 2", "Sayfa 2"),
             Cols = 4,
             Rows = 1,
             Widgets =
             [
                 new Widget
                 {
-                    Text = "← Geri",
+                    Text = AppLanguage.Pick("← Back", "← Geri"),
                     X = 0, Y = 0,
                     Style = new WidgetStyle { Background = "#334155", Foreground = "#ffffff" },
                     Actions = { [WidgetEvents.Press] = [new ActionBinding(PageAction.TypeId, PageAction.Back())] },
                 },
                 new Widget
                 {
-                    Text = "Metin editörü aç",
+                    Text = AppLanguage.Pick("Open text editor", "Metin editörü aç"),
                     X = 1, Y = 0,
                     Style = new WidgetStyle { Background = "#0284c7", Foreground = "#ffffff" },
                     Actions = { [WidgetEvents.Press] = [new ActionBinding(OpenAction.TypeId, OpenAction.Settings("notepad.exe"))] },
                 },
                 new Widget
                 {
-                    Text = "Tümünü kopyala",
+                    Text = AppLanguage.Pick("Copy all", "Tümünü kopyala"),
                     X = 2, Y = 0, W = 2,
                     Style = new WidgetStyle { Background = "#7c3aed", Foreground = "#ffffff" },
                     Actions =
@@ -143,7 +143,7 @@ public sealed class ProfileStore
 
         var page1 = new Page
         {
-            Name = "Ana sayfa",
+            Name = AppLanguage.Pick("Main page", "Ana sayfa"),
             Cols = 4,
             Rows = 2,
             Widgets =
@@ -154,7 +154,7 @@ public sealed class ProfileStore
                 new Widget
                 {
                     Type = WidgetTypes.Toggle,
-                    Text = "Sessiz",
+                    Text = AppLanguage.Pick("Mute", "Sessiz"),
                     X = 2, Y = 1,
                     Style = new WidgetStyle { Background = "#334155", Foreground = "#ffffff" },
                     Actions =
@@ -165,7 +165,7 @@ public sealed class ProfileStore
                 },
                 new Widget
                 {
-                    Text = "Sayfa 2 →",
+                    Text = AppLanguage.Pick("Page 2 →", "Sayfa 2 →"),
                     X = 3, Y = 1,
                     Style = new WidgetStyle { Background = "#334155", Foreground = "#ffffff" },
                     Actions = { [WidgetEvents.Press] = [new ActionBinding(PageAction.TypeId, PageAction.Goto(page2.Id))] },
@@ -173,6 +173,6 @@ public sealed class ProfileStore
             ],
         };
 
-        return new Profile { Name = "Varsayılan", Pages = [page1, page2] };
+        return new Profile { Name = AppLanguage.Pick("Default", "Varsayılan"), Pages = [page1, page2] };
     }
 }

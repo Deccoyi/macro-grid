@@ -24,7 +24,7 @@ public interface IActiveWindowSource
     void Start();
 
     /// <summary>Every process currently owning at least one visible top-level window, one entry per
-    /// process (its main/first visible window's title) — for the editor's "çalışan uygulamadan seç" list.
+    /// process (its main/first visible window's title) — for the editor's "pick from running apps" list.
     /// Not filtered against MacroGrid's own process; the editor excludes it itself if it shows up.</summary>
     IReadOnlyList<ForegroundWindow> ListVisibleWindows();
 }

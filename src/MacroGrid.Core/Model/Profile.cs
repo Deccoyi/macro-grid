@@ -8,7 +8,7 @@ public sealed class Profile
     public string Name { get; set; } = "Profile";
     public List<Page> Pages { get; set; } = [];
 
-    /// <summary>Which "Önizleme" device preset (or preview profile id) the editor should switch to when
+    /// <summary>Which "Preview" device preset (or preview profile id) the editor should switch to when
     /// this profile is opened — null/empty means "Serbest" (free). Purely an editor convenience; the
     /// server/client never read it. If the referenced preset no longer exists (a custom preview profile
     /// was deleted in Tercihler) the editor falls back to free on its own — this field is left as-is.</summary>

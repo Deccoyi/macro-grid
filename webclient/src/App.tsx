@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { Grid, WidgetView, type Profile, type WidgetState } from "@macro/renderer";
 import { getDeviceId } from "./deviceId";
+import { t } from "./i18n";
 import { ConnectionStatus, ProfileSummary, ServerConnection } from "./ws/connection";
 
 export function App() {
@@ -15,7 +16,7 @@ export function App() {
   const actionErrorTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
-    const connection = new ServerConnection(getDeviceId(), "Tarayıcı", {
+    const connection = new ServerConnection(getDeviceId(), t("Browser", "Tarayıcı"), {
       onStatusChange: setStatus,
       onLayout: (nextProfile, nextPageId) => {
         setProfile(nextProfile);
@@ -167,7 +168,7 @@ function TopBar({
           color: status === "connected" ? "#4ade80" : status === "connecting" ? "#facc15" : "#ef4444",
         }}
       >
-        {status === "connected" ? "Bağlı" : status === "connecting" ? "Bağlanıyor…" : "Çevrimdışı"}
+        {status === "connected" ? t("Connected", "Bağlı") : status === "connecting" ? t("Connecting…", "Bağlanıyor…") : t("Offline", "Çevrimdışı")}
       </span>
     </div>
   );
@@ -192,13 +193,15 @@ function ConnectScreen({ status, onSubmitPin }: { status: ConnectionStatus; onSu
     >
       <h1 style={{ fontSize: 20, margin: 0 }}>Macro Grid</h1>
 
-      {!pairing && <p style={{ color: "#9aa0a8", fontSize: 13 }}>{status === "connecting" ? "Bağlanıyor…" : "Bağlantı koptu, yeniden deneniyor…"}</p>}
+      {!pairing && <p style={{ color: "#9aa0a8", fontSize: 13 }}>{status === "connecting" ? t("Connecting…", "Bağlanıyor…") : t("Connection lost, retrying…", "Bağlantı koptu, yeniden deneniyor…")}</p>}
 
       {pairing && (
         <>
           <p style={{ color: "#9aa0a8", fontSize: 13, textAlign: "center", margin: 0, maxWidth: 320 }}>
-            Bu tarayıcı henüz eşleşmemiş. Bilgisayarındaki Macro Grid düzenleyicisinde "Eşleştirme"ye tıkla ve orada
-            gösterilen 6 haneli PIN'i buraya gir.
+            {t(
+              'This browser is not paired yet. Open "Pairing" in the Macro Grid editor on your computer and enter the 6-digit PIN shown there.',
+              'Bu tarayıcı henüz eşleşmemiş. Bilgisayarındaki Macro Grid düzenleyicisinde "Eşleştirme"ye tıkla ve orada gösterilen 6 haneli PIN\'i buraya gir.',
+            )}
           </p>
           <input
             value={pin}
@@ -222,7 +225,7 @@ function ConnectScreen({ status, onSubmitPin }: { status: ConnectionStatus; onSu
               cursor: pin.length === 6 ? "pointer" : "default",
             }}
           >
-            Eşleştir
+            {t("Pair", "Eşleştir")}
           </button>
         </>
       )}

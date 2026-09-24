@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { useMemo } from "react";
 import type { VariableInfo } from "../api/types";
+import { useCatalogText } from "../i18n/catalogText";
 import { useT } from "../i18n/I18nContext";
 import { PickerShell, usePickerFilter, usePickerOpenState } from "./PickerShell";
 
@@ -15,24 +16,25 @@ export interface VariablePickerProps {
   renderTrigger?: (open: () => void) => ReactNode;
 }
 
-/** "+ Değişken ekle": categorized (by provider — built-in "Sistem" today, a plugin's own category later), searchable. */
+/** "+ Add variable": categorized (by provider — built-in "System" today, a plugin's own category later), searchable. */
 export function VariablePicker({ catalog, onInsert, buttonLabel, mode = "template", renderTrigger }: VariablePickerProps) {
   const { t } = useT();
+  const catalogText = useCatalogText();
   const picker = usePickerOpenState();
   const label = buttonLabel ?? t("variable.add");
 
   const categories = useMemo(() => {
     const counts = new Map<string, number>();
     for (const v of catalog) counts.set(v.category, (counts.get(v.category) ?? 0) + 1);
-    return [...counts.entries()].map(([id, badge]) => ({ id, label: id, badge }));
-  }, [catalog]);
+    return [...counts.entries()].map(([id, badge]) => ({ id, label: catalogText.categoryLabel(id), badge }));
+  }, [catalog, catalogText]);
 
   const items = usePickerFilter(
     catalog,
     picker.category,
     picker.query,
     (v) => v.category,
-    (v, q) => v.name.toLowerCase().includes(q) || v.description.toLowerCase().includes(q),
+    (v, q) => v.name.toLowerCase().includes(q) || catalogText.variableDescription(v).toLowerCase().includes(q),
   );
 
   if (catalog.length === 0) return null;
@@ -64,7 +66,7 @@ export function VariablePicker({ catalog, onInsert, buttonLabel, mode = "templat
               style={{ display: "block", width: "100%", textAlign: "left", borderRadius: 0, padding: "6px 10px" }}
             >
               <div style={{ fontFamily: "ui-monospace, monospace", fontSize: 12 }}>{`{${v.name}}`}</div>
-              <div style={{ fontSize: 11, color: "var(--ms-text-secondary)" }}>{v.description}</div>
+              <div style={{ fontSize: 11, color: "var(--ms-text-secondary)" }}>{catalogText.variableDescription(v)}</div>
             </button>
           ))}
         </PickerShell>

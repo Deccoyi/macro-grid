@@ -15,7 +15,7 @@ public class VariableCatalogTests
     {
         var catalog = new VariableCatalog(
         [
-            new FakeSource(new VariableInfo("z.two", "İkinci", "{z.two}", "Test")),
+            new FakeSource(new VariableInfo("z.two", "Second", "{z.two}", "Test")),
             new FakeSource(new VariableInfo("a.one", "Birinci", "{a.one}", "Test")),
         ]);
 

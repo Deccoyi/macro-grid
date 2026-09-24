@@ -6,7 +6,7 @@ import { api } from "../api/client";
 import { useT } from "../i18n/I18nContext";
 import { SectionLabel } from "./fields/controls";
 
-/** "Otomatik etkinleştir" — the profile's foreground-window auto-switch rules (docs/auto-profile-switch.md).
+/** "Activate automatically" — the profile's foreground-window auto-switch rules (docs/auto-profile-switch.md).
  * Lives inside ProfilePagesPanel, toggled open by the AppWindow icon next to rename/new/delete. */
 export function AppMatchesEditor({ matches, onChange }: { matches: AppMatch[]; onChange: (matches: AppMatch[]) => void }) {
   const { t } = useT();

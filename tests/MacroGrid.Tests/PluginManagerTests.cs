@@ -210,7 +210,7 @@ public sealed class PluginManagerTests : IAsyncLifetime
         Assert.Equal("Stub", descriptor.Category);
         Assert.Equal("stub", _manager.GetActionPluginId("stub.action"));
         Assert.NotNull(_manager.GetSettingsPage("stub"));
-        Assert.Equal("stub hazır", Assert.Single(_status.All, i => i.PluginId == "stub").Text);
+        Assert.Equal("stub ready", Assert.Single(_status.All, i => i.PluginId == "stub").Text);
         Assert.Contains(_catalog.All, v => v.Name == "stub.value");
         await WaitForAsync(() => _variables.Get("stub.value") is 42.0);
     }

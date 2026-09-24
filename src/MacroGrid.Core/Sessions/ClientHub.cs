@@ -26,7 +26,8 @@ public sealed class ClientHub(
     PluginStatusRegistry statusRegistry,
     PreferencesStore preferences,
     AutoProfileSwitcher autoSwitcher,
-    ILogger<ClientHub> logger)
+    ILogger<ClientHub> logger,
+    PluginLocalizer localizer)
 {
     public const string ServerVersion = "0.2.0";
     private const int MaxMessageBytes = 64 * 1024;
@@ -120,7 +121,7 @@ public sealed class ClientHub(
 
             if (envelope is null || string.IsNullOrEmpty(envelope.Type))
             {
-                await session.SendAsync(MessageTypes.Error, new ErrorMessage("bad_message", "Geçersiz JSON zarfı."), ct);
+                await session.SendAsync(MessageTypes.Error, new ErrorMessage("bad_message", "Invalid JSON envelope."), ct);
                 continue;
             }
 
@@ -138,7 +139,7 @@ public sealed class ClientHub(
 
         if (!session.IsIdentified)
         {
-            await session.SendAsync(MessageTypes.Error, new ErrorMessage("hello_required", "Önce hello gönderilmeli."), ct);
+            await session.SendAsync(MessageTypes.Error, new ErrorMessage("hello_required", "A hello message has to be sent first."), ct);
             return;
         }
 
@@ -199,11 +200,11 @@ public sealed class ClientHub(
     {
         if (hello is null || string.IsNullOrWhiteSpace(hello.DeviceId))
         {
-            await session.SendAsync(MessageTypes.Error, new ErrorMessage("bad_hello", "deviceId gerekli."), ct);
+            await session.SendAsync(MessageTypes.Error, new ErrorMessage("bad_hello", "deviceId is required."), ct);
             return;
         }
 
-        var deviceName = string.IsNullOrWhiteSpace(hello.DeviceName) ? "Cihaz" : hello.DeviceName;
+        var deviceName = string.IsNullOrWhiteSpace(hello.DeviceName) ? "Device" : hello.DeviceName;
         var device = devices.FindByToken(hello.Token);
         string? issuedToken = null;
 
@@ -211,7 +212,7 @@ public sealed class ClientHub(
         {
             if (!pairing.Verify(hello.Pin))
             {
-                await session.SendAsync(MessageTypes.Error, new ErrorMessage("pairing_required", "Eşleştirme gerekli. Bilgisayardaki Macro Grid düzenleyicisinde gösterilen PIN'i girin."), ct);
+                await session.SendAsync(MessageTypes.Error, new ErrorMessage("pairing_required", "Pairing is required. Enter the PIN shown in the Macro Grid editor on the computer."), ct);
                 return;
             }
             device = devices.Pair(hello.DeviceId, deviceName);
@@ -296,7 +297,7 @@ public sealed class ClientHub(
     private async Task ReportActionErrorsAsync(ClientSession session, IReadOnlyList<string> errors)
     {
         if (errors.Count == 0) return;
-        var message = errors[0];
+        var message = localizer.TranslateAny(errors[0]) ?? errors[0];
         statusRegistry.SetCore("actionError", message, StatusLevel.Warning, "triangle-alert");
         await session.SendAsync(MessageTypes.Error, new ErrorMessage("action_failed", message));
     }

@@ -1,5 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
+import { useT } from "../../i18n/I18nContext";
 import { usePreferences } from "../../preferences/PreferencesContext";
 
 /** Shared preset palette offered by every color field's popover (see ColorField below). */
@@ -56,8 +57,9 @@ export function CollapsibleSection({
  * portaled to <body> and positioned from the trigger's own screen rect, right-edge-aligned to it, so an
  * `overflow-y: auto` ancestor (the Properties panel) can never clip it — a plain absolutely-positioned
  * child WOULD be clipped there, because a lone `overflow-y` forces the element's `overflow-x` to `auto`
- * too (see docs/ui-guidelines.md: "kompakt masaüstü menü", never a floating web card). */
+ * too (see docs/ui-guidelines.md: "compact desktop menu", never a floating web card). */
 export function ColorField({ value, onChange, disabled, title }: { value?: string; onChange: (v: string) => void; disabled?: boolean; title?: string }) {
+  const { t } = useT();
   const [open, setOpen] = useState(false);
   const [pos, setPos] = useState<{ top: number; right: number } | null>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
@@ -104,7 +106,7 @@ export function ColorField({ value, onChange, disabled, title }: { value?: strin
         <div ref={popoverRef} className="color-field-popover" style={{ position: "fixed", top: pos.top, right: pos.right }}>
           <div className="color-field">
             <label
-              title="Renk çarkından seç"
+              title={t("color.pickFromWheel")}
               style={{ width: 15, height: 15, borderRadius: 3, background: isColor ? value : "transparent", border: isColor ? "1px solid rgba(255,255,255,.18)" : "1px dashed var(--ms-text-disabled)", flexShrink: 0, position: "relative", overflow: "hidden", cursor: "pointer" }}
             >
               <input
@@ -116,7 +118,7 @@ export function ColorField({ value, onChange, disabled, title }: { value?: strin
             </label>
             <input type="text" autoFocus value={value ?? ""} onChange={(e) => onChange(e.target.value)} placeholder="#374151" />
           </div>
-          <div className="section-label" style={{ margin: "8px 0 4px" }}>Hazır Renkler</div>
+          <div className="section-label" style={{ margin: "8px 0 4px" }}>{t("color.presets")}</div>
           <div className="swatch-grid">
             {SWATCHES.map((hex) => (
               <button

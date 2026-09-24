@@ -71,7 +71,7 @@ export function DynamizeModal({ propertyLabel, binding, variableCatalog, resultK
         style={{ width: 600, maxHeight: "82vh", background: "var(--ms-bg-surface)", border: "1px solid var(--ms-border-strong)", display: "flex", flexDirection: "column" }}
       >
         {/* Header — a window title bar, not a web modal's rounded card top: square corners, no radius
-           anywhere in this shell (see docs/ui-guidelines.md: "pencere gibi", asla web modalı gibi). */}
+           anywhere in this shell (see docs/ui-guidelines.md: "like a window", never like a web modal). */}
         <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "13px 18px", borderBottom: "1px solid var(--ms-border)" }}>
           <div style={{ width: 26, height: 26, background: "var(--ms-accent-bg-muted)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
             <Variable size={14} color="var(--ms-accent-hover)" />

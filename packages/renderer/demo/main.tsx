@@ -9,7 +9,7 @@ const page: Page = {
   rows: 3,
   widgets: [
     { id: "btn", actions: {}, type: "button", x: 0, y: 0, w: 1, h: 1, text: "Kopyala", style: { background: "#1d4ed8", foreground: "#fff" } },
-    { id: "gradient", actions: {}, type: "button", x: 1, y: 0, w: 1, h: 1, text: "Özel CSS", style: { foreground: "#fff", radius: 12 },
+    { id: "gradient", actions: {}, type: "button", x: 1, y: 0, w: 1, h: 1, text: "Custom CSS", style: { foreground: "#fff", radius: 12 },
       customCss: ":host { background: linear-gradient(135deg, #f59e0b, #dc2626); border: 2px solid gold; width: 999px; }" },
     { id: "toggle", actions: {}, type: "toggle", x: 2, y: 0, w: 1, h: 1, text: "Sessiz", style: { background: "#374151", foreground: "#fff" } },
     { id: "label", actions: {}, type: "label", x: 3, y: 0, w: 1, h: 1, text: "CPU\n42%", style: { background: "#1f2937", foreground: "#38bdf8" } },
@@ -27,7 +27,7 @@ function Demo() {
 
   return (
     <div style={{ padding: 16, height: "calc(100vh - 32px)" }}>
-      <h3 style={{ marginTop: 0 }}>Renderer demo — Aşama 3</h3>
+      <h3 style={{ marginTop: 0 }}>Renderer demo — stage 3</h3>
       <div style={{ height: "80%", border: "1px solid #35383e", borderRadius: 4 }}>
         <Grid
           page={page}
@@ -45,9 +45,9 @@ function Demo() {
         />
       </div>
       <p style={{ fontSize: 12, color: "#9a9ea6" }}>
-        Toggle'a tıkla, slider/knob'u sürükle. "Özel CSS" butonunda width:999px sanitize edilmeli, gradient/border kalmalı.
+        Click the toggle, drag the slider/knob. On the "Custom CSS" button width:999px must be sanitized while the gradient/border stay.
       </p>
-      <button onClick={() => setActive((a) => ({ ...a, toggle: !a.toggle }))}>Toggle'ı çevir</button>
+      <button onClick={() => setActive((a) => ({ ...a, toggle: !a.toggle }))}>Flip the toggle</button>
       <pre style={{ fontSize: 11 }}>{JSON.stringify({ presses, values }, null, 2)}</pre>
     </div>
   );

@@ -3,6 +3,10 @@
 export const tr = {
   // ---- App shell / menu bar ----
   "app.loading": "Yükleniyor…",
+  "app.title": "Macro Grid Editörü",
+  "profile.defaultName": "Profil",
+  "color.pickFromWheel": "Renk çarkından seç",
+  "color.presets": "Hazır Renkler",
   "menu.file": "Dosya",
   "menu.file.exportProfile": "Profili Dışa Aktar (.msprofile)",
   "menu.file.importProfile": "Profili İçe Aktar (.msprofile / .json)…",

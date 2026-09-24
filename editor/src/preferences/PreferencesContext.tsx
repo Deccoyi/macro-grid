@@ -8,7 +8,7 @@ export type PreviewProfile = PreviewProfileInfo;
 
 const DEFAULTS: AppPreferences = {
   theme: "dark",
-  language: "tr",
+  language: navigator.language.toLowerCase().startsWith("tr") ? "tr" : "en",
   previewProfiles: [],
   collapsedInspectorSections: {},
   defaultProfileId: null,
@@ -20,6 +20,8 @@ interface PreferencesContextValue {
   theme: Theme;
   setTheme: (theme: Theme) => void;
   language: Language;
+  /** The language the server has stored. Text the server translates (plugin names, action lists, ...) has to be refetched when this changes. */
+  savedLanguage: Language;
   setLanguage: (language: Language) => void;
   previewProfiles: PreviewProfile[];
   addPreviewProfile: (p: Omit<PreviewProfile, "id">) => void;
@@ -50,12 +52,14 @@ const CHANNEL_NAME = "macro-grid-preferences";
 export function PreferencesProvider({ children }: { children: ReactNode }) {
   const [prefs, setPrefs] = useState<AppPreferences>(DEFAULTS);
   const loaded = useRef(false);
+  const [savedLanguage, setSavedLanguage] = useState<Language>(DEFAULTS.language);
   const channel = useRef<BroadcastChannel | null>(null);
 
   const refetch = useCallback(() => {
     api.getPreferences().then((p) => {
       loaded.current = true;
       setPrefs(p);
+      setSavedLanguage(p.language);
     }).catch(() => {
       loaded.current = true;
     });
@@ -88,7 +92,7 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
     // Only after the initial GET resolves — otherwise a save could race the load and overwrite the
     // server's copy with these still-default values.
     if (loaded.current) {
-      api.savePreferences(next).catch(() => {});
+      api.savePreferences(next).then(() => setSavedLanguage(next.language)).catch(() => {});
       channel.current?.postMessage(next);
     }
   }, []);
@@ -139,6 +143,7 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
       theme: prefs.theme,
       setTheme,
       language: prefs.language,
+      savedLanguage,
       setLanguage,
       previewProfiles: prefs.previewProfiles,
       addPreviewProfile,
@@ -152,7 +157,7 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
       autostartMode: prefs.autostartMode,
       setAutostartMode,
     }),
-    [prefs, setTheme, setLanguage, addPreviewProfile, removePreviewProfile, setInspectorSectionCollapsed, setDefaultProfileId, setLaunchMode, setAutostartMode],
+    [prefs, savedLanguage, setTheme, setLanguage, addPreviewProfile, removePreviewProfile, setInspectorSectionCollapsed, setDefaultProfileId, setLaunchMode, setAutostartMode],
   );
 
   return <PreferencesContext.Provider value={value}>{children}</PreferencesContext.Provider>;

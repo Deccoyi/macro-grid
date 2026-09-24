@@ -118,7 +118,7 @@ export interface Profile {
   id: string;
   name: string;
   pages: Page[];
-  /** Editor-only: which "Önizleme" preset to switch to when this profile is opened. Ignored by the
+  /** Editor-only: which "Preview" preset to switch to when this profile is opened. Ignored by the
    * renderer itself and by the phone client. */
   previewDeviceId?: string;
   /** Editor-only: foreground-window rules that auto-switch an opted-in device to this profile — see

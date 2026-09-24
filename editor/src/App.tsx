@@ -7,6 +7,7 @@ import { DialogHost } from "./dialogs/DialogHost";
 import { DevicePreviewFrame, type DeviceSize } from "./grid/DevicePreviewFrame";
 import { EditorCanvas } from "./grid/EditorCanvas";
 import { useT } from "./i18n/I18nContext";
+import { useDocumentTitle } from "./i18n/useDocumentTitle";
 import type { DictKey } from "./i18n/tr";
 import { StatusBar } from "./components/StatusBar";
 import { ContextMenu, type ContextMenuItem } from "./panels/ContextMenu";
@@ -19,7 +20,7 @@ import { usePreferences } from "./preferences/PreferencesContext";
 import { useEditorState } from "./state/useEditorState";
 
 /** Common phone/tablet CSS-px viewport sizes (device-independent px, same units widget fontSize uses)
- * for the "Önizleme" picker. User-defined sizes from Preferences are appended after these. "Özel"
+ * for the "Preview" picker. User-defined sizes from Preferences are appended after these. "Custom"
  * reveals free-form width/height inputs. */
 const BUILTIN_DEVICE_PRESETS: { id: string; key: DictKey; size: DeviceSize | null }[] = [
   { id: "free", key: "device.free", size: null },
@@ -31,6 +32,7 @@ const BUILTIN_DEVICE_PRESETS: { id: string; key: DictKey; size: DeviceSize | nul
 
 export function App() {
   const { t } = useT();
+  useDocumentTitle("app.title");
   const { previewProfiles } = usePreferences();
   const state = useEditorState();
   const { profile, currentPage } = state;
@@ -47,7 +49,7 @@ export function App() {
   const [moveCopyOpen, setMoveCopyOpen] = useState(false);
   const [copyPageTarget, setCopyPageTarget] = useState<string | null>(null);
 
-  // Each profile remembers its own "Önizleme" preset (a tablet profile reopens in tablet preview, a
+  // Each profile remembers its own "Preview" preset (a tablet profile reopens in tablet preview, a
   // phone profile in phone preview, ...) — switch to it whenever a *different* profile is loaded, but
   // never on every in-place edit (profile is a fresh object on every mutate(), so this keys off the id).
   useEffect(() => {
