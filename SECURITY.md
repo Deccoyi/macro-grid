@@ -2,8 +2,7 @@
 
 ## What to expect from this software
 
-Macro Grid is an alpha-stage project written by an AI assistant and not independently audited (see the [README](README.md)). It is provided "as is",
-without warranty of any kind (see the [MIT license](LICENSE)); you use it at your own risk.
+This software was created entirely by AI tools, is alpha-stage and has not been independently audited or security-reviewed (see the [README](README.md)). It is provided "as is", without warranty of any kind, and the authors and contributors accept no responsibility or liability for it, including for security problems and their consequences (see the [MIT license](LICENSE)). You use it entirely at your own risk. Security reports are welcome, but they create no obligation to fix and are not a promise of support or of a response time.
 
 ### Threat model: a trusted local network only
 
@@ -27,7 +26,8 @@ Please report security problems **privately**, not in a public issue. Use GitHub
 repository, then **Advisories**, then **Report a vulnerability**. (Private vulnerability reporting will be enabled on the repository when it is
 made public.)
 
-If that channel is not available, write to the project mailbox, macrogrid.app@gmail.com, and put no more than "security report" in the subject line.
+If that channel is not available, open a normal issue that says only that you have a security report, with no details, and a maintainer will
+arrange a private way to receive it.
 
 Helpful details: what is affected, the steps to reproduce, and what an attacker on the same network (or with a paired device, or with an installed
 plugin) could do.

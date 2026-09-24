@@ -4,6 +4,12 @@ New features and fixes in Macro Grid. For technical details, see [CHANGELOG-deve
 
 ## Unreleased
 ### New
+- **Start with Windows:** Preferences has a new General section. Turn on "Start Macro Grid when I sign in to Windows" and choose what happens at that start: only the tray icon (default) or also the editor window.
+- **When you open Macro Grid:** Choose whether it opens the editor window (default) or only starts in the notification area.
+- **Settings windows block the editor:** While Preferences, Plugins or another settings window is open, the editor behind it cannot be used, like in other desktop programs.
+- **Help window:** It now shows the disclaimer, the user agreement and the license texts of all bundled libraries inside the app.
+- **Installer:** Shows a user agreement that has to be accepted, creates a desktop shortcut by default, works on company networks, and removes everything when it is uninstalled, even while Macro Grid is running.
+- **Phone app:** The settings panel shows the same notice: AI-generated, alpha, no warranty, use at your own risk.
 - **Automatic profile switching:** When an app comes to the front, your phone switches to that app's profile. When you move to another window, it goes back to the previous profile.
 - **Profile lock:** The profile drawer on your phone has a lock switch. While it is on, automatic switching pauses. You can still pick a profile by hand.
 - **Default profile:** You can choose a default profile in Preferences.

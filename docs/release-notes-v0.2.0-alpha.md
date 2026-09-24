@@ -4,8 +4,10 @@ Draft notes for the GitHub Release `server-v0.2.0-alpha`. Derived from [CHANGELO
 
 ---
 
-**Alpha software.** Macro Grid was written entirely by an AI assistant, has not been reviewed line by line or security-audited, and comes with no warranty.
-It is meant for a home or office network you trust, not for the internet. Expect rough edges and changes between versions.
+**Alpha software, AI-generated, use at your own risk.** All code, documentation and artwork of Macro Grid were created by artificial intelligence. Nothing has been
+reviewed line by line by a human or security-audited. It is provided "as is", without warranty of any kind, and the authors accept no responsibility or
+liability for it: all risk is yours. The installer asks you to accept a user agreement that says so. It is meant for a home or office network you trust, not for
+the internet. Expect rough edges and changes between versions. The installer is not code-signed, so Windows may warn about an unknown publisher.
 
 Macro Grid turns a phone or tablet on your network into a customizable macro deck for your Windows PC. This is the server and editor; get the phone app
 from [macro-grid-client](https://github.com/Deccoyi/macro-grid-client) and plugins from

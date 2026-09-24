@@ -11,13 +11,16 @@ duration, ...) and presses keys, types text, opens programs, changes the volume 
 
 > **Alpha.** Macro Grid is early software: features and file formats can still change between versions.
 >
-> ## This project was written entirely by an AI assistant
+> ## AI-generated software: you use it entirely at your own risk
 >
-> All code, design and documentation in this repository were written by an AI assistant (Claude) at a user's direction. It has not been reviewed line by line by a
-> human, security-audited or certified for production use.
+> All code, design, documentation and artwork of this project were created by artificial intelligence (an AI assistant working at the
+> maintainer's direction). Nothing has been reviewed line by line by a human, security-audited or certified for any purpose.
 >
-> **No warranty of any kind.** The software is provided "as is", without warranty of any kind, express or implied, including but not limited to
-> merchantability, fitness for a particular purpose and non-infringement. You use it entirely at your own risk. See [LICENSE](LICENSE) (MIT).
+> **No warranty, no liability.** The software is provided "as is", without warranty of any kind, express or implied. To the fullest
+> extent permitted by law, the authors and contributors accept no responsibility or liability of any kind for it, including for damage,
+> data loss, misuse, security problems or any other consequence of installing or using it. All risk is yours: which software you
+> install, which devices you pair, which plugins you run and which buttons you press. The installer and the app ask you to accept the
+> [user agreement](installer/license-agreement.txt). See also [LICENSE](LICENSE) (MIT).
 
 This repository is the **server and editor**. The three parts are versioned independently:
 

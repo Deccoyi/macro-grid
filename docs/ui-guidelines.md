@@ -48,7 +48,9 @@ Decide in this order:
 1. Can it be solved in the existing **Properties panel**? Use it.
 2. Can it be solved in the existing **workspace**? Use it.
 3. Does it need a separate work area (preferences, plugins, pairing, help)? Open a real **desktop window** (`ToolWindow.cs`, one native window per
-   tool, non-modal). The Plugins, Preferences, Pairing, Help and plugin settings screens work this way.
+   tool). The Plugins, Preferences, Pairing, Help and plugin settings screens work this way. Like an ordinary desktop dialog, a tool window is
+   owned by the editor window, stays above it and blocks it while open: clicking the editor plays the Windows warning sound and flashes the
+   tool window instead of working behind it (`Owner` plus `Enabled = false`, not `ShowDialog`).
 4. Only a short confirmation or warning? A small **dialog**.
 5. Only momentary status? Inline feedback or the **status bar**.
 

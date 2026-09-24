@@ -43,7 +43,7 @@ scripts\publish.ps1
 ```
 
 Builds the editor, then publishes `artifacts\server\` (`MacroGrid.exe`, about 62 MB, plus its `wwwroot` folder and
-`version.txt`, `LICENSE`, `THIRD_PARTY_NOTICES.md` and the `licenses/` folder with the original license texts of all third-party libraries). The version is read from `ClientHub.ServerVersion`; bump it there first (see `versioning.md`).
+`version.txt`, `LICENSE`, `THIRD_PARTY_NOTICES.md`, `license-agreement.txt` and the `licenses/` folder with the original license texts of all third-party libraries). The version is read from `ClientHub.ServerVersion`; bump it there first (see `versioning.md`).
 `-SkipEditor` reuses an editor bundle that is already built.
 
 ## 2. Build the installer
@@ -56,10 +56,11 @@ installer\build-installer.ps1
 
 It produces `artifacts\MacroGrid-Setup-<version>.exe`. The installer (`installer\MacroGrid.iss`):
 
-- installs to `Program Files\Macro Grid` with a Start menu entry, and an optional desktop shortcut;
-- has an unchecked task "Start Macro Grid when I sign in to Windows" (a per-user `Run` entry that is removed on uninstall);
-- opens TCP port 9820 in the Windows firewall for private networks only, and removes the rule on uninstall;
-- closes a running server before an upgrade replaces its files;
+- first asks the person to accept the user agreement (`installer\license-agreement.txt`: no warranty, limitation of liability, the MIT license); the same text is shown in the editor's Help window;
+- installs to `Program Files\Macro Grid` with a Start menu entry and a desktop shortcut (the task is ticked by default);
+- has an unchecked task "Start Macro Grid when I sign in to Windows" (a per-user `Run` entry that carries `--autostart`, removed on uninstall). The same switch is in the editor under Preferences, General, together with what a start by Windows and a start by the person do (tray only or open the editor window);
+- opens TCP port 9820 in the Windows firewall for private and domain networks (never public ones), and removes the rule on uninstall;
+- closes a running Macro Grid before installing or uninstalling, and removes the whole program folder on uninstall;
 - leaves `%AppData%\MacroGrid` (profiles, paired devices, plugins, logs) in place on uninstall.
 
 `AppId` in the `.iss` file must never change; it is how upgrades and the uninstaller find the app.
