@@ -46,7 +46,7 @@ describe("sanitizeWidgetCss", () => {
 
     expect(css).not.toContain("evil.example");
     expect(css).toContain("data:image/png;base64,AAAA");
-    expect(removed.some((r) => r.includes("dış url"))).toBe(true);
+    expect(removed.some((r) => r.includes("external url"))).toBe(true);
   });
 
   it("strips @import (would fetch an external stylesheet)", () => {

@@ -5,6 +5,7 @@ import type { PluginInfo } from "../api/types";
 import { DialogHost } from "../dialogs/DialogHost";
 import { confirmAsync } from "../dialogs/dialogStore";
 import { useT } from "../i18n/I18nContext";
+import { useDocumentTitle } from "../i18n/useDocumentTitle";
 import { SectionLabel } from "../panels/fields/controls";
 import { ToolWindowLayout } from "./ToolWindowLayout";
 
@@ -22,6 +23,7 @@ const STATUS_COLOR: Record<PluginInfo["status"], string> = {
  * install (from a folder), reload or remove a plugin. All of it takes effect immediately — no restart. */
 export function PluginsWindow() {
   const { t } = useT();
+  useDocumentTitle("plugins.title");
   const [category, setCategory] = useState<Category>("installed");
   const [plugins, setPlugins] = useState<PluginInfo[] | null>(null);
   const [installing, setInstalling] = useState(false);

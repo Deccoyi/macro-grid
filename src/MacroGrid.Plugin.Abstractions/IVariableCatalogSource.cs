@@ -2,7 +2,7 @@ namespace MacroGrid.Plugin.Abstractions;
 
 /// <summary>
 /// One variable a provider makes available, described for the editor's variable picker.
-/// <paramref name="Category"/> groups it in that picker (e.g. "Sistem"); a plugin can introduce its own
+/// <paramref name="Category"/> groups it in that picker (e.g. "System"); a plugin can introduce its own
 /// category name freely — the editor just lists whatever distinct category strings show up.
 /// </summary>
 public sealed record VariableInfo(string Name, string Description, string Example, string Category);

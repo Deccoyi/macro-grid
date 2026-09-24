@@ -33,7 +33,8 @@ public sealed class PluginManager(
     VariableStore variables,
     PluginPermissionStore permissionStore,
     IInputService? input,
-    ILogger<PluginManager> logger) : IHostedService
+    ILogger<PluginManager> logger,
+    PluginLocalizer? localizer = null) : IHostedService
 {
     private static readonly JsonSerializerOptions ManifestJson = new(JsonSerializerDefaults.Web);
     private static readonly TimeSpan ProviderStopTimeout = TimeSpan.FromSeconds(5);
@@ -72,6 +73,12 @@ public sealed class PluginManager(
     public IReadOnlyList<IIconPackSource> IconPacks
     {
         get { lock (_stateLock) return [.. _entries.Values.Where(e => e.Running is not null).SelectMany(e => e.Running!.Host.IconPacks)]; }
+    }
+
+    /// <summary>Every running plugin's icon packs together with the id of the plugin that owns them (picks the translation table).</summary>
+    public IReadOnlyList<(string PluginId, IIconPackSource Pack)> IconPacksWithOwner
+    {
+        get { lock (_stateLock) return [.. _entries.Values.Where(e => e.Running is not null).SelectMany(e => e.Running!.Host.IconPacks.Select(p => (e.Info.Id, p)))]; }
     }
 
     public IPluginSettingsPage? GetSettingsPage(string pluginId)
@@ -375,10 +382,11 @@ public sealed class PluginManager(
 
             foreach (var provider in host.VariableProviders)
             {
-                if (provider is IVariableCatalogSource source) catalog.Add(source);
+                if (provider is IVariableCatalogSource source) catalog.Add(source, manifest.Id);
                 providerHost.StartOwned(manifest.Id, provider, variableStore);
             }
 
+            localizer?.Register(manifest.Id, dir, manifest.DefaultLanguage);
             var info = new LoadedPlugin(manifest.Id, manifest.Name, manifest.Version, PluginLoadStatus.Loaded, null, host.SettingsPage is not null);
             var entry = new Entry(dir, info) { Running = new Running(context, instance, host, variableStore) };
             lock (_stateLock) _entries[manifest.Id] = entry;
@@ -427,6 +435,7 @@ public sealed class PluginManager(
 
         DisposeAll(running.Host, id, running.Instance);
         statusRegistry.RemovePlugin(id);
+        localizer?.Unregister(id);
         entry.Running = null;
 
         if (running.Context is { } context)

@@ -36,6 +36,11 @@ public sealed record PluginManifest
     [JsonConverter(typeof(JsonStringEnumConverter<PluginKind>))]
     public required PluginKind Kind { get; init; }
 
+    /// <summary>Language the plugin's own texts (action names, descriptions, form labels, ...) are written in, e.g. "en". Defaults to "en".
+    /// Other languages come from <c>locales/&lt;language&gt;.json</c> next to plugin.json (default-language text to translation); a
+    /// language without a file falls back to the texts as written.</summary>
+    public string? DefaultLanguage { get; init; }
+
     /// <summary>JS plugins only — permission strings like "variables", "actions", "http:localhost:4455". Ignored for csharp plugins.</summary>
     public string[]? Permissions { get; init; }
 }

@@ -33,8 +33,8 @@ public sealed class UiDialogService(SynchronizationContext ui) : IUiDialogServic
             {
                 using var dialog = new OpenFileDialog
                 {
-                    Title = "Uygulama seç",
-                    Filter = "Uygulamalar (*.exe)|*.exe|Tüm dosyalar (*.*)|*.*",
+                    Title = HostText.Get("dialog.pickApp"),
+                    Filter = HostText.Get("dialog.appFilter"),
                     CheckFileExists = true,
                 };
                 tcs.SetResult(dialog.ShowDialog() == DialogResult.OK ? dialog.FileName : null);

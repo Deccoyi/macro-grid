@@ -19,11 +19,11 @@ public enum SettingFieldKind
 }
 
 /// <summary>One labeled option in a <see cref="SettingFieldKind.Select"/> or <see cref="SettingFieldKind.Segmented"/> field.
-/// <paramref name="Group"/> is used for indentation like "Grup › Öğe" (e.g. a scene item nested in a group).</summary>
+/// <paramref name="Group"/> is used for indentation like "Group › Item" (e.g. a scene item nested in a group).</summary>
 public sealed record SettingOption(string Value, string Label, string? Group = null, string? Icon = null);
 
 /// <summary>The result of an <see cref="IOptionsSource"/> query. <paramref name="Error"/> carries a
-/// user-facing message (e.g. "OBS'e bağlı değil") when options could not be produced; in that case
+/// user-facing message (e.g. "Not connected to the app") when options could not be produced; in that case
 /// <paramref name="Options"/> is empty, not null.</summary>
 public sealed record OptionsResult(IReadOnlyList<SettingOption> Options, string? Error = null);
 

@@ -25,7 +25,8 @@ internal sealed class ToolWindow : Form
         MinimumSize = new Size(480, 360);
         StartPosition = FormStartPosition.CenterScreen;
         Icon = Icon.ExtractAssociatedIcon(Application.ExecutablePath);
-        _ = WebViewEnvironment.AttachAsync(this, url);
+        // A plugin's settings window is titled with the plugin's name, which the page does not know.
+        _ = WebViewEnvironment.AttachAsync(this, url, followDocumentTitle: !url.Contains("window=plugin-settings"));
     }
 
 

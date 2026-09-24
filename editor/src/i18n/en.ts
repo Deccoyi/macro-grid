@@ -3,6 +3,10 @@ import type { DictKey } from "./tr";
 /** English dictionary — must define exactly the same keys as tr.ts (enforced by the DictKey type). */
 export const en: Record<DictKey, string | ((...args: string[]) => string)> = {
   "app.loading": "Loading…",
+  "app.title": "Macro Grid Editor",
+  "profile.defaultName": "Profile",
+  "color.pickFromWheel": "Pick from the color wheel",
+  "color.presets": "Preset colors",
   "menu.file": "File",
   "menu.file.exportProfile": "Export Profile (.msprofile)",
   "menu.file.importProfile": "Import Profile (.msprofile / .json)…",

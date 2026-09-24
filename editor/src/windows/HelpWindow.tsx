@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { api, type LegalOverview } from "../api/client";
 import { useT } from "../i18n/I18nContext";
+import { useDocumentTitle } from "../i18n/useDocumentTitle";
 import { useServerVersion } from "../state/useServerVersion";
 import { SectionLabel } from "../panels/fields/controls";
 import { ToolWindowLayout } from "./ToolWindowLayout";
@@ -19,11 +20,12 @@ const textStyle = {
   color: "var(--ms-text-primary)",
 } as const;
 
-/** The whole page of the "Yardım" tool window (see ToolWindow.cs) — a real separate OS window, not an in-page dialog.
+/** The whole page of the "Help" tool window (see ToolWindow.cs) — a real separate OS window, not an in-page dialog.
  * The legal texts come from the files that ship next to the exe (GET /api/legal), so the app itself shows what it is
  * licensed under and what the person agreed to, instead of pointing at a repository. */
 export function HelpWindow() {
   const { t } = useT();
+  useDocumentTitle("help.title");
   const serverVersion = useServerVersion();
   const requested = new URLSearchParams(location.search).get("tab");
   const [category, setCategory] = useState<Category>(isCategory(requested) ? requested : "about");

@@ -12,7 +12,7 @@ public sealed class StubPlugin : IPlugin
         host.RegisterAction(new StubAction());
         host.RegisterVariableProvider(new StubProvider());
         host.RegisterSettingsPage(new StubSettingsPage());
-        host.CreateStatusItem("stub").Update("stub hazır", StatusLevel.Ok);
+        host.CreateStatusItem("stub").Update("stub ready", StatusLevel.Ok);
     }
 }
 
@@ -21,9 +21,9 @@ public sealed class StubAction : IActionHandler, IActionDescriptor
     public string Type => "stub.action";
     public string DisplayName => "Stub aksiyon";
     public string Category => "Stub";
-    public string? Description => "Test amaçlı aksiyon";
+    public string? Description => "Action for tests";
     public string? Icon => "flask-conical";
-    public IReadOnlyList<SettingField> Fields => [new SettingField("value", "Değer", SettingFieldKind.Text)];
+    public IReadOnlyList<SettingField> Fields => [new SettingField("value", "Value", SettingFieldKind.Text)];
 
     public Task ExecuteAsync(ActionContext context, JsonObject settings, CancellationToken cancellationToken) => Task.CompletedTask;
 }

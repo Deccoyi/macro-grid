@@ -3,6 +3,7 @@ using System.Text.Json.Nodes;
 using MacroGrid.Core.Actions;
 using MacroGrid.Core.Devices;
 using MacroGrid.Core.Model;
+using MacroGrid.Core;
 using MacroGrid.Core.Plugins;
 using MacroGrid.Core.Preferences;
 using MacroGrid.Core.Profiles;
@@ -23,6 +24,14 @@ internal static class ServerApp
 {
     public const int Port = 9820;
 
+    /// <summary>The core status items are written in English; the device counter is the one that carries words to translate.</summary>
+    private static string LocalizeCoreStatus(PluginStatusEntry status, string language, PluginLocalizer localizer)
+    {
+        if (status.Id == "actionError") return localizer.TranslateAny(status.Text) ?? status.Text;
+        if (status.Id != "devices" || !int.TryParse(status.Text.Split(' ')[0], out var count)) return status.Text;
+        return language == "tr" ? $"{count} cihaz" : count == 1 ? "1 device" : $"{count} devices";
+    }
+
     public static WebApplication Build(string[] args, IUiDialogService dialogs, IUiWindowService windows)
     {
         var dataDir = ProfileStore.DefaultDataDir;
@@ -41,7 +50,10 @@ internal static class ServerApp
         builder.Logging.AddProvider(new FileLoggerProvider(Path.Combine(dataDir, "logs")));
 
         builder.Services.AddSingleton(new ProfileStore(dataDir));
-        builder.Services.AddSingleton(new PreferencesStore(dataDir));
+        var preferencesStore = new PreferencesStore(dataDir);
+        AppLanguage.Current = preferencesStore.Get().Language;
+        preferencesStore.Changed += () => AppLanguage.Current = preferencesStore.Get().Language;
+        builder.Services.AddSingleton(preferencesStore);
         builder.Services.AddSingleton(new LegalDocuments(AppContext.BaseDirectory));
         builder.Services.AddSingleton(new AutostartService(Environment.ProcessPath ?? Application.ExecutablePath));
         builder.Services.AddSingleton<IInputService, WindowsInputService>();
@@ -74,6 +86,7 @@ internal static class ServerApp
 
         var pluginsRoot = Path.Combine(dataDir, "plugins");
 
+        builder.Services.AddSingleton(sp => new PluginLocalizer(() => sp.GetRequiredService<PreferencesStore>().Get().Language));
         builder.Services.AddSingleton<VariableCatalog>();
         builder.Services.AddSingleton<VariableProviderHost>();
         builder.Services.AddHostedService(sp => sp.GetRequiredService<VariableProviderHost>());
@@ -82,7 +95,8 @@ internal static class ServerApp
             sp.GetRequiredService<PluginStatusRegistry>(), sp.GetRequiredService<ActionDispatcher>(),
             sp.GetRequiredService<VariableCatalog>(), sp.GetRequiredService<VariableProviderHost>(),
             sp.GetRequiredService<VariableStore>(), new PluginPermissionStore(dataDir),
-            sp.GetRequiredService<IInputService>(), sp.GetRequiredService<ILogger<PluginManager>>()));
+            sp.GetRequiredService<IInputService>(), sp.GetRequiredService<ILogger<PluginManager>>(),
+            sp.GetRequiredService<PluginLocalizer>()));
         builder.Services.AddHostedService(sp => sp.GetRequiredService<PluginManager>());
 
         builder.Services.AddSingleton(new DeviceStore(dataDir));
@@ -102,7 +116,7 @@ internal static class ServerApp
         var app = builder.Build();
 
         var sessionRegistry = app.Services.GetRequiredService<SessionRegistry>();
-        void UpdateDeviceStatus() => statusRegistry.SetCore("devices", $"{sessionRegistry.All.Count} cihaz",
+        void UpdateDeviceStatus() => statusRegistry.SetCore("devices", $"{sessionRegistry.All.Count} devices",
             sessionRegistry.All.Count > 0 ? StatusLevel.Ok : StatusLevel.Idle, "smartphone");
         sessionRegistry.Changed += UpdateDeviceStatus;
         UpdateDeviceStatus();
@@ -179,7 +193,7 @@ internal static class ServerApp
 
         api.MapPost("/profiles", (ProfileStore profiles) =>
         {
-            var profile = new Profile { Name = "Yeni Profil", Pages = [new Page { Name = "Sayfa 1", Cols = 4, Rows = 3 }] };
+            var profile = new Profile { Name = AppLanguage.Pick("New profile", "Yeni Profil"), Pages = [new Page { Name = AppLanguage.Pick("Page 1", "Sayfa 1"), Cols = 4, Rows = 3 }] };
             profiles.Save(profile);
             return Results.Json(profile, ProtocolJson.Options);
         });
@@ -193,11 +207,11 @@ internal static class ServerApp
             }
             catch (JsonException)
             {
-                return Results.BadRequest(new { error = "Geçersiz JSON." });
+                return Results.BadRequest(new { error = "Invalid JSON." });
             }
 
             if (profile is null || profile.Id != id)
-                return Results.BadRequest(new { error = "Profil id'si uyuşmuyor." });
+                return Results.BadRequest(new { error = "The profile id does not match." });
 
             if (!ProfileValidator.Validate(profile, out var error))
                 return Results.BadRequest(new { error });
@@ -208,7 +222,7 @@ internal static class ServerApp
         });
 
         api.MapDelete("/profiles/{id}", (string id, ProfileStore profiles) =>
-            profiles.Delete(id) ? Results.NoContent() : Results.BadRequest(new { error = "Son profil silinemez." }));
+            profiles.Delete(id) ? Results.NoContent() : Results.BadRequest(new { error = "The last profile cannot be deleted." }));
 
         api.MapGet("/preferences", (PreferencesStore preferences) =>
             Results.Json(preferences.Get(), ProtocolJson.Options));
@@ -222,10 +236,10 @@ internal static class ServerApp
             }
             catch (JsonException)
             {
-                return Results.BadRequest(new { error = "Geçersiz JSON." });
+                return Results.BadRequest(new { error = "Invalid JSON." });
             }
             if (parsed is null)
-                return Results.BadRequest(new { error = "Geçersiz JSON." });
+                return Results.BadRequest(new { error = "Invalid JSON." });
 
             preferences.Save(parsed);
             return Results.NoContent();
@@ -247,45 +261,46 @@ internal static class ServerApp
             }
             catch (JsonException)
             {
-                return Results.BadRequest(new { error = "Geçersiz JSON." });
+                return Results.BadRequest(new { error = "Invalid JSON." });
             }
             if (body?["enabled"] is not JsonValue value || !value.TryGetValue<bool>(out var enabled))
-                return Results.BadRequest(new { error = "\"enabled\" (true/false) gerekli." });
+                return Results.BadRequest(new { error = "\"enabled\" (true/false) is required." });
 
             autostart.SetEnabled(enabled);
             return Results.Json(new { enabled = autostart.IsEnabled() });
         });
 
-        api.MapGet("/actions", (ActionDispatcher dispatcher, PluginManager plugins) =>
+        api.MapGet("/actions", (ActionDispatcher dispatcher, PluginManager plugins, PluginLocalizer localizer) =>
             dispatcher.Handlers.Select(h =>
             {
                 var descriptor = h as IActionDescriptor;
+                var pluginId = plugins.GetActionPluginId(h.Type);
                 return new
                 {
                     h.Type,
-                    h.DisplayName,
-                    Category = descriptor?.Category ?? "Diğer",
-                    Description = descriptor?.Description,
+                    DisplayName = localizer.Translate(pluginId, h.DisplayName)!,
+                    Category = localizer.Translate(pluginId, descriptor?.Category ?? "Other")!,
+                    Description = localizer.Translate(pluginId, descriptor?.Description),
                     Icon = descriptor?.Icon,
-                    PluginId = plugins.GetActionPluginId(h.Type),
-                    Fields = descriptor is { Fields.Count: > 0 } ? descriptor.Fields : null,
+                    PluginId = pluginId,
+                    Fields = descriptor is { Fields.Count: > 0 } ? descriptor.Fields.Select(f => localizer.Localize(pluginId, f)).ToList() : null,
                 };
             }).OrderBy(a => a.DisplayName));
 
-        api.MapPost("/actions/{type}/options/{sourceId}", async (string type, string sourceId, HttpRequest request, ActionDispatcher dispatcher) =>
+        api.MapPost("/actions/{type}/options/{sourceId}", async (string type, string sourceId, HttpRequest request, ActionDispatcher dispatcher, PluginManager plugins, PluginLocalizer localizer) =>
         {
             var handler = dispatcher.Handlers.FirstOrDefault(h => h.Type == type);
             if (handler is not IOptionsSource optionsSource)
-                return Results.Json(new OptionsResult([], "Bu aksiyon dinamik seçenek sağlamıyor"));
+                return Results.Json(new OptionsResult([], "This action does not provide dynamic options"));
 
             JsonObject? currentValues;
             try { currentValues = await JsonSerializer.DeserializeAsync<JsonObject>(request.Body, ProtocolJson.Options); }
-            catch (JsonException) { return Results.BadRequest(new { error = "Geçersiz JSON." }); }
+            catch (JsonException) { return Results.BadRequest(new { error = "Invalid JSON." }); }
 
             try
             {
                 var result = await optionsSource.GetOptionsAsync(sourceId, currentValues ?? [], request.HttpContext.RequestAborted);
-                return Results.Json(result, ProtocolJson.Options);
+                return Results.Json(result with { Error = localizer.Translate(plugins.GetActionPluginId(type), result.Error) }, ProtocolJson.Options);
             }
             catch (Exception ex) when (ex is not OperationCanceledException)
             {
@@ -296,7 +311,7 @@ internal static class ServerApp
         api.MapGet("/variables/snapshot", (VariableStore variables) =>
             Results.Json(variables.Snapshot(), ProtocolJson.Options));
 
-        api.MapGet("/variables/catalog", (VariableCatalog catalog) => catalog.All);
+        api.MapGet("/variables/catalog", (VariableCatalog catalog, PluginLocalizer localizer) => catalog.Localized(localizer));
 
         api.MapPost("/browse/executable", async (IUiDialogService dialogs) =>
         {
@@ -337,10 +352,11 @@ internal static class ServerApp
             return Results.Json(new { path });
         });
 
-        api.MapGet("/plugins", (PluginManager plugins) => plugins.Plugins);
+        api.MapGet("/plugins", (PluginManager plugins, PluginLocalizer localizer) =>
+            plugins.Plugins.Select(p => p with { Name = localizer.Translate(p.Id, p.Name)! }));
 
-        api.MapGet("/icon-packs", (PluginManager plugins) =>
-            plugins.IconPacks.Select(p => new { p.Id, p.DisplayName, Icons = p.IconNames }));
+        api.MapGet("/icon-packs", (PluginManager plugins, PluginLocalizer localizer) =>
+            plugins.IconPacksWithOwner.Select(o => new { o.Pack.Id, DisplayName = localizer.Translate(o.PluginId, o.Pack.DisplayName)!, Icons = o.Pack.IconNames }));
 
         api.MapGet("/icon-packs/{packId}/{iconName}", (string packId, string iconName, PluginManager plugins) =>
         {
@@ -385,9 +401,11 @@ internal static class ServerApp
 
         // A registered IPluginSettingsPage (schema-driven form) takes precedence; a plugin without one
         // falls back to the raw settings.json passthrough it always had (see docs/plugin-authoring.md
-        // §"Ayarlar") so older plugins keep working unchanged.
-        api.MapGet("/plugins/{id}/settings/schema", (string id, PluginManager plugins) =>
-            plugins.GetSettingsPage(id) is { } page ? Results.Json(page.Fields, ProtocolJson.Options) : Results.NotFound());
+        // §"Settings") so older plugins keep working unchanged.
+        api.MapGet("/plugins/{id}/settings/schema", (string id, PluginManager plugins, PluginLocalizer localizer) =>
+            plugins.GetSettingsPage(id) is { } page
+                ? Results.Json(page.Fields.Select(f => localizer.Localize(id, f)).ToList(), ProtocolJson.Options)
+                : Results.NotFound());
 
         api.MapGet("/plugins/{id}/settings", (string id, PluginManager plugins) =>
         {
@@ -406,8 +424,8 @@ internal static class ServerApp
             {
                 JsonObject? values;
                 try { values = await JsonSerializer.DeserializeAsync<JsonObject>(request.Body, ProtocolJson.Options); }
-                catch (JsonException) { return Results.BadRequest(new { error = "Geçersiz JSON." }); }
-                if (values is null) return Results.BadRequest(new { error = "Geçersiz JSON." });
+                catch (JsonException) { return Results.BadRequest(new { error = "Invalid JSON." }); }
+                if (values is null) return Results.BadRequest(new { error = "Invalid JSON." });
                 page.Save(values);
                 return Results.NoContent();
             }
@@ -418,25 +436,25 @@ internal static class ServerApp
             using var reader = new StreamReader(request.Body);
             var body = await reader.ReadToEndAsync();
             try { JsonDocument.Parse(body); }
-            catch (JsonException) { return Results.BadRequest(new { error = "Geçersiz JSON." }); }
+            catch (JsonException) { return Results.BadRequest(new { error = "Invalid JSON." }); }
 
             await File.WriteAllTextAsync(Path.Combine(dir, "settings.json"), body);
             return Results.NoContent();
         });
 
-        api.MapPost("/plugins/{id}/settings/options/{sourceId}", async (string id, string sourceId, HttpRequest request, PluginManager plugins) =>
+        api.MapPost("/plugins/{id}/settings/options/{sourceId}", async (string id, string sourceId, HttpRequest request, PluginManager plugins, PluginLocalizer localizer) =>
         {
             if (plugins.GetSettingsPage(id) is not IOptionsSource optionsSource)
-                return Results.Json(new OptionsResult([], "Bu plugin dinamik seçenek sağlamıyor"));
+                return Results.Json(new OptionsResult([], "This plugin does not provide dynamic options"));
 
             JsonObject? currentValues;
             try { currentValues = await JsonSerializer.DeserializeAsync<JsonObject>(request.Body, ProtocolJson.Options); }
-            catch (JsonException) { return Results.BadRequest(new { error = "Geçersiz JSON." }); }
+            catch (JsonException) { return Results.BadRequest(new { error = "Invalid JSON." }); }
 
             try
             {
                 var result = await optionsSource.GetOptionsAsync(sourceId, currentValues ?? [], request.HttpContext.RequestAborted);
-                return Results.Json(result, ProtocolJson.Options);
+                return Results.Json(result with { Error = localizer.Translate(id, result.Error) }, ProtocolJson.Options);
             }
             catch (Exception ex) when (ex is not OperationCanceledException)
             {
@@ -444,25 +462,28 @@ internal static class ServerApp
             }
         });
 
-        api.MapGet("/status", (PluginStatusRegistry statusRegistry) => statusRegistry.All);
+        api.MapGet("/status", (PluginStatusRegistry statusRegistry, PluginLocalizer localizer, PreferencesStore preferences) =>
+            statusRegistry.All.Select(s => s.PluginId == "core"
+                ? s with { Text = LocalizeCoreStatus(s, preferences.Get().Language, localizer) }
+                : s with { Text = localizer.Translate(s.PluginId, s.Text)!, Tooltip = localizer.Translate(s.PluginId, s.Tooltip) }));
 
         api.MapGet("/version", () => new { version = ClientHub.ServerVersion });
 
         api.MapPost("/windows/preferences", async (IUiWindowService windows) =>
         {
-            await windows.ShowToolWindowAsync("preferences", "Tercihler", $"http://localhost:{Port}/editor/?window=preferences", 640, 520);
+            await windows.ShowToolWindowAsync("preferences", "Preferences", $"http://localhost:{Port}/editor/?window=preferences", 640, 520);
             return Results.NoContent();
         });
 
         api.MapPost("/windows/plugins", async (IUiWindowService windows) =>
         {
-            await windows.ShowToolWindowAsync("plugins", "Eklentiler", $"http://localhost:{Port}/editor/?window=plugins", 640, 520);
+            await windows.ShowToolWindowAsync("plugins", "Plugins", $"http://localhost:{Port}/editor/?window=plugins", 640, 520);
             return Results.NoContent();
         });
 
-        api.MapPost("/windows/plugin-settings/{id}", async (string id, IUiWindowService windows, PluginManager plugins) =>
+        api.MapPost("/windows/plugin-settings/{id}", async (string id, IUiWindowService windows, PluginManager plugins, PluginLocalizer localizer) =>
         {
-            var name = plugins.Plugins.FirstOrDefault(p => p.Id == id)?.Name ?? id;
+            var name = localizer.Translate(id, plugins.Plugins.FirstOrDefault(p => p.Id == id)?.Name) ?? id;
             await windows.ShowToolWindowAsync($"plugin-settings-{id}", name,
                 $"http://localhost:{Port}/editor/?window=plugin-settings&id={Uri.EscapeDataString(id)}", 520, 560);
             return Results.NoContent();
@@ -472,13 +493,13 @@ internal static class ServerApp
         {
             var tab = request.Query["tab"].ToString();
             var tabQuery = tab is "about" or "agreement" or "licenses" ? $"&tab={tab}" : "";
-            await windows.ShowToolWindowAsync("help", "Yardım", $"http://localhost:{Port}/editor/?window=help{tabQuery}", 760, 560);
+            await windows.ShowToolWindowAsync("help", "Help", $"http://localhost:{Port}/editor/?window=help{tabQuery}", 760, 560);
             return Results.NoContent();
         });
 
         api.MapPost("/windows/pairing", async (IUiWindowService windows) =>
         {
-            await windows.ShowToolWindowAsync("pairing", "Eşleştirme", $"http://localhost:{Port}/editor/?window=pairing", 760, 560);
+            await windows.ShowToolWindowAsync("pairing", "Pairing", $"http://localhost:{Port}/editor/?window=pairing", 760, 560);
             return Results.NoContent();
         });
 

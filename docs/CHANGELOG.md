@@ -4,6 +4,8 @@ New features and fixes in Macro Grid. For technical details, see [CHANGELOG-deve
 
 ## Unreleased
 ### New
+- **Default language:** Macro Grid opens in Turkish on a Turkish Windows and in English on any other. Once you pick a language in Preferences, that choice is kept.
+- **Plugin languages:** Plugins can ship their own translations. The tray menu, window titles and plugin texts now follow the language you choose.
 - **Start with Windows:** Preferences has a new General section. Turn on "Start Macro Grid when I sign in to Windows" and choose what happens at that start: only the tray icon (default) or also the editor window.
 - **When you open Macro Grid:** Choose whether it opens the editor window (default) or only starts in the notification area.
 - **Settings windows block the editor:** While Preferences, Plugins or another settings window is open, the editor behind it cannot be used, like in other desktop programs.
@@ -22,6 +24,7 @@ New features and fixes in Macro Grid. For technical details, see [CHANGELOG-deve
 - **No restart for plugins:** Installing, reloading or removing a plugin takes effect right away. A new "Reload" button is in the Plugins window.
 
 ### Changed
+- **Language:** Variable descriptions, action names, categories and window titles now follow the language you choose in Preferences.
 - The installer now sets up the web component that the editor window needs, on PCs where it is missing.
 - The **Remove** button in the Plugins window works again (its confirmation box was not shown, so nothing happened).
 - The editor's screens can now only be used on the PC itself. This keeps other devices on your network from changing your profiles or reading your pairing code.

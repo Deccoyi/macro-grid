@@ -1,3 +1,4 @@
+using MacroGrid.Core;
 using MacroGrid.Core.Variables;
 
 namespace MacroGrid.Tests;
@@ -70,12 +71,12 @@ public class TemplateTests
         var store = new VariableStore();
         store.Set("muted", true);
 
-        Assert.Equal("Açık", Template.Parse("{muted}").Render(store));
-        Assert.Equal("EVET", Template.Parse("{muted|EVET/HAYIR}").Render(store));
+        Assert.Equal(AppLanguage.Pick("On", "Açık"), Template.Parse("{muted}").Render(store));
+        Assert.Equal("YES", Template.Parse("{muted|YES/NO}").Render(store));
 
         store.Set("muted", false);
-        Assert.Equal("Kapalı", Template.Parse("{muted}").Render(store));
-        Assert.Equal("HAYIR", Template.Parse("{muted|EVET/HAYIR}").Render(store));
+        Assert.Equal(AppLanguage.Pick("Off", "Kapalı"), Template.Parse("{muted}").Render(store));
+        Assert.Equal("NO", Template.Parse("{muted|YES/NO}").Render(store));
     }
 
     [Fact]

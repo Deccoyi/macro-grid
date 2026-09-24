@@ -15,13 +15,13 @@ public static class ProfileValidator
     {
         if (string.IsNullOrWhiteSpace(profile.Name))
         {
-            error = "Profil adı boş olamaz.";
+            error = "The profile name cannot be empty.";
             return false;
         }
 
         if (profile.Pages.Count == 0)
         {
-            error = "Profilde en az bir sayfa olmalı.";
+            error = "A profile needs at least one page.";
             return false;
         }
 
@@ -33,13 +33,13 @@ public static class ProfileValidator
         {
             if (!pageIds.Add(page.Id))
             {
-                error = $"Yinelenen sayfa id'si: {page.Id}";
+                error = $"Duplicate page id: {page.Id}";
                 return false;
             }
 
             if (page.Cols < 1 || page.Cols > MaxGridSize || page.Rows < 1 || page.Rows > MaxGridSize)
             {
-                error = $"'{page.Name}' sayfasının grid boyutu 1-{MaxGridSize} aralığında olmalı.";
+                error = $"The grid size of page '{page.Name}' must be between 1 and {MaxGridSize}.";
                 return false;
             }
 
@@ -58,14 +58,14 @@ public static class ProfileValidator
         {
             if (string.IsNullOrWhiteSpace(match.ProcessName))
             {
-                error = "Otomatik geçiş kuralı için uygulama adı (ör. \"Player.exe\") boş olamaz.";
+                error = "An auto-switch rule needs an application name (for example \"Player.exe\").";
                 return false;
             }
 
             var key = match.ProcessName.Trim() + "\u0000" + (match.TitleContains?.Trim() ?? "");
             if (!seen.Add(key))
             {
-                error = $"'{match.ProcessName}' için yinelenen otomatik geçiş kuralı.";
+                error = $"Duplicate auto-switch rule for '{match.ProcessName}'.";
                 return false;
             }
         }
@@ -83,19 +83,19 @@ public static class ProfileValidator
         {
             if (!widgetIds.Add(widget.Id))
             {
-                error = $"Yinelenen widget id'si: {widget.Id}";
+                error = $"Duplicate widget id: {widget.Id}";
                 return false;
             }
 
             if (widget.W < 1 || widget.H < 1)
             {
-                error = $"Widget '{widget.Id}' için genişlik/yükseklik en az 1 olmalı.";
+                error = $"Widget '{widget.Id}' must be at least 1 wide and 1 high.";
                 return false;
             }
 
             if (widget.X < 0 || widget.Y < 0 || widget.X + widget.W > page.Cols || widget.Y + widget.H > page.Rows)
             {
-                error = $"Widget '{widget.Id}' sayfa sınırlarının dışına taşıyor.";
+                error = $"Widget '{widget.Id}' extends beyond the page.";
                 return false;
             }
 
@@ -105,7 +105,7 @@ public static class ProfileValidator
                 {
                     if (occupied[x, y])
                     {
-                        error = $"Widget '{widget.Id}' başka bir widget'la çakışıyor ({x}, {y}).";
+                        error = $"Widget '{widget.Id}' overlaps another widget at ({x}, {y}).";
                         return false;
                     }
                     occupied[x, y] = true;

@@ -2,6 +2,7 @@ import { useState, type ElementType } from "react";
 import { ChevronUp, ChevronDown, Circle, CircleDot, SlidersHorizontal, Timer, ToggleLeft, ToggleRight, X } from "lucide-react";
 import type { ActionBinding, Page, Widget, WidgetEventName } from "@macro/renderer";
 import type { ActionInfo, ProfileSummary, VariableInfo } from "../api/types";
+import { useCatalogText } from "../i18n/catalogText";
 import { useT } from "../i18n/I18nContext";
 import type { DictKey } from "../i18n/tr";
 import { ActionPicker } from "./ActionPicker";
@@ -45,6 +46,7 @@ const VALUE_EVENTS: { event: WidgetEventName; key: DictKey; icon: ElementType }[
 
 export function ActionEditor({ widget, actions, pages, profiles, variableCatalog, onChange }: ActionEditorProps) {
   const { t } = useT();
+  const catalogText = useCatalogText();
   const events =
     widget.type === "toggle" ? TOGGLE_EVENTS
     : widget.type === "slider" || widget.type === "knob" ? VALUE_EVENTS
@@ -75,7 +77,7 @@ export function ActionEditor({ widget, actions, pages, profiles, variableCatalog
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
       {/* Always 4 columns (the button's event count), regardless of how many events this widget type
-         has — so a slider's single "Değer değişti" cell or a toggle's two cells are exactly the same size
+         has — so a slider's single "Value changed" cell or a toggle's two cells are exactly the same size
          as a button's, instead of stretching to fill the row. */}
       <div style={{ display: "grid", gridTemplateColumns: `repeat(${BUTTON_EVENTS.length}, minmax(0, 1fr))`, gap: 6 }}>
         {events.map((e) => {
@@ -116,7 +118,7 @@ export function ActionEditor({ widget, actions, pages, profiles, variableCatalog
                 onPick={(type) => updateBinding(index, { type, settings: {} })}
                 renderTrigger={(open) => (
                   <button type="button" className="ghost" onClick={open} style={{ flex: 1, textAlign: "left", justifyContent: "flex-start" }}>
-                    {actionInfo?.displayName ?? binding.type}
+                    {actionInfo ? catalogText.actionName(actionInfo) : binding.type}
                   </button>
                 )}
               />

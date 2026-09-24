@@ -122,8 +122,8 @@ export interface PairedDeviceInfo {
   autoSwitchLocked: boolean;
 }
 
-/** One process currently owning a visible top-level window — GET /api/system/windows, for the "çalışan
- * uygulamadan seç" picker on a profile's auto-switch rules. */
+/** One process currently owning a visible top-level window — GET /api/system/windows, for the "pick from
+ * running apps" picker on a profile's auto-switch rules. */
 export interface RunningWindowInfo {
   processName: string;
   title: string;

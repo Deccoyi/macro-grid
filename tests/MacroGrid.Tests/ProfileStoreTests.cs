@@ -29,17 +29,17 @@ public sealed class ProfileStoreTests : IDisposable
         var store = new ProfileStore(_dir);
         var profile = store.First();
         var clockWidget = profile.Pages[0].Widgets[0];
-        clockWidget.Text = "Değişti {system.time}";
+        clockWidget.Text = "Changed {system.time}";
         clockWidget.W = 3;
         store.Save(profile);
 
         var reloaded = new ProfileStore(_dir).Get(profile.Id)!;
         var reloadedClock = reloaded.Pages[0].FindWidget(clockWidget.Id)!;
 
-        Assert.Equal("Değişti {system.time}", reloadedClock.Text);
+        Assert.Equal("Changed {system.time}", reloadedClock.Text);
         Assert.Equal(3, reloadedClock.W);
 
-        var macroWidget = reloaded.Pages[1].Widgets.Single(w => w.Text == "Tümünü kopyala");
+        var macroWidget = reloaded.Pages[1].Widgets.Single(w => w.Actions.ContainsKey(WidgetEvents.Press) && w.Actions[WidgetEvents.Press].Count == 3);
         var bindings = macroWidget.Actions[WidgetEvents.Press];
         Assert.Equal(3, bindings.Count);
         Assert.Equal(HotkeyAction.TypeId, bindings[0].Type);
@@ -84,7 +84,7 @@ public sealed class ProfileStoreTests : IDisposable
     {
         var store = new ProfileStore(_dir);
         var first = store.First();
-        var second = new Profile { Name = "İkinci" };
+        var second = new Profile { Name = "Second" };
         store.Save(second);
 
         Assert.True(store.Delete(second.Id));

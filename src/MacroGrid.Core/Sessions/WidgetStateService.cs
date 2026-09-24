@@ -67,7 +67,7 @@ public sealed class WidgetStateService : IHostedService, IDisposable
         _layouts.SendAssetsAsync(session, hashes, ct);
 
     /// <summary>
-    /// Brings every connected client currently showing this profile up to date after an editor "Kaydet", so
+    /// Brings every connected client currently showing this profile up to date after an editor "Save", so
     /// devices see the edit live instead of having to reconnect. A client that supports it gets a small
     /// <c>layout.patch</c> with just the changed widgets, any other client the full layout; either way the usual
     /// initial text/toggle/dynamic-style state follows. A client on a page that no longer exists (deleted while

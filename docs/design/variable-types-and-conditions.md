@@ -7,7 +7,7 @@
 When a user dynamizes a property (color, text, icon, animation) they pick a variable such as `system.audio.muted` and then must type a
 comparison value. The editor gives no hint about **what the variable returns** or **what to type**:
 
-- `system.audio.muted` is a `bool`. In a text template it renders as `Açık` / `Kapalı`, so the user guesses `Açık`, `true`, `1`...
+- `system.audio.muted` is a `bool`. In a text template it renders as `On` / `Off` (`Açık` / `Kapalı` in Turkish), so the user guesses `On`, `true`, `1`...
 - Only one of those guesses works, and the failure is silent (the rule just never matches).
 - The value field hint only says "50 or text" (`dynamic.value.hint`), regardless of the variable.
 
@@ -17,7 +17,7 @@ comparison value. The editor gives no hint about **what the variable returns** o
 | --- | --- |
 | `VariableInfo(Name, Description, Example, Category)` | No type, no unit, no allowed values. |
 | `DynamicRuleEvaluator.EvaluateComparison` | A `bool` is not numeric (`TryToDouble` fails), so it is compared as text: `bool.ToString()` is `"True"` / `"False"`, matched **case-insensitively**. So `== true` / `== false` works, **`== 1` / `== 0` silently never matches**. |
-| `Template.FormatBool` | Renders `Açık` / `Kapalı` (or custom `{name\|on/off}`). This is display only; `== Açık` does **not** match. |
+| `Template.FormatBool` | Renders `On` / `Off`, or `Açık` / `Kapalı` in Turkish (or custom `{name\|on/off}`). This is display only; `== On` does **not** match. |
 | `editor/src/grid/evaluateDynamic.ts` | Mirror of the server evaluator. A JS `boolean` is also non-numeric, so `String(true)` = `"true"`. Same behavior. |
 | `VariablePicker` | Shows name, description and a template example only. |
 | Plugins | Each plugin describes its own variables through `IVariableCatalogSource`; several are `bool` (e.g. `*.connected`, `*.streaming`, `*.studioMode`) with the same problem. |
@@ -93,7 +93,7 @@ In `DynamizeModal.tsx` (condition row) and `VariablePicker.tsx`:
 
 ## Out of scope
 
-- Localizing the default `Açık` / `Kapalı` template words (tracked in the roadmap's known gaps).
+- More languages than Turkish and English for the default boolean words.
 - A general expression language or new operators.
 - Changing how templates render values.
 

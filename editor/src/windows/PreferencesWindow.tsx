@@ -3,6 +3,7 @@ import { Trash2 } from "lucide-react";
 import type { ProfileSummary } from "../api/types";
 import { api } from "../api/client";
 import { useT } from "../i18n/I18nContext";
+import { useDocumentTitle } from "../i18n/useDocumentTitle";
 import { SectionLabel, Seg } from "../panels/fields/controls";
 import { usePreferences } from "../preferences/PreferencesContext";
 import { ToolWindowLayout } from "./ToolWindowLayout";
@@ -13,6 +14,7 @@ type Category = "general" | "appearance" | "language" | "previewProfiles" | "pro
  * window, not an in-page dialog. */
 export function PreferencesWindow() {
   const { t, lang, setLang } = useT();
+  useDocumentTitle("preferences.title");
   const {
     theme, setTheme, previewProfiles, addPreviewProfile, removePreviewProfile, defaultProfileId, setDefaultProfileId,
     launchMode, setLaunchMode, autostartMode, setAutostartMode,

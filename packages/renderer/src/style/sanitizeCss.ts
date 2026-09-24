@@ -53,12 +53,12 @@ export function sanitizeWidgetCss(input: string | undefined | null): SanitizeRes
   try {
     root = postcss().process(input, { parser: safeParse }).root;
   } catch {
-    return { css: "", removed: ["CSS ayrıştırılamadı."] };
+    return { css: "", removed: ["The CSS could not be parsed."] };
   }
 
   root.walkAtRules((atRule: AtRule) => {
     if (FORBIDDEN_AT_RULES.has(atRule.name.toLowerCase())) {
-      removed.push(`@${atRule.name} kaldırıldı (dış kaynak yüklenemez).`);
+      removed.push(`@${atRule.name} removed (external resources cannot be loaded).`);
       atRule.remove();
     }
   });
@@ -66,12 +66,12 @@ export function sanitizeWidgetCss(input: string | undefined | null): SanitizeRes
   root.walkDecls((decl: Declaration) => {
     const prop = decl.prop.toLowerCase();
     if (isForbiddenProperty(prop)) {
-      removed.push(`${decl.prop} kaldırıldı (boyut/konum widget tarafından belirlenir).`);
+      removed.push(`${decl.prop} removed (size and position are set by the widget).`);
       decl.remove();
       return;
     }
     if (hasExternalUrl(decl.value)) {
-      removed.push(`${decl.prop}: dış url() kaldırıldı (yalnızca data: URI'lere izin var).`);
+      removed.push(`${decl.prop}: external url() removed (only data: URIs are allowed).`);
       decl.remove();
     }
   });

@@ -14,12 +14,12 @@ namespace MacroGrid.Windows.Audio;
 /// </summary>
 public sealed class SystemAudioProvider(IAudioService audio) : IVariableProvider, IVariableCatalogSource
 {
-    private const string Category = "Ses";
+    private const string Category = "Audio";
 
     public IEnumerable<VariableInfo> Describe() =>
     [
-        new("system.audio.master", "Ana ses seviyesi (%)", "{system.audio.master|0}%", Category),
-        new("system.audio.muted", "Ses sessize alınmış mı", "{system.audio.muted}", Category),
+        new("system.audio.master", "Master volume (%)", "{system.audio.master|0}%", Category),
+        new("system.audio.muted", "Whether the sound is muted", "{system.audio.muted}", Category),
     ];
 
     public async Task RunAsync(IVariableStore store, CancellationToken cancellationToken)

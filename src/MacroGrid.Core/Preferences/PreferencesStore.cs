@@ -20,6 +20,9 @@ public sealed class PreferencesStore
         Load();
     }
 
+    /// <summary>Raised after every save, on the thread that saved.</summary>
+    public event Action? Changed;
+
     public AppPreferences Get()
     {
         lock (_lock) return _preferences;
@@ -39,6 +42,7 @@ public sealed class PreferencesStore
             File.Move(tmp, _path, overwrite: true);
             _preferences = preferences;
         }
+        Changed?.Invoke();
     }
 
     private void Load()

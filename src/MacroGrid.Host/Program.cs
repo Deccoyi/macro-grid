@@ -10,7 +10,7 @@ internal static class Program
         using var mutex = new Mutex(initiallyOwned: true, @"Local\MacroGrid.Server", out var isFirstInstance);
         if (!isFirstInstance)
         {
-            MessageBox.Show("Macro Grid zaten çalışıyor (sistem tepsisine bakın).", "Macro Grid",
+            MessageBox.Show(HostText.Get("app.alreadyRunning"), "Macro Grid",
                 MessageBoxButtons.OK, MessageBoxIcon.Information);
             return;
         }
@@ -24,13 +24,14 @@ internal static class Program
         var windows = new UiWindowService(ui);
 
         var server = ServerApp.Build(args, dialogs, windows);
+        HostText.Bind(server.Services.GetRequiredService<PreferencesStore>());
         try
         {
             server.StartAsync().GetAwaiter().GetResult();
         }
         catch (IOException ex)
         {
-            MessageBox.Show($"Sunucu {ServerApp.Port} portunda başlatılamadı:\n{ex.Message}", "Macro Grid",
+            MessageBox.Show(HostText.Get("server.startFailed", ServerApp.Port, ex.Message), "Macro Grid",
                 MessageBoxButtons.OK, MessageBoxIcon.Error);
             return;
         }

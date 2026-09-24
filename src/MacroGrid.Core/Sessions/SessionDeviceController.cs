@@ -20,7 +20,7 @@ public sealed class SessionDeviceController(ClientSession session, ProfileStore 
         session.PageHistory.Count > 0 ? NavigateAsync(session.PageHistory.Pop(), pushHistory: false) : Task.CompletedTask;
 
     /// <summary>A plain user pick — drawer or a <c>core.profile</c> button. Records the switch as this
-    /// session's new auto-switch base (docs/auto-profile-switch.md's "Elle seçim") before applying it.
+    /// session's new auto-switch base (docs/auto-profile-switch.md's "Manual choice") before applying it.
     /// <see cref="Sessions.AutoProfileSwitcher"/> does not call this overload: it updates
     /// <see cref="ClientSession.AutoSwitch"/> itself (Auto origin) and calls <see cref="ApplyProfileAsync"/>
     /// directly, so a rule match is never also recorded as a manual pick.</summary>
