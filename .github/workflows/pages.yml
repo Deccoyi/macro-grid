@@ -12,6 +12,9 @@ on:
     paths:
       - "website/**"
       - ".github/workflows/pages.yml"
+  # Regenerate the download page when a release changes.
+  release:
+    types: [published, edited, deleted]
   workflow_dispatch:
 
 permissions:
@@ -42,6 +45,8 @@ jobs:
       # VitePress fails the build on a dead internal link.
       - name: Build the site
         working-directory: website
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: npm run docs:build
 
       - name: Set up Pages
