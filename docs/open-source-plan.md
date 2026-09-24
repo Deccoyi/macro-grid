@@ -10,6 +10,8 @@ splits the work between Claude and the owner. Final home of this file after appr
 
 ## Findings from the current state (2026-09-24)
 
+- ✅ **Project renamed to Macro Grid (2026-09-24)** in all three repos (code, docs, package ids, `macrogrid://` pairing scheme, `com.macrogrid.client`), repos recreated as `Deccoyi/macro-grid`, `macro-grid-client`, `macro-grid-plugin` (private). All commits are authored by `Deccoyi <macrogrid.app@gmail.com>` (the project mailbox; history rewritten again for this). Older sections below may still say "Macro Station" / `macro-station-plugin`; read them as the new names. Open: rename the local folders, close the running server exe that locks old build folders, run the plugin builds against the renamed SDK, run trademark searches for "Macro Grid".
+
 - Server `0.2.0`, Plugin SDK `0.3.0`, OBS plugin `0.2.0`, PLC Icons `0.1.0`. Client Stage 5 done and tested on a real device.
 - All three repos: `dev` is the working branch. `macro-grid` and `-client` also have `main`. **`macro-grid-plugin` has only `dev`** (its `origin/HEAD` points at `dev`).
 - **No GitHub Actions / CI** anywhere. No `SECURITY.md`, `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`, issue/PR templates.
