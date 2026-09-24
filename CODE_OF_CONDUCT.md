@@ -1,5 +1,10 @@
 # Code of Conduct
 
+> **AI-generated software.** All code, design and documentation of this project, including this file, were created by artificial
+> intelligence at the maintainer's direction. It is alpha-stage, has not been reviewed line by line by a human or security-audited, and is
+> provided "as is", without warranty of any kind. You use it entirely at your own risk (see the [README](README.md) and the
+> [MIT license](LICENSE)).
+
 This covers the issues, pull requests and discussions of the three Macro Grid repositories (`macro-grid`, `macro-grid-client` and
 `macro-grid-plugin`).
 
