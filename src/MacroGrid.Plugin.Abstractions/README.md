@@ -1,9 +1,8 @@
 # MacroGrid.Plugin.Abstractions
 
-> **AI notice:** this package, like the rest of Macro Grid, was written entirely with AI assistance: the code, the
-> documentation and the icon. A human directs, reviews and tests the work and is responsible for the releases, but no line
-> was written by hand. It is provided as is under the MIT license, so review it as you would any third-party dependency
-> before relying on it.
+> **AI notice:** this project is AI-generated and its code has not been reviewed. Macro Grid was built for personal use and
+> was later made open source. It is published as is, without any warranty, and you use it entirely at your own risk. We
+> accept no responsibility and cannot be held liable for any damage or loss that results from using it (see the MIT license).
 
 The plugin SDK for [Macro Grid](https://github.com/Deccoyi/macro-grid). It holds the interfaces a C# plugin
 implements (`IPlugin`, `IPluginHost`, `IActionHandler`, `IVariableProvider`, `IPluginSettingsPage`,
