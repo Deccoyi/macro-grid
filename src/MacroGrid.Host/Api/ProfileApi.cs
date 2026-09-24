@@ -5,9 +5,6 @@ using MacroGrid.Core.Model;
 using MacroGrid.Core.Plugins;
 using MacroGrid.Core.Profiles;
 using MacroGrid.Core.Sessions;
-using MacroGrid.Protocol;
-using MacroGrid.Windows.Autostart;
-using MacroGrid.Windows.Windows;
 
 namespace MacroGrid.Host.Api;
 

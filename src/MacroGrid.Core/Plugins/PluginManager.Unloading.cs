@@ -1,7 +1,3 @@
-using MacroGrid.Core.Actions;
-using MacroGrid.Core.Profiles;
-using MacroGrid.Core.Plugins.Js;
-using MacroGrid.Core.Variables;
 using MacroGrid.Plugin.Abstractions;
 using Microsoft.Extensions.Logging;
 

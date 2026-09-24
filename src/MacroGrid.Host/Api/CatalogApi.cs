@@ -1,10 +1,7 @@
-using MacroGrid.Core;
 using MacroGrid.Core.Actions;
 using MacroGrid.Core.Plugins;
-using MacroGrid.Core.Sessions;
 using MacroGrid.Core.Variables;
 using MacroGrid.Plugin.Abstractions;
-using MacroGrid.Windows.Windows;
 using Microsoft.AspNetCore.Routing;
 
 namespace MacroGrid.Host.Api;

@@ -1,5 +1,4 @@
 using System.Text.Json;
-using MacroGrid.Core.Profiles;
 using MacroGrid.Core.Plugins.Js;
 using MacroGrid.Core.Variables;
 using MacroGrid.Plugin.Abstractions;
