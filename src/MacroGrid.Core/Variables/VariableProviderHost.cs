@@ -17,23 +17,36 @@ public sealed class VariableProviderHost(IEnumerable<IVariableProvider> provider
     private sealed record Running(CancellationTokenSource Cts, Task Task);
 
     private readonly ConcurrentDictionary<string, List<Running>> _owned = new();
-    private readonly TaskCompletionSource<CancellationToken> _stopping = new(TaskCreationOptions.RunContinuationsAsynchronously);
+    // Owned providers stop with this token. It is cancelled in StopAsync and does not depend on when the runtime
+    // gets around to calling ExecuteAsync: BackgroundService may start that call after StartAsync has returned
+    // (seen on slower machines), which made StartOwned fail with "has not started yet".
+    private readonly CancellationTokenSource _hostCts = new();
+    private volatile bool _started;
 
-    protected override Task ExecuteAsync(CancellationToken stoppingToken)
+    public override Task StartAsync(CancellationToken cancellationToken)
     {
-        _stopping.TrySetResult(stoppingToken);
-        return Task.WhenAll(providers.Select(p => RunWithRestartAsync(p, store, stoppingToken)));
+        _started = true;
+        return base.StartAsync(cancellationToken);
     }
+
+    public override async Task StopAsync(CancellationToken cancellationToken)
+    {
+        _hostCts.Cancel();
+        await base.StopAsync(cancellationToken);
+    }
+
+    protected override Task ExecuteAsync(CancellationToken stoppingToken) =>
+        Task.WhenAll(providers.Select(p => RunWithRestartAsync(p, store, stoppingToken)));
 
     /// <summary>Starts a plugin-owned provider. It writes through <paramref name="ownerStore"/> and stops with the
     /// application or when <see cref="StopOwnerAsync"/> is called for <paramref name="ownerId"/>.</summary>
     public void StartOwned(string ownerId, IVariableProvider provider, IVariableStore ownerStore)
     {
-        // The host token exists as soon as this hosted service has started; PluginManager is registered after it.
-        if (!_stopping.Task.IsCompletedSuccessfully)
+        // PluginManager is registered after this hosted service, so it has been started by the time plugins load.
+        if (!_started)
             throw new InvalidOperationException("Variable provider host has not started yet.");
 
-        var cts = CancellationTokenSource.CreateLinkedTokenSource(_stopping.Task.Result);
+        var cts = CancellationTokenSource.CreateLinkedTokenSource(_hostCts.Token);
         var running = new Running(cts, Task.Run(() => RunWithRestartAsync(provider, ownerStore, cts.Token)));
         var list = _owned.GetOrAdd(ownerId, _ => []);
         lock (list) list.Add(running);
