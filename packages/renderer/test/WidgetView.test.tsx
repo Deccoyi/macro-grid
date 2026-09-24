@@ -1,5 +1,4 @@
-import { render, screen } from "@testing-library/react";
-import { fireEvent } from "@testing-library/react";
+import { fireEvent, render } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { WidgetView } from "../src/widgets/WidgetView";
 import type { Widget } from "../src/types";
