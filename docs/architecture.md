@@ -1,13 +1,13 @@
 # Architecture
 
-How Macro Station is put together. For what is done and what is planned see [roadmap.md](roadmap.md); for building and working on the code see
+How Macro Grid is put together. For what is done and what is planned see [roadmap.md](roadmap.md); for building and working on the code see
 [development.md](development.md).
 
 ## Big picture
 
 ```
 ┌────────────── Windows PC ──────────────────────────────────────────────┐
-│  MacroStation.exe (tray app)                                           │
+│  MacroGrid.exe (tray app)                                           │
 │   ├─ Kestrel, port 9820 ── /ws       WebSocket for phones and decks    │
 │   │                     ── /api      editor API (this computer only)   │
 │   │                     ── /editor/  the editor (React bundle)         │
@@ -17,7 +17,7 @@ How Macro Station is put together. For what is done and what is planned see [roa
 │   └─ Windows: key input, audio, system metrics, foreground window      │
 └───────────────▲────────────────────────────────────────────────────────┘
                 │ WebSocket, JSON, local network only
-     phone / tablet app (macro-station-client)  ·  any browser at /deck/
+     phone / tablet app (macro-grid-client)  ·  any browser at /deck/
 ```
 
 The server is a Windows tray application. Profiles are designed in the editor, which runs inside the server's own WebView2 window. Phones and
@@ -28,19 +28,19 @@ server runs the actions on the PC and pushes live values back.
 
 | Project | What it is |
 |---|---|
-| `src/MacroStation.Host` | The executable: tray icon, WebView2 windows, Kestrel and the HTTP/WebSocket endpoints (`ServerApp.cs`). |
-| `src/MacroStation.Core` | The platform-independent logic: profile model and storage, actions, variables and templates, sessions and layout sending, pairing, plugin loading. |
-| `src/MacroStation.Protocol` | The WebSocket message types and payloads. |
-| `src/MacroStation.Windows` | Windows-specific parts: `SendInput` key presses, audio through NAudio (`WASAPI`), CPU and RAM, the foreground-window hook. |
-| `src/MacroStation.Plugin.Abstractions` | The plugin SDK: the interfaces plugins implement. |
-| `editor/` | The editor (React and Vite). Built into `src/MacroStation.Host/wwwroot/editor`. |
+| `src/MacroGrid.Host` | The executable: tray icon, WebView2 windows, Kestrel and the HTTP/WebSocket endpoints (`ServerApp.cs`). |
+| `src/MacroGrid.Core` | The platform-independent logic: profile model and storage, actions, variables and templates, sessions and layout sending, pairing, plugin loading. |
+| `src/MacroGrid.Protocol` | The WebSocket message types and payloads. |
+| `src/MacroGrid.Windows` | Windows-specific parts: `SendInput` key presses, audio through NAudio (`WASAPI`), CPU and RAM, the foreground-window hook. |
+| `src/MacroGrid.Plugin.Abstractions` | The plugin SDK: the interfaces plugins implement. |
+| `editor/` | The editor (React and Vite). Built into `src/MacroGrid.Host/wwwroot/editor`. |
 | `webclient/` | The browser deck (React and Vite). Built into `wwwroot/deck`. |
 | `packages/renderer/` | The grid and widget renderer the editor and the deck use. The phone app has its own independent copy in the client repository (deliberately not kept in sync). |
 | `tests/` | xUnit tests and a stub plugin used to test plugin loading. |
 
 ## Data model
 
-Stored as JSON, one file per profile in `%AppData%\MacroStation\profiles\` (written to a temp file and renamed, so a crash never leaves a
+Stored as JSON, one file per profile in `%AppData%\MacroGrid\profiles\` (written to a temp file and renamed, so a crash never leaves a
 half-written profile).
 
 - **Profile** `{ id, name, pages[], appMatches[], previewDeviceId? }`
@@ -56,13 +56,13 @@ half-written profile).
   - `dynamic`: property path to a rule (see [Dynamic values](#dynamic-values)).
   - `customCss`: the user's own CSS for the widget (see [Custom CSS](#custom-css)).
 
-Other data in `%AppData%\MacroStation\`: `devices.json` (paired devices and their tokens, in plain text), `preferences.json`,
+Other data in `%AppData%\MacroGrid\`: `devices.json` (paired devices and their tokens, in plain text), `preferences.json`,
 `plugins\<id>\` (installed plugins), `plugin-permissions.json` (approved permissions of JavaScript plugins), `logs\`.
 
 ## The WebSocket protocol
 
 Every frame is `{ "type": "...", "data": { ... } }` in camelCase JSON (`Envelope`, `ProtocolJson.Options`). The types are in
-`src/MacroStation.Protocol/MessageTypes.cs`.
+`src/MacroGrid.Protocol/MessageTypes.cs`.
 
 **Client to server:** `hello { deviceId, deviceName, token?, clientVersion, pin?, capabilities? }`, `widget.down`, `widget.up`, `widget.longPress`,
 `widget.doubleTap`, `widget.value`, `page.change`, `page.next`, `page.prev`, `profile.change`, `profile.lock`, `asset.get`.
@@ -72,7 +72,7 @@ Every frame is `{ "type": "...", "data": { ... } }` in camelCase JSON (`Envelope
 
 - **Pairing.** The first time, a device sends `hello` with the PIN shown in the editor's Pairing window (six digits, valid for five minutes, kept
   in memory only). The server answers with a per-device token, which the device keeps and sends instead of the PIN from then on. The editor also
-  shows a QR code that encodes `macrostation://pair?host=<ip>&port=9820&pin=<pin>`. Devices can be revoked in the editor.
+  shows a QR code that encodes `macrogrid://pair?host=<ip>&port=9820&pin=<pin>`. Devices can be revoked in the editor.
 - **Layout.** After `hello` the server sends `layout.full` (the profile and the current page), then the live state of the page. A client that
   announces `assets` in `hello.capabilities` gets large `data:` values (icons, images) as `asset:<hash>` references and fetches each one once
   with `asset.get`; a client that announces `layout.patch` gets an editor save as a `layout.patch` with only the changed widgets. A client that
@@ -140,7 +140,7 @@ warnings for what was removed.
 
 Plugins add actions, variables, settings pages, status items and icon packs. They can be C# (full trust, in an isolated assembly load context)
 or JavaScript (a Jint sandbox with approved permissions). They are installed, reloaded and removed while the server runs. The plugin SDK is
-`MacroStation.Plugin.Abstractions`; the guide for writing plugins is `docs/plugin-authoring.md` in the plugin repository. How it is built:
+`MacroGrid.Plugin.Abstractions`; the guide for writing plugins is `docs/plugin-authoring.md` in the plugin repository. How it is built:
 [design/js-plugin-runtime.md](design/js-plugin-runtime.md) and [design/layout-patch-and-assets.md](design/layout-patch-and-assets.md) (plugin hot loading).
 
 ## Automatic profile switching
@@ -149,7 +149,7 @@ A device can follow the foreground window on the PC: [design/auto-profile-switch
 
 ## Security model
 
-Macro Station is meant for a home or office network you trust. It is not hardened for the open internet.
+Macro Grid is meant for a home or office network you trust. It is not hardened for the open internet.
 
 - **Nothing is encrypted.** Traffic is plain `ws://` and `http://` on the local network. The phone app allows cleartext for this reason.
 - **The server listens on all network interfaces** on port 9820. Do not forward the port to the internet, and allow it in the firewall only for

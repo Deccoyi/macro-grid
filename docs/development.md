@@ -14,15 +14,15 @@ How to build, run and test the server and editor, and the pitfalls that are easy
 
 ## Build and run
 
-The editor and the browser deck are React apps. The server serves their built bundles from `src/MacroStation.Host/wwwroot/editor` and
+The editor and the browser deck are React apps. The server serves their built bundles from `src/MacroGrid.Host/wwwroot/editor` and
 `wwwroot/deck` (both are ignored by git), so build them once before the first run:
 
 ```powershell
 cd editor;    npm install; npm run build; cd ..
 cd webclient; npm install; npm run build; cd ..
-Copy-Item editor\dist\*    src\MacroStation.Host\wwwroot\editor -Recurse -Force
-Copy-Item webclient\dist\* src\MacroStation.Host\wwwroot\deck   -Recurse -Force   # create the folder first if needed
-dotnet run --project src/MacroStation.Host
+Copy-Item editor\dist\*    src\MacroGrid.Host\wwwroot\editor -Recurse -Force
+Copy-Item webclient\dist\* src\MacroGrid.Host\wwwroot\deck   -Recurse -Force   # create the folder first if needed
+dotnet run --project src/MacroGrid.Host
 ```
 
 `scripts\publish.ps1` does the bundle builds and the copying for you when it publishes a release (see [release.md](release.md)).
@@ -43,7 +43,7 @@ cd webclient; npm run dev   # http://localhost:5192/deck/
 
 ### Rebuilding while the server runs
 
-A running `MacroStation.exe` locks the files in `bin\`, so quit it (tray menu, Exit) before `dotnet build`. The exe serves the editor from its own
+A running `MacroGrid.exe` locks the files in `bin\`, so quit it (tray menu, Exit) before `dotnet build`. The exe serves the editor from its own
 `bin\Debug\net10.0-windows\wwwroot\editor` copy, which only `dotnet build` refreshes. After a front-end change: build the bundle, copy `dist` into
 `wwwroot\editor`, stop the exe, `dotnet build`, start it again. The server sends `Cache-Control: no-store` for HTML and `/api` responses so the
 WebView2 window does not keep showing an old bundle.
@@ -65,7 +65,7 @@ When you test the editor or the API by hand, use a separate test profile (**+ Pr
 
 ## Data and logs
 
-The server keeps everything in `%AppData%\MacroStation\` (profiles, paired devices, preferences, plugins, logs; see
+The server keeps everything in `%AppData%\MacroGrid\` (profiles, paired devices, preferences, plugins, logs; see
 [architecture.md](architecture.md#data-model)). The tray menu opens the folder. Logs are in `logs\`.
 
 ## Pitfalls

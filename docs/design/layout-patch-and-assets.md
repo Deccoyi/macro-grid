@@ -34,7 +34,7 @@ After a patch the server clears its per-widget "already sent" state only for the
 (text, toggle, value, dynamic style); the client drops the cached live state of the same widgets (`changedWidgetIds`),
 so every other widget keeps its text, toggle and slider position.
 
-### Client behaviour (`macro-station-client/src/ws`)
+### Client behaviour (`macro-grid-client/src/ws`)
 
 - Messages are handled strictly in arrival order. A layout that references uncached assets waits for them (bounded by 5 s;
   an asset that never arrives only leaves that icon blank). `asset` messages skip the queue, otherwise they would wait behind

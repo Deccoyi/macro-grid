@@ -1,6 +1,6 @@
 # Changelog
 
-New features and fixes in Macro Station. For technical details, see [CHANGELOG-developer.md](CHANGELOG-developer.md).
+New features and fixes in Macro Grid. For technical details, see [CHANGELOG-developer.md](CHANGELOG-developer.md).
 
 ## Unreleased
 ### New

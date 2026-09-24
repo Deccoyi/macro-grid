@@ -1,7 +1,7 @@
 import type { Profile, WidgetState } from "@macro/renderer";
 import { version as CLIENT_VERSION } from "../../package.json";
 
-/** Every frame is { type, data }, matching MacroStation.Protocol.Envelope server-side — same wire format
+/** Every frame is { type, data }, matching MacroGrid.Protocol.Envelope server-side — same wire format
  * as the Android client's connection.ts (deliberately not shared as a package, same reasoning as the
  * renderer not being shared between the server and client repositories). */
 interface Envelope<T = unknown> {
@@ -51,7 +51,7 @@ export interface ConnectionEvents {
 }
 
 const MAX_BACKOFF_MS = 10_000;
-const TOKEN_KEY = "macro-station.webToken";
+const TOKEN_KEY = "macro-grid.webToken";
 
 /**
  * Owns the one WebSocket to the server this page is served from — always same-origin (this app is only

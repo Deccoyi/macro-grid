@@ -1,5 +1,5 @@
 /**
- * Mirrors server/src/MacroStation.Core/Model/Profile.cs and MacroStation.Protocol/Messages.cs.
+ * Mirrors server/src/MacroGrid.Core/Model/Profile.cs and MacroGrid.Protocol/Messages.cs.
  * Field names are camelCase because the server serializes with JsonSerializerDefaults.Web.
  * Keep this in sync by hand for now; a generated-types step can replace it later.
  */

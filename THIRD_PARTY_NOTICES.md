@@ -1,10 +1,10 @@
 # Third-party notices
 
-Macro Station is built on open-source components. Each one is distributed under its own license. This file is the index: for every component
+Macro Grid is built on open-source components. Each one is distributed under its own license. This file is the index: for every component
 it lists the version, license, copyright holder and project page, and points to the folder under [`licenses/`](licenses/) that holds the
 original license text (and any NOTICE file) copied unchanged from the package.
 
-The release folder and the installer ship this file, [LICENSE](LICENSE) and the whole `licenses/` folder next to `MacroStation.exe`.
+The release folder and the installer ship this file, [LICENSE](LICENSE) and the whole `licenses/` folder next to `MacroGrid.exe`.
 
 Versions are the ones resolved at the time of writing (see the `csproj` files and the npm lockfiles). Only components that are used at run
 time or end up in the shipped files are listed; build and test tools (Vite, TypeScript, Vitest, xUnit and similar) are not distributed and are
@@ -12,11 +12,11 @@ not listed.
 
 ## The project itself
 
-Macro Station (server, editor and browser deck in this repository) is released under the [MIT License](LICENSE), Copyright (c) 2026 Deccoyi.
+Macro Grid (server, editor and browser deck in this repository) is released under the [MIT License](LICENSE), Copyright (c) 2026 Deccoyi.
 
 ## App icons (AI-generated)
 
-The application icons (`src/MacroStation.Host/app.ico`, the favicon and the PNG icons in `editor/public/`) are AI-generated. They are not
+The application icons (`src/MacroGrid.Host/app.ico`, the favicon and the PNG icons in `editor/public/`) are AI-generated. They are not
 taken from a third-party icon set and are covered by the project's MIT license.
 
 ## .NET (NuGet and the bundled runtime)

@@ -1,8 +1,8 @@
-# Contributing to Macro Station
+# Contributing to Macro Grid
 
 Thanks for your interest. This repository is the server and editor; the phone app is
-[macro-station-client](https://github.com/Deccoyi/macro-station-client) and the plugins are
-[macro-station-plugin](https://github.com/Deccoyi/macro-station-plugin). Each has its own version and its own contribution rules.
+[macro-grid-client](https://github.com/Deccoyi/macro-grid-client) and the plugins are
+[macro-grid-plugin](https://github.com/Deccoyi/macro-grid-plugin). Each has its own version and its own contribution rules.
 
 ## Getting set up
 
@@ -26,7 +26,7 @@ Windows 10 or 11, `dotnet test` for the server tests.
   `docs/CHANGELOG.md` (short, plain sentences for non-developers, no code, file or API names, and without small fixes or internal changes).
 - **Versions** are never bumped in a pull request. The maintainer decides that at release time ([docs/versioning.md](docs/versioning.md)). Changes to the
   WebSocket protocol must stay compatible with older clients (add optional capabilities instead of changing existing messages), and changes to the plugin SDK
-  (`MacroStation.Plugin.Abstractions`) can break plugins, so call them out.
+  (`MacroGrid.Plugin.Abstractions`) can break plugins, so call them out.
 - **Names.** Do not mention third-party product or brand names in code, comments, docs or commits, except where the product is the functional target of the code
   itself (for example a plugin that talks to it). Describe patterns generically.
 - **UI.** Read [docs/ui-guidelines.md](docs/ui-guidelines.md) and use the colors in [docs/color-bible.md](docs/color-bible.md). No emoji or text symbols as icons; use
@@ -36,7 +36,7 @@ Windows 10 or 11, `dotnet test` for the server tests.
 
 ## Tests
 
-Add or update tests with your change. Server logic has tests in `tests/MacroStation.Tests`; the renderer has Vitest tests in `packages/renderer/test`. Run `dotnet test`
+Add or update tests with your change. Server logic has tests in `tests/MacroGrid.Tests`; the renderer has Vitest tests in `packages/renderer/test`. Run `dotnet test`
 and the type checks (`npm run typecheck` in `editor/`, `webclient/` and `packages/renderer/`) before you open a pull request.
 
 ## Security

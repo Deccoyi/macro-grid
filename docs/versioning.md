@@ -1,6 +1,6 @@
 # Versioning
 
-Macro Station follows [Semantic Versioning](https://semver.org/): `MAJOR.MINOR.PATCH`. While the project is before 1.0.0 (`0.MINOR.PATCH`),
+Macro Grid follows [Semantic Versioning](https://semver.org/): `MAJOR.MINOR.PATCH`. While the project is before 1.0.0 (`0.MINOR.PATCH`),
 the same discipline applies: a breaking change is a MINOR bump, a compatible feature is also a MINOR bump, and a fix is a PATCH bump.
 This document describes what is versioned, where each version lives and what counts as a breaking change.
 
@@ -10,10 +10,10 @@ There is no single project version. Four things are versioned independently, bec
 
 | What | Where the version lives | Now |
 |---|---|---|
-| **Server** (`macro-station`, this repository) | `ClientHub.ServerVersion` in `src/MacroStation.Core/Sessions/ClientHub.cs` | `0.2.0` |
-| **Phone app** ([macro-station-client](https://github.com/Deccoyi/macro-station-client)) | `version` in that repository's `package.json` | `0.1.0` |
-| **Plugin SDK** (`MacroStation.Plugin.Abstractions`) | `PluginSdk.Version` in `src/MacroStation.Plugin.Abstractions/PluginSdk.cs` | `0.3.0` |
-| **Each plugin** ([macro-station-plugin](https://github.com/Deccoyi/macro-station-plugin)) | `version` in the plugin's own `plugin.json` | per plugin |
+| **Server** (`macro-grid`, this repository) | `ClientHub.ServerVersion` in `src/MacroGrid.Core/Sessions/ClientHub.cs` | `0.2.0` |
+| **Phone app** ([macro-grid-client](https://github.com/Deccoyi/macro-grid-client)) | `version` in that repository's `package.json` | `0.1.0` |
+| **Plugin SDK** (`MacroGrid.Plugin.Abstractions`) | `PluginSdk.Version` in `src/MacroGrid.Plugin.Abstractions/PluginSdk.cs` | `0.3.0` |
+| **Each plugin** ([macro-grid-plugin](https://github.com/Deccoyi/macro-grid-plugin)) | `version` in the plugin's own `plugin.json` | per plugin |
 
 The SDK is not published as a package yet; plugins reference the project by path. The browser deck (`webclient/`) and the editor (`editor/`)
 are part of the server and released with it.
@@ -51,7 +51,7 @@ Every plugin declares in `plugin.json` which SDK it was built against and which 
   "version": "0.2.0",
   "sdkVersion": "^0.3.0",
   "minServerVersion": "0.1.0",
-  "entry": "MacroStation.Plugin.Obs.dll",
+  "entry": "MacroGrid.Plugin.Obs.dll",
   "kind": "csharp"
 }
 ```

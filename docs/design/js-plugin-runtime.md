@@ -1,7 +1,7 @@
 # JS plugin runtime
 
 Plugins with `"kind": "js"` in `plugin.json` are a single script that runs in a Jint sandbox inside the server. The
-author-facing reference is `macro-station-plugin/docs/plugin-authoring.md` ("JavaScript plugins"); this note records how
+author-facing reference is `macro-grid-plugin/docs/plugin-authoring.md` ("JavaScript plugins"); this note records how
 it is built and why.
 
 ## Shape

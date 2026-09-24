@@ -33,7 +33,7 @@ const PreferencesContext = createContext<PreferencesContextValue | null>(null);
 // since they don't share React state. BroadcastChannel gives same-origin windows an instant push where
 // the platform supports it; the focus/visibility refetch below is the reliable fallback either way (e.g.
 // switching back to the main window after changing something in Tercihler always picks up the change).
-const CHANNEL_NAME = "macro-station-preferences";
+const CHANNEL_NAME = "macro-grid-preferences";
 
 export function PreferencesProvider({ children }: { children: ReactNode }) {
   const [prefs, setPrefs] = useState<AppPreferences>(DEFAULTS);

@@ -8,7 +8,7 @@ export interface SettingOption {
   icon?: string | null;
 }
 
-/** Mirrors MacroStation.Plugin.Abstractions.SettingField — one field of a schema-driven form (action
+/** Mirrors MacroGrid.Plugin.Abstractions.SettingField — one field of a schema-driven form (action
  * settings or a plugin's own settings page), rendered generically by SchemaForm.tsx. */
 export interface SettingField {
   key: string;
@@ -27,7 +27,7 @@ export interface SettingField {
   visibleWhen?: string | null;
 }
 
-/** Mirrors MacroStation.Plugin.Abstractions.OptionsResult — the response of a dynamic-dropdown query. */
+/** Mirrors MacroGrid.Plugin.Abstractions.OptionsResult — the response of a dynamic-dropdown query. */
 export interface OptionsResult {
   options: SettingOption[];
   error?: string | null;
@@ -71,7 +71,7 @@ export interface VariableInfo {
   category: string;
 }
 
-/** Mirrors MacroStation.Core.Plugins.LoadedPlugin. `status` is "Loaded" | "Incompatible" | "Error"
+/** Mirrors MacroGrid.Core.Plugins.LoadedPlugin. `status` is "Loaded" | "Incompatible" | "Error"
  * (C# enum names as sent by System.Text.Json's default Web naming — see PluginLoader.cs). */
 export interface PluginInfo {
   id: string;
@@ -129,7 +129,7 @@ export interface RunningWindowInfo {
   title: string;
 }
 
-/** Pairing QR payload. `text` is the `macrostation://pair?...` URI to encode — empty if the server
+/** Pairing QR payload. `text` is the `macrogrid://pair?...` URI to encode — empty if the server
  * has no LAN adapter up (nothing to reach it on), in which case the editor should warn instead of
  * showing a QR code. `pin` is also shown as text for manual entry if the camera scan doesn't work. */
 export interface PairingQrInfo {

@@ -1,4 +1,4 @@
-# Macro Station
+# Macro Grid
 
 Turn a phone or tablet on your local network into a customizable macro deck for your Windows PC, like a hardware macro keypad you design yourself.
 You lay out buttons, toggles, sliders and knobs on a grid in the editor; the deck shows live values from the PC (CPU, RAM, the time, OBS stream
@@ -12,8 +12,8 @@ duration, ...) and presses keys, types text, opens programs, changes the volume 
 > **No warranty of any kind.** The software is provided "as is", without warranty of any kind, express or implied, including but not limited to
 > merchantability, fitness for a particular purpose and non-infringement. You use it entirely at your own risk. See [LICENSE](LICENSE) (MIT).
 
-This repository is the **server and editor**. The phone and tablet app is in [macro-station-client](https://github.com/Deccoyi/macro-station-client), and
-plugins are in [macro-station-plugin](https://github.com/Deccoyi/macro-station-plugin). The three are versioned independently.
+This repository is the **server and editor**. The phone and tablet app is in [macro-grid-client](https://github.com/Deccoyi/macro-grid-client), and
+plugins are in [macro-grid-plugin](https://github.com/Deccoyi/macro-grid-plugin). The three are versioned independently.
 
 ## What it does
 
@@ -37,7 +37,7 @@ All communication stays on your local network.
 
 - Windows 10 or 11.
 - The [WebView2 Runtime](https://developer.microsoft.com/microsoft-edge/webview2/) (part of current Windows).
-- A phone or tablet on the same network with the [Android app](https://github.com/Deccoyi/macro-station-client), or any browser.
+- A phone or tablet on the same network with the [Android app](https://github.com/Deccoyi/macro-grid-client), or any browser.
 
 There are no published releases yet; build from source (below). A Windows installer definition is included and described in [docs/release.md](docs/release.md).
 
@@ -57,21 +57,21 @@ You need the [.NET 10 SDK](https://dotnet.microsoft.com/download) and [Node.js](
 ```powershell
 cd editor;    npm install; npm run build; cd ..
 cd webclient; npm install; npm run build; cd ..
-Copy-Item editor\dist\*    src\MacroStation.Host\wwwroot\editor -Recurse -Force
-New-Item -ItemType Directory -Force src\MacroStation.Host\wwwroot\deck | Out-Null
-Copy-Item webclient\dist\* src\MacroStation.Host\wwwroot\deck -Recurse -Force
-dotnet run --project src/MacroStation.Host
+Copy-Item editor\dist\*    src\MacroGrid.Host\wwwroot\editor -Recurse -Force
+New-Item -ItemType Directory -Force src\MacroGrid.Host\wwwroot\deck | Out-Null
+Copy-Item webclient\dist\* src\MacroGrid.Host\wwwroot\deck -Recurse -Force
+dotnet run --project src/MacroGrid.Host
 ```
 
 Run the tests with `dotnet test`. More in [docs/development.md](docs/development.md).
 
 ## Security
 
-Macro Station is designed for a home or office network you trust, not for the internet.
+Macro Grid is designed for a home or office network you trust, not for the internet.
 
 - Traffic is not encrypted. The server listens on all network interfaces on port 9820; do not forward the port, and allow it in the firewall only for
   private networks.
-- A device must be paired with the PIN, and tokens are stored in plain text in `%AppData%\MacroStation\devices.json`.
+- A device must be paired with the PIN, and tokens are stored in plain text in `%AppData%\MacroGrid\devices.json`.
 - A paired device can press keys, type text and start programs on your PC. Pair only devices you trust.
 - The editor API is reachable only from the server's own computer.
 - C# plugins have full trust and can do anything the server can; install only ones you trust. JavaScript plugins are sandboxed.
@@ -87,7 +87,7 @@ Details are in [docs/architecture.md](docs/architecture.md#security-model). To r
 - [Design notes](docs/design/): automatic profile switching, layout patches and cached assets, JavaScript plugins
 - [UI guidelines](docs/ui-guidelines.md) and [color system](docs/color-bible.md)
 - [Changelog](docs/CHANGELOG.md) (short) and [developer changelog](docs/CHANGELOG-developer.md)
-- Writing plugins: `docs/plugin-authoring.md` in the [plugin repository](https://github.com/Deccoyi/macro-station-plugin)
+- Writing plugins: `docs/plugin-authoring.md` in the [plugin repository](https://github.com/Deccoyi/macro-grid-plugin)
 
 ## Contributing
 
@@ -99,4 +99,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Third-party licenses
 
-Macro Station uses open-source libraries. The full list with versions, licenses and copyright holders is in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md), and the original license text of every library is in the [licenses/](licenses/) folder. The installer and the release folder include both, plus the [LICENSE](LICENSE) file. The app icons are AI-generated.
+Macro Grid uses open-source libraries. The full list with versions, licenses and copyright holders is in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md), and the original license text of every library is in the [licenses/](licenses/) folder. The installer and the release folder include both, plus the [LICENSE](LICENSE) file. The app icons are AI-generated.

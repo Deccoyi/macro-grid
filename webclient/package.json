@@ -1,9 +1,9 @@
 {
-  "name": "macro-station-webclient",
+  "name": "macro-grid-webclient",
   "private": true,
   "version": "0.1.0",
   "type": "module",
-  "description": "Browser deck — the same grid/widgets as the Android client, served by the server itself at /deck/ so any device on the LAN with a browser can act as a Macro Station deck without installing the app.",
+  "description": "Browser deck — the same grid/widgets as the Android client, served by the server itself at /deck/ so any device on the LAN with a browser can act as a Macro Grid deck without installing the app.",
   "scripts": {
     "dev": "vite --port 5192",
     "build": "vite build",

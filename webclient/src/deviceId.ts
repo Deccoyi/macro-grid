@@ -1,4 +1,4 @@
-const KEY = "macro-station.webDeviceId";
+const KEY = "macro-grid.webDeviceId";
 
 /** A stable per-browser-profile id, same role as the Android client's deviceId — lets the server pair
  * this browser once and recognize it across reconnects/tab reloads. Generated once, kept in localStorage

@@ -1,6 +1,6 @@
 # Releasing the server
 
-The server ships as a Windows installer that wraps a self-contained single-file `MacroStation.exe` (the .NET runtime and
+The server ships as a Windows installer that wraps a self-contained single-file `MacroGrid.exe` (the .NET runtime and
 ASP.NET are bundled). The target PC needs nothing installed except the WebView2 Runtime, which is part of current Windows.
 
 ## 1. Build the release folder
@@ -9,7 +9,7 @@ ASP.NET are bundled). The target PC needs nothing installed except the WebView2 
 scripts\publish.ps1
 ```
 
-Builds the editor, then publishes `artifacts\server\` (`MacroStation.exe`, about 62 MB, plus its `wwwroot` folder and
+Builds the editor, then publishes `artifacts\server\` (`MacroGrid.exe`, about 62 MB, plus its `wwwroot` folder and
 `version.txt`, `LICENSE`, `THIRD_PARTY_NOTICES.md` and the `licenses/` folder with the original license texts of all third-party libraries). The version is read from `ClientHub.ServerVersion`; bump it there first (see `versioning.md`).
 `-SkipEditor` reuses an editor bundle that is already built.
 
@@ -21,13 +21,13 @@ Install [Inno Setup 6](https://jrsoftware.org/isinfo.php) once, then:
 installer\build-installer.ps1
 ```
 
-It produces `artifacts\MacroStation-Setup-<version>.exe`. The installer (`installer\MacroStation.iss`):
+It produces `artifacts\MacroGrid-Setup-<version>.exe`. The installer (`installer\MacroGrid.iss`):
 
-- installs to `Program Files\Macro Station` with a Start menu entry, and an optional desktop shortcut;
-- has an unchecked task "Start Macro Station when I sign in to Windows" (a per-user `Run` entry that is removed on uninstall);
+- installs to `Program Files\Macro Grid` with a Start menu entry, and an optional desktop shortcut;
+- has an unchecked task "Start Macro Grid when I sign in to Windows" (a per-user `Run` entry that is removed on uninstall);
 - opens TCP port 9820 in the Windows firewall for private networks only, and removes the rule on uninstall;
 - closes a running server before an upgrade replaces its files;
-- leaves `%AppData%\MacroStation` (profiles, paired devices, plugins, logs) in place on uninstall.
+- leaves `%AppData%\MacroGrid` (profiles, paired devices, plugins, logs) in place on uninstall.
 
 `AppId` in the `.iss` file must never change; it is how upgrades and the uninstaller find the app.
 

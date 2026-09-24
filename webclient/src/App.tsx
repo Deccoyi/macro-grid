@@ -138,7 +138,7 @@ function TopBar({
         background: "#16181c", borderBottom: "1px solid #2d3136", flexWrap: "wrap",
       }}
     >
-      <span style={{ color: "#e6e7ea", fontSize: 13, fontWeight: 600 }}>Macro Station</span>
+      <span style={{ color: "#e6e7ea", fontSize: 13, fontWeight: 600 }}>Macro Grid</span>
 
       {profiles.length > 1 && (
         <select
@@ -190,14 +190,14 @@ function ConnectScreen({ status, onSubmitPin }: { status: ConnectionStatus; onSu
         boxSizing: "border-box",
       }}
     >
-      <h1 style={{ fontSize: 20, margin: 0 }}>Macro Station</h1>
+      <h1 style={{ fontSize: 20, margin: 0 }}>Macro Grid</h1>
 
       {!pairing && <p style={{ color: "#9aa0a8", fontSize: 13 }}>{status === "connecting" ? "Bağlanıyor…" : "Bağlantı koptu, yeniden deneniyor…"}</p>}
 
       {pairing && (
         <>
           <p style={{ color: "#9aa0a8", fontSize: 13, textAlign: "center", margin: 0, maxWidth: 320 }}>
-            Bu tarayıcı henüz eşleşmemiş. Bilgisayarındaki Macro Station düzenleyicisinde "Eşleştirme"ye tıkla ve orada
+            Bu tarayıcı henüz eşleşmemiş. Bilgisayarındaki Macro Grid düzenleyicisinde "Eşleştirme"ye tıkla ve orada
             gösterilen 6 haneli PIN'i buraya gir.
           </p>
           <input

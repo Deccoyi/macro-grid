@@ -17,7 +17,7 @@ const STATUS_COLOR: Record<PluginInfo["status"], string> = {
 };
 
 /** The whole page of the "Eklentiler" tool window (see ToolWindow.cs) — a real separate, non-modal OS
- * window. Lists what MacroStation.Core.Plugins.PluginManager found under plugins/, and lets the user
+ * window. Lists what MacroGrid.Core.Plugins.PluginManager found under plugins/, and lets the user
  * install (from a folder), reload or remove a plugin. All of it takes effect immediately — no restart. */
 export function PluginsWindow() {
   const { t } = useT();

@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-  Builds the release folder of the server: the editor and browser deck bundles, then a self-contained single-file MacroStation.exe.
+  Builds the release folder of the server: the editor and browser deck bundles, then a self-contained single-file MacroGrid.exe.
 
 .DESCRIPTION
   Output goes to artifacts/server/. The version comes from ClientHub.ServerVersion, the single place the
@@ -19,10 +19,10 @@ $ErrorActionPreference = "Stop"
 $root = Split-Path -Parent $PSScriptRoot
 $out = Join-Path $root "artifacts\server"
 
-$hub = Get-Content (Join-Path $root "src\MacroStation.Core\Sessions\ClientHub.cs") -Raw
+$hub = Get-Content (Join-Path $root "src\MacroGrid.Core\Sessions\ClientHub.cs") -Raw
 if ($hub -notmatch 'ServerVersion\s*=\s*"([^"]+)"') { throw "Could not read ServerVersion from ClientHub.cs" }
 $version = $Matches[1]
-Write-Host "Macro Station server $version"
+Write-Host "Macro Grid server $version"
 
 if (-not $SkipEditor) {
     Push-Location (Join-Path $root "editor")
@@ -33,7 +33,7 @@ if (-not $SkipEditor) {
     } finally { Pop-Location }
 
     # The Host serves the editor from its own wwwroot/editor folder.
-    $target = Join-Path $root "src\MacroStation.Host\wwwroot\editor"
+    $target = Join-Path $root "src\MacroGrid.Host\wwwroot\editor"
     New-Item -ItemType Directory -Force $target | Out-Null
     Copy-Item (Join-Path $root "editor\dist\*") $target -Recurse -Force
 
@@ -44,14 +44,14 @@ if (-not $SkipEditor) {
         npm run build
         if ($LASTEXITCODE) { throw "Browser deck build failed" }
     } finally { Pop-Location }
-    $deck = Join-Path $root "src\MacroStation.Host\wwwroot\deck"
+    $deck = Join-Path $root "src\MacroGrid.Host\wwwroot\deck"
     New-Item -ItemType Directory -Force $deck | Out-Null
     Copy-Item (Join-Path $root "webclient\dist\*") $deck -Recurse -Force
 }
 
 if (Test-Path $out) { Remove-Item $out -Recurse -Force }
 
-dotnet publish (Join-Path $root "src\MacroStation.Host") -c $Configuration -r win-x64 --self-contained `
+dotnet publish (Join-Path $root "src\MacroGrid.Host") -c $Configuration -r win-x64 --self-contained `
     -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:EnableCompressionInSingleFile=true `
     -p:DebugType=None -p:DebugSymbols=false -p:Version=$version -o $out
 if ($LASTEXITCODE) { throw "dotnet publish failed" }

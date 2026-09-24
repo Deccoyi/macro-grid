@@ -33,7 +33,7 @@ Every `ClientSession` holds an `AutoSwitchState`: a stack of entries `{ ProfileI
 
 ## Windows side
 
-`MacroStation.Windows/Windows/ForegroundWindowMonitor` is event driven (no polling): a thread with its own message loop calls
+`MacroGrid.Windows/Windows/ForegroundWindowMonitor` is event driven (no polling): a thread with its own message loop calls
 `SetWinEventHook(EVENT_SYSTEM_FOREGROUND, WINEVENT_OUTOFCONTEXT)`; on each event it reads the process name (`GetWindowThreadProcessId`) and the title
 (`GetWindowText`) and raises `ForegroundChanged`. `HasVisibleWindow(processName)` uses `EnumWindows` with `IsWindowVisible`. Closing is detected by
 pruning on every foreground event and, while a session has a `Rule` entry on its stack, by a two-second `PeriodicTimer` (no timer runs
