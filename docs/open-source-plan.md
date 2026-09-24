@@ -52,10 +52,25 @@ Flip order on the day (minutes apart): server, client, plugin, then enable Pages
 
 ## Claude's tasks (all done while repos are still private, no push/visibility changes without explicit go-ahead)
 
+### Status of the gates (2026-09-24)
+
+| Gate | Status |
+|---|---|
+| G1 | ✅ history scrubbed and repos recreated (private) |
+| G2 | ✅ LICENSE, README, SECURITY, CONTRIBUTING, issue/PR templates, code of conduct, third-party notices in all three repos; needs owner review |
+| G3 | ✅ tracked files and full history scanned clean for employer, personal, e-mail, IP and profile-path strings; secrets scan by grep only (no gitleaks yet) |
+| G4 | ⏳ owner: installer never compiled/tested |
+| G5 | ⏳ owner: debug APK installed on a real phone; release APK + keystore still open |
+| G6 | ⏳ SDK packed and verified, `nuget push` by owner pending |
+| G7 | ⏳ site builds, examples load; owner runs the tutorials on a clean setup |
+| G8 | ⏳ workflows written and YAML-checked, not yet run on GitHub |
+| G9 | ⏳ release workflows and notes drafts written; tags/releases by owner |
+| G10 | ✅ terms read by owner; brand scan done |
+
 **A. Repo hygiene (all three)**
-1. Add missing `LICENSE` (MIT, same as others) to `macro-grid-plugin`; per-plugin license note where needed.
+1. ✅ (LICENSE already existed, MIT; per-plugin LICENSE/NOTICE files added) Add missing `LICENSE` (MIT, same as others) to `macro-grid-plugin`; per-plugin license note where needed.
 2. ✅ Add `SECURITY.md` (private reporting via GitHub advisories, LAN-only threat model, no-warranty note), `CONTRIBUTING.md` (build/test steps, Conventional Commits, English only, two-changelog rule), `CODE_OF_CONDUCT.md`, `.github/ISSUE_TEMPLATE/*` and `PULL_REQUEST_TEMPLATE.md`.
-3. Make `main` the default and `dev` the integration branch in `macro-grid-plugin` (create `main`); document the branching model in CONTRIBUTING.
+3. ⏳ (branching model documented in CONTRIBUTING; creating `main` in the plugin repo is left for the flip) Make `main` the default and `dev` the integration branch in `macro-grid-plugin` (create `main`); document the branching model in CONTRIBUTING.
 4. ✅ README pass: fix stale security note, add badges (license, alpha status), screenshots placeholders, install instructions that point to Releases, links between the three repos.
 5. ✅ Sweep tracked docs for personal/company data (employer domain, machine IPs, `C:\Users\...`); remove or generalize in the current tree first, then prepare the history rewrite described in O2 (mailmap + replace-text, run on mirror clones only). Move internal handoff/agent notes that are useless to outsiders into `docs/internal/` or delete stale ones (e.g. `handoff-2026-09-23.md`).
 6. ✅ Translate remaining Turkish in public-facing docs (README, `plugin-authoring.md`, `plan.md` header, `versioning.md`) to English, per project language rule; keep Turkish only in UI strings.
@@ -65,12 +80,12 @@ Flip order on the day (minutes apart): server, client, plugin, then enable Pages
 **B. Build and CI**
 9. ✅ `.github/workflows/ci.yml` per repo: server (`dotnet build/test` on windows-latest, editor `npm ci && npm run build && npm test`), client (`npm ci`, build, tests, optional debug APK), plugin (build + OBS tests).
 10. ✅ `release.yml` for server (runs `scripts/publish.ps1`, uploads zip; installer step behind a flag since Inno Setup must be installed) and for client (unsigned/debug or signed-if-secrets APK).
-11. Prepare NuGet packaging of `MacroGrid.Plugin.Abstractions` (`PackageId`, metadata, README, symbol package, `Version` 0.3.0) and switch plugin csproj files to a `PackageReference` with a documented local-feed/ProjectReference fallback for developers working on both repos. The owner does the actual `nuget push`.
+11. ✅ (packed and verified against a scratch feed; owner does the `nuget push`, O5) Prepare NuGet packaging of `MacroGrid.Plugin.Abstractions` (`PackageId`, metadata, README, symbol package, `Version` 0.3.0) and switch plugin csproj files to a `PackageReference` with a documented local-feed/ProjectReference fallback for developers working on both repos. The owner does the actual `nuget push`.
 12. ✅ Enable Dependabot config (`dependabot.yml`) for nuget, npm, gradle, github-actions.
 
 **C. Documentation site (in `macro-grid-plugin`, deployed with GitHub Pages)**
-13. Tool: VitePress (Node/Vite already used in the project, Markdown-native, built-in search, dark mode). Site source in `macro-grid-plugin/website/`; deployed by a `pages.yml` workflow (upload-pages-artifact + deploy-pages). Base path `/macro-grid-plugin/` until a custom domain exists.
-14. Content structure:
+13. ✅ Tool: VitePress (Node/Vite already used in the project, Markdown-native, built-in search, dark mode). Site source in `macro-grid-plugin/website/`; deployed by a `pages.yml` workflow (upload-pages-artifact + deploy-pages). Base path `/macro-grid-plugin/` until a custom domain exists.
+14. ✅ (20 pages) Content structure:
     - Introduction: what Macro Grid is, architecture (server, client, plugins), alpha status and disclaimer
     - Getting started: install server, pair phone (PIN/QR), first profile, first button
     - Plugin basics: folder layout, `plugin.json` reference, permissions, SDK/server compatibility, versioning
@@ -79,8 +94,8 @@ Flip order on the day (minutes apart): server, client, plugin, then enable Pages
     - Tutorial 3, showing live data: variables and formatting in widget text
     - Guides: settings pages, icon packs (PLC Icons as the worked example), OBS plugin as a real-world example, debugging/logs, publishing your plugin
     - Reference: manifest schema, JS `host` API, C# SDK interfaces, permissions, changelog links
-15. Reuse and convert existing `docs/plugin-authoring.md` (281 lines) and `agent-and-repo-rules.md`; do not duplicate, make the site the single source and leave a short pointer file. Every code sample is taken from the real repo code (HelloJs, OBS, PLCIcons) and each tutorial project is committed under `examples/` and built in CI so samples cannot rot.
-16. Verify tutorials myself by executing them from a scratch directory (JS one against a running server if available; C# one with `dotnet build` against the packed SDK), then hand the owner a checklist for the on-device run.
+15. ✅ Reuse and convert existing `docs/plugin-authoring.md` (281 lines) and `agent-and-repo-rules.md`; do not duplicate, make the site the single source and leave a short pointer file. Every code sample is taken from the real repo code (HelloJs, OBS, PLCIcons) and each tutorial project is committed under `examples/` and built in CI so samples cannot rot.
+16. ⏳ (both examples build and load in the real plugin manager; the on-device run is the owner's G7 checklist) Verify tutorials myself by executing them from a scratch directory (JS one against a running server if available; C# one with `dotnet build` against the packed SDK), then hand the owner a checklist for the on-device run.
 
 **D. Release prep**
 17. ✅ Write `docs/open-source-plan.md` (this file, English) and a `docs/release.md` update (release checklist, versioning, tag naming `server-v0.2.0`, `client-v0.x`, `plugin-obs-v0.2.0` style).
@@ -89,14 +104,14 @@ Flip order on the day (minutes apart): server, client, plugin, then enable Pages
 
 ## Owner's tasks (things only the owner can do)
 
-- **O1 Decide the licence/branding facts:** confirm MIT for all three, confirm the copyright holder line (handle vs real name), confirm the project name is free to use (no trademark clash), and whether a contact email for SECURITY.md/conduct reports is wanted (a new project mailbox, not a personal or employer one).
+- ✅ **O1 Decide the licence/branding facts:** confirm MIT for all three, confirm the copyright holder line (handle vs real name), confirm the project name is free to use (no trademark clash), and whether a contact email for SECURITY.md/conduct reports is wanted (a new project mailbox, not a personal or employer one).
 - **O2 Identity scrub (decided: full scrub, history is rewritten).** Nothing that names the employer or the old personal email or real name may remain in any repo, commit metadata or file, in any past commit.
   1. ✅ (Decided) Commits use the project mailbox `macrogrid.app@gmail.com` directly (not the noreply address). Add it to the GitHub account, tick "Block command line pushes that expose my email" only if the noreply variant is preferred later; the mailbox is public in every commit, so keep it a dedicated project address. Update the global git config on every machine that commits (a personal/employer email is still in the global config on the dev machine).
   2. ✅ **DONE (local).** History rewritten with `git filter-branch` (git-filter-repo is not installed) on fresh clones, author/committer forced to the identity above, employer domain stripped from `docs/agent-notes.md`; result applied to the working repos (branches `dev`/`main`, old remote-tracking refs, reflogs and unreachable objects removed). Untouched backup mirrors with the OLD history are in the session scratchpad (`bak/`); delete them after the flip.
   3. ✅ **DONE (2026-09-24).** Owner deleted and recreated the three private repos; the rewritten history was pushed (server and client: `dev` + `main`, plugin: `dev`). Original text: Owner reviews the result, then, instead of force-pushing over the old private repos, **delete the three GitHub repos and recreate them empty and private, then push the rewritten history**. Force-push alone can leave the old commits reachable by SHA on GitHub's side. Update `origin` in the local clones.
   4. Old local clones and the backup mirrors (they contain the old identity) are kept off any public place and deleted after the flip. Also check that the Windows user profile name is not present in tracked files (scan already clean for `C:\Users\`).
   5. The "author" of AI-assisted commits keeps the `Co-Authored-By` trailer; those carry no personal data.
-- **O3 Legal/asset checks:**
+- ✅ **O3 Legal/asset checks** (owner read the OpenAI and Google terms: output rights go to the user, no attribution needed; PLC icons were made with Gemini, app logo with ChatGPT; icons carry no brand look-alikes):
   - PLC Icons: the ~20-25 original icons were AI-generated; the rest are Lucide (ISC). Not a blocker, but: (a) the pack README and `THIRD_PARTY_NOTICES.md` must say which icons are AI-generated (provided under the repo licence "as is") and which are Lucide, and ship the ISC licence text, (b) copyright in purely AI-generated output is uncertain in many jurisdictions, so the MIT grant may be weaker than for human work; acceptable here, (c) owner reads the generator's current terms once and confirms redistribution under an open licence is allowed, (d) spot check that no icon reproduces a real brand logo or trademark. Claude documents which files are original vs Lucide by comparing against the Lucide package, so the split comes from evidence.
   - Provenance note (owner, 2026-09-24): the 29 PLC icons were generated with Gemini. Public docs only say "AI-generated"; the generator name, prompts and generation dates go into the owner's private provenance note. Owner reads Google's current generative-AI terms once (output ownership, redistribution under an open licence, any attribution or watermark rule) and confirms; if the terms forbid open licensing, the icons are removed from the pack before the flip.
   - App icons / logos generated with the free plan of a chat assistant's image tool: generally not a problem. The provider's terms assign output rights to the user and allow commercial use, free plan included; the same caveats as above apply (weaker copyright, no exclusivity, generated art can resemble existing art). Owner confirms the terms in force today, keeps the prompt and generation date in a private note as provenance, and checks the image contains no third-party logo, text or recognisable character. Describe them in the README as "AI-generated".
@@ -126,4 +141,4 @@ Flip order on the day (minutes apart): server, client, plugin, then enable Pages
 
 1. (Settled) Full identity scrub with history rewrite and recreated repos. Remaining: which address goes into the commits (recommended: the GitHub noreply address).
 2. (Settled) Docs site uses the default `<handle>.github.io/macro-grid-plugin/` address.
-3. Contact email for security and conduct reports.
+3. ✅ (Settled) Contact: project mailbox `macrogrid.app@gmail.com`; security reports through GitHub private vulnerability reporting. Name search: no active "Macro Grid" product found by web search; owner skipped registry searches (non-commercial project).
