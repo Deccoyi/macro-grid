@@ -16,7 +16,7 @@ pasted link. Anything not published by us must be clearly marked as third-party.
 - **Install:** `PluginManager.InstallFromFolderAsync` (`src/MacroGrid.Core/Plugins/PluginManager.cs`)
   copies the folder to `%AppData%\MacroGrid\plugins\<id>\` with `CopyDirectory`
   (overwrite only, not atomic) and loads it. Endpoint: `POST /api/plugins/install`
-  (`src/MacroGrid.Host/ServerApp.cs`), backed by the native folder dialog.
+  (`src/MacroGrid.Host/Api/PluginApi.cs`), backed by the native folder dialog.
 - **Manifest:** `plugin.json` → `PluginManifest` (SDK): `id`, `name`, `version`,
   `sdkVersion` (caret range), `minServerVersion`, `entry`, `kind`, `permissions` (JS only).
   Compatibility: `SemVer.SatisfiesCaret` / `SatisfiesMinimum`; failures get the

@@ -56,7 +56,7 @@ public sealed record VariableInfo(
 - `SystemAudioProvider`: `system.audio.master` → `Number` + `%`; `system.audio.muted` → `Boolean`.
 - `SystemMetricsProvider`: `system.time` → `DateTime`, `system.uptime` → `Duration`, `system.cpu` / `system.ram` → `Number` + `%`,
   `system.ram.used` / `system.ram.total` → `Number` + `GB`.
-- Audit any other provider registered in `ServerApp.cs`.
+- Audit any other provider registered in `ServiceRegistration.cs`.
 - Official plugins (separate `macro-station-plugins` repository, own versioning): tag their boolean and numeric variables in a follow-up
   there. Do this only after the abstraction change is released; it must not block this work.
 
