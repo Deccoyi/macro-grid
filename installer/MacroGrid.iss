@@ -23,6 +23,8 @@ AppPublisher=Macro Grid
 DefaultDirName={autopf}\{#AppName}
 DefaultGroupName={#AppName}
 UninstallDisplayIcon={app}\{#AppExe}
+; Inno's default entry name is "<name> version <version>"; Windows already shows the version in its own column.
+UninstallDisplayName={#AppName}
 OutputDir={#OutputDir}
 OutputBaseFilename=MacroGrid-Setup-{#AppVersion}
 Compression=lzma2
