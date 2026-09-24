@@ -2,8 +2,10 @@
 // This file is copied byte-for-byte into each repo. Keep the copies identical.
 export const SITE_ORIGIN = 'https://deccoyi.github.io/'
 
-// Links between the sibling sites open in the same tab: strip the target and rel
-// attributes VitePress adds to every external link in markdown pages.
+// Links between the sibling sites open in the same tab. VitePress adds target="_blank" to every
+// external link in markdown pages, and its router hijacks any same-origin link that has no target
+// attribute (it would look for the page inside the current site and show a 404). So the sibling
+// links get an explicit target="_self": the router leaves them alone and the browser navigates.
 export function sameTabForSiblingSites(md: any): void {
   const previous = md.renderer.rules.link_open
   md.renderer.rules.link_open = (tokens: any[], idx: number, options: any, env: any, self: any) => {
@@ -12,14 +14,14 @@ export function sameTabForSiblingSites(md: any): void {
       ? previous(tokens, idx, options, env, self)
       : self.renderToken(tokens, idx, options)
     if (!href.startsWith(SITE_ORIGIN)) return html
-    return html.replace(/\s(?:target|rel)="[^"]*"/g, '')
+    return html.replace(/\s(?:target|rel)="[^"]*"/g, '').replace(/^<a\b/, '<a target="_self"')
   }
 }
 
 const footerMessage =
-  'Macro Grid sites: <a href="https://deccoyi.github.io/macro-grid/">PC</a> &middot; ' +
-  '<a href="https://deccoyi.github.io/macro-grid-client/">Phone</a> &middot; ' +
-  '<a href="https://deccoyi.github.io/macro-grid-plugin/store/">Plugins</a><br>' +
+  'Macro Grid sites: <a target="_self" href="https://deccoyi.github.io/macro-grid/">PC</a> &middot; ' +
+  '<a target="_self" href="https://deccoyi.github.io/macro-grid-client/">Phone</a> &middot; ' +
+  '<a target="_self" href="https://deccoyi.github.io/macro-grid-plugin/store/">Plugins</a><br>' +
   'Released under the MIT License. Alpha software, written entirely by an AI assistant, provided as is without warranty.'
 
 export function sharedConfig(base: string, themeColor: string) {
