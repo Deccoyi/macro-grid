@@ -4,6 +4,11 @@ Thanks for your interest. This repository is the server and editor; the phone ap
 [macro-grid-client](https://github.com/Deccoyi/macro-grid-client) and the plugins are
 [macro-grid-plugin](https://github.com/Deccoyi/macro-grid-plugin). Each has its own version and its own contribution rules.
 
+## This is a hobby project
+
+Macro Grid is maintained in spare time. Issues and pull requests are welcome, but replies and reviews can take a while, and there is no
+promise that a request will be accepted or a pull request merged. Please be patient, and don't expect support on a schedule.
+
 ## Getting set up
 
 See [docs/development.md](docs/development.md) for the requirements, how to build and run, how to test, and the pitfalls. In short: Windows 10 or 11,
