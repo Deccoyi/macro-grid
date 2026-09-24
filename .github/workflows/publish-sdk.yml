@@ -31,7 +31,7 @@ jobs:
       - name: Check that the tag points at a commit on dev or main
         shell: bash
         run: |
-          git fetch --no-tags origin dev main
+          # fetch-depth: 0 above already brought every branch; no further fetch (no credentials are kept in the checkout)
           if git merge-base --is-ancestor "$GITHUB_SHA" origin/dev || git merge-base --is-ancestor "$GITHUB_SHA" origin/main; then
             echo "Tagged commit $GITHUB_SHA is on dev or main."
           else
