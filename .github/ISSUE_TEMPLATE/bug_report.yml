@@ -1,0 +1,58 @@
+name: Bug report
+description: Something in the server, the editor or the browser deck does not work as expected.
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting. Macro Grid is in alpha, so bugs are expected. Please do not report security problems here; see SECURITY.md.
+        Problems with the Android app or a plugin belong in the `macro-grid-client` or `macro-grid-plugin` repository.
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: What did you do, what did you expect, and what happened instead?
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. ...
+        2. ...
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Server version
+      description: Shown in the editor's Help menu and in the bottom status bar.
+      placeholder: 0.2.0
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Where does it happen?
+      options:
+        - Editor
+        - Server or tray app
+        - Browser deck
+        - Phone app connection or pairing
+        - Plugin loading
+        - Installer
+        - Other
+    validations:
+      required: true
+  - type: input
+    id: os
+    attributes:
+      label: Windows version
+      placeholder: Windows 11 23H2
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs or screenshots
+      description: Logs are in the `logs` folder of the data folder (tray menu, open data folder). Remove anything private before pasting.
+      render: shell

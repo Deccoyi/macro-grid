@@ -1,9 +1,16 @@
 # Macro Grid
 
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Status: alpha](https://img.shields.io/badge/status-alpha-orange.svg)](docs/roadmap.md)
+[![CI](https://github.com/Deccoyi/macro-grid/actions/workflows/ci.yml/badge.svg)](https://github.com/Deccoyi/macro-grid/actions/workflows/ci.yml)
+[![Platform: Windows](https://img.shields.io/badge/platform-Windows%2010%2F11-lightgrey.svg)](#requirements)
+
 Turn a phone or tablet on your local network into a customizable macro deck for your Windows PC, like a hardware macro keypad you design yourself.
 You lay out buttons, toggles, sliders and knobs on a grid in the editor; the deck shows live values from the PC (CPU, RAM, the time, OBS stream
 duration, ...) and presses keys, types text, opens programs, changes the volume and controls other software through plugins.
 
+> **Alpha.** Macro Grid is early software: features and file formats can still change between versions.
+>
 > ## This project was written entirely by an AI assistant
 >
 > All code, design and documentation in this repository were written by an AI assistant (Claude) at a user's direction. It has not been reviewed line by line by a
@@ -12,8 +19,21 @@ duration, ...) and presses keys, types text, opens programs, changes the volume 
 > **No warranty of any kind.** The software is provided "as is", without warranty of any kind, express or implied, including but not limited to
 > merchantability, fitness for a particular purpose and non-infringement. You use it entirely at your own risk. See [LICENSE](LICENSE) (MIT).
 
-This repository is the **server and editor**. The phone and tablet app is in [macro-grid-client](https://github.com/Deccoyi/macro-grid-client), and
-plugins are in [macro-grid-plugin](https://github.com/Deccoyi/macro-grid-plugin). The three are versioned independently.
+This repository is the **server and editor**. The three parts are versioned independently:
+
+| Repository | What it is |
+|---|---|
+| [Deccoyi/macro-grid](https://github.com/Deccoyi/macro-grid) (this one) | Windows server, editor, browser deck, plugin SDK |
+| [Deccoyi/macro-grid-client](https://github.com/Deccoyi/macro-grid-client) | Android phone and tablet app |
+| [Deccoyi/macro-grid-plugin](https://github.com/Deccoyi/macro-grid-plugin) | Plugins (OBS, PLC icons, ...) and the plugin authoring docs |
+
+## Screenshots
+
+_Screenshots will be added before the first public release._
+
+<!-- ![The editor](docs/images/editor.png) -->
+<!-- ![A deck on a phone](docs/images/deck-phone.png) -->
+<!-- ![The pairing window](docs/images/pairing.png) -->
 
 ## What it does
 
@@ -39,11 +59,16 @@ All communication stays on your local network.
 - The [WebView2 Runtime](https://developer.microsoft.com/microsoft-edge/webview2/) (part of current Windows).
 - A phone or tablet on the same network with the [Android app](https://github.com/Deccoyi/macro-grid-client), or any browser.
 
-There are no published releases yet; build from source (below). A Windows installer definition is included and described in [docs/release.md](docs/release.md).
+## Install
+
+Download the latest Windows installer (`MacroGrid-Setup-<version>.exe`) or the zip from the
+[GitHub Releases](https://github.com/Deccoyi/macro-grid/releases) page and run it. The first public alpha (`server-v0.2.0-alpha`) is being prepared; until it
+is published, build from source (below). The installer is not code-signed yet, so Windows SmartScreen may warn on first run. How releases are made:
+[docs/release.md](docs/release.md).
 
 ## Getting started
 
-1. Build and start the server (see below). It appears as a tray icon; the menu opens the editor.
+1. Install and start the server (see above; or build it from source, below). It appears as a tray icon; the menu opens the editor.
 2. Open the editor's **Pairing** window: it shows a six-digit PIN and a QR code, valid for five minutes.
 3. On the phone, open the app, then scan the QR code (or enter the PC's address and the PIN). The device is paired and shows the profile.
 4. Design your pages in the editor. Saving updates connected devices immediately.

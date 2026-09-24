@@ -54,19 +54,19 @@ Flip order on the day (minutes apart): server, client, plugin, then enable Pages
 
 **A. Repo hygiene (all three)**
 1. Add missing `LICENSE` (MIT, same as others) to `macro-grid-plugin`; per-plugin license note where needed.
-2. Add `SECURITY.md` (private reporting via GitHub advisories, LAN-only threat model, no-warranty note), `CONTRIBUTING.md` (build/test steps, Conventional Commits, English only, two-changelog rule), `CODE_OF_CONDUCT.md`, `.github/ISSUE_TEMPLATE/*` and `PULL_REQUEST_TEMPLATE.md`.
+2. ✅ Add `SECURITY.md` (private reporting via GitHub advisories, LAN-only threat model, no-warranty note), `CONTRIBUTING.md` (build/test steps, Conventional Commits, English only, two-changelog rule), `CODE_OF_CONDUCT.md`, `.github/ISSUE_TEMPLATE/*` and `PULL_REQUEST_TEMPLATE.md`.
 3. Make `main` the default and `dev` the integration branch in `macro-grid-plugin` (create `main`); document the branching model in CONTRIBUTING.
-4. README pass: fix stale security note, add badges (license, alpha status), screenshots placeholders, install instructions that point to Releases, links between the three repos.
-5. Sweep tracked docs for personal/company data (employer domain, machine IPs, `C:\Users\...`); remove or generalize in the current tree first, then prepare the history rewrite described in O2 (mailmap + replace-text, run on mirror clones only). Move internal handoff/agent notes that are useless to outsiders into `docs/internal/` or delete stale ones (e.g. `handoff-2026-09-23.md`).
-6. Translate remaining Turkish in public-facing docs (README, `plugin-authoring.md`, `plan.md` header, `versioning.md`) to English, per project language rule; keep Turkish only in UI strings.
+4. ✅ README pass: fix stale security note, add badges (license, alpha status), screenshots placeholders, install instructions that point to Releases, links between the three repos.
+5. ✅ Sweep tracked docs for personal/company data (employer domain, machine IPs, `C:\Users\...`); remove or generalize in the current tree first, then prepare the history rewrite described in O2 (mailmap + replace-text, run on mirror clones only). Move internal handoff/agent notes that are useless to outsiders into `docs/internal/` or delete stale ones (e.g. `handoff-2026-09-23.md`).
+6. ✅ Translate remaining Turkish in public-facing docs (README, `plugin-authoring.md`, `plan.md` header, `versioning.md`) to English, per project language rule; keep Turkish only in UI strings.
 7. ✅ (2026-09-24, needs owner review of the manual-check items) Complete `THIRD_PARTY_NOTICES.md` for each repo by reading csproj / package.json / gradle files (Jint, Capacitor, MLKit, etc.); no guessing. Result: each repo has an index `THIRD_PARTY_NOTICES.md` plus `licenses/<library>/` folders with the original license texts (server 22, client 28, plugins: build/test-only deps). Visible via a README section; server publish script and installer, the client APK web assets (`dist/`) and each plugin's build output carry the notices. Proprietary Google ML Kit / Play services terms are linked, not copied. Open: in-app "licenses" screens (server help window, client settings) are suggestions only.
 8. ✅ (identity + brand part done; secrets part still open) Re-run secret/PII scan (tracked files and full history, including deleted `_backup/` content) and report.
 
 **B. Build and CI**
-9. `.github/workflows/ci.yml` per repo: server (`dotnet build/test` on windows-latest, editor `npm ci && npm run build && npm test`), client (`npm ci`, build, tests, optional debug APK), plugin (build + OBS tests).
-10. `release.yml` for server (runs `scripts/publish.ps1`, uploads zip; installer step behind a flag since Inno Setup must be installed) and for client (unsigned/debug or signed-if-secrets APK).
+9. ✅ `.github/workflows/ci.yml` per repo: server (`dotnet build/test` on windows-latest, editor `npm ci && npm run build && npm test`), client (`npm ci`, build, tests, optional debug APK), plugin (build + OBS tests).
+10. ✅ `release.yml` for server (runs `scripts/publish.ps1`, uploads zip; installer step behind a flag since Inno Setup must be installed) and for client (unsigned/debug or signed-if-secrets APK).
 11. Prepare NuGet packaging of `MacroGrid.Plugin.Abstractions` (`PackageId`, metadata, README, symbol package, `Version` 0.3.0) and switch plugin csproj files to a `PackageReference` with a documented local-feed/ProjectReference fallback for developers working on both repos. The owner does the actual `nuget push`.
-12. Enable Dependabot config (`dependabot.yml`) for nuget, npm, gradle, github-actions.
+12. ✅ Enable Dependabot config (`dependabot.yml`) for nuget, npm, gradle, github-actions.
 
 **C. Documentation site (in `macro-grid-plugin`, deployed with GitHub Pages)**
 13. Tool: VitePress (Node/Vite already used in the project, Markdown-native, built-in search, dark mode). Site source in `macro-grid-plugin/website/`; deployed by a `pages.yml` workflow (upload-pages-artifact + deploy-pages). Base path `/macro-grid-plugin/` until a custom domain exists.
@@ -83,8 +83,8 @@ Flip order on the day (minutes apart): server, client, plugin, then enable Pages
 16. Verify tutorials myself by executing them from a scratch directory (JS one against a running server if available; C# one with `dotnet build` against the packed SDK), then hand the owner a checklist for the on-device run.
 
 **D. Release prep**
-17. Write `docs/open-source-plan.md` (this file, English) and a `docs/release.md` update (release checklist, versioning, tag naming `server-v0.2.0`, `client-v0.x`, `plugin-obs-v0.2.0` style).
-18. Draft GitHub Release notes from the public `CHANGELOG.md` files.
+17. ✅ Write `docs/open-source-plan.md` (this file, English) and a `docs/release.md` update (release checklist, versioning, tag naming `server-v0.2.0`, `client-v0.x`, `plugin-obs-v0.2.0` style).
+18. ✅ Draft GitHub Release notes from the public `CHANGELOG.md` files.
 19. Final pre-flip audit report: gate table with pass/fail evidence.
 
 ## Owner's tasks (things only the owner can do)

@@ -6,13 +6,23 @@ Thanks for your interest. This repository is the server and editor; the phone ap
 
 ## Getting set up
 
-See [docs/development.md](docs/development.md) for the requirements, how to build and run, how to test, and the pitfalls. In short: .NET 10 SDK, Node.js 20+,
-Windows 10 or 11, `dotnet test` for the server tests.
+See [docs/development.md](docs/development.md) for the requirements, how to build and run, how to test, and the pitfalls. In short: Windows 10 or 11,
+the .NET 10 SDK and Node.js 20+.
+
+```powershell
+cd editor;    npm ci; npm run build; cd ..
+cd webclient; npm ci; npm run build; cd ..
+dotnet build
+dotnet test
+```
+
+(`dotnet run --project src/MacroGrid.Host` needs the built bundles copied into `src/MacroGrid.Host/wwwroot`; see the development guide.)
 
 ## Before you start
 
 - For anything bigger than a small fix, open an issue first so we can agree on the approach. Look at [docs/roadmap.md](docs/roadmap.md) for what is planned.
-- Work on the `dev` branch (or a branch from it) and open pull requests against `dev`. `main` is for releases.
+- Branching: `main` holds releases and `dev` is the integration branch. Work on a branch from `dev` and open pull requests against `dev`.
+  The maintainer merges `dev` into `main` for a release ([docs/release.md](docs/release.md)).
 - Keep a pull request to one topic. Several small, focused commits are better than one large one.
 
 ## Rules
@@ -38,6 +48,10 @@ Windows 10 or 11, `dotnet test` for the server tests.
 
 Add or update tests with your change. Server logic has tests in `tests/MacroGrid.Tests`; the renderer has Vitest tests in `packages/renderer/test`. Run `dotnet test`
 and the type checks (`npm run typecheck` in `editor/`, `webclient/` and `packages/renderer/`) before you open a pull request.
+
+## Code of conduct
+
+Everyone taking part is expected to follow the [Code of Conduct](CODE_OF_CONDUCT.md).
 
 ## Security
 

@@ -1,0 +1,22 @@
+version: 2
+updates:
+  - package-ecosystem: nuget
+    directory: /
+    schedule:
+      interval: weekly
+  - package-ecosystem: npm
+    directory: /editor
+    schedule:
+      interval: weekly
+  - package-ecosystem: npm
+    directory: /webclient
+    schedule:
+      interval: weekly
+  - package-ecosystem: npm
+    directory: /packages/renderer
+    schedule:
+      interval: weekly
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
