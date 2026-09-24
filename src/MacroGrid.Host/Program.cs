@@ -35,6 +35,24 @@ internal static class Program
 
         Application.Run(new TrayContext(server));
 
-        server.StopAsync(TimeSpan.FromSeconds(3)).GetAwaiter().GetResult();
+        // The tray icon is gone at this point. If stopping the server hangs (for example a hosted service waiting for
+        // the UI thread, whose message loop has just ended) or a foreground thread survives, the process would stay
+        // in the background with no icon to quit it from. This watchdog ends the process in that case.
+        new Thread(() =>
+        {
+            Thread.Sleep(TimeSpan.FromSeconds(8));
+            Environment.Exit(0);
+        }) { IsBackground = true }.Start();
+
+        try
+        {
+            server.StopAsync(TimeSpan.FromSeconds(3)).GetAwaiter().GetResult();
+        }
+        catch (Exception)
+        {
+            // Shutting down anyway.
+        }
+
+        Environment.Exit(0);
     }
 }
