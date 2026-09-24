@@ -1,10 +1,19 @@
+<script setup lang="ts">
+import { computed } from 'vue'
+import { useData } from 'vitepress'
+import { UI, langOf, siteHref } from '../i18n'
+
+const { lang } = useData()
+const current = computed(() => langOf(lang.value))
+const t = computed(() => UI[current.value])
+const moreHref = computed(() => siteHref('/macro-grid/', 'guide/security', current.value))
+</script>
+
 <template>
   <div class="ai-banner" role="note">
-    <strong>Alpha software, written entirely by AI.</strong>
-    <span class="long">
-      Nothing has been reviewed line by line by a human or security-audited. No warranty, no liability: you use it at your own risk.
-    </span>
-    <a target="_self" href="https://deccoyi.github.io/macro-grid/guide/security">Read more</a>
+    <strong>{{ t.aiStrong }}</strong>
+    <span class="long">{{ t.aiLong }}</span>
+    <a target="_self" :href="moreHref">{{ t.aiMore }}</a>
   </div>
 </template>
 
