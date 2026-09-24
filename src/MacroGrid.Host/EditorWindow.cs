@@ -1,5 +1,3 @@
-using Microsoft.Web.WebView2.WinForms;
-
 namespace MacroGrid.Host;
 
 /// <summary>
@@ -11,7 +9,6 @@ namespace MacroGrid.Host;
 internal sealed class EditorWindow : Form
 {
     private static EditorWindow? _instance;
-    private readonly WebView2 _webView = new() { Dock = DockStyle.Fill };
 
     private EditorWindow(string url)
     {
@@ -20,27 +17,9 @@ internal sealed class EditorWindow : Form
         Height = 800;
         StartPosition = FormStartPosition.CenterScreen;
         Icon = Icon.ExtractAssociatedIcon(Application.ExecutablePath);
-        Controls.Add(_webView);
-        _ = InitializeAsync(url);
+        _ = WebViewEnvironment.AttachAsync(this, url);
     }
 
-    private async Task InitializeAsync(string url)
-    {
-        try
-        {
-            await _webView.EnsureCoreWebView2Async(await WebViewEnvironment.GetAsync());
-            _webView.CoreWebView2.Navigate(url);
-        }
-        catch (Exception ex)
-        {
-            MessageBox.Show(
-                this,
-                "WebView2 çalışma zamanı başlatılamadı. Microsoft Edge WebView2 Runtime kurulu olmalı:\nhttps://developer.microsoft.com/microsoft-edge/webview2/\n\n" + ex.Message,
-                "Macro Grid",
-                MessageBoxButtons.OK,
-                MessageBoxIcon.Error);
-        }
-    }
 
     public static void ShowOrFocus(string url)
     {
