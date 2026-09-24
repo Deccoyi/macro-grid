@@ -147,8 +147,8 @@ export interface PreviewProfileInfo {
   height: number;
 }
 
-/** Editor-wide preferences, persisted server-side (see docs/agent-notes.md — not localStorage, so they
- * survive a cleared browser cache or opening the editor from a different machine on the LAN). */
+/** Editor-wide preferences, persisted server-side, not in localStorage, so they survive a cleared browser
+ * cache or a different WebView profile. */
 export interface AppPreferences {
   theme: "dark" | "light";
   language: "tr" | "en";

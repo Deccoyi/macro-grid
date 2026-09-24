@@ -7,8 +7,7 @@ namespace MacroStation.Windows.Windows;
 
 /// <summary>
 /// <see cref="IActiveWindowSource"/> via <c>SetWinEventHook(EVENT_SYSTEM_FOREGROUND)</c> — event-driven,
-/// not polling, to keep the host's idle CPU footprint flat (docs/auto-profile-switch.md, and see
-/// docs/plan.md's lightweight-resource-budget note). <c>WINEVENT_OUTOFCONTEXT</c> delivers the callback on
+/// not polling, to keep the host's idle CPU footprint flat (see docs/design/auto-profile-switch.md). <c>WINEVENT_OUTOFCONTEXT</c> delivers the callback on
 /// whichever thread called <c>SetWinEventHook</c>, so this owns a dedicated thread with its own native
 /// message loop rather than piggy-backing on WPF/WinForms — this project has no UI framework dependency
 /// otherwise and shouldn't gain one just for this.

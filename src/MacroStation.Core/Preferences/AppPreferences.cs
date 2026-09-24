@@ -11,9 +11,8 @@ public sealed class PreviewProfile
 }
 
 /// <summary>Editor-wide preferences: theme, language, user-defined preview sizes. Not tied to any one
-/// profile or browser — see docs/agent-notes.md on why this replaced localStorage (a fresh browser
-/// profile, a cleared cache, or opening the editor from a different machine on the LAN must not lose
-/// these; they live with the rest of the user's data on the server instead).</summary>
+/// profile or browser: a fresh WebView profile or a cleared cache must not lose these, so they live with
+/// the rest of the user's data on the server instead of in localStorage.</summary>
 public sealed class AppPreferences
 {
     public string Theme { get; set; } = "dark";

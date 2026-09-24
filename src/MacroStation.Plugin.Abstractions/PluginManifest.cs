@@ -9,9 +9,9 @@ public enum PluginKind
 }
 
 /// <summary>
-/// A plugin's <c>plugin.json</c>, one per plugin folder. Schema mirrors docs/versioning.md's "Plugin
-/// uyumluluk beyanı" section and macro-station-plugins/agent-and-repo-rules.md madde 3 — keep both in
-/// sync with this record if the schema changes (that's a MINOR/MAJOR host change, see versioning.md).
+/// A plugin's <c>plugin.json</c>, one per plugin folder. Schema mirrors the "Plugin compatibility" section of
+/// docs/versioning.md and the manifest table in the plugin repository's docs/plugin-authoring.md; keep them in
+/// sync with this record if the schema changes (that is a MINOR/MAJOR host change, see versioning.md).
 /// </summary>
 public sealed record PluginManifest
 {

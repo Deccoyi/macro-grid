@@ -10,7 +10,7 @@ Conventional Commits, while keeping each project's own docs (changelog + plan/ro
 files) honest about what actually got finished.
 
 This skill is project-agnostic: it works in whichever git repository it's invoked in
-(e.g. `macro-station-main`, `macro-station-plugins`, or any other repo on this machine).
+(for example `macro-station`, `macro-station-client`, `macro-station-plugin`, or any other repo on this machine).
 Don't hardcode assumptions about repo layout beyond "there's a `.git` and probably a
 `docs/` folder" — discover the rest each time.
 

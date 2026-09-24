@@ -5,8 +5,7 @@ using MacroStation.Plugin.Abstractions;
 namespace MacroStation.Core.Plugins;
 
 /// <summary>
-/// One isolated <see cref="AssemblyLoadContext"/> per plugin (agent-and-repo-rules.md madde 4: C# plugins
-/// get isolation, not a sandbox — full CLR access, but a crashing/leaking plugin doesn't take down the
+/// One isolated <see cref="AssemblyLoadContext"/> per plugin (C# plugins get isolation, not a sandbox — full CLR access, but a crashing/leaking plugin doesn't take down the
 /// default context or collide with another plugin's own dependency versions). Collectible so a plugin can be
 /// unloaded and reloaded without restarting the server. Managed assemblies are loaded from memory, not from
 /// the file, so the plugin's DLLs are never locked on disk: a plugin can be replaced or deleted while (or

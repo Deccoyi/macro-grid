@@ -16,6 +16,9 @@ New features and fixes in Macro Station. For technical details, see [CHANGELOG-d
 - **No restart for plugins:** Installing, reloading or removing a plugin takes effect right away. A new "Reload" button is in the Plugins window.
 
 ### Changed
+- The editor's screens can now only be used on the PC itself. This keeps other devices on your network from changing your profiles or reading your pairing code.
+- Text typed into action fields that allow values (for example an OBS text source) now shows the current value instead of the raw `{name}`.
+- The Help menu shows the real version.
 - The editor's scrollbar is now slimmer and cleaner.
 - Saving in the editor now updates your phone faster and smoother. Only what you changed is sent, and the rest of the deck stays as it is.
 - Icons are sent to your phone once and kept there.

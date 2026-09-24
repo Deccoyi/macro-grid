@@ -1,6 +1,6 @@
 # Layout patches, cached assets and plugin hot loading
 
-Three related gaps from `plan.md` were closed together: a saved edit no longer resends the whole layout, icons and
+Three related gaps were closed together: a saved edit no longer resends the whole layout, icons and
 images are sent once and cached on the device, and plugins can be installed, reloaded and removed while the server runs.
 
 ## Protocol

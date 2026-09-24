@@ -193,8 +193,8 @@ public static class WidgetEvents
     public const string ToggleOff = "toggleOff";
 
     /// <summary>Fired on a <see cref="WidgetTypes.Slider"/>/<see cref="WidgetTypes.Knob"/> once a drag ends
-    /// (client's SliderContent/KnobContent "onCommit", not every intermediate onChange tick — see
-    /// docs/agent-notes.md on why not every tick hits the wire). <see cref="Plugin.Abstractions.ActionContext.Value"/>
+    /// (client's SliderContent/KnobContent "onCommit", not every intermediate onChange tick, so the
+    /// wire is not flooded while dragging). <see cref="Plugin.Abstractions.ActionContext.Value"/>
     /// carries the dragged value; bindings on this event read it instead of a static setting.</summary>
     public const string ValueChange = "valueChange";
 }

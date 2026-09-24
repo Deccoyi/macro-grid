@@ -13,7 +13,7 @@ type Category = "code" | "devices";
  * window using the same left-categories/right-content shell as Plugins/Preferences/Help, instead of the
  * old centered modal-over-a-dark-backdrop (see docs/ui-guidelines.md: Device Manager-style screens get
  * their own window, never an in-page overlay). A fresh, short-lived PIN/QR is issued every time this
- * window opens — see docs/agent-notes.md on why a static code would defeat the point of scanning it. */
+ * window opens: a static code that stayed valid would defeat the point of scanning it. */
 export function PairingWindow() {
   const { t, lang } = useT();
   const [category, setCategory] = useState<Category>("code");

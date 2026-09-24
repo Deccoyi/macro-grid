@@ -59,5 +59,7 @@ if ($LASTEXITCODE) { throw "dotnet publish failed" }
 # Reference documentation the WebView2 package drops next to the exe; not needed at runtime.
 Get-ChildItem $out -Filter "*.xml" | Remove-Item -Force
 
+Copy-Item (Join-Path $root "LICENSE") $out
+Copy-Item (Join-Path $root "THIRD_PARTY_NOTICES.md") $out
 Set-Content (Join-Path $out "version.txt") $version -NoNewline
 Write-Host "Done: $out"

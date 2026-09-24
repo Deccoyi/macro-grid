@@ -1,55 +1,76 @@
-# Sürümleme (Semantic Versioning)
+# Versioning
 
-Proje [SemVer](https://semver.org/) kullanır: `MAJOR.MINOR.PATCH`. Henüz 1.0.0 öncesindeyiz (`0.x.y`); SemVer'e göre 0.x'te her şey serbesttir ama bu projede **0.x'te de disiplinli davranıyoruz** — aşağıdaki MAJOR/MINOR/PATCH ayrımı 0.x için de geçerli, sadece ilk sayı 0'da sabit kalıyor (`0.MINOR.PATCH`).
+Macro Station follows [Semantic Versioning](https://semver.org/): `MAJOR.MINOR.PATCH`. While the project is before 1.0.0 (`0.MINOR.PATCH`),
+the same discipline applies: a breaking change is a MINOR bump, a compatible feature is also a MINOR bump, and a fix is a PATCH bump.
+This document describes what is versioned, where each version lives and what counts as a breaking change.
 
-## Nerede kaç versiyon var?
-Tek bir "proje versiyonu" yok — birbirinden bağımsız dört versiyon takip edilir, çünkü biri değişse bile diğerleri uyumlu kalabilir:
+## What is versioned, and where
 
-| Ne | Versiyon nerede yaşar | Şu an |
+There is no single project version. Four things are versioned independently, because one can change while the others stay compatible:
+
+| What | Where the version lives | Now |
 |---|---|---|
-| **Server (Host)** | `MacroStation.Core.Sessions.ClientHub.ServerVersion` sabiti | `0.2.0` (yeni editör API uç noktaları — `/api/status`, `/api/actions/{type}/options/*`, `/api/plugins/{id}/settings/*`, `/api/icon-packs` — için MINOR bump) |
-| **Client** | `client/package.json` → `version` (client kurulunca) | — |
-| **Plugin SDK** (`MacroStation.Plugin.Abstractions`) | Kendi paket versiyonu (NuGet paketi olduğunda `.csproj` → `<Version>`) | `0.3.0` (henüz paketlenmedi, kod hâlâ proje referansıyla kullanılıyor — schema-driven ayar formları (`SettingField`, `IActionDescriptor`, `IOptionsSource`, `IPluginSettingsPage`, `IPluginStatusItem`, `IIconPackSource`) ve `IVariableStore.Remove` eklendiği için `0.2.0`'dan MINOR bump) |
-| **Her plugin** | Kendi `plugin.json` → `version` | loader tamam; OBS `0.2.0`, PLC İkonları — bkz. `macro-station-plugins/` |
+| **Server** (`macro-station`, this repository) | `ClientHub.ServerVersion` in `src/MacroStation.Core/Sessions/ClientHub.cs` | `0.2.0` |
+| **Phone app** ([macro-station-client](https://github.com/Deccoyi/macro-station-client)) | `version` in that repository's `package.json` | `0.1.0` |
+| **Plugin SDK** (`MacroStation.Plugin.Abstractions`) | `PluginSdk.Version` in `src/MacroStation.Plugin.Abstractions/PluginSdk.cs` | `0.3.0` |
+| **Each plugin** ([macro-station-plugin](https://github.com/Deccoyi/macro-station-plugin)) | `version` in the plugin's own `plugin.json` | per plugin |
 
-**Protokol versiyonu ayrı bir kavram:** WebSocket mesaj şeması (`hello`/`welcome` içindeki `clientVersion`/`serverVersion`) şu an sadece bilgi amaçlı gönderiliyor, uyumluluk kontrolü yapmıyor. İleride (Aşama 5, eşleştirme) bir `protocolVersion` tamsayısı eklenip sunucu/istemci uyuşmazsa kullanıcıya net bir "istemcini güncelle" mesajı gösterilmesi planlanıyor — bu SemVer'den bağımsız, basit artan bir sayı olacak (protokol her değiştiğinde +1).
+The SDK is not published as a package yet; plugins reference the project by path. The browser deck (`webclient/`) and the editor (`editor/`)
+are part of the server and released with it.
 
-## MAJOR / MINOR / PATCH neyi ifade eder
-- **MAJOR:** Geriye uyumsuz bir değişiklik.
-  - Server/Client: mevcut bir WebSocket mesajının alanı kaldırılıyor/anlamı değişiyor, `hello` akışı değişiyor.
-  - Plugin SDK: `IActionHandler`, `IVariableStore`, `IVariableProvider`, `IDeviceController`, `ActionContext` gibi arayüzlerden biri kırılıyor (imza değişiyor, üye kaldırılıyor). **Bu, o SDK sürümüne yazılmış tüm plugin'lerin yeniden derlenmesini gerektirir.**
-  - Plugin: kendi `plugin.json` ayar şemasını veya action/variable adlarını geriye uyumsuz değiştiriyor (kullanıcının kayıtlı profilindeki aksiyon ayarları artık anlamsızlaşıyor).
-- **MINOR:** Geriye uyumlu yeni özellik.
-  - Yeni bir widget tipi, yeni bir built-in aksiyon (`core.*`), yeni bir opsiyonel protokol alanı/mesaj tipi, SDK'ya yeni bir opsiyonel arayüz/üye eklenmesi.
-- **PATCH:** Davranış değişmeden hata düzeltmesi, performans, iç refactor.
+## The connection between server and phone app
 
-## Plugin uyumluluk beyanı
-Her plugin, hangi Plugin SDK sürümüyle derlendiğini `plugin.json` içinde beyan eder (uygulandı, Aşama 6 — bkz. `MacroStation.Plugin.Abstractions/PluginManifest.cs` ve `MacroStation.Core/Plugins/PluginLoader.cs`):
+The phone app and the browser deck talk to the server over a WebSocket (port 9820) with JSON messages. Compatibility works like this:
+
+- `hello` and `welcome` carry `clientVersion` and `serverVersion`. They are informational; nothing checks them.
+- Optional features are negotiated. A client lists what it understands in `hello.capabilities` (`assets`, `layout.patch`, see
+  `ClientCapabilities.cs`), and the server sends the older, plain form to a client that lists nothing. This is how a newer server keeps
+  working with an older phone app and the browser deck. New optional features should be added the same way.
+- There is no `protocolVersion` number. Changing the meaning of an existing message or field is a breaking change (see below).
+
+## What each bump means
+
+- **MAJOR** (after 1.0.0; before that, a MINOR bump): a breaking change.
+  - Server and phone app: an existing WebSocket message or field is removed or changes meaning, or the `hello` flow changes in a way an
+    older client cannot handle.
+  - Plugin SDK: a public interface a plugin implements or receives (`IPlugin`, `IPluginHost`, `IActionHandler`, `IVariableProvider`,
+    `IVariableStore`, `IDeviceController`, `ActionContext`, ...) changes incompatibly. This requires every plugin built for that SDK to be rebuilt.
+  - Plugin: it changes its action types, settings or variable names in a way that makes a user's saved profile stop working.
+- **MINOR**: a compatible feature: a new widget type, a new built-in action (`core.*`), a new optional message or capability, a new optional
+  member or interface in the SDK.
+- **PATCH**: a fix, a performance change or an internal refactor with no change in behavior.
+
+## Plugin compatibility
+
+Every plugin declares in `plugin.json` which SDK it was built against and which server it needs:
 
 ```json
 {
   "id": "obs",
-  "name": "OBS Kontrolü",
-  "version": "1.2.0",
-  "sdkVersion": "^1.0.0",
-  "minServerVersion": "0.4.0"
+  "name": "OBS Control",
+  "version": "0.2.0",
+  "sdkVersion": "^0.3.0",
+  "minServerVersion": "0.1.0",
+  "entry": "MacroStation.Plugin.Obs.dll",
+  "kind": "csharp"
 }
 ```
 
-- `sdkVersion`: npm tarzı caret aralığı (`^1.0.0` → `1.x.x` ile uyumlu, `2.0.0` ile değil). Host, plugin'i yüklemeden önce kendi Plugin SDK sürümüyle bu aralığı karşılaştırır; uyuşmazsa plugin'i **yüklemez** ve editörde net bir uyarı gösterir ("Bu plugin SDK 2.x istiyor, sunucu 1.x kullanıyor").
-- `minServerVersion`: plugin'in ihtiyaç duyduğu asgari server (Host) sürümü — ör. plugin bir `IDeviceController` metodunu kullanıyorsa ve o metot server 0.4.0'da eklendiyse.
-- Bu iki alan sayesinde "hangi plugin hangi sürümle çalışıyor" editördeki plugin listesinde tek bakışta görülebilir (yükleniyor/uyumsuz/güncel değil).
-- Tam manifesto şeması (`entry`, `kind`, `permissions` dahil) ve örnek bir C# plugin'i: `macro-station-plugins/docs/plugin-authoring.md`.
+- `sdkVersion` is a caret range checked against `PluginSdk.Version`. While the SDK is `0.x`, `^0.3.0` matches `0.3.x` only; from 1.0.0,
+  `^1.2.0` matches `1.2.0` up to (not including) `2.0.0`.
+- `minServerVersion` is the oldest server that has what the plugin uses.
+- A plugin that does not satisfy either is listed as incompatible in the editor and is not loaded.
 
-## Branch → main geçişinde versiyon bump'ı
-**Kural: `development` (veya çalışılan branch) `main`'e merge edilmeden önce, versiyonun bump edilip edilmeyeceği ve MAJOR/MINOR/PATCH'ten hangisi olacağı HER SEFERİNDE kullanıcıya sorulur.** Otomatik/sessiz bump yapılmaz — kullanıcı onaylamadan sürüm numarası değiştirilmez ve `main`'e merge edilmez.
+The full manifest and the SDK are described in `docs/plugin-authoring.md` in the plugin repository.
 
-Henüz `development`/`main` branch'leri kurulmadı (repo `master` üzerinde, ilk commit atılmadı). Bu branch'ler kurulduğunda bu kural geçerli olacak.
+## Releasing
 
-## Changelog
-Two separate changelogs are kept; when a version bump is approved, both get an entry:
+Work happens on the `dev` branch and is merged into `main` for a release. Before a merge to `main` the maintainer decides whether the version
+is bumped and by how much (MAJOR, MINOR or PATCH); a version number is never changed silently. When a bump is approved, both changelogs get
+their entry:
 
-- `docs/CHANGELOG-developer.md` — the detailed, technical record for developers, in [Keep a Changelog](https://keepachangelog.com/) format.
-- `docs/CHANGELOG.md` — the short, public record for everyone who is not a developer. Short sentences, what is new and what got fixed. No code, file or API names; small bug fixes and stability improvements are not listed.
+- `docs/CHANGELOG-developer.md`: the detailed, technical record, in [Keep a Changelog](https://keepachangelog.com/) format.
+- `docs/CHANGELOG.md`: the short record for people who are not developers. Short sentences, what is new and what got fixed, with no code,
+  file or API names, and without small bug fixes or internal changes.
 
-Both are written in English.
+Both are written in English. See [docs/release.md](release.md) for building the installer.
