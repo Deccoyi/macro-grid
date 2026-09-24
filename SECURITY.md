@@ -32,8 +32,12 @@ arrange a private way to receive it.
 Helpful details: what is affected, the steps to reproduce, and what an attacker on the same network (or with a paired device, or with an installed
 plugin) could do.
 
-This is a small project maintained in spare time, so there is no guaranteed response time and no bug bounty, but reports are taken seriously and
-credited if you wish.
+## This is a hobby project
+
+Macro Grid is a hobby project maintained in spare time, not a full-time job or a commercial product. Security reports are read and the
+maintainer will try to fix real problems, but there is no guaranteed response time, no guaranteed fix, no support schedule and no bug
+bounty. Fixes land when there is time for them. If that is not acceptable for how you use the software, do not rely on it.
+Reporters are credited if they wish.
 
 ## Supported versions
 
