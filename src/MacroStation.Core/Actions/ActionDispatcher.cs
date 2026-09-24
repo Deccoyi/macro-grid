@@ -1,12 +1,14 @@
 using System.Collections.Concurrent;
+using System.Text.Json.Nodes;
 using MacroStation.Core.Model;
+using MacroStation.Core.Variables;
 using MacroStation.Plugin.Abstractions;
 using Microsoft.Extensions.Logging;
 
 namespace MacroStation.Core.Actions;
 
 /// <summary>Holds every registered action type (built-in and plugin) and runs a widget's bindings for an event.</summary>
-public sealed class ActionDispatcher(IEnumerable<IActionHandler> handlers, ILogger<ActionDispatcher> logger)
+public sealed class ActionDispatcher(IEnumerable<IActionHandler> handlers, ILogger<ActionDispatcher> logger, IVariableStore? variables = null)
 {
     private readonly ConcurrentDictionary<string, IActionHandler> _handlers =
         new(handlers.Select(h => KeyValuePair.Create(h.Type, h)), StringComparer.OrdinalIgnoreCase);
@@ -44,7 +46,7 @@ public sealed class ActionDispatcher(IEnumerable<IActionHandler> handlers, ILogg
 
             try
             {
-                await handler.ExecuteAsync(context, binding.Settings, cancellationToken);
+                await handler.ExecuteAsync(context, ResolveVariables(handler, binding.Settings), cancellationToken);
             }
             catch (Exception ex) when (ex is not OperationCanceledException)
             {
@@ -53,5 +55,25 @@ public sealed class ActionDispatcher(IEnumerable<IActionHandler> handlers, ILogg
             }
         }
         return (IReadOnlyList<string>?)errors ?? [];
+    }
+
+    /// <summary>
+    /// For every field the handler declares with <see cref="SettingField.AllowVariables"/>, replaces the
+    /// <c>{variable}</c> templates in the user's text with the current values before the handler runs. The
+    /// binding's own settings are never modified (they belong to the saved profile); a copy is returned only
+    /// when there is something to resolve.
+    /// </summary>
+    private JsonObject ResolveVariables(IActionHandler handler, JsonObject settings)
+    {
+        if (variables is null || handler is not IActionDescriptor descriptor) return settings;
+
+        JsonObject? resolved = null;
+        foreach (var field in descriptor.Fields.Where(f => f.AllowVariables))
+        {
+            if (settings[field.Key] is not JsonValue value || !value.TryGetValue<string>(out var text) || !text.Contains('{')) continue;
+            resolved ??= (JsonObject)settings.DeepClone();
+            resolved[field.Key] = Template.Parse(text).Render(variables);
+        }
+        return resolved ?? settings;
     }
 }
