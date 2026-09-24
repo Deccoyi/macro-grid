@@ -36,3 +36,13 @@ running the tutorials, enabling Actions, tagging releases). Nothing found so far
 3. GitHub: enable Actions, create `main` in the plugin repo, merge `dev` into `main` in the server and client repos, enable private vulnerability reporting, set descriptions and topics, and check that CI is green on `main` (G8).
 4. Tag the releases and create the release drafts (G9).
 5. Flip visibility in this order: server, client, plugin; then enable Pages and publish the releases.
+6. Right after the flip, lock down SDK publishing (these are not enforced on a private repo under the current plan,
+   so they wait for the public repo):
+   - **Important:** add a tag ruleset on the server repo for `sdk-v*` (restrict creations, updates and deletions;
+     only the repository admin in the bypass list). Without it anyone with write access can publish to nuget.org
+     by pushing a tag.
+   - Turn on **Required reviewers** for the `nuget` environment (the owner as reviewer, "Prevent self-review" off),
+     so every publish waits for an approval.
+   - Ask nuget.org to reserve the `MacroGrid.` package ID prefix (mail account@nuget.org from the account address
+     with the user name, `MacroGrid.Plugin.Abstractions` and the public project URL). It blocks look-alike package
+     names and adds the verified mark.
