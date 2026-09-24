@@ -9,7 +9,7 @@ The server is a Windows tray application. It stores your profiles, talks to the 
 
 ## With the installer
 
-1. Download `MacroGrid-Setup-<version>.exe` (or the zip) from [GitHub Releases](https://github.com/Deccoyi/macro-grid/releases).
+1. Download `MacroGrid-Setup-<version>.exe` (or the zip) from the [Download page](/download).
 2. Run it and accept the user agreement. A desktop shortcut is created by default.
 3. Finish and start Macro Grid.
 
