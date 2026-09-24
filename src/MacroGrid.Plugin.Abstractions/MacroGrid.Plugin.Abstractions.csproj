@@ -1,5 +1,31 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
+
+    <!-- NuGet package metadata. Keep <Version> equal to PluginSdk.Version (PluginSdk.cs). -->
+    <PackageId>MacroGrid.Plugin.Abstractions</PackageId>
+    <Version>0.3.0</Version>
+    <Authors>Deccoyi</Authors>
+    <Description>Plugin SDK for Macro Grid: the IPlugin entry point, action/variable/settings/icon-pack interfaces and the plugin manifest types that C# plugins compile against. The Macro Grid server supplies the runtime copy of this assembly.</Description>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageTags>macrogrid;macro-grid;plugin;sdk;streamdeck;macro-pad</PackageTags>
+    <PackageProjectUrl>https://github.com/Deccoyi/macro-grid</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/Deccoyi/macro-grid</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+
+    <!-- Symbols and reproducible builds. -->
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <Deterministic>true</Deterministic>
+    <ContinuousIntegrationBuild Condition="'$(CI)' == 'true' or '$(GITHUB_ACTIONS)' == 'true'">true</ContinuousIntegrationBuild>
+
+    <!-- IntelliSense docs ship in the package. Not every member is documented yet, so CS1591 stays quiet. -->
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);CS1591;CS1734</NoWarn>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
 </Project>
