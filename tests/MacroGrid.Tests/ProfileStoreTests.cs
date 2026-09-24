@@ -1,3 +1,4 @@
+using MacroGrid.Core;
 using MacroGrid.Core.Actions;
 using MacroGrid.Core.Model;
 using MacroGrid.Core.Profiles;
@@ -52,10 +53,10 @@ public sealed class ProfileStoreTests : IDisposable
         var profile = new ProfileStore(_dir).First();
 
         Assert.Equal(2, profile.Pages.Count);
-        var toPage2 = profile.Pages[0].Widgets.Single(w => w.Text == "Sayfa 2 →");
+        var toPage2 = profile.Pages[0].Widgets.Single(w => w.Text == AppLanguage.Pick("Page 2 →", "Sayfa 2 →"));
         Assert.Equal(profile.Pages[1].Id, toPage2.Actions[WidgetEvents.Press][0].Settings["pageId"]!.GetValue<string>());
 
-        var back = profile.Pages[1].Widgets.Single(w => w.Text == "← Geri");
+        var back = profile.Pages[1].Widgets.Single(w => w.Text == AppLanguage.Pick("← Back", "← Geri"));
         Assert.Equal(PageAction.TypeId, back.Actions[WidgetEvents.Press][0].Type);
     }
 
