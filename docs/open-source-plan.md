@@ -40,12 +40,12 @@ Flip to public only when **every** item is true:
 | G1 | Identity scrub done (O2): history rewritten (✅ done locally), GitHub repos recreated (✅ done 2026-09-24, private), scan finds no employer name, old email or real name anywhere in tree or history | Claude scans, owner executes |
 | G2 | Every repo has LICENSE, README with correct status, SECURITY.md, CONTRIBUTING.md, issue templates, third-party notices | Claude prepares, owner reviews |
 | G3 | No secrets/PII/company references in tracked files or history (scan clean) | Claude scans, owner confirms |
-| G4 | Server installer compiled and install/upgrade/uninstall tested on a clean Windows PC | Owner |
+| G4 | ✅ tested by the owner on a clean domain-joined PC (2026-09-24): install with user agreement, editor, pairing, start with Windows, tray exit, uninstall; four fixes came out of it (see the audit) |
 | G5 | Client release APK built and tested on a real device against the release server | Owner |
 | G6 | Plugin SDK `0.3.0` published to NuGet (or an equally public feed), plugin projects build from a clean clone without sibling repos | Claude prepares, owner publishes |
 | G7 | Docs site builds locally and both tutorials (JS hello world, C# hello world) were followed verbatim on a clean setup and work | Claude writes, owner runs them |
-| G8 | CI green on all three (build + tests) on `main` | Claude writes, owner enables |
-| G9 | First tagged release `v0.2.0-alpha` (server + installer) and client `v0.x` APK ready as GitHub Release drafts | Owner publishes |
+| G8 | ✅ CI green on `dev` and `main` in all three repos (runs on pull requests and `main`); required check and branch protection come after the flip |
+| G9 | ⏳ alpha tags and draft releases are made after the flip (workflows and notes are ready) |
 | G10 | AI-generated icons/logos disclosed, generator terms checked, no brand look-alikes (O3) | Owner, Claude assists |
 
 Flip order on the day (minutes apart): server, client, plugin, then enable Pages, publish releases, verify links.

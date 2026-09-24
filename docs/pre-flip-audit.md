@@ -3,21 +3,20 @@
 Status of the ten gates from [open-source-plan.md](open-source-plan.md), with the evidence behind each one.
 Audit date: 2026-09-24. Repos: `Deccoyi/macro-grid`, `macro-grid-client`, `macro-grid-plugin` (all private).
 
-**Verdict: not ready to flip yet.** G4, G7, G8 and G9 are open and depend on the owner (clean-PC test,
-running the tutorials, enabling Actions, tagging releases). Nothing found so far blocks the flip once those are done.
+**Verdict: ready to open as an alpha.** All gates that block opening are passed; the remaining items (G7, G9 and the after-the-flip list) do not need to happen before the repositories go public. Nothing found so far blocks the flip.
 
 | Gate | Status | Evidence |
 |---|---|---|
 | **G1** Identity scrub | ✅ Pass | All commits in all three repos (78 / 33 / 28) have author and committer the project identity (Deccoyi + project mailbox). A search of every commit (metadata, messages, file contents) for the old employer name, both old personal addresses and the user-profile name finds nothing. Old backups were deleted; the repos were deleted and recreated on GitHub. |
 | **G2** Community files | ✅ Pass (owner review) | Every repo has LICENSE (MIT), README, SECURITY.md, CONTRIBUTING.md, CODE_OF_CONDUCT.md, issue templates (3 / 3 / 4), a PR template, THIRD_PARTY_NOTICES.md and a `licenses/` folder (22 / 28 / 5). |
-| **G3** No secrets / PII | ✅ Pass (grep only) | Known secret formats (cloud keys, tokens, private keys) match nothing in the full history. No `.jks`, `.keystore`, `.env` or `keystore.properties` file was ever committed; the release key lives outside the repos. Password-like matches are only the property *names* in `android/app/build.gradle`. No gitleaks run yet: add it to CI. |
-| **G4** Installer tested | ⏳ Open (owner) | `MacroGrid-Setup-0.2.0.exe` compiled for the first time (Inno Setup 6.7.3). Install / upgrade / uninstall on a clean Windows PC not yet done. Known: `PrivilegesRequired=admin` with per-user (HKCU) autostart entry; installer is unsigned. |
+| **G3** No secrets / PII | ✅ Pass (grep only) | Re-run on 2026-09-24 over every commit of all three repos and over all current files: no employer, personal-name, user-profile-path, machine-address or company-network string; no known secret format (cloud keys, tokens, private keys); no key, keystore or `.env` file ever committed; the release key lives outside the repos. The dedicated project mailbox appears only in commit metadata (and in old file versions in history). No gitleaks run yet: add it to CI later. |
+| **G4** Installer tested | ✅ Pass | Tested by the owner on a clean, domain-joined company PC on 2026-09-24: install, the user agreement page, editor opens (WebView2 data folder fixed), phone pairs and the mute toggle works, start with Windows after a restart, quit from the tray ends the process, uninstall (also while running) removes everything. Fixes found by that test: WebView2 data folder, plugins built against SDK 0.3.0 loading on 0.3.1, tray exit, uninstall while running. Unsigned installer: Windows shows an unknown-publisher warning. |
 | **G5** Release APK on a device | ✅ Pass | Signed `MacroGrid-0.1.0.apk` (verified with `apksigner`), installed on a real phone, paired with the renamed server, live values and buttons work. Keystore backed up by the owner. Only a re-run against the final release server build is left. |
 | **G6** SDK on NuGet | ✅ Pass | `MacroGrid.Plugin.Abstractions` 0.3.0 is live on nuget.org (Trusted Publishing, tag `sdk-v0.3.0`). A clean build of both plugins with an empty package cache restores it from nuget.org and passes; the plugin CI dropped the server checkout. The package's project links stay 404 for outsiders until the repos are public. |
-| **G7** Tutorials verified | ⏳ Open (owner) | Docs site builds with no dead links; both examples build and load in the real plugin manager; JS example and plugin install worked on the owner's setup. The tutorials still have to be followed verbatim on a clean setup. |
-| **G8** CI green | ⏳ Open (owner) | CI is green on `dev` in all three repos (server: 4 jobs, client, plugin). It runs on pull requests and on `main` only. Open: create `main` in the plugin repo, merge `dev` into `main` in all three, check the first runs on `main`, make CI a required check. |
-| **G9** Release drafts | ⏳ Open (owner) | Release workflows and release-note drafts exist. Tags (`server-v0.2.0-alpha`, `client-v0.1.0`, plugin tags) and the drafts are created by the owner after G4–G8. |
-| **G10** AI-generated assets | ✅ Pass | The OpenAI and Google terms were read by the owner (output rights go to the user, no attribution needed). The 29 PLC icons were checked against the Lucide set and are original; READMEs say "AI-generated"; no third-party logos. A trademark scan found only descriptive uses (Windows, Android, Microsoft namespaces, `notepad.exe` sample target). |
+| **G7** Tutorials verified | ⏳ Open (owner, not blocking) | Docs site builds with no dead links; both examples build and load in the real plugin manager; JS example and plugin install worked on the owner's setup; the C# example restores the published SDK. The tutorials still have to be followed verbatim on a clean setup; do it before the documentation site is switched on, which happens after the flip anyway. |
+| **G8** CI green | ✅ Pass | CI is green on `dev` and on `main` in all three repos (server: 4 jobs, client, plugin). It runs on pull requests and on `main` only, plus by hand. `main` exists in all three repos and is the default branch. Not yet a required check (branch protection is set after the flip). |
+| **G9** Release drafts | ⏳ Open | Release workflows and release-note drafts exist. Alpha tags (`server-v0.2.0-alpha`, `client-v0.1.0-alpha`, plugin tags) and the draft releases are created after the flip, so the workflows run on public repositories. |
+| **G10** AI-generated assets | ✅ Pass | The OpenAI and Google terms were read by the owner (output rights go to the user, no attribution needed). The 29 PLC icons were checked against the Lucide set and are original. Every README, SECURITY.md, the docs site, the installer agreement, the editor's Help window and the phone app's settings panel now state that the software is AI-generated, provided without warranty or liability and used at the user's own risk. A trademark scan found only descriptive uses (Windows, Android, Microsoft namespaces, `notepad.exe` sample target). |
 
 ## Known issues to close before or right after the flip
 
@@ -31,12 +30,13 @@ running the tutorials, enabling Actions, tagging releases). Nothing found so far
 
 ## Owner checklist (in order)
 
-1. Clean-PC installer test (G4) and fix anything it shows.
-2. Publish the SDK to nuget.org (G6), then run both tutorials on a clean setup (G7).
-3. GitHub: enable Actions, create `main` in the plugin repo, merge `dev` into `main` in the server and client repos, enable private vulnerability reporting, set descriptions and topics, and check that CI is green on `main` (G8).
-4. Tag the releases and create the release drafts (G9).
-5. Flip visibility in this order: server, client, plugin; then enable Pages and publish the releases.
-6. Right after the flip, lock down SDK publishing (these are not enforced on a private repo under the current plan,
+Done: the clean-PC installer test (G4), the SDK on nuget.org (G6), `main` in all three repositories, CI on `main`.
+
+1. Optional before the flip: run both tutorials verbatim on a clean setup (G7). It can also wait until the documentation site is switched on.
+2. Flip visibility in this order: server, client, plugin (Settings, General, Danger Zone, Change visibility).
+3. Right after each repository is public: turn on **Private vulnerability reporting** (Settings, Code security), add branch protection on `main` with CI as a required check, set the description and topics, and switch on Actions Pages in the plugin repository (Settings, Pages, source GitHub Actions).
+4. Tag the alpha releases (`server-v0.2.0-alpha`, `client-v0.1.0-alpha`, the plugin tags) and publish the draft releases with the installer and the APK attached (G9).
+5. Right after the flip, lock down SDK publishing (these are not enforced on a private repo under the current plan,
    so they wait for the public repo):
    - **Important:** add a tag ruleset on the server repo for `sdk-v*` (restrict creations, updates and deletions;
      only the repository admin in the bypass list). Without it anyone with write access can publish to nuget.org
