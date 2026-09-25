@@ -13,7 +13,7 @@ loads your plugin and supplies its own copy of this assembly at runtime.
 
 ```xml
 <ItemGroup>
-  <PackageReference Include="MacroGrid.Plugin.Abstractions" Version="0.3.1"
+  <PackageReference Include="MacroGrid.Plugin.Abstractions" Version="0.4.0"
                     PrivateAssets="all" ExcludeAssets="runtime" />
 </ItemGroup>
 ```
@@ -53,8 +53,8 @@ new VariableInfo("myplugin.state", "State", "{myplugin.state}", "My plugin") { V
 
 ## Compatibility
 
-`PluginSdk.Version` is the SDK version. A plugin declares `"sdkVersion": "^0.3.0"` in `plugin.json`; while the SDK is
-`0.x`, that matches `0.3.x` only. The package version equals `PluginSdk.Version`, so package `0.3.1` works with
-Macro Grid servers whose SDK is `0.3.x`. Breaking rules are in the server repo's `docs/guides/versioning.md`.
+`PluginSdk.Version` is the SDK version. A plugin declares `"sdkVersion": "^0.4.0"` in `plugin.json`; while the SDK is
+`0.x`, that matches `0.4.x` only. The package version equals `PluginSdk.Version`, so package `0.4.0` works with
+Macro Grid servers whose SDK is `0.4.x`. Breaking rules are in the server repo's `docs/guides/versioning.md`.
 
 Target framework: `net10.0`. License: MIT.
