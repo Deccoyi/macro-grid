@@ -66,11 +66,13 @@ The full manifest and the SDK are described in `docs/plugin-authoring.md` in the
 ## Releasing
 
 Work happens on the `dev` branch and is merged into `main` for a release. Before a merge to `main` the maintainer decides whether the version
-is bumped and by how much (MAJOR, MINOR or PATCH); a version number is never changed silently. When a bump is approved, both changelogs get
+is bumped and by how much (MAJOR, MINOR or PATCH); a version number is never changed silently. When a bump is approved, the changelogs get
 their entry:
 
-- `docs/CHANGELOG-developer.md`: the detailed, technical record, in [Keep a Changelog](https://keepachangelog.com/) format.
 - `docs/CHANGELOG.md`: the short record for people who are not developers. Short sentences, what is new and what got fixed, with no code,
-  file or API names, and without small bug fixes or internal changes.
+  file or API names, and without small bug fixes or internal changes. It is also the source of the release notes and of the update window.
+- `docs/CHANGELOG-developer.md`: the developer record, in [Keep a Changelog](https://keepachangelog.com/) format, only for what git history cannot carry:
+  changes to the plugin SDK or the protocol, breaking changes, migrations and anything a plugin author or maintainer has to do differently. Older entries are
+  more detailed and stay as they are.
 
 Both are written in English. See [docs/guides/release.md](release.md) for building the installer.
