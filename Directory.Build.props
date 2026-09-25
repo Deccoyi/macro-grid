@@ -2,7 +2,7 @@
   <PropertyGroup>
     <!-- The one version of Macro Grid: the server and the plugin SDK (NuGet package) carry this number. PluginSdk.Version and
          ClientHub.ServerVersion read it from the assembly. See docs/guides/versioning.md. -->
-    <Version>1.0.0</Version>
+    <Version>1.0.1</Version>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <LangVersion>latest</LangVersion>

@@ -34,6 +34,8 @@ internal static class Program
 
         var server = ServerApp.Build(args, dialogs, windows);
         HostText.Bind(server.Services.GetRequiredService<PreferencesStore>());
+        // Before anything starts: if the app hangs while starting, this is the last line in the log.
+        StartupDiagnostics.LogStarting(server.Services, args);
         try
         {
             server.StartAsync().GetAwaiter().GetResult();
@@ -44,6 +46,9 @@ internal static class Program
                 MessageBoxButtons.OK, MessageBoxIcon.Error);
             return;
         }
+
+        // What the data folder holds against what was loaded from it (see StartupDiagnostics).
+        StartupDiagnostics.LogStarted(server.Services);
 
         // The installer starts the app again with this argument after an automatic update: say so once.
         var updateState = server.Services.GetRequiredService<UpdateStateStore>();

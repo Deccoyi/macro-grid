@@ -3,6 +3,12 @@
 This file follows the [Keep a Changelog](https://keepachangelog.com/) format. For versioning rules, see [versioning.md](guides/versioning.md). The short, public changelog is [CHANGELOG.md](CHANGELOG.md).
 
 ## [Unreleased]
+
+## [1.0.1] - 2026-09-26
+### Added
+- **Start-up report in the log** (category `Startup`): before anything starts, the version, exe path, arguments, user, administrator flag, the data folder and a listing of it (`DataDirReport.Inventory`); after the host has started, every `profiles/*.json` and every plugin folder against what the profile store and the plugin manager hold (`CompareProfiles`, `ComparePlugins`; a file that is on disk but not loaded is a warning), the preferences and device counts, and a write test in the data folder (`WriteProbe`). It never stops the app from starting. Written to find out why a start can see less than the data folder holds.
+
+## [1.0.0] - 2026-09-26
 Macro Grid and the plugin SDK now carry **one version**, and it restarts at 1.0.0 (the last separate numbers were server 0.3.2 and SDK 0.4.0). Plugin authors: see "Plugin manifest" below.
 
 ### Changed
