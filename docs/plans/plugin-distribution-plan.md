@@ -229,7 +229,7 @@ Saved sources live in `%AppData%\MacroGrid\plugin-sources.json`.
       generator, author docs and schemas for both repo types.
 - [x] **Phase 2 — host:** catalog client + install pipeline for the official source (method 2).
 - [x] **Phase 3 — host:** added multi-plugin sources with the third-party warning (method 3).
-- [ ] **Phase 4 — host:** single-plugin direct links (method 4).
+- [x] **Phase 4 — host:** single-plugin direct links (method 4).
 - [ ] **Phase 5 — host:** badges and update-available.
 
 Each phase updates both changelogs under `[Unreleased]`.
