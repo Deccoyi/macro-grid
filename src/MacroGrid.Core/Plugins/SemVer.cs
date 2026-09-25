@@ -31,6 +31,15 @@ public static partial class SemVer
         return a.Patch.CompareTo(b.Patch);
     }
 
+    /// <summary>Compares two version strings; an unparsable one sorts before every parsable one.</summary>
+    public static int CompareVersionStrings(string a, string b)
+    {
+        var aOk = TryParse(a, out var pa);
+        var bOk = TryParse(b, out var pb);
+        if (!aOk || !bOk) return aOk.CompareTo(bOk);
+        return Compare(pa, pb);
+    }
+
     /// <summary>Is <paramref name="actual"/> &gt;= <paramref name="minimum"/>?</summary>
     public static bool SatisfiesMinimum(string actual, string minimum)
     {

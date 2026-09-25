@@ -3,6 +3,7 @@ using MacroGrid.Core;
 using MacroGrid.Core.Actions;
 using MacroGrid.Core.Devices;
 using MacroGrid.Core.Plugins;
+using MacroGrid.Core.Plugins.Distribution;
 using MacroGrid.Core.Preferences;
 using MacroGrid.Core.Profiles;
 using MacroGrid.Core.Sessions;
@@ -88,6 +89,29 @@ internal static class ServiceRegistration
             sp.GetRequiredService<IInputService>(), sp.GetRequiredService<ILogger<PluginManager>>(),
             sp.GetRequiredService<PluginLocalizer>()));
         services.AddHostedService(sp => sp.GetRequiredService<PluginManager>());
+        return services;
+    }
+
+    /// <summary>
+    /// Installing plugins from GitHub (Discover tab): the official catalog today, added sources and direct links
+    /// in later phases of the plugin distribution plan. Like <see cref="AddUpdates"/>, this is an opt-in outbound
+    /// connection the server never makes on its own — the HTTP client is only ever invoked from
+    /// <c>PluginCatalogApi</c>, when the editor opens Discover or starts an install.
+    /// </summary>
+    public static IServiceCollection AddPluginDistribution(this IServiceCollection services, string dataDir)
+    {
+        // Redirects are switched off so the downloader can check every hop against the host allow-list itself,
+        // the same reasoning as AddUpdates' InstallerDownloader client.
+        var http = new HttpClient(new SocketsHttpHandler { AllowAutoRedirect = false }) { Timeout = TimeSpan.FromMinutes(2) };
+        http.DefaultRequestHeaders.UserAgent.ParseAdd($"MacroGrid/{ClientHub.ServerVersion}");
+        services.AddSingleton(new PluginCatalogClient(http));
+        services.AddSingleton(new PluginPackageDownloader(http));
+        services.AddSingleton(new PluginInstallOriginStore(dataDir));
+        services.AddSingleton(sp => new PluginCatalogInstaller(
+            sp.GetRequiredService<PluginPackageDownloader>(),
+            sp.GetRequiredService<PluginManager>(),
+            sp.GetRequiredService<PluginInstallOriginStore>(),
+            Path.Combine(dataDir, "plugins-staging")));
         return services;
     }
 
