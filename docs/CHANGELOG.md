@@ -3,6 +3,9 @@
 New features and fixes in Macro Grid. For technical details, see [CHANGELOG-developer.md](CHANGELOG-developer.md).
 
 ## Unreleased
+### Changed
+- **One version number:** Macro Grid and the tools plugins are built with now share one version number, so it is easy to tell which plugins fit which version. Plugins that work today keep working.
+- **Clearer plugin messages:** When a plugin does not fit, the Plugins window now says which Macro Grid version it needs.
 
 ## 0.3.2 - 2026-09-25
 ### New
