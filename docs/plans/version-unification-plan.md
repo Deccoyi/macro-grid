@@ -1,6 +1,6 @@
 # Version unification plan (1.0.0 baseline)
 
-Status: approved by the owner on 2026-09-25 with the decisions listed under "Decisions" below. Section 1, 2 and 5 (server, SDK, central docs) are in progress on `dev`; sections 3 and 4 wait until SDK 1.0.0 is on NuGet.
+Status (2026-09-26): sections 1, 2 and 5 are done and released (Macro Grid and SDK 1.0.0 and 1.0.1, tags `server-v1.0.0-beta` and `server-v1.0.1-beta`, SDK on NuGet). Sections 3 (plugins) and 4 (phone app) are merged into `dev` of their repositories; their `dev` to `main` pull requests and the plugin and app releases are waiting for the owner. Deviation from section 3: the plugin index stays `formatVersion` 1 (a server before 1.0.0 refuses any other number) and carries `macroGrid` next to the legacy fields.
 
 **Repositories:** `macro-grid` (server, SDK, loader, editor, central release docs), `macro-grid-plugin` (manifests, build check, release script, store site, docs), `macro-grid-client` (server-version check, docs). The release skill (`~/.claude/skills/release/SKILL.md`, outside the repositories) is updated too.
 
@@ -48,7 +48,7 @@ Decision: **1.0.0 is the new baseline.** The server and the SDK carry one number
 - Every `plugin.json`: `sdkVersion` and `minServerVersion` are replaced by `"macroGrid": "1.0.0"` (OBS, PLCIcons, SoundBoard, HelloJs, `examples/hello-*`). Each plugin's own `version` stays independent.
 - `Directory.Build.props`: `MacroGridSdkVersion` → `1.0.0`.
 - `build/Plugin.props`: a build-time check. In C# plugins, `macroGrid` in `plugin.json` have the same MAJOR as `MacroGridSdkVersion` and **not be greater** than it (three parts; MINOR and PATCH may be lower, so a plugin keeps running on more servers). Otherwise the build fails, so declaring a Macro Grid the plugin was not built against is impossible.
-- `scripts/update-plugin-index.ps1`, `scripts/release-plugin.ps1`, `examples/third-party-release.yml`: the index gets `macroGrid`; `formatVersion` becomes 2 (the server keeps reading v1 indexes as legacy).
+- `scripts/update-plugin-index.ps1`, `scripts/release-plugin.ps1`, `examples/third-party-release.yml`: the index gets `macroGrid`. `formatVersion` stays 1 (a server before 1.0.0 refuses any other number); the 1.0.0 server accepts 1 and 2.
 - `scripts/release-plugin.ps1` already knows `soundboard`; check that the plugin CI (`.github/workflows/ci.yml`) builds SoundBoard too.
 - Store site (`website/.vitepress/store-lib.ts`, `PluginDetail.vue`): a "Needs Macro Grid 1.3.0+" badge.
 - Docs: `website/basics/compatibility.md`, `website/reference/manifest.md`, `website/reference/source-index.md` (and the `tr/` copies).
