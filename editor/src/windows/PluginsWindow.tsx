@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
-import { FolderOpen, RefreshCw, RotateCw, Settings, Trash2 } from "lucide-react";
+import { Download, FolderOpen, Link as LinkIcon, Plus, RefreshCw, RotateCw, Settings, Trash2 } from "lucide-react";
 import { api } from "../api/client";
-import type { PluginInfo } from "../api/types";
+import type { PluginCatalogEntryInfo, PluginInfo, PluginLinkInspectResult, PluginSourceInfo } from "../api/types";
 import { DialogHost } from "../dialogs/DialogHost";
-import { confirmAsync } from "../dialogs/dialogStore";
+import { confirmAsync, promptAsync } from "../dialogs/dialogStore";
 import { useT } from "../i18n/I18nContext";
 import { useDocumentTitle } from "../i18n/useDocumentTitle";
 import { SectionLabel } from "../panels/fields/controls";
@@ -33,11 +33,176 @@ export function PluginsWindow() {
   const [notice, setNotice] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  const [catalog, setCatalog] = useState<PluginCatalogEntryInfo[] | null>(null);
+  const [catalogError, setCatalogError] = useState<string | null>(null);
+  const [catalogLoading, setCatalogLoading] = useState(false);
+  const [installingCatalogId, setInstallingCatalogId] = useState<string | null>(null);
+  const [sources, setSources] = useState<PluginSourceInfo[]>([]);
+  const [officialSource, setOfficialSource] = useState({ id: "official", owner: "Deccoyi", repo: "macro-grid-plugin" });
+  const [selectedSource, setSelectedSource] = useState("official");
+  const [catalogOfficial, setCatalogOfficial] = useState(true);
+
   const refresh = () => api.listPlugins().then(setPlugins).catch(() => {});
 
   useEffect(() => {
     refresh();
   }, []);
+
+  const refreshCatalog = (source = selectedSource) => {
+    setCatalogLoading(true);
+    setCatalogError(null);
+    setCatalog(null);
+    api
+      .fetchPluginCatalog(source)
+      .then((response) => {
+        setCatalogOfficial(response.official ?? source === "official");
+        if (response.error) setCatalogError(response.error);
+        else setCatalog(response.plugins);
+      })
+      .catch((err) => setCatalogError(err instanceof Error ? err.message : String(err)))
+      .finally(() => setCatalogLoading(false));
+  };
+
+  useEffect(() => {
+    // The HTTP client behind this is only ever used when Discover is actually open — never in the background.
+    if (category === "discover" && catalog === null && !catalogLoading) refreshCatalog();
+  }, [category]);
+
+  const selectSource = (id: string) => {
+    setSelectedSource(id);
+    refreshCatalog(id);
+  };
+
+  const addSourceUrl = async (url: string) => {
+    setError(null);
+    try {
+      const result = await api.addPluginSource(url);
+      if (!result.id) {
+        setError(t("plugins.discover.source.addFailed", result.error ?? "?"));
+        return;
+      }
+      const list = await api.listPluginSources();
+      setSources(list.added);
+      selectSource(result.id);
+    } catch (err) {
+      setError(t("plugins.discover.source.addFailed", err instanceof Error ? err.message : String(err)));
+    }
+  };
+
+  const addSource = async () => {
+    const url = await promptAsync(t("plugins.discover.source.addPrompt"), "", { title: t("plugins.discover.source.addTitle") });
+    if (!url) return;
+    await addSourceUrl(url);
+  };
+
+  const installFromLink = async () => {
+    const url = await promptAsync(t("plugins.discover.link.prompt"), "", { title: t("plugins.discover.link.title") });
+    if (!url) return;
+    setError(null);
+    setNotice(null);
+
+    let inspected: PluginLinkInspectResult;
+    try {
+      inspected = await api.inspectPluginLink(url);
+    } catch (err) {
+      setError(t("plugins.discover.link.failed", err instanceof Error ? err.message : String(err)));
+      return;
+    }
+    if (inspected.error) {
+      setError(t("plugins.discover.link.failed", inspected.error));
+      return;
+    }
+
+    if (inspected.isMultiPlugin) {
+      if (await confirmAsync(t("plugins.discover.link.isSource", `${inspected.owner}/${inspected.repo}`), { title: t("plugins.discover.link.title") })) {
+        await addSourceUrl(url);
+      }
+      return;
+    }
+    if (!inspected.compatible) {
+      setError(t("plugins.discover.link.failed", t("plugins.discover.incompatible")));
+      return;
+    }
+
+    const risk = inspected.kind === "js" && (inspected.permissions?.length ?? 0) > 0
+      ? t("plugins.discover.thirdParty.permissions", inspected.permissions!.map(permissionText).join(", "))
+      : t("plugins.discover.thirdParty.fullAccess");
+    const repoLabel = `${inspected.owner}/${inspected.repo}`;
+    const proceed = await confirmAsync(`${t("plugins.discover.thirdParty.warning", repoLabel)} ${risk}`.trim(), {
+      title: t("plugins.discover.thirdParty.title"),
+      danger: true,
+    });
+    if (!proceed) return;
+
+    try {
+      const result = await api.installFromPluginLink(url);
+      if (result.installed) {
+        setNotice(t("plugins.discover.installSuccess", result.name ?? inspected.name ?? inspected.id ?? ""));
+        refresh();
+      } else {
+        setError(t("plugins.discover.link.failed", result.error ?? "?"));
+      }
+    } catch (err) {
+      setError(t("plugins.discover.link.failed", err instanceof Error ? err.message : String(err)));
+    }
+  };
+
+  const removeSource = async (source: PluginSourceInfo) => {
+    if (!(await confirmAsync(t("plugins.discover.source.removeConfirm", source.name), { title: t("plugins.discover.source.remove") }))) return;
+    await api.removePluginSource(source.id);
+    setSources((prev) => prev.filter((s) => s.id !== source.id));
+    if (selectedSource === source.id) selectSource("official");
+  };
+
+  useEffect(() => {
+    if (category !== "discover") return;
+    api
+      .listPluginSources()
+      .then((r) => {
+        setSources(r.added);
+        setOfficialSource(r.official);
+      })
+      .catch(() => {});
+  }, [category]);
+
+  const permissionText = (permission: string) => {
+    if (permission === "variables" || permission === "actions" || permission === "input") return t(`plugins.permission.${permission}`);
+    if (permission.startsWith("http:")) return t("plugins.permission.http", permission.slice(5));
+    return t("plugins.permission.unknown", permission);
+  };
+
+  const installFromCatalog = async (entry: PluginCatalogEntryInfo, official: boolean, sourceLabel: string) => {
+    if (!entry.installableVersion) return;
+
+    if (!official) {
+      const risk = entry.kind === "js" && entry.permissions.length > 0
+        ? t("plugins.discover.thirdParty.permissions", entry.permissions.map(permissionText).join(", "))
+        : t("plugins.discover.thirdParty.fullAccess");
+      const proceed = await confirmAsync(`${t("plugins.discover.thirdParty.warning", sourceLabel)} ${risk}`.trim(), {
+        title: t("plugins.discover.thirdParty.title"),
+        danger: true,
+      });
+      if (!proceed) return;
+    }
+
+    setInstallingCatalogId(entry.id);
+    setError(null);
+    setNotice(null);
+    try {
+      const result = await api.installFromPluginCatalog(selectedSource, entry.id, entry.installableVersion);
+      if (result.installed) {
+        setNotice(t("plugins.discover.installSuccess", result.name ?? entry.name));
+        refresh();
+        refreshCatalog();
+      } else {
+        setError(t("plugins.discover.installFailed", entry.name, result.error ?? "?"));
+      }
+    } catch (err) {
+      setError(t("plugins.discover.installFailed", entry.name, err instanceof Error ? err.message : String(err)));
+    } finally {
+      setInstallingCatalogId(null);
+    }
+  };
 
   const uninstall = async (plugin: PluginInfo) => {
     if (!(await confirmAsync(t("plugins.uninstall.confirm", plugin.name), { title: t("plugins.uninstall"), danger: true }))) return;
@@ -85,12 +250,6 @@ export function PluginsWindow() {
     }
   };
 
-  const permissionText = (permission: string) => {
-    if (permission === "variables" || permission === "actions" || permission === "input") return t(`plugins.permission.${permission}`);
-    if (permission.startsWith("http:")) return t("plugins.permission.http", permission.slice(5));
-    return t("plugins.permission.unknown", permission);
-  };
-
   const install = async () => {
     setInstalling(true);
     setError(null);
@@ -109,6 +268,12 @@ export function PluginsWindow() {
     } finally {
       setInstalling(false);
     }
+  };
+
+  const currentSourceLabel = () => {
+    if (selectedSource === officialSource.id) return `${officialSource.owner}/${officialSource.repo}`;
+    const saved = sources.find((s) => s.id === selectedSource);
+    return saved ? `${saved.owner}/${saved.repo}` : selectedSource;
   };
 
   const categories = [
@@ -134,9 +299,32 @@ export function PluginsWindow() {
             <div key={p.id} style={{ borderTop: "1px solid var(--ms-border)" }}>
               <div style={{ display: "flex", alignItems: "flex-start", gap: 8, padding: "8px 0" }}>
                 <span style={{ width: 8, height: 8, borderRadius: "50%", marginTop: 5, flexShrink: 0, background: STATUS_COLOR[p.status] }} />
+                {p.hasIcon && (
+                  <img
+                    src={api.getPluginIconUrl(p.id)}
+                    alt=""
+                    style={{ width: 20, height: 20, borderRadius: 4, marginTop: 1, flexShrink: 0, objectFit: "contain" }}
+                  />
+                )}
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 13 }}>
-                    {p.name} <span style={{ color: "var(--ms-text-disabled)" }}>v{p.version}</span>
+                  <div style={{ fontSize: 13, display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+                    <span>
+                      {p.name} <span style={{ color: "var(--ms-text-disabled)" }}>v{p.version}</span>
+                    </span>
+                    <span
+                      style={{
+                        fontSize: 10,
+                        padding: "1px 6px",
+                        borderRadius: 10,
+                        border: "1px solid var(--ms-border)",
+                        color: "var(--ms-text-secondary)",
+                      }}
+                    >
+                      {t(`plugins.badge.${p.trust === "ThirdParty" ? "thirdParty" : p.trust === "Official" ? "official" : "local"}`)}
+                    </span>
+                    {catalog?.find((e) => e.id === p.id)?.updateAvailable && (
+                      <span style={{ fontSize: 10, color: "var(--ms-warning, #facc15)" }}>{t("plugins.updateAvailable")}</span>
+                    )}
                   </div>
                   {p.detail && <div style={{ fontSize: 11, color: "var(--ms-text-secondary)", marginTop: 2 }}>{p.detail}</div>}
                   {p.status === "NeedsApproval" && (
@@ -201,12 +389,109 @@ export function PluginsWindow() {
           </div>
         </div>
       ) : (
-        <>
-          <SectionLabel>{t("plugins.category.discover")}</SectionLabel>
-          <p style={{ margin: "10px 0 0", fontSize: 12.5, color: "var(--ms-text-secondary)", lineHeight: 1.5, maxWidth: 420 }}>
-            {t("plugins.comingSoon.body")}
-          </p>
-        </>
+        <div style={{ maxWidth: 460 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+            <SectionLabel>{t("plugins.category.discover")}</SectionLabel>
+            <div style={{ flex: 1 }} />
+            <button type="button" className="ghost" title={t("plugins.refresh")} onClick={() => refreshCatalog()} style={{ display: "flex", padding: 6 }}>
+              <RefreshCw size={14} />
+            </button>
+          </div>
+
+          <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 10 }}>
+            <label style={{ fontSize: 11.5, color: "var(--ms-text-secondary)" }}>{t("plugins.discover.source.label")}</label>
+            <select value={selectedSource} onChange={(e) => selectSource(e.target.value)} style={{ flex: 1, minWidth: 0, fontSize: 12 }}>
+              <option value={officialSource.id}>{t("plugins.discover.source.official")}</option>
+              {sources.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.name}
+                </option>
+              ))}
+            </select>
+            {selectedSource !== officialSource.id && (
+              <button
+                type="button"
+                className="ghost"
+                title={t("plugins.discover.source.remove")}
+                onClick={() => {
+                  const source = sources.find((s) => s.id === selectedSource);
+                  if (source) removeSource(source);
+                }}
+                style={{ display: "flex", padding: 6, flexShrink: 0 }}
+              >
+                <Trash2 size={14} />
+              </button>
+            )}
+            <button type="button" className="ghost" title={t("plugins.discover.source.add")} onClick={addSource} style={{ display: "flex", padding: 6, flexShrink: 0 }}>
+              <Plus size={14} />
+            </button>
+          </div>
+
+          <button
+            type="button"
+            className="ghost"
+            onClick={installFromLink}
+            style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 10, fontSize: 12 }}
+          >
+            <LinkIcon size={14} />
+            {t("plugins.discover.link.install")}
+          </button>
+
+          {catalogLoading && <div style={{ fontSize: 12, color: "var(--ms-text-secondary)", marginTop: 8 }}>{t("plugins.discover.loading")}</div>}
+          {!catalogLoading && catalogError && (
+            <div style={{ fontSize: 12, color: "var(--ms-danger)", marginTop: 8 }}>{t("plugins.discover.offline")}</div>
+          )}
+          {!catalogLoading && !catalogError && catalog?.length === 0 && (
+            <div style={{ fontSize: 12, color: "var(--ms-text-secondary)", marginTop: 8 }}>{t("plugins.discover.empty")}</div>
+          )}
+          {!catalogLoading &&
+            !catalogError &&
+            catalog?.map((entry) => (
+              <div key={entry.id} style={{ borderTop: "1px solid var(--ms-border)" }}>
+                <div style={{ display: "flex", alignItems: "flex-start", gap: 8, padding: "8px 0" }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 13 }}>
+                      {entry.name}{" "}
+                      {entry.latestVersion && <span style={{ color: "var(--ms-text-disabled)" }}>v{entry.latestVersion}</span>}
+                    </div>
+                    {entry.author && (
+                      <div style={{ fontSize: 11, color: "var(--ms-text-secondary)", marginTop: 2 }}>{t("plugins.discover.by", entry.author)}</div>
+                    )}
+                    {entry.description && (
+                      <div style={{ fontSize: 11.5, color: "var(--ms-text-secondary)", marginTop: 4 }}>{entry.description}</div>
+                    )}
+                    {!entry.compatible && (
+                      <div style={{ fontSize: 11, color: "var(--ms-warning, #facc15)", marginTop: 4 }}>{t("plugins.discover.incompatible")}</div>
+                    )}
+                  </div>
+                  {entry.installed && !entry.updateAvailable && (
+                    <span style={{ fontSize: 11.5, color: "var(--ms-text-disabled)", flexShrink: 0, marginTop: 2 }}>
+                      {t("plugins.discover.installed")}
+                    </span>
+                  )}
+                  {(!entry.installed || entry.updateAvailable) && entry.compatible && (
+                    <button
+                      type="button"
+                      className="ghost"
+                      title={entry.updateAvailable ? t("plugins.discover.update") : t("plugins.discover.install")}
+                      disabled={installingCatalogId === entry.id}
+                      onClick={() => installFromCatalog(entry, catalogOfficial, currentSourceLabel())}
+                      style={{ display: "flex", padding: 6, flexShrink: 0 }}
+                    >
+                      <Download size={14} />
+                    </button>
+                  )}
+                </div>
+              </div>
+            ))}
+
+          {(notice || error) && (
+            <div style={{ marginTop: 14, paddingTop: 14, borderTop: "1px solid var(--ms-border)" }}>
+              {notice && <p style={{ fontSize: 12, color: "var(--ms-success, #4ade80)", margin: 0 }}>{notice}</p>}
+              {error && <p style={{ fontSize: 12, color: "var(--ms-danger)", margin: 0 }}>{error}</p>}
+            </div>
+          )}
+        </div>
       )}
       {/* This window is a separate native window; the confirm dialog of "Remove" is drawn by its own host. */}
       <DialogHost />

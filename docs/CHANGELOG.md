@@ -4,6 +4,15 @@ New features and fixes in Macro Grid. For technical details, see [CHANGELOG-deve
 
 ## Unreleased
 
+## 0.3.2 - 2026-09-25
+### New
+- **Discover plugins:** The Plugins window's Discover tab can now browse and install plugins from the official catalog, with compatibility, install and update status shown for each one.
+- **Third-party plugin sources:** Discover can add another author's plugin repository as a source and install from it, with a clear warning before installing anything that isn't from the official source.
+- **Install from a link:** Discover can also install a single plugin straight from a pasted repository link, with the same compatibility check and third-party warning first.
+- **Plugin icons:** A plugin can now show its own icon next to its name in the Plugins window.
+- **Richer plugin settings:** Plugins can offer file pickers, lists of items, buttons and notices on their settings page, and can react when a button is released.
+- **Where a plugin came from:** Installed Plugins now shows an Official / Third-party / Local badge for each plugin, and flags one with an update available once Discover has been opened.
+
 ## 0.3.1 - 2026-09-25
 This version has a new user agreement: you are asked to accept it once, in the installer or, if someone else installed it, the first time you start Macro Grid.
 

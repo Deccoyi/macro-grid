@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { RefreshCw } from "lucide-react";
+import { api } from "../../api/client";
 import type { OptionsResult, SettingField, SettingOption, VariableInfo } from "../../api/types";
 import { useT } from "../../i18n/I18nContext";
 import { VariablePicker } from "../VariablePicker";
@@ -13,6 +14,10 @@ interface SchemaFormProps {
    * api.getActionOptions(type, ...) or api.getPluginSettingsOptions(id, ...) bound by the caller. */
   fetchOptions: (sourceId: string, currentValues: Record<string, unknown>) => Promise<OptionsResult>;
   variableCatalog?: VariableInfo[];
+  /** Runs a "Button" field's command against the plugin's ISettingsCommandHandler — only a plugin settings
+   * form (PluginSettingsWindow.tsx) provides this; an action settings form has none, so Button renders
+   * disabled there (an action handler has no side interface to run a command against). */
+  runCommand?: (command: string, currentValues: Record<string, unknown>) => Promise<{ text: string | null }>;
 }
 
 /**
@@ -20,7 +25,7 @@ interface SchemaFormProps {
  * (see forms.tsx's formFor) and a plugin's own settings window (PluginSettingsWindow.tsx). Fields the
  * plugin didn't provide (a hand-written form exists instead) never reach here.
  */
-export function SchemaForm({ fields, values, onChange, fetchOptions, variableCatalog = [] }: SchemaFormProps) {
+export function SchemaForm({ fields, values, onChange, fetchOptions, variableCatalog = [], runCommand }: SchemaFormProps) {
   const set = (key: string, value: unknown) => onChange({ ...values, [key]: value });
 
   return (
@@ -34,6 +39,7 @@ export function SchemaForm({ fields, values, onChange, fetchOptions, variableCat
           onChange={(v) => set(field.key, v)}
           fetchOptions={fetchOptions}
           variableCatalog={variableCatalog}
+          runCommand={runCommand}
         />
       ))}
     </div>
@@ -83,6 +89,7 @@ function SchemaFieldRow({
   onChange,
   fetchOptions,
   variableCatalog,
+  runCommand,
 }: {
   field: SettingField;
   value: unknown;
@@ -90,11 +97,81 @@ function SchemaFieldRow({
   onChange: (v: unknown) => void;
   fetchOptions: SchemaFormProps["fetchOptions"];
   variableCatalog: VariableInfo[];
+  runCommand: SchemaFormProps["runCommand"];
 }) {
   const { t } = useT();
   const textRef = useRef<HTMLInputElement | null>(null);
   // Called unconditionally (rules-of-hooks) — a no-op internally for kinds that never set optionsSource.
   const opts = useFieldOptions(field, values, fetchOptions);
+
+  if (field.kind === "Notice") {
+    return (
+      <div style={{ fontSize: 11.5, color: "var(--ms-warning, #facc15)", lineHeight: 1.4 }}>{field.description}</div>
+    );
+  }
+
+  if (field.kind === "Button") {
+    return <ButtonField field={field} values={values} runCommand={runCommand} />;
+  }
+
+  if (field.kind === "File") {
+    const path = typeof value === "string" ? value : "";
+    return (
+      <label className="field">
+        {field.label}
+        <div style={{ display: "flex", gap: 6 }}>
+          <input type="text" value={path} readOnly style={{ flex: 1 }} placeholder={field.placeholder ?? undefined} />
+          <button
+            type="button"
+            onClick={async () => {
+              const picked = await api.browseForFile(field.label, field.fileFilter ?? "All files (*.*)|*.*");
+              if (picked !== null) onChange(picked);
+            }}
+          >
+            {t("schemaForm.browse")}
+          </button>
+        </div>
+        {field.description && <FieldHint text={field.description} />}
+      </label>
+    );
+  }
+
+  if (field.kind === "List") {
+    const rows = Array.isArray(value) ? (value as Record<string, unknown>[]) : [];
+    const itemFields = field.itemFields ?? [];
+    const setRows = (next: Record<string, unknown>[]) => onChange(next);
+    return (
+      <div className="field">
+        {field.label}
+        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          {rows.map((row, index) => (
+            <div key={(row.id as string | undefined) ?? index} style={{ border: "1px solid var(--ms-border)", borderRadius: 6, padding: 8 }}>
+              <SchemaForm
+                fields={itemFields}
+                values={row}
+                onChange={(nextRow) => setRows(rows.map((r, i) => (i === index ? { ...row, ...nextRow } : r)))}
+                fetchOptions={fetchOptions}
+                variableCatalog={variableCatalog}
+                runCommand={runCommand}
+              />
+              <button
+                type="button"
+                className="ghost"
+                style={{ marginTop: 6, fontSize: 11.5 }}
+                onClick={() => setRows(rows.filter((_, i) => i !== index))}
+              >
+                {t("schemaForm.removeRow")}
+              </button>
+            </div>
+          ))}
+          <button type="button" className="ghost" style={{ alignSelf: "flex-start" }} onClick={() => setRows([...rows, {}])}>
+            {t("schemaForm.addRow")}
+          </button>
+        </div>
+        {field.description && <FieldHint text={field.description} />}
+      </div>
+    );
+  }
 
   if (field.kind === "Bool") {
     return (
@@ -213,4 +290,41 @@ function SchemaFieldRow({
 
 function FieldHint({ text }: { text: string }) {
   return <span style={{ fontSize: 11, color: "var(--ms-text-secondary)", lineHeight: 1.4 }}>{text}</span>;
+}
+
+function ButtonField({
+  field,
+  values,
+  runCommand,
+}: {
+  field: SettingField;
+  values: Record<string, unknown>;
+  runCommand: SchemaFormProps["runCommand"];
+}) {
+  const { t } = useT();
+  const [running, setRunning] = useState(false);
+  const [result, setResult] = useState<string | null>(null);
+
+  const run = async () => {
+    if (!field.command || !runCommand) return;
+    setRunning(true);
+    setResult(null);
+    try {
+      const { text } = await runCommand(field.command, values);
+      setResult(text);
+    } catch (err) {
+      setResult(err instanceof Error ? err.message : String(err));
+    } finally {
+      setRunning(false);
+    }
+  };
+
+  return (
+    <div className="field">
+      <button type="button" disabled={running || !runCommand} onClick={run}>
+        {running ? t("schemaForm.running") : field.label}
+      </button>
+      {result && <FieldHint text={result} />}
+    </div>
+  );
 }

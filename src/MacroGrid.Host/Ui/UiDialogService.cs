@@ -20,6 +20,13 @@ public interface IUiDialogService
 
     /// <returns>The chosen folder's path, or null if the user canceled.</returns>
     Task<string?> BrowseForFolderAsync(string title);
+
+    /// <summary>Shows a native Open dialog and returns only the chosen path (unlike <see cref="OpenFileAsync"/>,
+    /// nothing is read into memory) — for a <see cref="MacroGrid.Plugin.Abstractions.SettingFieldKind.File"/> field,
+    /// where the plugin stores the path itself and reads the file on its own.</summary>
+    /// <param name="filter">A WinForms file filter, e.g. <c>"Audio files (*.wav;*.mp3)|*.wav;*.mp3"</c>.</param>
+    /// <returns>The chosen file's path, or null if the user canceled.</returns>
+    Task<string?> BrowseForFileAsync(string title, string filter);
 }
 
 public sealed class UiDialogService(SynchronizationContext ui) : IUiDialogService
@@ -97,6 +104,29 @@ public sealed class UiDialogService(SynchronizationContext ui) : IUiDialogServic
                 }
                 File.WriteAllBytes(dialog.FileName, content);
                 tcs.SetResult(dialog.FileName);
+            }
+            catch (Exception ex)
+            {
+                tcs.SetException(ex);
+            }
+        }, null);
+        return tcs.Task;
+    }
+
+    public Task<string?> BrowseForFileAsync(string title, string filter)
+    {
+        var tcs = new TaskCompletionSource<string?>();
+        ui.Post(_ =>
+        {
+            try
+            {
+                using var dialog = new OpenFileDialog
+                {
+                    Title = title,
+                    Filter = filter + "|All files (*.*)|*.*",
+                    CheckFileExists = true,
+                };
+                tcs.SetResult(dialog.ShowDialog() == DialogResult.OK ? dialog.FileName : null);
             }
             catch (Exception ex)
             {

@@ -36,6 +36,7 @@ internal static class ServerApp
             .AddBuiltInActions(dialogs, windows)
             .AddVariablesAndStatus()
             .AddPlugins(dataDir)
+            .AddPluginDistribution(dataDir)
             .AddClientSessions(dataDir)
             .AddUpdates(dataDir);
 
@@ -120,6 +121,7 @@ internal static class ServerApp
             .MapAppApi()
             .MapCatalogApi()
             .MapPluginApi()
+            .MapPluginCatalogApi()
             .MapWindowApi()
             .MapDeviceApi()
             .MapUpdateApi();

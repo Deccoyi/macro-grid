@@ -181,4 +181,11 @@ Macro Grid is meant for a home or office network you trust. It is not hardened f
   SHA-256 GitHub reports for the release file, and runs only after Windows asks for administrator permission. The installer is not code-signed,
   so this protects against a broken download but **not against a compromised GitHub account** or release. Release notes are shown as text,
   never as HTML. Design: [design/auto-update.md](design/auto-update.md).
+- **Installing a plugin from Discover is the only other connection the server makes, and only when the person opens Discover or starts an
+  install** — never on its own, never in the background. It reads a fixed `raw.githubusercontent.com/<owner>/<repo>/HEAD/macrogrid-index.json`
+  (or a single plugin's `plugin.json`) and downloads the package only from `github.com/<owner>/<repo>/releases/download/...` (and the hosts that
+  redirect resolves to), never the GitHub API. A package's SHA-256 must match what the index promised; the official source
+  (`Deccoyi/macro-grid-plugin`) additionally signs every release (ECDSA P-256) and a package that fails that signature check is refused, not
+  merely warned about. Every other source is always shown as third-party, signed or not. See the plugin repository's
+  `website/reference/source-index.md` for the index format and signing, and `docs/plans/plugin-distribution-plan.md` for the rollout.
 - **The user agreement has to be accepted, per Windows user.** The setup shows it (an update only when its text changed) and records its SHA-256 in `HKCU`. At start, before the server exists, the app compares that record with the agreement it ships and asks once when they differ (another Windows user of the same PC, or a changed text); declining exits. Until then nothing listens and nothing runs. Design: [design/agreement-acceptance.md](design/agreement-acceptance.md).

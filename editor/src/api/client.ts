@@ -8,6 +8,12 @@ import type {
   IconPackInfo,
   PairedDeviceInfo,
   PairingQrInfo,
+  PluginAddSourceResult,
+  PluginCatalogInstallResult,
+  PluginCatalogResponse,
+  PluginLinkInspectResult,
+  PluginLinkInstallResult,
+  PluginSourcesResponse,
   PluginInfo,
   PluginInstallResult,
   PluginUninstallResult,
@@ -93,6 +99,11 @@ export const api = {
   browseForExecutable: (): Promise<string | null> =>
     send<{ path: string | null }>("POST", "/api/browse/executable").then((r) => r.path),
 
+  /** Shows a native "Open" dialog for a SettingFieldKind.File field and returns only the chosen path (the
+   * plugin stores the path itself and reads the file on its own — nothing is uploaded). */
+  browseForFile: (title: string, filter: string): Promise<string | null> =>
+    send<{ path: string | null }>("POST", "/api/browse/file", { title, filter }).then((r) => r.path),
+
   pairingQr: (): Promise<PairingQrInfo> => get("/api/pairing/qr"),
 
   regeneratePairingQr: (): Promise<PairingQrInfo> => send("POST", "/api/pairing/qr/regenerate"),
@@ -146,6 +157,39 @@ export const api = {
 
   getPluginSettingsOptions: (id: string, sourceId: string, currentValues: Record<string, unknown>): Promise<OptionsResult> =>
     send("POST", `${pluginPath(id)}/settings/options/${encodeURIComponent(sourceId)}`, currentValues),
+
+  /** Runs a SettingFieldKind.Button field's command against the plugin's ISettingsCommandHandler (e.g. a
+   * sound preview) — `values` is the current form/row values. 404 (thrown as an Error) if the plugin's
+   * settings page does not implement that interface. The returned text is a short info/error message. */
+  runPluginSettingsCommand: (id: string, command: string, values: Record<string, unknown>): Promise<{ text: string | null }> =>
+    send("POST", `${pluginPath(id)}/settings/command`, { command, values }),
+
+  /** URL of a plugin's manifest logo (PluginInfo.hasIcon) — an <img src>, not a fetch: nothing to parse. */
+  getPluginIconUrl: (id: string): string => `${pluginPath(id)}/icon`,
+
+  /** Discover tab: browses a source's plugins (today, only `"official"`) — fetched fresh every time the tab
+   * opens or is refreshed, never in the background. */
+  fetchPluginCatalog: (source: string): Promise<PluginCatalogResponse> =>
+    get(`/api/plugin-catalog?source=${encodeURIComponent(source)}`),
+
+  /** Downloads, verifies and installs one version from a catalog source through the same pipeline as a local
+   * folder install (PluginManager.InstallFromFolderAsync), plus hash/signature checks first. */
+  installFromPluginCatalog: (source: string, id: string, version: string): Promise<PluginCatalogInstallResult> =>
+    send("POST", "/api/plugin-catalog/install", { source, id, version }),
+
+  listPluginSources: (): Promise<PluginSourcesResponse> => get("/api/plugin-sources"),
+
+  /** Validates the repository (it must have a macrogrid-index.json) and saves it as a source — one HTTP call,
+   * only made when the user submits the "Add source" dialog. */
+  addPluginSource: (url: string): Promise<PluginAddSourceResult> => send("POST", "/api/plugin-sources", { url }),
+
+  removePluginSource: (id: string): Promise<void> => send("DELETE", `/api/plugin-sources/${encodeURIComponent(id)}`),
+
+  /** Reads a pasted single-plugin repository's plugin.json (or detects it's actually a multi-plugin source) —
+   * nothing is downloaded yet. */
+  inspectPluginLink: (url: string): Promise<PluginLinkInspectResult> => send("POST", "/api/plugin-link/inspect", { url }),
+
+  installFromPluginLink: (url: string): Promise<PluginLinkInstallResult> => send("POST", "/api/plugin-link/install", { url }),
 
   getPreferences: (): Promise<AppPreferences> => get("/api/preferences"),
 

@@ -95,6 +95,7 @@ public sealed class PluginLocalizer(Func<string> currentLanguage)
         Description = Translate(pluginId, field.Description),
         Placeholder = Translate(pluginId, field.Placeholder),
         Options = field.Options?.Select(o => o with { Label = Translate(pluginId, o.Label)! }).ToArray(),
+        ItemFields = field.ItemFields?.Select(f => Localize(pluginId, f)).ToArray(),
     };
 
     public VariableInfo Localize(string? pluginId, VariableInfo variable) => variable with

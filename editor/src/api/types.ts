@@ -1,5 +1,5 @@
 import type { Profile } from "@macro/renderer";
-type SettingFieldKind = "Text" | "Password" | "Number" | "Slider" | "Bool" | "Select" | "Segmented";
+type SettingFieldKind = "Text" | "Password" | "Number" | "Slider" | "Bool" | "Select" | "Segmented" | "File" | "List" | "Button" | "Notice";
 
 export interface SettingOption {
   value: string;
@@ -25,6 +25,13 @@ export interface SettingField {
   dependsOn?: string[] | null;
   allowVariables?: boolean;
   visibleWhen?: string | null;
+  /** Required for kind "File": a WinForms file filter, e.g. "Audio files (*.wav;*.mp3)|*.wav;*.mp3". */
+  fileFilter?: string | null;
+  /** Required for kind "List": the schema of one row. Extra row keys outside this schema (a plugin-assigned
+   * id, a computed flag, ...) are kept as-is across an edit — never dropped by the form. */
+  itemFields?: SettingField[] | null;
+  /** Required for kind "Button": the command id sent to the plugin's ISettingsCommandHandler. */
+  command?: string | null;
 }
 
 /** Mirrors MacroGrid.Plugin.Abstractions.OptionsResult — the response of a dynamic-dropdown query. */
@@ -91,6 +98,13 @@ export interface PluginInfo {
   hasSettings: boolean;
   /** For "NeedsApproval": the permissions a JS plugin declares and is waiting to be allowed. */
   pendingPermissions?: string[] | null;
+  /** True when the manifest's optional `icon` path resolved to a valid file — fetch it from
+   * api.getPluginIconUrl(id) instead of the generic category glyph. Missing from an older server. */
+  hasIcon?: boolean;
+  /** "Official" | "ThirdParty" | "Local" — where GET /api/plugins says this plugin came from. Missing from an
+   * older server (treat as "Local"). Only GET /api/plugins sends this; approve/reload's single-plugin response
+   * does not, since the caller already has it from the list. */
+  trust?: "Official" | "ThirdParty" | "Local";
 }
 
 /** One icon pack contributed by a plugin via IPluginHost.RegisterIconPack — e.g. the PLC icon set.
@@ -116,6 +130,100 @@ export interface PluginUninstallResult {
   /** true if a file was still in use and the folder was instead marked for removal on the next server
    * start — see ServerApp.cs's DELETE /api/plugins/{id}. The plugin itself is already unloaded either way. */
   pending: boolean;
+}
+
+/** One plugin in a catalog response (GET /api/plugin-catalog) — mirrors PluginCatalogApi.DescribeEntry. */
+export interface PluginCatalogEntryInfo {
+  id: string;
+  name: string;
+  description: string | null;
+  author: string | null;
+  homepage: string | null;
+  kind: string;
+  /** The newest version listed, whether or not this server can run it. */
+  latestVersion: string | null;
+  /** The newest version this server's SDK and version actually satisfy — what Install would fetch. Null
+   * when nothing in the catalog is compatible. */
+  installableVersion: string | null;
+  compatible: boolean;
+  permissions: string[];
+  installed: boolean;
+  installedVersion: string | null;
+  /** True when installableVersion is newer than the installed version. */
+  updateAvailable: boolean;
+  /** "Official" | "ThirdParty" | "Local" | null (not installed and no recorded origin). */
+  trust: string | null;
+}
+
+export interface PluginCatalogResponse {
+  source: string;
+  name: string;
+  /** False for an added third-party source — drives the confirmation dialog before installing anything from it. */
+  official?: boolean;
+  plugins: PluginCatalogEntryInfo[];
+  /** Set instead of `plugins` when the source could not be fetched or parsed (offline, malformed index, ...). */
+  error?: string;
+  code?: string;
+}
+
+/** One saved third-party source (GET /api/plugin-sources). */
+export interface PluginSourceInfo {
+  id: string;
+  owner: string;
+  repo: string;
+  name: string;
+  addedAt: string;
+}
+
+export interface PluginSourcesResponse {
+  official: { id: string; owner: string; repo: string };
+  added: PluginSourceInfo[];
+}
+
+export interface PluginAddSourceResult extends Partial<PluginSourceInfo> {
+  error?: string;
+  code?: string;
+}
+
+/** POST /api/plugin-link/inspect — a pasted single-plugin repository link, read before anything is downloaded. */
+export interface PluginLinkInspectResult {
+  /** True when the repo has a macrogrid-index.json instead of a root plugin.json — install it as a source (method 3) instead. */
+  isMultiPlugin: boolean;
+  owner: string;
+  repo: string;
+  id?: string;
+  name?: string;
+  description?: string | null;
+  author?: string | null;
+  homepage?: string | null;
+  kind?: string;
+  version?: string;
+  sdkVersion?: string;
+  minServerVersion?: string;
+  permissions?: string[];
+  compatible?: boolean;
+  error?: string;
+  code?: string;
+}
+
+export interface PluginLinkInstallResult {
+  installed: boolean;
+  id?: string;
+  name?: string;
+  status?: PluginInfo["status"];
+  detail?: string | null;
+  error?: string;
+  code?: string;
+}
+
+export interface PluginCatalogInstallResult {
+  installed: boolean;
+  id?: string;
+  name?: string;
+  status?: PluginInfo["status"];
+  detail?: string | null;
+  error?: string;
+  code?: string;
 }
 
 export interface PairedDeviceInfo {

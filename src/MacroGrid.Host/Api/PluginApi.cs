@@ -2,6 +2,7 @@ using MacroGrid.Host.Ui;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using MacroGrid.Core.Plugins;
+using MacroGrid.Core.Plugins.Distribution;
 using MacroGrid.Plugin.Abstractions;
 using Microsoft.AspNetCore.Routing;
 
@@ -12,8 +13,21 @@ internal static class PluginApi
 {
     public static RouteGroupBuilder MapPluginApi(this RouteGroupBuilder api)
     {
-        api.MapGet("/plugins", (PluginManager plugins, PluginLocalizer localizer) =>
-            plugins.Plugins.Select(p => p with { Name = localizer.Translate(p.Id, p.Name)! }));
+        // trust is Official / ThirdParty / Local — Local also covers a plugin installed before this feature
+        // existed (from a folder), which has no recorded origin.
+        api.MapGet("/plugins", (PluginManager plugins, PluginLocalizer localizer, PluginInstallOriginStore origins) =>
+            plugins.Plugins.Select(p => new
+            {
+                p.Id,
+                Name = localizer.Translate(p.Id, p.Name)!,
+                p.Version,
+                p.Status,
+                p.Detail,
+                p.HasSettings,
+                p.PendingPermissions,
+                p.HasIcon,
+                Trust = (origins.Get(p.Id)?.Trust ?? PluginTrust.Local).ToString(),
+            }));
 
         api.MapGet("/icon-packs", (PluginManager plugins, PluginLocalizer localizer) =>
             plugins.IconPacksWithOwner.Select(o => new { o.Pack.Id, DisplayName = localizer.Translate(o.PluginId, o.Pack.DisplayName)!, Icons = o.Pack.IconNames }));
@@ -23,6 +37,16 @@ internal static class PluginApi
             var pack = plugins.IconPacks.FirstOrDefault(p => p.Id == packId);
             var svg = pack?.GetIconSvg(iconName);
             return svg is null ? Results.NotFound() : Results.Text(svg, "image/svg+xml");
+        });
+
+        // The manifest's optional logo (LoadedPlugin.HasIcon) — the editor's Plugins window shows this
+        // instead of the generic category glyph when present.
+        api.MapGet("/plugins/{id}/icon", (string id, PluginManager plugins) =>
+        {
+            var path = plugins.GetPluginIconPath(id);
+            if (path is null) return Results.NotFound();
+            var contentType = Path.GetExtension(path).Equals(".svg", StringComparison.OrdinalIgnoreCase) ? "image/svg+xml" : "image/png";
+            return Results.File(path, contentType);
         });
 
         api.MapPost("/plugins/install", async (IUiDialogService dialogs, PluginManager plugins) =>
@@ -109,6 +133,30 @@ internal static class PluginApi
             OptionsEndpoint.HandleAsync(plugins.GetSettingsPage(id) as IOptionsSource, "This plugin does not provide dynamic options",
                 sourceId, request, localizer, () => id));
 
+        // Runs a SettingFieldKind.Button field's command (whatever the plugin uses it for — a preview, a
+        // connection test, ...): 404 when the settings page does not implement ISettingsCommandHandler at
+        // all, so an older/simpler plugin never gets a broken button.
+        api.MapPost("/plugins/{id}/settings/command", async (string id, HttpRequest request, PluginManager plugins, PluginLocalizer localizer) =>
+        {
+            if (plugins.GetSettingsPage(id) is not ISettingsCommandHandler handler)
+                return Results.NotFound();
+
+            var (valid, body) = await ApiResults.ReadJsonAsync<SettingsCommandRequest>(request);
+            if (!valid || body is null || string.IsNullOrEmpty(body.Command)) return ApiResults.InvalidJson();
+
+            try
+            {
+                var text = await handler.RunCommandAsync(body.Command, body.Values ?? [], request.HttpContext.RequestAborted);
+                return ApiResults.Json(new { text = localizer.Translate(id, text) });
+            }
+            catch (Exception ex) when (ex is not OperationCanceledException)
+            {
+                return ApiResults.Json(new { text = localizer.Translate(id, ex.Message) });
+            }
+        });
+
         return api;
     }
+
+    private sealed record SettingsCommandRequest(string? Command, JsonObject? Values);
 }

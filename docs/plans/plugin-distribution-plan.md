@@ -1,8 +1,8 @@
 # Plugin distribution plan
 
-> Status: **planned, not implemented.** This document describes how plugins will be
-> found, downloaded and installed from GitHub, and the repo format plugin authors
-> must follow.
+> Status: **implemented** (see the rollout checklist, section 9 — all five phases are checked off). This
+> document describes how plugins are found, downloaded and installed from GitHub, and the repo format plugin
+> authors must follow.
 
 **Repositories:** `macro-grid` (phases 2 to 5: host, editor, docs) and `macro-grid-plugin` (phase 1: `release.yml`, index generator, author docs, the store website). `macro-grid-client` is not touched.
 
@@ -225,11 +225,11 @@ Saved sources live in `%AppData%\MacroGrid\plugin-sources.json`.
 
 ## 9. Rollout phases
 
-- [ ] **Phase 1 — plugins repo:** `main` branch, release hash + signature, index
+- [x] **Phase 1 — plugins repo:** `main` branch, release hash + signature, index
       generator, author docs and schemas for both repo types.
-- [ ] **Phase 2 — host:** catalog client + install pipeline for the official source (method 2).
-- [ ] **Phase 3 — host:** added multi-plugin sources with the third-party warning (method 3).
-- [ ] **Phase 4 — host:** single-plugin direct links (method 4).
-- [ ] **Phase 5 — host:** badges and update-available.
+- [x] **Phase 2 — host:** catalog client + install pipeline for the official source (method 2).
+- [x] **Phase 3 — host:** added multi-plugin sources with the third-party warning (method 3).
+- [x] **Phase 4 — host:** single-plugin direct links (method 4).
+- [x] **Phase 5 — host:** badges and update-available.
 
 Each phase updates both changelogs under `[Unreleased]`.

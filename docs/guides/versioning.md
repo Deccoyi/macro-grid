@@ -10,9 +10,9 @@ There is no single project version. Four things are versioned independently, bec
 
 | What | Where the version lives | Now |
 |---|---|---|
-| **Server** (`macro-grid`, this repository) | `ClientHub.ServerVersion` in `src/MacroGrid.Core/Sessions/ClientHub.cs` | `0.3.1` |
+| **Server** (`macro-grid`, this repository) | `ClientHub.ServerVersion` in `src/MacroGrid.Core/Sessions/ClientHub.cs` | `0.3.2` |
 | **Phone app** ([macro-grid-client](https://github.com/Deccoyi/macro-grid-client)) | `version` in that repository's `package.json` | `0.1.0` |
-| **Plugin SDK** (`MacroGrid.Plugin.Abstractions`) | `PluginSdk.Version` in `src/MacroGrid.Plugin.Abstractions/PluginSdk.cs` | `0.3.0` |
+| **Plugin SDK** (`MacroGrid.Plugin.Abstractions`) | `PluginSdk.Version` in `src/MacroGrid.Plugin.Abstractions/PluginSdk.cs` | `0.4.0` |
 | **Each plugin** ([macro-grid-plugin](https://github.com/Deccoyi/macro-grid-plugin)) | `version` in the plugin's own `plugin.json` | per plugin |
 
 The plugin SDK is published on NuGet as `MacroGrid.Plugin.Abstractions`; its version is the SDK version (`PluginSdk.Version`) and plugins reference it as a package (developers may use the project path instead, see the plugin repository's `docs/using-the-sdk-package.md`). The browser deck (`webclient/`) and the editor (`editor/`)
