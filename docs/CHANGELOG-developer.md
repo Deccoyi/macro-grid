@@ -4,6 +4,9 @@ This file follows the [Keep a Changelog](https://keepachangelog.com/) format. Fo
 
 ## [Unreleased]
 
+## [0.3.2] - 2026-09-25
+Plugin SDK 0.4.0 (published to NuGet with the `sdk-v0.4.0` tag) and the plugin distribution feature (Discover). Every plugin's `sdkVersion` range must now satisfy `^0.4.0`.
+
 ### Added
 - **Badges and update-available (phase 5 of `docs/plans/plugin-distribution-plan.md`, closing out the plan):** `GET /api/plugins` now sends `trust` ("Official" | "ThirdParty" | "Local", from `PluginInstallOriginStore`, defaulting to `Local` for a plugin with no recorded origin — installed from a folder, or before this feature existed) alongside each `LoadedPlugin`. The editor's Installed tab shows that as a badge, and flags a plugin with "Update available" by matching it against whatever Discover last fetched (`PluginCatalogEntryInfo.updateAvailable`) — never a fetch of its own, so Installed never touches the network by itself.
 - **Single-plugin direct links (phase 4 of `docs/plans/plugin-distribution-plan.md`):** `POST /api/plugin-link/inspect` reads a pasted repository's root `plugin.json` (or, if it has a `macrogrid-index.json` instead, says so and returns `isMultiPlugin: true` so the editor offers to add it as a source instead) — nothing is downloaded yet. `POST /api/plugin-link/install` resolves the release asset and its `.sha256` from `owner/repo/id/version` (`PluginSourceUrls.SinglePluginPackageUrl`), fetches the hash with new `PluginPackageDownloader.FetchTextAssetAsync`, and runs the normal install pipeline with `PluginTrust.ThirdParty`. `PluginPackageDownloader.DownloadAsync` now accepts an undeclared size (`PluginCatalogVersion.Size == 0`, only method 4 uses this) and falls back to the 100 MB cap instead of requiring an exact match. Editor: "Install from link…" in Discover, same third-party confirmation as an added source. Tests: `PluginPackageDownloaderTests`.
