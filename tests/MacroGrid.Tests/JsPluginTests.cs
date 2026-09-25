@@ -31,7 +31,7 @@ public sealed class JsPluginTests : IDisposable
 
     private static PluginManifest Manifest(string id = "t") => new()
     {
-        Id = id, Name = "T", Version = "1.0.0", SdkVersion = "^0.4.0", MinServerVersion = "0.1.0", Entry = "index.js", Kind = PluginKind.Js,
+        Id = id, Name = "T", Version = "1.0.0", MacroGrid = "1.0.0", Entry = "index.js", Kind = PluginKind.Js,
     };
 
     private (JsPlugin Plugin, PluginHostCollector Host) Start(string script, string[]? permissions = null, JsPluginLimits? limits = null)

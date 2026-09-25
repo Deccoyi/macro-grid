@@ -5,10 +5,13 @@ namespace MacroGrid.Core.Plugins.Distribution;
 /// a direct link. Field names match the JSON (camelCase) documented in the plugin repository's
 /// website/reference/source-index.md.
 /// </summary>
+/// <param name="MacroGrid">The oldest Macro Grid the version runs on ("1.3.0"). Older index entries carry
+/// <paramref name="SdkVersion"/> and <paramref name="MinServerVersion"/> instead; see <see cref="Plugins.PluginCompatibility"/>.</param>
 public sealed record PluginCatalogVersion(
     string Version,
-    string SdkVersion,
-    string MinServerVersion,
+    string? MacroGrid,
+    string? SdkVersion,
+    string? MinServerVersion,
     string Url,
     string Sha256,
     long Size,
@@ -38,8 +41,9 @@ public sealed record PluginSingleManifest(
     string? Homepage,
     string Kind,
     string Version,
-    string SdkVersion,
-    string MinServerVersion,
+    string? MacroGrid,
+    string? SdkVersion,
+    string? MinServerVersion,
     IReadOnlyList<string>? Permissions);
 
 public sealed record PluginCatalogIndex(

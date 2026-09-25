@@ -13,7 +13,7 @@ public sealed class PluginPackageDownloaderTests
     private static HttpResponseMessage File200(byte[] content) => new(HttpStatusCode.OK) { Content = new ByteArrayContent(content) };
 
     private static PluginCatalogVersion Version(long size, string sha256 = "auto") =>
-        new("0.2.0", "^0.3.0", "0.1.0", ZipUrl, sha256 == "auto" ? Hex : sha256, size, null, null);
+        new("0.2.0", "1.0.0", null, null, ZipUrl, sha256 == "auto" ? Hex : sha256, size, null, null);
 
     [Fact]
     public async Task Downloads_and_verifies_against_a_declared_size()

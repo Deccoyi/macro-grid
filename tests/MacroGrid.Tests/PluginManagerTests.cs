@@ -31,7 +31,7 @@ public sealed class PluginManagerTests : IAsyncLifetime
     {
         _providerHost = new VariableProviderHost([], _variables, NullLogger<VariableProviderHost>.Instance);
         await _providerHost.StartAsync(CancellationToken.None);
-        _manager = new PluginManager(_pluginsDir, "0.1.0", _status, _dispatcher, _catalog, _providerHost, _variables, new PluginPermissionStore(_root), null, NullLogger<PluginManager>.Instance);
+        _manager = new PluginManager(_pluginsDir, "1.0.0", _status, _dispatcher, _catalog, _providerHost, _variables, new PluginPermissionStore(_root), null, NullLogger<PluginManager>.Instance);
     }
 
     public async Task DisposeAsync()
@@ -65,7 +65,7 @@ public sealed class PluginManagerTests : IAsyncLifetime
     [Fact]
     public async Task Start_on_a_missing_folder_lists_nothing()
     {
-        var manager = new PluginManager(Path.Combine(_root, "does-not-exist"), "0.1.0", _status, _dispatcher, _catalog, _providerHost, _variables, new PluginPermissionStore(_root), null, NullLogger<PluginManager>.Instance);
+        var manager = new PluginManager(Path.Combine(_root, "does-not-exist"), "1.0.0", _status, _dispatcher, _catalog, _providerHost, _variables, new PluginPermissionStore(_root), null, NullLogger<PluginManager>.Instance);
 
         await manager.StartAsync(CancellationToken.None);
 
@@ -93,25 +93,63 @@ public sealed class PluginManagerTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task Start_flags_sdk_version_mismatch_as_incompatible()
+    public async Task Start_flags_a_newer_required_macro_grid_as_incompatible()
     {
-        WriteManifest(NewPluginFolder("TooNew"), sdkVersion: "^99.0.0");
+        WriteManifest(NewPluginFolder("NeedsNewer"), macroGrid: "1.5.0");
 
         await _manager.StartAsync(CancellationToken.None);
 
         var plugin = Assert.Single(_manager.Plugins);
         Assert.Equal(PluginLoadStatus.Incompatible, plugin.Status);
-        Assert.Contains("SDK", plugin.Detail);
+        Assert.Contains("1.5.0", plugin.Detail);
     }
 
     [Fact]
-    public async Task Start_flags_server_version_below_minimum_as_incompatible()
+    public async Task Start_flags_a_different_major_as_incompatible_and_says_to_rebuild()
     {
-        WriteManifest(NewPluginFolder("NeedsNewerServer"), minServerVersion: "99.0.0");
+        WriteManifest(NewPluginFolder("NextMajor"), macroGrid: "2.0.0");
+
+        await _manager.StartAsync(CancellationToken.None);
+
+        var plugin = Assert.Single(_manager.Plugins);
+        Assert.Equal(PluginLoadStatus.Incompatible, plugin.Status);
+        Assert.Contains("rebuilt", plugin.Detail);
+    }
+
+    [Fact]
+    public async Task Start_flags_a_two_part_macro_grid_as_incompatible()
+    {
+        WriteManifest(NewPluginFolder("TwoParts"), macroGrid: "1.0");
 
         await _manager.StartAsync(CancellationToken.None);
 
         Assert.Equal(PluginLoadStatus.Incompatible, Assert.Single(_manager.Plugins).Status);
+    }
+
+    [Fact]
+    public async Task A_legacy_manifest_for_sdk_0_4_is_read_as_macro_grid_1_0_0()
+    {
+        // No entry file in the folder, so a compatible manifest ends in Error (entry not found), never in Incompatible.
+        WriteManifest(NewPluginFolder("Legacy04"), macroGrid: null, sdkVersion: "^0.4.0", minServerVersion: "0.1.0");
+
+        await _manager.StartAsync(CancellationToken.None);
+
+        Assert.NotEqual(PluginLoadStatus.Incompatible, Assert.Single(_manager.Plugins).Status);
+    }
+
+    [Theory]
+    [InlineData("^0.3.0")]
+    [InlineData("^0.2.0")]
+    [InlineData("^1.0.0")]
+    public async Task A_legacy_manifest_for_an_older_sdk_must_be_rebuilt(string sdkVersion)
+    {
+        WriteManifest(NewPluginFolder("LegacyOld"), macroGrid: null, sdkVersion: sdkVersion, minServerVersion: "0.1.0");
+
+        await _manager.StartAsync(CancellationToken.None);
+
+        var plugin = Assert.Single(_manager.Plugins);
+        Assert.Equal(PluginLoadStatus.Incompatible, plugin.Status);
+        Assert.Contains("rebuilt for Macro Grid 1.0.0", plugin.Detail);
     }
 
     [Fact]
@@ -348,8 +386,8 @@ public sealed class PluginManagerTests : IAsyncLifetime
     private static void WriteJsPlugin(string dir, string id, string[] permissions, string script)
     {
         var list = string.Join(", ", permissions.Select(p => "\"" + p + "\""));
-        var manifest = "{ \"id\": \"" + id + "\", \"name\": \"Js\", \"version\": \"1.0.0\", \"sdkVersion\": \"^0.4.0\", "
-            + "\"minServerVersion\": \"0.1.0\", \"entry\": \"index.js\", \"kind\": \"js\", \"permissions\": [" + list + "] }";
+        var manifest = "{ \"id\": \"" + id + "\", \"name\": \"Js\", \"version\": \"1.0.0\", \"macroGrid\": \"1.0.0\", "
+            + "\"entry\": \"index.js\", \"kind\": \"js\", \"permissions\": [" + list + "] }";
         File.WriteAllText(Path.Combine(dir, "plugin.json"), manifest);
         File.WriteAllText(Path.Combine(dir, "index.js"), script);
     }
@@ -361,19 +399,20 @@ public sealed class PluginManagerTests : IAsyncLifetime
         Assert.True(condition(), "Condition was not met in time.");
     }
 
-    private static void WriteManifest(string dir, string? id = null, string sdkVersion = "^0.4.0", string minServerVersion = "0.1.0", string kind = "csharp", string entry = "Plugin.dll", string? icon = null)
+    private static void WriteManifest(string dir, string? id = null, string? macroGrid = "1.0.0", string? sdkVersion = null, string? minServerVersion = null, string kind = "csharp", string entry = "Plugin.dll", string? icon = null)
     {
         var iconLine = icon is null ? "" : $$"""
           ,"icon": "{{icon}}"
         """;
+        var compatibilityLines = (macroGrid is null ? "" : $"\"macroGrid\": \"{macroGrid}\",\n")
+            + (sdkVersion is null ? "" : $"\"sdkVersion\": \"{sdkVersion}\",\n")
+            + (minServerVersion is null ? "" : $"\"minServerVersion\": \"{minServerVersion}\",\n");
         var json = $$"""
         {
           "id": "{{id ?? Path.GetFileName(dir)}}",
           "name": "Test Plugin",
           "version": "1.0.0",
-          "sdkVersion": "{{sdkVersion}}",
-          "minServerVersion": "{{minServerVersion}}",
-          "entry": "{{entry}}",
+          {{compatibilityLines}}"entry": "{{entry}}",
           "kind": "{{kind}}"{{iconLine}}
         }
         """;
