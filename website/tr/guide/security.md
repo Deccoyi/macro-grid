@@ -12,6 +12,7 @@ Tüm kod, tasarım ve dokümantasyon bir yapay zekâ asistanı tarafından oluş
 - **Eşleşmiş bir cihaz, bilgisayarınızda tuşlara basabilir, metin yazabilir ve programlar başlatabilir.** Yalnızca güvendiğiniz cihazları eşleştirin ve eskilerini kaldırın.
 - **Düzenleyici API'si yalnızca bilgisayarın kendisi içindir.** Sunucu, başka makinelerden gelen Düzenleyici API isteklerine 403 döndürür; böylece ağınızdaki kimse profillerinizi değiştiremez ya da PIN'inizi okuyamaz.
 - **C# eklentileri tam güvenle çalışır**; JavaScript eklentileri korumalı alanda çalışır ve onaylanmış izinlere ihtiyaç duyar.
-- **Her şey yerelde kalır.** Bulut hizmeti ve hesap yoktur.
+- **Verileriniz yerelde kalır.** Bulut hizmeti ve hesap yoktur.
+- **İsteğe bağlı tek bağlantı: güncelleme denetimi.** Sunucu yaklaşık altı saatte bir github.com'a yeni bir sürüm olup olmadığını sorar. Yalnızca program adı ve sürümü (`MacroGrid/<sürüm>`) gönderilir; sizinle ya da bilgisayarınızla ilgili hiçbir şey gönderilmez ve siz "Şimdi kur"a basmadan hiçbir şey kurulmaz. İndirilen yükleyici, GitHub'ın bildirdiği SHA-256 ile karşılaştırılır; kod imzalı değildir, bu yüzden Windows yönetici izni ister. Denetimi Tercihler > Genel bölümünden kapatabilirsiniz.
 
 Bir güvenlik açığını bildirmek için [SECURITY.md](https://github.com/Deccoyi/macro-grid/blob/main/SECURITY.md) dosyasına bakın.
