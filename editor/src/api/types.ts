@@ -128,6 +128,48 @@ export interface PluginUninstallResult {
   pending: boolean;
 }
 
+/** One plugin in a catalog response (GET /api/plugin-catalog) — mirrors PluginCatalogApi.DescribeEntry. */
+export interface PluginCatalogEntryInfo {
+  id: string;
+  name: string;
+  description: string | null;
+  author: string | null;
+  homepage: string | null;
+  kind: string;
+  /** The newest version listed, whether or not this server can run it. */
+  latestVersion: string | null;
+  /** The newest version this server's SDK and version actually satisfy — what Install would fetch. Null
+   * when nothing in the catalog is compatible. */
+  installableVersion: string | null;
+  compatible: boolean;
+  permissions: string[];
+  installed: boolean;
+  installedVersion: string | null;
+  /** True when installableVersion is newer than the installed version. */
+  updateAvailable: boolean;
+  /** "Official" | "ThirdParty" | "Local" | null (not installed and no recorded origin). */
+  trust: string | null;
+}
+
+export interface PluginCatalogResponse {
+  source: string;
+  name: string;
+  plugins: PluginCatalogEntryInfo[];
+  /** Set instead of `plugins` when the source could not be fetched or parsed (offline, malformed index, ...). */
+  error?: string;
+  code?: string;
+}
+
+export interface PluginCatalogInstallResult {
+  installed: boolean;
+  id?: string;
+  name?: string;
+  status?: PluginInfo["status"];
+  detail?: string | null;
+  error?: string;
+  code?: string;
+}
+
 export interface PairedDeviceInfo {
   id: string;
   name: string;

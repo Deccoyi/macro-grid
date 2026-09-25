@@ -8,6 +8,8 @@ import type {
   IconPackInfo,
   PairedDeviceInfo,
   PairingQrInfo,
+  PluginCatalogInstallResult,
+  PluginCatalogResponse,
   PluginInfo,
   PluginInstallResult,
   PluginUninstallResult,
@@ -160,6 +162,16 @@ export const api = {
 
   /** URL of a plugin's manifest logo (PluginInfo.hasIcon) — an <img src>, not a fetch: nothing to parse. */
   getPluginIconUrl: (id: string): string => `${pluginPath(id)}/icon`,
+
+  /** Discover tab: browses a source's plugins (today, only `"official"`) — fetched fresh every time the tab
+   * opens or is refreshed, never in the background. */
+  fetchPluginCatalog: (source: string): Promise<PluginCatalogResponse> =>
+    get(`/api/plugin-catalog?source=${encodeURIComponent(source)}`),
+
+  /** Downloads, verifies and installs one version from a catalog source through the same pipeline as a local
+   * folder install (PluginManager.InstallFromFolderAsync), plus hash/signature checks first. */
+  installFromPluginCatalog: (source: string, id: string, version: string): Promise<PluginCatalogInstallResult> =>
+    send("POST", "/api/plugin-catalog/install", { source, id, version }),
 
   getPreferences: (): Promise<AppPreferences> => get("/api/preferences"),
 

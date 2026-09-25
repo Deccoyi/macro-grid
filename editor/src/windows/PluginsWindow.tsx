@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
-import { FolderOpen, RefreshCw, RotateCw, Settings, Trash2 } from "lucide-react";
+import { Download, FolderOpen, RefreshCw, RotateCw, Settings, Trash2 } from "lucide-react";
 import { api } from "../api/client";
-import type { PluginInfo } from "../api/types";
+import type { PluginCatalogEntryInfo, PluginInfo } from "../api/types";
 import { DialogHost } from "../dialogs/DialogHost";
 import { confirmAsync } from "../dialogs/dialogStore";
 import { useT } from "../i18n/I18nContext";
@@ -33,11 +33,55 @@ export function PluginsWindow() {
   const [notice, setNotice] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  const [catalog, setCatalog] = useState<PluginCatalogEntryInfo[] | null>(null);
+  const [catalogError, setCatalogError] = useState<string | null>(null);
+  const [catalogLoading, setCatalogLoading] = useState(false);
+  const [installingCatalogId, setInstallingCatalogId] = useState<string | null>(null);
+
   const refresh = () => api.listPlugins().then(setPlugins).catch(() => {});
 
   useEffect(() => {
     refresh();
   }, []);
+
+  const refreshCatalog = () => {
+    setCatalogLoading(true);
+    setCatalogError(null);
+    api
+      .fetchPluginCatalog("official")
+      .then((response) => {
+        if (response.error) setCatalogError(response.error);
+        else setCatalog(response.plugins);
+      })
+      .catch((err) => setCatalogError(err instanceof Error ? err.message : String(err)))
+      .finally(() => setCatalogLoading(false));
+  };
+
+  useEffect(() => {
+    // The HTTP client behind this is only ever used when Discover is actually open — never in the background.
+    if (category === "discover" && catalog === null && !catalogLoading) refreshCatalog();
+  }, [category]);
+
+  const installFromCatalog = async (entry: PluginCatalogEntryInfo) => {
+    if (!entry.installableVersion) return;
+    setInstallingCatalogId(entry.id);
+    setError(null);
+    setNotice(null);
+    try {
+      const result = await api.installFromPluginCatalog("official", entry.id, entry.installableVersion);
+      if (result.installed) {
+        setNotice(t("plugins.discover.installSuccess", result.name ?? entry.name));
+        refresh();
+        refreshCatalog();
+      } else {
+        setError(t("plugins.discover.installFailed", entry.name, result.error ?? "?"));
+      }
+    } catch (err) {
+      setError(t("plugins.discover.installFailed", entry.name, err instanceof Error ? err.message : String(err)));
+    } finally {
+      setInstallingCatalogId(null);
+    }
+  };
 
   const uninstall = async (plugin: PluginInfo) => {
     if (!(await confirmAsync(t("plugins.uninstall.confirm", plugin.name), { title: t("plugins.uninstall"), danger: true }))) return;
@@ -208,12 +252,70 @@ export function PluginsWindow() {
           </div>
         </div>
       ) : (
-        <>
-          <SectionLabel>{t("plugins.category.discover")}</SectionLabel>
-          <p style={{ margin: "10px 0 0", fontSize: 12.5, color: "var(--ms-text-secondary)", lineHeight: 1.5, maxWidth: 420 }}>
-            {t("plugins.comingSoon.body")}
-          </p>
-        </>
+        <div style={{ maxWidth: 460 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+            <SectionLabel>{t("plugins.category.discover")}</SectionLabel>
+            <div style={{ flex: 1 }} />
+            <button type="button" className="ghost" title={t("plugins.refresh")} onClick={refreshCatalog} style={{ display: "flex", padding: 6 }}>
+              <RefreshCw size={14} />
+            </button>
+          </div>
+
+          {catalogLoading && <div style={{ fontSize: 12, color: "var(--ms-text-secondary)", marginTop: 8 }}>{t("plugins.discover.loading")}</div>}
+          {!catalogLoading && catalogError && (
+            <div style={{ fontSize: 12, color: "var(--ms-danger)", marginTop: 8 }}>{t("plugins.discover.offline")}</div>
+          )}
+          {!catalogLoading && !catalogError && catalog?.length === 0 && (
+            <div style={{ fontSize: 12, color: "var(--ms-text-secondary)", marginTop: 8 }}>{t("plugins.discover.empty")}</div>
+          )}
+          {!catalogLoading &&
+            !catalogError &&
+            catalog?.map((entry) => (
+              <div key={entry.id} style={{ borderTop: "1px solid var(--ms-border)" }}>
+                <div style={{ display: "flex", alignItems: "flex-start", gap: 8, padding: "8px 0" }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 13 }}>
+                      {entry.name}{" "}
+                      {entry.latestVersion && <span style={{ color: "var(--ms-text-disabled)" }}>v{entry.latestVersion}</span>}
+                    </div>
+                    {entry.author && (
+                      <div style={{ fontSize: 11, color: "var(--ms-text-secondary)", marginTop: 2 }}>{t("plugins.discover.by", entry.author)}</div>
+                    )}
+                    {entry.description && (
+                      <div style={{ fontSize: 11.5, color: "var(--ms-text-secondary)", marginTop: 4 }}>{entry.description}</div>
+                    )}
+                    {!entry.compatible && (
+                      <div style={{ fontSize: 11, color: "var(--ms-warning, #facc15)", marginTop: 4 }}>{t("plugins.discover.incompatible")}</div>
+                    )}
+                  </div>
+                  {entry.installed && !entry.updateAvailable && (
+                    <span style={{ fontSize: 11.5, color: "var(--ms-text-disabled)", flexShrink: 0, marginTop: 2 }}>
+                      {t("plugins.discover.installed")}
+                    </span>
+                  )}
+                  {(!entry.installed || entry.updateAvailable) && entry.compatible && (
+                    <button
+                      type="button"
+                      className="ghost"
+                      title={entry.updateAvailable ? t("plugins.discover.update") : t("plugins.discover.install")}
+                      disabled={installingCatalogId === entry.id}
+                      onClick={() => installFromCatalog(entry)}
+                      style={{ display: "flex", padding: 6, flexShrink: 0 }}
+                    >
+                      <Download size={14} />
+                    </button>
+                  )}
+                </div>
+              </div>
+            ))}
+
+          {(notice || error) && (
+            <div style={{ marginTop: 14, paddingTop: 14, borderTop: "1px solid var(--ms-border)" }}>
+              {notice && <p style={{ fontSize: 12, color: "var(--ms-success, #4ade80)", margin: 0 }}>{notice}</p>}
+              {error && <p style={{ fontSize: 12, color: "var(--ms-danger)", margin: 0 }}>{error}</p>}
+            </div>
+          )}
+        </div>
       )}
       {/* This window is a separate native window; the confirm dialog of "Remove" is drawn by its own host. */}
       <DialogHost />
