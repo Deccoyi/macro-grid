@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
-import { Download, FolderOpen, RefreshCw, RotateCw, Settings, Trash2 } from "lucide-react";
+import { Download, FolderOpen, Plus, RefreshCw, RotateCw, Settings, Trash2 } from "lucide-react";
 import { api } from "../api/client";
-import type { PluginCatalogEntryInfo, PluginInfo } from "../api/types";
+import type { PluginCatalogEntryInfo, PluginInfo, PluginSourceInfo } from "../api/types";
 import { DialogHost } from "../dialogs/DialogHost";
-import { confirmAsync } from "../dialogs/dialogStore";
+import { confirmAsync, promptAsync } from "../dialogs/dialogStore";
 import { useT } from "../i18n/I18nContext";
 import { useDocumentTitle } from "../i18n/useDocumentTitle";
 import { SectionLabel } from "../panels/fields/controls";
@@ -37,6 +37,10 @@ export function PluginsWindow() {
   const [catalogError, setCatalogError] = useState<string | null>(null);
   const [catalogLoading, setCatalogLoading] = useState(false);
   const [installingCatalogId, setInstallingCatalogId] = useState<string | null>(null);
+  const [sources, setSources] = useState<PluginSourceInfo[]>([]);
+  const [officialSource, setOfficialSource] = useState({ id: "official", owner: "Deccoyi", repo: "macro-grid-plugin" });
+  const [selectedSource, setSelectedSource] = useState("official");
+  const [catalogOfficial, setCatalogOfficial] = useState(true);
 
   const refresh = () => api.listPlugins().then(setPlugins).catch(() => {});
 
@@ -44,12 +48,14 @@ export function PluginsWindow() {
     refresh();
   }, []);
 
-  const refreshCatalog = () => {
+  const refreshCatalog = (source = selectedSource) => {
     setCatalogLoading(true);
     setCatalogError(null);
+    setCatalog(null);
     api
-      .fetchPluginCatalog("official")
+      .fetchPluginCatalog(source)
       .then((response) => {
+        setCatalogOfficial(response.official ?? source === "official");
         if (response.error) setCatalogError(response.error);
         else setCatalog(response.plugins);
       })
@@ -62,13 +68,72 @@ export function PluginsWindow() {
     if (category === "discover" && catalog === null && !catalogLoading) refreshCatalog();
   }, [category]);
 
-  const installFromCatalog = async (entry: PluginCatalogEntryInfo) => {
+  const selectSource = (id: string) => {
+    setSelectedSource(id);
+    refreshCatalog(id);
+  };
+
+  const addSource = async () => {
+    const url = await promptAsync(t("plugins.discover.source.addPrompt"), "", { title: t("plugins.discover.source.addTitle") });
+    if (!url) return;
+    setError(null);
+    try {
+      const result = await api.addPluginSource(url);
+      if (!result.id) {
+        setError(t("plugins.discover.source.addFailed", result.error ?? "?"));
+        return;
+      }
+      const list = await api.listPluginSources();
+      setSources(list.added);
+      selectSource(result.id);
+    } catch (err) {
+      setError(t("plugins.discover.source.addFailed", err instanceof Error ? err.message : String(err)));
+    }
+  };
+
+  const removeSource = async (source: PluginSourceInfo) => {
+    if (!(await confirmAsync(t("plugins.discover.source.removeConfirm", source.name), { title: t("plugins.discover.source.remove") }))) return;
+    await api.removePluginSource(source.id);
+    setSources((prev) => prev.filter((s) => s.id !== source.id));
+    if (selectedSource === source.id) selectSource("official");
+  };
+
+  useEffect(() => {
+    if (category !== "discover") return;
+    api
+      .listPluginSources()
+      .then((r) => {
+        setSources(r.added);
+        setOfficialSource(r.official);
+      })
+      .catch(() => {});
+  }, [category]);
+
+  const permissionText = (permission: string) => {
+    if (permission === "variables" || permission === "actions" || permission === "input") return t(`plugins.permission.${permission}`);
+    if (permission.startsWith("http:")) return t("plugins.permission.http", permission.slice(5));
+    return t("plugins.permission.unknown", permission);
+  };
+
+  const installFromCatalog = async (entry: PluginCatalogEntryInfo, official: boolean, sourceLabel: string) => {
     if (!entry.installableVersion) return;
+
+    if (!official) {
+      const risk = entry.kind === "js" && entry.permissions.length > 0
+        ? t("plugins.discover.thirdParty.permissions", entry.permissions.map(permissionText).join(", "))
+        : t("plugins.discover.thirdParty.fullAccess");
+      const proceed = await confirmAsync(`${t("plugins.discover.thirdParty.warning", sourceLabel)} ${risk}`.trim(), {
+        title: t("plugins.discover.thirdParty.title"),
+        danger: true,
+      });
+      if (!proceed) return;
+    }
+
     setInstallingCatalogId(entry.id);
     setError(null);
     setNotice(null);
     try {
-      const result = await api.installFromPluginCatalog("official", entry.id, entry.installableVersion);
+      const result = await api.installFromPluginCatalog(selectedSource, entry.id, entry.installableVersion);
       if (result.installed) {
         setNotice(t("plugins.discover.installSuccess", result.name ?? entry.name));
         refresh();
@@ -129,12 +194,6 @@ export function PluginsWindow() {
     }
   };
 
-  const permissionText = (permission: string) => {
-    if (permission === "variables" || permission === "actions" || permission === "input") return t(`plugins.permission.${permission}`);
-    if (permission.startsWith("http:")) return t("plugins.permission.http", permission.slice(5));
-    return t("plugins.permission.unknown", permission);
-  };
-
   const install = async () => {
     setInstalling(true);
     setError(null);
@@ -153,6 +212,12 @@ export function PluginsWindow() {
     } finally {
       setInstalling(false);
     }
+  };
+
+  const currentSourceLabel = () => {
+    if (selectedSource === officialSource.id) return `${officialSource.owner}/${officialSource.repo}`;
+    const saved = sources.find((s) => s.id === selectedSource);
+    return saved ? `${saved.owner}/${saved.repo}` : selectedSource;
   };
 
   const categories = [
@@ -256,8 +321,37 @@ export function PluginsWindow() {
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
             <SectionLabel>{t("plugins.category.discover")}</SectionLabel>
             <div style={{ flex: 1 }} />
-            <button type="button" className="ghost" title={t("plugins.refresh")} onClick={refreshCatalog} style={{ display: "flex", padding: 6 }}>
+            <button type="button" className="ghost" title={t("plugins.refresh")} onClick={() => refreshCatalog()} style={{ display: "flex", padding: 6 }}>
               <RefreshCw size={14} />
+            </button>
+          </div>
+
+          <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 10 }}>
+            <label style={{ fontSize: 11.5, color: "var(--ms-text-secondary)" }}>{t("plugins.discover.source.label")}</label>
+            <select value={selectedSource} onChange={(e) => selectSource(e.target.value)} style={{ flex: 1, minWidth: 0, fontSize: 12 }}>
+              <option value={officialSource.id}>{t("plugins.discover.source.official")}</option>
+              {sources.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.name}
+                </option>
+              ))}
+            </select>
+            {selectedSource !== officialSource.id && (
+              <button
+                type="button"
+                className="ghost"
+                title={t("plugins.discover.source.remove")}
+                onClick={() => {
+                  const source = sources.find((s) => s.id === selectedSource);
+                  if (source) removeSource(source);
+                }}
+                style={{ display: "flex", padding: 6, flexShrink: 0 }}
+              >
+                <Trash2 size={14} />
+              </button>
+            )}
+            <button type="button" className="ghost" title={t("plugins.discover.source.add")} onClick={addSource} style={{ display: "flex", padding: 6, flexShrink: 0 }}>
+              <Plus size={14} />
             </button>
           </div>
 
@@ -299,7 +393,7 @@ export function PluginsWindow() {
                       className="ghost"
                       title={entry.updateAvailable ? t("plugins.discover.update") : t("plugins.discover.install")}
                       disabled={installingCatalogId === entry.id}
-                      onClick={() => installFromCatalog(entry)}
+                      onClick={() => installFromCatalog(entry, catalogOfficial, currentSourceLabel())}
                       style={{ display: "flex", padding: 6, flexShrink: 0 }}
                     >
                       <Download size={14} />

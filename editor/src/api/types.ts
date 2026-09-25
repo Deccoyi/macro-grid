@@ -154,8 +154,29 @@ export interface PluginCatalogEntryInfo {
 export interface PluginCatalogResponse {
   source: string;
   name: string;
+  /** False for an added third-party source — drives the confirmation dialog before installing anything from it. */
+  official?: boolean;
   plugins: PluginCatalogEntryInfo[];
   /** Set instead of `plugins` when the source could not be fetched or parsed (offline, malformed index, ...). */
+  error?: string;
+  code?: string;
+}
+
+/** One saved third-party source (GET /api/plugin-sources). */
+export interface PluginSourceInfo {
+  id: string;
+  owner: string;
+  repo: string;
+  name: string;
+  addedAt: string;
+}
+
+export interface PluginSourcesResponse {
+  official: { id: string; owner: string; repo: string };
+  added: PluginSourceInfo[];
+}
+
+export interface PluginAddSourceResult extends Partial<PluginSourceInfo> {
   error?: string;
   code?: string;
 }

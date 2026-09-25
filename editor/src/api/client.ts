@@ -8,8 +8,10 @@ import type {
   IconPackInfo,
   PairedDeviceInfo,
   PairingQrInfo,
+  PluginAddSourceResult,
   PluginCatalogInstallResult,
   PluginCatalogResponse,
+  PluginSourcesResponse,
   PluginInfo,
   PluginInstallResult,
   PluginUninstallResult,
@@ -172,6 +174,14 @@ export const api = {
    * folder install (PluginManager.InstallFromFolderAsync), plus hash/signature checks first. */
   installFromPluginCatalog: (source: string, id: string, version: string): Promise<PluginCatalogInstallResult> =>
     send("POST", "/api/plugin-catalog/install", { source, id, version }),
+
+  listPluginSources: (): Promise<PluginSourcesResponse> => get("/api/plugin-sources"),
+
+  /** Validates the repository (it must have a macrogrid-index.json) and saves it as a source — one HTTP call,
+   * only made when the user submits the "Add source" dialog. */
+  addPluginSource: (url: string): Promise<PluginAddSourceResult> => send("POST", "/api/plugin-sources", { url }),
+
+  removePluginSource: (id: string): Promise<void> => send("DELETE", `/api/plugin-sources/${encodeURIComponent(id)}`),
 
   getPreferences: (): Promise<AppPreferences> => get("/api/preferences"),
 
