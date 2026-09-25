@@ -4,7 +4,16 @@ New features and fixes in Macro Grid. For technical details, see [CHANGELOG-deve
 
 ## Unreleased
 
-## 0.3.0 - 2026-09-25
+## 0.3.1 - 2026-09-25
+This version has a new user agreement: you are asked to accept it once, in the installer or, if someone else installed it, the first time you start Macro Grid.
+
+It replaces 0.3.0, which was withdrawn. Everything from 0.3.0 is in it: automatic updates, the agreement asked again whenever its text changes, a much faster installer and clearer conditions for yes/no values.
+
+### Fixed
+- **After an update:** Macro Grid now starts again as you, not as administrator.
+- **Install now:** It no longer fails when an older download was left over on the PC.
+
+## 0.3.0 - 2026-09-25 (withdrawn, replaced by 0.3.1)
 This version has a new user agreement: you are asked to accept it once, in the installer or, if someone else installed it, the first time you start Macro Grid.
 
 ### New

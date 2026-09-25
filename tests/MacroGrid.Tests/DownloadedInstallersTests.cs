@@ -44,6 +44,20 @@ public sealed class DownloadedInstallersTests : IDisposable
     }
 
     [Fact]
+    public void The_version_that_was_just_downloaded_stays_even_when_a_newer_leftover_exists()
+    {
+        var leftover = Add("0.9.0-alpha");
+        var fresh = Add("0.3.0-alpha");
+        var older = Add("0.2.5");
+
+        DownloadedInstallers.CleanUp(_root, V("0.2.1"), keep: V("0.3.0-alpha"));
+
+        Assert.True(Directory.Exists(fresh));
+        Assert.False(Directory.Exists(leftover));
+        Assert.False(Directory.Exists(older));
+    }
+
+    [Fact]
     public void Everything_goes_when_the_running_version_is_as_new_as_all_of_them()
     {
         Add("0.2.1");

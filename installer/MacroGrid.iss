@@ -87,11 +87,11 @@ Filename: "{tmp}\MicrosoftEdgeWebview2Setup.exe"; Parameters: "/silent /install"
 Filename: "{sys}\netsh.exe"; Parameters: "advfirewall firewall delete rule name=""Macro Grid"""; Flags: runhidden; StatusMsg: "Allowing phones on your private network..."
 Filename: "{sys}\netsh.exe"; Parameters: "advfirewall firewall add rule name=""Macro Grid"" dir=in action=allow protocol=TCP localport=9820 profile=domain,private program=""{app}\{#AppExe}"""; Flags: runhidden; StatusMsg: "Allowing phones on your private network..."
 Filename: "{app}\{#AppExe}"; Description: "Start {#AppName}"; Flags: nowait postinstall skipifsilent; Check: not IsUpdateRun
-; After an automatic update (the app started this setup with /UPDATE) start it again as the person, not as administrator. The argument makes
-; it show "Updated to <version>" once. The finished page closes by itself in that case, so the "Start" entry above is left out.
-; runasoriginaluser only takes effect on a postinstall entry (without postinstall the app came back elevated, found by testing); a postinstall
-; entry runs when the finished page is left, which the auto-close in CurPageChanged does.
-Filename: "{app}\{#AppExe}"; Parameters: "--updated"; Description: "Start {#AppName}"; Flags: nowait postinstall runasoriginaluser; Check: IsUpdateRun
+; After an automatic update (the app started this setup with /UPDATE) start it again as the person, not as administrator. The finished page
+; closes by itself in that case, so the "Start" entry above is left out. Neither runasoriginaluser nor a postinstall entry brought the app back as the
+; person when the app itself started this setup (found by testing: it came back elevated), so Explorer starts it: Explorer always runs it with the
+; person's normal token. A program started this way gets no arguments; the app knows it was updated from the version it ran last (StartupPolicy).
+Filename: "{win}\explorer.exe"; Parameters: """{app}\{#AppExe}"""; Description: "Start {#AppName}"; Flags: nowait postinstall runasoriginaluser; Check: IsUpdateRun
 
 ; Profiles, paired devices, plugins and logs live in %AppData%\MacroGrid and are deliberately left in place
 ; on uninstall, so a reinstall picks up where the user left off.

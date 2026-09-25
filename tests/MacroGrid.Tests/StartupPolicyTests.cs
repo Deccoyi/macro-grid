@@ -49,6 +49,21 @@ public sealed class StartupPolicyTests
         Assert.False(StartupPolicy.ShouldOpenEditor(["--AUTOSTART"], prefs));
     }
 
+    [Theory]
+    [InlineData("0.2.1", "0.3.0", true)]
+    [InlineData("0.3.0", "0.3.0", false)]
+    [InlineData("0.3.1", "0.3.0", false)]
+    [InlineData(null, "0.3.0", false)]
+    [InlineData("nonsense", "0.3.0", false)]
+    public void A_higher_version_than_last_time_means_the_app_was_just_updated(string? lastRun, string current, bool expected) =>
+        Assert.Equal(expected, StartupPolicy.WasUpdated(Manual, lastRun, current));
+
+    [Fact]
+    public void The_updated_argument_still_counts_without_a_version_change()
+    {
+        Assert.True(StartupPolicy.WasUpdated(["--updated"], "0.3.0", "0.3.0"));
+    }
+
     [Fact]
     public void An_update_restart_is_recognised_and_still_follows_the_launch_mode()
     {

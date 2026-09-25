@@ -8,8 +8,12 @@ namespace MacroGrid.Core.Updates;
 /// </summary>
 public static class DownloadedInstallers
 {
-    /// <summary>Applies the rule to <paramref name="updatesRoot"/> and returns the paths it deleted. A path that cannot be deleted goes to <paramref name="onError"/> and never stops the rest.</summary>
-    public static IReadOnlyList<string> CleanUp(string updatesRoot, ReleaseVersion running, Action<string, Exception>? onError = null)
+    /// <summary>
+    /// Applies the rule to <paramref name="updatesRoot"/> and returns the paths it deleted. A path that cannot be deleted goes to <paramref name="onError"/>
+    /// and never stops the rest. <paramref name="keep"/> names the version that was just downloaded: that one stays even when a newer leftover exists,
+    /// because it is the one about to be installed.
+    /// </summary>
+    public static IReadOnlyList<string> CleanUp(string updatesRoot, ReleaseVersion running, Action<string, Exception>? onError = null, ReleaseVersion? keep = null)
     {
         var deleted = new List<string>();
         if (!Directory.Exists(updatesRoot)) return deleted;
@@ -29,11 +33,12 @@ public static class DownloadedInstallers
             return deleted;
         }
 
-        var keep = folders.Where(f => f.Version > running).OrderByDescending(f => f.Version).Select(f => f.Path).FirstOrDefault();
+        var keepPath = keep is { } wanted ? folders.Where(f => f.Version == wanted).Select(f => f.Path).FirstOrDefault() : null;
+        keepPath ??= folders.Where(f => f.Version > running).OrderByDescending(f => f.Version).Select(f => f.Path).FirstOrDefault();
 
         foreach (var (path, _) in folders)
         {
-            if (path == keep)
+            if (path == keepPath)
             {
                 DeletePartFiles(path, deleted, onError);
                 continue;
@@ -42,7 +47,7 @@ public static class DownloadedInstallers
         }
 
         // With nothing left to keep, the root itself is empty; remove it too unless something else lives there.
-        if (keep is null && !Directory.EnumerateFileSystemEntries(updatesRoot).Any())
+        if (keepPath is null && !Directory.EnumerateFileSystemEntries(updatesRoot).Any())
             TryDelete(() => Directory.Delete(updatesRoot), updatesRoot, deleted, onError);
 
         return deleted;

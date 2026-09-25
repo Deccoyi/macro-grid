@@ -1,4 +1,6 @@
 using MacroGrid.Core.Preferences;
+using MacroGrid.Core.Sessions;
+using MacroGrid.Core.Updates;
 using MacroGrid.Host.Ui;
 using MacroGrid.Host.Updates;
 using MacroGrid.Windows.Agreement;
@@ -44,7 +46,9 @@ internal static class Program
         }
 
         // The installer starts the app again with this argument after an automatic update: say so once.
-        var updated = StartupPolicy.WasUpdated(args);
+        var updateState = server.Services.GetRequiredService<UpdateStateStore>();
+        var updated = StartupPolicy.WasUpdated(args, updateState.Get().LastRunVersion, ClientHub.ServerVersion);
+        updateState.Update(s => s with { LastRunVersion = ClientHub.ServerVersion });
         // Downloaded installers never pile up: on every start only the newest one that is still newer than this version stays.
         server.Services.GetRequiredService<UpdateInstaller>().CleanUpDownloads();
 

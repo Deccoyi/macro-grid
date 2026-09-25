@@ -73,12 +73,12 @@ internal sealed class UpdateInstaller(UpdateService updates, InstallerDownloader
     /// Keeps at most one downloaded installer (the newest that is newer than the running version) and deletes the rest, see
     /// <see cref="DownloadedInstallers"/>. Runs at every start, when a new download replaces an older one, and never fails the caller.
     /// </summary>
-    public void CleanUpDownloads()
+    public void CleanUpDownloads(ReleaseVersion? justDownloaded = null)
     {
         if (!ReleaseVersion.TryParse(ClientHub.ServerVersion, out var running)) return;
         try
         {
-            DownloadedInstallers.CleanUp(UpdatesRoot, running, (path, ex) => log.LogWarning(ex, "Could not remove {Path} from the downloaded installers.", path));
+            DownloadedInstallers.CleanUp(UpdatesRoot, running, (path, ex) => log.LogWarning(ex, "Could not remove {Path} from the downloaded installers.", path), justDownloaded);
         }
         catch (Exception ex)
         {
@@ -93,7 +93,7 @@ internal sealed class UpdateInstaller(UpdateService updates, InstallerDownloader
         {
             var progress = new Progress<double>(fraction => SetStatus(new("downloading", (int)Math.Round(fraction * 100), null)));
             var path = await downloader.DownloadAsync(release, UpdatesRoot, progress, cancellationToken);
-            CleanUpDownloads(); // an older download this one replaces
+            CleanUpDownloads(release.Version); // the other downloads this one replaces; never the one that was just fetched
 
             SetStatus(new("starting", 100, null));
             using var setup = StartInstaller(path);
