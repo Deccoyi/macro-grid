@@ -28,6 +28,13 @@ Where the project stands. The project is before 1.0.0 and under active developme
 
 The order of the bigger pieces of work, and their plans, are in [plans/README.md](plans/README.md). The items below have no plan file yet.
 
+- **An encrypted connection:** the phone and the server talk over plain `ws://` and `http://` on the local network, so anyone on the same Wi-Fi
+  can read the traffic and take the pairing PIN or a device token, and then press the buttons of your profiles. Fine on a home network you trust,
+  a real gap on a shared one (cafe, school, office). Wanted: the server makes its own certificate and puts its fingerprint into the pairing QR
+  code, so the phone accepts only that certificate (no certificate authority needed). That covers listening in and impersonating the server. To
+  settle in its plan: the browser deck (a self-signed certificate makes browsers warn, so it may keep a plain option, switched off by default), the
+  phone app's setting that allows plain traffic, a token that never crosses the wire (a signed challenge instead), moving already paired devices
+  over, and keeping older phone apps working while both connections exist (announced as a capability). It needs a plan file first (`plans/`).
 - **Keyboard shortcuts and undo/redo in the editor:** today the editor has no shortcuts beyond Enter and Escape in windows and menus, no undo, and
   duplicating or copying a widget goes through the right-click menu. Wanted: **Delete**, **Ctrl+C / Ctrl+X / Ctrl+V** and **Ctrl+D** on the selected
   widgets, with paste working across pages and across profiles (a copy carries its actions and dynamic rules), and **Ctrl+Z / Ctrl+Y** to step back

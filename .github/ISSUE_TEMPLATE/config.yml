@@ -1,5 +1,8 @@
 blank_issues_enabled: false
 contact_links:
+  - name: Ask a question or share an idea
+    url: https://github.com/Deccoyi/macro-grid/discussions
+    about: Questions, ideas and things you made go to Discussions, not to an issue. A maintainer turns a discussion into an issue when there is something to fix or build.
   - name: Report a security vulnerability
     url: https://github.com/Deccoyi/macro-grid/security/advisories/new
     about: Please report security problems privately, not in a public issue. See SECURITY.md.

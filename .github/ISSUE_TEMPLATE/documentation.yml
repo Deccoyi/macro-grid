@@ -1,0 +1,26 @@
+name: Documentation problem
+description: A page or a file in the docs is wrong, unclear or missing
+labels: ["documentation"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for helping. This form is for the Windows server, the editor, the browser deck and the installer. Something else? See the links on the previous page.
+  - type: input
+    id: where
+    attributes:
+      label: Which page or file?
+      description: A link or a file name.
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: What is wrong, unclear or missing?
+    validations:
+      required: true
+  - type: textarea
+    id: suggestion
+    attributes:
+      label: What would you write instead?
+      description: Optional.

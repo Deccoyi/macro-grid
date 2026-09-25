@@ -7,9 +7,10 @@
 - The conversation with the user is in Turkish. That does not affect anything written into the project.
 
 ## Changelogs
-- Keep two changelogs in `docs/`: `CHANGELOG-developer.md` (detailed, technical) and `CHANGELOG.md` (short, public, for non-developers).
+- Keep two changelogs in `docs/`: `CHANGELOG.md` (short, public, for non-developers) and `CHANGELOG-developer.md` (only what developers need and git history cannot carry).
 - `CHANGELOG.md` uses short, simple sentences, one line per change ("New / Changed / Fixed"). No code, file or API names. Leave out small bug fixes and stability or internal improvements.
-- Update both under `[Unreleased]` when a change is finished. See `docs/guides/versioning.md` and the `commit-all` skill.
+- `CHANGELOG-developer.md` records only: changes to the plugin SDK or the WebSocket protocol, breaking or incompatible changes, migrations, and anything a plugin author, integrator or maintainer has to do differently. Everything else (how a feature was built, refactors, internal details, small fixes) goes in the commit message and the pull request description, not in this file. Entries already there stay as they are.
+- When a change is finished, update `CHANGELOG.md` under `[Unreleased]`, and `CHANGELOG-developer.md` only if the change is one of the kinds above. See `docs/guides/versioning.md` and the `commit-all` skill.
 
 ## Commits
 - Conventional Commits (`type(scope): description`), always in English.

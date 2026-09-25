@@ -1,0 +1,15 @@
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Show what you made: a profile, a layout, a setup, a plugin. Screenshots are welcome; remove anything private first.
+  - type: textarea
+    id: what
+    attributes:
+      label: What did you make?
+    validations:
+      required: true
+  - type: textarea
+    id: how
+    attributes:
+      label: How does it work, or how did you build it?

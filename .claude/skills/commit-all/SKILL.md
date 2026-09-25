@@ -92,7 +92,8 @@ already has:
   exists (in `docs/`, or at the repo root), under an `[Unreleased]` section:
   - **`CHANGELOG-developer.md`** — the detailed, technical log for developers: what
     changed and how (modules, endpoints, protocol messages, files), in Keep a Changelog
-    style (Added / Changed / Fixed). Add an entry per meaningful group.
+    style (Added / Changed / Fixed). Add an entry per meaningful group. If the project's own rules (CLAUDE.md) narrow what belongs
+    in this file, follow them and put the rest in the commit message.
   - **`CHANGELOG.md`** — the short, public log for non-developer end users. Write in
     English, with short, simple sentences: one line per change,
     saying what the user can now do or what got fixed (headings "New / Changed / Fixed"). No code, file names, API names or internal jargon. Leave out small bug
