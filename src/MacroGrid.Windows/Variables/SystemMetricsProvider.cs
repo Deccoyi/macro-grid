@@ -14,12 +14,12 @@ public sealed class SystemMetricsProvider : IVariableProvider, IVariableCatalogS
 
     public IEnumerable<VariableInfo> Describe() =>
     [
-        new("system.time", "Current time and date", "{system.time|HH:mm:ss}", Category),
-        new("system.uptime", "How long the computer has been running", "{system.uptime}", Category),
-        new("system.cpu", "CPU usage (%)", "{system.cpu|0}%", Category),
-        new("system.ram", "RAM usage (%)", "{system.ram|0}%", Category),
-        new("system.ram.used", "Used RAM (GB)", "{system.ram.used|0.#} GB", Category),
-        new("system.ram.total", "Total RAM (GB)", "{system.ram.total|0.#} GB", Category),
+        new("system.time", "Current time and date", "{system.time|HH:mm:ss}", Category) { Type = VariableType.DateTime },
+        new("system.uptime", "How long the computer has been running", "{system.uptime}", Category) { Type = VariableType.Duration },
+        new("system.cpu", "CPU usage (%)", "{system.cpu|0}%", Category) { Type = VariableType.Number, Unit = "%" },
+        new("system.ram", "RAM usage (%)", "{system.ram|0}%", Category) { Type = VariableType.Number, Unit = "%" },
+        new("system.ram.used", "Used RAM (GB)", "{system.ram.used|0.#} GB", Category) { Type = VariableType.Number, Unit = "GB" },
+        new("system.ram.total", "Total RAM (GB)", "{system.ram.total|0.#} GB", Category) { Type = VariableType.Number, Unit = "GB" },
     ];
 
     public async Task RunAsync(IVariableStore store, CancellationToken cancellationToken)

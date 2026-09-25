@@ -9,6 +9,7 @@ import type { DictKey } from "../../i18n/tr";
 import { VariablePicker } from "../VariablePicker";
 import { combinatorOf, fromConditionNode, newCase, newCondition, toConditionNode, type EditCase, type EditCondition } from "./conditionEditing";
 import { useBackdropClose } from "../../components/useBackdropClose";
+import { allowsOrdering, fitConditionToVariable, normalizeBoolText, valueInputFor, type ValueInput } from "./variableTypes";
 
 const OPERATOR_KEYS: Record<EditCondition["operator"], DictKey> = {
   ">": "dynamic.operator.>",
@@ -71,7 +72,7 @@ export function DynamizeModal({ propertyLabel, binding, variableCatalog, resultK
         style={{ width: 600, maxHeight: "82vh", background: "var(--ms-bg-surface)", border: "1px solid var(--ms-border-strong)", display: "flex", flexDirection: "column" }}
       >
         {/* Header — a window title bar, not a web modal's rounded card top: square corners, no radius
-           anywhere in this shell (see docs/ui-guidelines.md: "like a window", never like a web modal). */}
+           anywhere in this shell (see docs/ui/ui-guidelines.md: "like a window", never like a web modal). */}
         <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "13px 18px", borderBottom: "1px solid var(--ms-border)" }}>
           <div style={{ width: 26, height: 26, background: "var(--ms-accent-bg-muted)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
             <Variable size={14} color="var(--ms-accent-hover)" />
@@ -98,7 +99,12 @@ export function DynamizeModal({ propertyLabel, binding, variableCatalog, resultK
             <div key={i} style={{ border: "1px solid var(--ms-border)", background: "var(--ms-bg-canvas)", padding: "12px 14px", display: "flex", flexDirection: "column", gap: 9 }}>
               <Keyword>{i === 0 ? t("dynamic.if") : t("dynamic.elseIf")}</Keyword>
 
-              {c.conditions.map((cond, ci) => (
+              {c.conditions.map((cond, ci) => {
+                const valueInput = valueInputFor(variableCatalog.find((v) => v.name === cond.variable));
+                const operators = (Object.keys(OPERATOR_KEYS) as EditCondition["operator"][])
+                  .filter((op) => allowsOrdering(valueInput) || op === "==" || op === "!=" || op === cond.operator);
+                const setValue = (field: "value" | "value2") => (v: string) => updateCase(i, (cc) => { cc.conditions[ci]![field] = v; });
+                return (
                 <div key={ci} style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                   {ci > 0 && (
                     <div className="seg" style={{ width: "auto", alignSelf: "flex-start" }}>
@@ -128,7 +134,11 @@ export function DynamizeModal({ propertyLabel, binding, variableCatalog, resultK
                     <VariablePicker
                       catalog={variableCatalog}
                       mode="bare"
-                      onInsert={(name) => updateCase(i, (cc) => { cc.conditions[ci]!.variable = name; })}
+                      onInsert={(name) => updateCase(i, (cc) => {
+                        const target = cc.conditions[ci]!;
+                        target.variable = name;
+                        fitConditionToVariable(target, variableCatalog.find((v) => v.name === name));
+                      })}
                       renderTrigger={(open) => (
                         <button type="button" className="ghost" onClick={open} style={chipStyle}>
                           <Variable size={11} />
@@ -142,30 +152,16 @@ export function DynamizeModal({ propertyLabel, binding, variableCatalog, resultK
                       onChange={(e) => updateCase(i, (cc) => { cc.conditions[ci]!.operator = e.target.value as EditCondition["operator"]; })}
                       style={{ width: "auto" }}
                     >
-                      {(Object.keys(OPERATOR_KEYS) as EditCondition["operator"][]).map((op) => (
+                      {operators.map((op) => (
                         <option key={op} value={op}>{t(OPERATOR_KEYS[op])}</option>
                       ))}
                     </select>
 
-                    <input
-                      type="text"
-                      value={cond.value}
-                      onChange={(e) => updateCase(i, (cc) => { cc.conditions[ci]!.value = e.target.value; })}
-                      placeholder={t("dynamic.value.placeholder")}
-                      title={t("dynamic.value.hint")}
-                      style={{ width: 108, textAlign: "center", fontFamily: "ui-monospace, monospace" }}
-                    />
+                    <ConditionValue value={cond.value} onChange={setValue("value")} input={valueInput} />
                     {cond.operator === "between" && (
                       <>
                         <span style={{ color: "var(--ms-text-disabled)", fontSize: 12 }}>–</span>
-                        <input
-                          type="text"
-                          value={cond.value2}
-                          onChange={(e) => updateCase(i, (cc) => { cc.conditions[ci]!.value2 = e.target.value; })}
-                          placeholder={t("dynamic.value.placeholder")}
-                          title={t("dynamic.value.hint")}
-                          style={{ width: 108, textAlign: "center", fontFamily: "ui-monospace, monospace" }}
-                        />
+                        <ConditionValue value={cond.value2} onChange={setValue("value2")} input={valueInput} />
                       </>
                     )}
 
@@ -177,7 +173,8 @@ export function DynamizeModal({ propertyLabel, binding, variableCatalog, resultK
                     )}
                   </div>
                 </div>
-              ))}
+                );
+              })}
 
               <button
                 type="button"
@@ -242,6 +239,42 @@ function Keyword({ children, muted }: { children: string; muted?: boolean }) {
   return (
     <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: ".04em", textTransform: "uppercase", color: muted ? "var(--ms-text-disabled)" : "var(--ms-text-secondary)", flexShrink: 0 }}>
       {children}
+    </span>
+  );
+}
+
+/** The compared value of a condition: a true/false select for a boolean, a select of the declared values,
+ * or free input (with the unit as a suffix for a number). A stored value outside the choices stays visible. */
+function ConditionValue({ value, onChange, input }: { value: string; onChange: (v: string) => void; input: ValueInput }) {
+  const { t } = useT();
+  if (input.kind !== "free") {
+    const current = input.kind === "boolean" ? normalizeBoolText(value) : value;
+    const choices = input.kind === "boolean"
+      ? [{ value: "true", label: t("dynamic.bool.true") }, { value: "false", label: t("dynamic.bool.false") }]
+      : input.values.map((v) => ({ value: v, label: v }));
+    return (
+      <select
+        value={current}
+        onChange={(e) => onChange(e.target.value)}
+        title={t(input.kind === "boolean" ? "dynamic.value.boolHint" : "dynamic.value.choiceHint")}
+        style={{ width: "auto", minWidth: 108 }}
+      >
+        {!choices.some((c) => c.value === current) && <option value={current}>{current}</option>}
+        {choices.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
+      </select>
+    );
+  }
+  return (
+    <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+      <input
+        type="text"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={input.unit ? `50 ${input.unit}` : t("dynamic.value.placeholder")}
+        title={t("dynamic.value.hint")}
+        style={{ width: 108, textAlign: "center", fontFamily: "ui-monospace, monospace" }}
+      />
+      {input.unit && <span style={{ fontSize: 12, color: "var(--ms-text-secondary)" }}>{input.unit}</span>}
     </span>
   );
 }

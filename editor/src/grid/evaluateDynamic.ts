@@ -66,6 +66,14 @@ function evaluateComparison(node: ConditionNode, variables: Record<string, unkno
     return v >= Math.min(lo, hi) && v <= Math.max(lo, hi);
   }
 
+  // A boolean matches "true"/"false" and "1"/"0" alike (case-insensitive); only == and != mean anything for it.
+  const expectedBool = typeof live === "boolean" ? toBoolean(node.value) : undefined;
+  if (expectedBool !== undefined) {
+    if (node.operator === "==") return live === expectedBool;
+    if (node.operator === "!=") return live !== expectedBool;
+    return false;
+  }
+
   const actual = toNumber(live);
   const expected = Number(node.value);
   if (actual !== undefined && !Number.isNaN(expected)) {
@@ -89,4 +97,12 @@ function toNumber(value: unknown): number | undefined {
   if (typeof value === "number") return value;
   if (typeof value === "string" && value.trim() !== "" && !Number.isNaN(Number(value))) return Number(value);
   return undefined;
+}
+
+function toBoolean(text: string): boolean | undefined {
+  switch (text.trim().toLowerCase()) {
+    case "true": case "1": return true;
+    case "false": case "0": return false;
+    default: return undefined;
+  }
 }

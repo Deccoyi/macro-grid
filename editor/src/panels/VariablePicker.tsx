@@ -4,6 +4,7 @@ import type { VariableInfo } from "../api/types";
 import { useCatalogText } from "../i18n/catalogText";
 import { useT } from "../i18n/I18nContext";
 import { PickerShell, usePickerFilter, usePickerOpenState } from "./PickerShell";
+import { VARIABLE_TYPE_KEYS } from "./dynamic/variableTypes";
 
 interface VariablePickerProps {
   catalog: VariableInfo[];
@@ -65,8 +66,15 @@ export function VariablePicker({ catalog, onInsert, buttonLabel, mode = "templat
               title={v.example}
               style={{ display: "block", width: "100%", textAlign: "left", borderRadius: 0, padding: "6px 10px" }}
             >
-              <div style={{ fontFamily: "ui-monospace, monospace", fontSize: 12 }}>{`{${v.name}}`}</div>
-              <div style={{ fontSize: 11, color: "var(--ms-text-secondary)" }}>{catalogText.variableDescription(v)}</div>
+              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                <span style={{ fontFamily: "ui-monospace, monospace", fontSize: 12 }}>{`{${v.name}}`}</span>
+                <span style={typeBadgeStyle}>{t(VARIABLE_TYPE_KEYS[v.type ?? "text"])}{v.unit ? ` ${v.unit}` : ""}</span>
+              </div>
+              <div style={{ fontSize: 11, color: "var(--ms-text-secondary)" }}>
+                {catalogText.variableDescription(v)}
+                {v.type === "boolean" && " · true / false"}
+                {v.values && v.values.length > 0 && ` · ${t("variable.values")}: ${v.values.join(", ")}`}
+              </div>
             </button>
           ))}
         </PickerShell>
@@ -74,3 +82,8 @@ export function VariablePicker({ catalog, onInsert, buttonLabel, mode = "templat
     </>
   );
 }
+
+const typeBadgeStyle: React.CSSProperties = {
+  fontSize: 10, padding: "0 5px", border: "1px solid var(--ms-border)", borderRadius: 3,
+  color: "var(--ms-text-secondary)", background: "var(--ms-bg-inset)",
+};
