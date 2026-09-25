@@ -20,6 +20,15 @@ public static class StartupPolicy
     public static bool WasUpdated(IEnumerable<string> args) =>
         args.Any(a => string.Equals(a, UpdatedArgument, StringComparison.OrdinalIgnoreCase));
 
+    /// <summary>
+    /// True when the app was just updated: the <see cref="UpdatedArgument"/> is there, or the version that ran last time was lower than this one.
+    /// The setup starts the app through Explorer so that it runs as the person and not as administrator, which leaves no room for an argument, so the
+    /// version is what tells. No earlier version (a first start) is not an update.
+    /// </summary>
+    public static bool WasUpdated(IEnumerable<string> args, string? lastRunVersion, string currentVersion) =>
+        WasUpdated(args)
+        || (Updates.ReleaseVersion.TryParse(lastRunVersion, out var last) && Updates.ReleaseVersion.TryParse(currentVersion, out var current) && current > last);
+
     public static bool ShouldOpenEditor(IEnumerable<string> args, AppPreferences preferences)
     {
         var startedByWindows = args.Any(a => string.Equals(a, AutostartArgument, StringComparison.OrdinalIgnoreCase));

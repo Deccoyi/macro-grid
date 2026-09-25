@@ -7,10 +7,12 @@ namespace MacroGrid.Core.Updates;
 /// <param name="SnoozedUntilUtc">"Later": no notification before this time.</param>
 /// <param name="SkippedVersion">"Skip this version": no notification for exactly this version.</param>
 /// <param name="NotifiedVersion">The version the person was last notified about, so the 6-hour checks do not repeat the notification.</param>
+/// <param name="LastRunVersion">The version that ran last time; a higher version now means the app was just updated.</param>
 public sealed record UpdateState(
     DateTimeOffset? LastCheckUtc = null,
     string? ETag = null,
     string? FeedJson = null,
     DateTimeOffset? SnoozedUntilUtc = null,
     string? SkippedVersion = null,
-    string? NotifiedVersion = null);
+    string? NotifiedVersion = null,
+    string? LastRunVersion = null);
