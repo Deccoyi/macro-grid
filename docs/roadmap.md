@@ -31,6 +31,10 @@ Where the project stands. The project is before 1.0.0 and under active developme
   `plugin-html` type draws a placeholder.
 - **The `web` widget** (an embedded page such as a live chat): today it draws a placeholder. The idea is an iframe first and, for pages that refuse to be
   framed, a native WebView positioned over the grid cell by a small Android plugin.
+- **A logo (avatar) for plugin packages:** a plugin can ship a small image (SVG or PNG, square) and name it in an optional manifest field, so the Store
+  (list and detail page) and the editor's Plugins window show it instead of the generic category glyph. It is an additive manifest field, so older
+  hosts ignore it. Do it with the next manifest or SDK change, or earlier if it fits. Plugin packages and the Store catalog need the file rules
+  (size limit, format check) and the release zip must include the image. See `plugin-distribution-plan.md`, section 3c.
 - **An async host API for JavaScript plugins** (today scripts are synchronous, so `host.http` blocks the plugin's own thread).
 
 ## Before a first public release
