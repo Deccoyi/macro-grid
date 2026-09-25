@@ -117,6 +117,16 @@ public sealed partial class PluginManager(
     /// <summary>The install folder of a plugin by id (loaded or not), or null if that id is not installed.</summary>
     public string? GetPluginDir(string pluginId) => FindEntry(pluginId)?.Dir;
 
+    /// <summary>The validated absolute path of a plugin's manifest icon (see <see cref="ResolveIconPath"/>),
+    /// or null when it has none or it failed validation — used by the icon-serving endpoint.</summary>
+    public string? GetPluginIconPath(string pluginId)
+    {
+        var entry = FindEntry(pluginId);
+        if (entry is null) return null;
+        try { return ResolveIconPath(entry.Dir, ReadManifest(Path.Combine(entry.Dir, "plugin.json"))); }
+        catch (Exception ex) when (ex is JsonException or InvalidOperationException) { return null; }
+    }
+
     private Entry? FindEntry(string pluginId)
     {
         lock (_stateLock)
@@ -263,6 +273,29 @@ public sealed partial class PluginManager(
 
     private static bool IsSafeSegment(string id) =>
         !string.IsNullOrWhiteSpace(id) && !id.Contains("..") && id.IndexOfAny(Path.GetInvalidFileNameChars()) < 0;
+
+    /// <summary>The size limit is 100 KB: generous for a small square logo (an SVG is typically a few KB; a
+    /// crisp 256x256 PNG rarely exceeds this), small enough that a plugin folder never balloons from it. Pixel
+    /// dimensions are not decoded and checked — that would add an image-parsing dependency for a cosmetic
+    /// field — so a non-square or oversized PNG under the byte limit is a plugin-author mistake caught by
+    /// review, not a load-time failure. A missing, unsafe, wrong-extension or too-large icon is treated the
+    /// same as no icon at all: the manifest field is cosmetic, so it never fails the plugin's own load.</summary>
+    private const long MaxIconBytes = 100 * 1024;
+    private static readonly string[] AllowedIconExtensions = [".svg", ".png"];
+
+    private static string? ResolveIconPath(string dir, PluginManifest manifest)
+    {
+        if (string.IsNullOrWhiteSpace(manifest.Icon)) return null;
+        if (Path.IsPathRooted(manifest.Icon) || manifest.Icon.Contains("..")) return null;
+
+        var rootFull = Path.GetFullPath(dir);
+        var iconFull = Path.GetFullPath(Path.Combine(dir, manifest.Icon));
+        if (!iconFull.StartsWith(rootFull + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase)) return null;
+        if (!AllowedIconExtensions.Contains(Path.GetExtension(iconFull), StringComparer.OrdinalIgnoreCase)) return null;
+
+        var file = new FileInfo(iconFull);
+        return file.Exists && file.Length <= MaxIconBytes ? iconFull : null;
+    }
 
     private static void CopyDirectory(string sourceDir, string destDir)
     {

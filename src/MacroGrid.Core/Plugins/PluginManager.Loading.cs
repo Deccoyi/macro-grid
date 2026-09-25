@@ -136,7 +136,8 @@ public sealed partial class PluginManager
             }
 
             localizer?.Register(manifest.Id, dir, manifest.DefaultLanguage);
-            var info = new LoadedPlugin(manifest.Id, manifest.Name, manifest.Version, PluginLoadStatus.Loaded, null, host.SettingsPage is not null);
+            var info = new LoadedPlugin(manifest.Id, manifest.Name, manifest.Version, PluginLoadStatus.Loaded, null,
+                host.SettingsPage is not null, HasIcon: ResolveIconPath(dir, manifest) is not null);
             var entry = new Entry(dir, info) { Running = new Running(context, instance, host, variableStore) };
             lock (_stateLock) _entries[manifest.Id] = entry;
             logger.LogInformation("Plugin loaded: {Id} {Version}", manifest.Id, manifest.Version);

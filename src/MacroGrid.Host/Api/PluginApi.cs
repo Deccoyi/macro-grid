@@ -25,6 +25,16 @@ internal static class PluginApi
             return svg is null ? Results.NotFound() : Results.Text(svg, "image/svg+xml");
         });
 
+        // The manifest's optional logo (LoadedPlugin.HasIcon) — the editor's Plugins window shows this
+        // instead of the generic category glyph when present.
+        api.MapGet("/plugins/{id}/icon", (string id, PluginManager plugins) =>
+        {
+            var path = plugins.GetPluginIconPath(id);
+            if (path is null) return Results.NotFound();
+            var contentType = Path.GetExtension(path).Equals(".svg", StringComparison.OrdinalIgnoreCase) ? "image/svg+xml" : "image/png";
+            return Results.File(path, contentType);
+        });
+
         api.MapPost("/plugins/install", async (IUiDialogService dialogs, PluginManager plugins) =>
         {
             var sourceDir = await dialogs.BrowseForFolderAsync("Choose the plugin folder (must contain plugin.json)");
@@ -109,6 +119,30 @@ internal static class PluginApi
             OptionsEndpoint.HandleAsync(plugins.GetSettingsPage(id) as IOptionsSource, "This plugin does not provide dynamic options",
                 sourceId, request, localizer, () => id));
 
+        // Runs a SettingFieldKind.Button field's command (whatever the plugin uses it for — a preview, a
+        // connection test, ...): 404 when the settings page does not implement ISettingsCommandHandler at
+        // all, so an older/simpler plugin never gets a broken button.
+        api.MapPost("/plugins/{id}/settings/command", async (string id, HttpRequest request, PluginManager plugins, PluginLocalizer localizer) =>
+        {
+            if (plugins.GetSettingsPage(id) is not ISettingsCommandHandler handler)
+                return Results.NotFound();
+
+            var (valid, body) = await ApiResults.ReadJsonAsync<SettingsCommandRequest>(request);
+            if (!valid || body is null || string.IsNullOrEmpty(body.Command)) return ApiResults.InvalidJson();
+
+            try
+            {
+                var text = await handler.RunCommandAsync(body.Command, body.Values ?? [], request.HttpContext.RequestAborted);
+                return ApiResults.Json(new { text = localizer.Translate(id, text) });
+            }
+            catch (Exception ex) when (ex is not OperationCanceledException)
+            {
+                return ApiResults.Json(new { text = localizer.Translate(id, ex.Message) });
+            }
+        });
+
         return api;
     }
+
+    private sealed record SettingsCommandRequest(string? Command, JsonObject? Values);
 }

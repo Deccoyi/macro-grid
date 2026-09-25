@@ -47,6 +47,19 @@ internal static class CatalogApi
             return Results.Json(new { path });
         });
 
+        // A SettingFieldKind.File field: title/filter come from the request body (the field's own label
+        // and FileFilter), so the dialog matches whatever the action or plugin settings form asked for.
+        api.MapPost("/browse/file", async (HttpRequest request, IUiDialogService dialogs) =>
+        {
+            var (valid, body) = await ApiResults.ReadJsonAsync<BrowseFileRequest>(request);
+            if (!valid || body is null) return ApiResults.InvalidJson();
+
+            var path = await dialogs.BrowseForFileAsync(body.Title ?? "", body.Filter ?? "All files (*.*)|*.*");
+            return Results.Json(new { path });
+        });
+
         return api;
     }
+
+    private sealed record BrowseFileRequest(string? Title, string? Filter);
 }

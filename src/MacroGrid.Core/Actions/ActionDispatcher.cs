@@ -32,10 +32,32 @@ public sealed class ActionDispatcher(IEnumerable<IActionHandler> handlers, ILogg
     /// </summary>
     public async Task<IReadOnlyList<string>> DispatchAsync(Widget widget, string eventName, ActionContext context, CancellationToken cancellationToken)
     {
-        if (!widget.Actions.TryGetValue(eventName, out var bindings) || bindings.Count == 0)
-            return [];
-
         List<string>? errors = null;
+
+        // A press handler that implements IReleaseAwareAction (e.g. "play while held") learns about the
+        // release here, before this event's own bindings run — same widget, same press-time settings.
+        if (eventName == WidgetEvents.Release && widget.Actions.TryGetValue(WidgetEvents.Press, out var pressBindings))
+        {
+            foreach (var binding in pressBindings)
+            {
+                if (!_handlers.TryGetValue(binding.Type, out var handler) || handler is not IReleaseAwareAction releaseAware)
+                    continue;
+
+                try
+                {
+                    await releaseAware.ReleaseAsync(context, ResolveVariables(handler, binding.Settings), cancellationToken);
+                }
+                catch (Exception ex) when (ex is not OperationCanceledException)
+                {
+                    logger.LogError(ex, "Release of action {Type} failed on widget {WidgetId}", binding.Type, widget.Id);
+                    (errors ??= []).Add(ex.Message);
+                }
+            }
+        }
+
+        if (!widget.Actions.TryGetValue(eventName, out var bindings) || bindings.Count == 0)
+            return (IReadOnlyList<string>?)errors ?? [];
+
         foreach (var binding in bindings)
         {
             if (!_handlers.TryGetValue(binding.Type, out var handler))
