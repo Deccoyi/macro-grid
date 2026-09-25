@@ -3,6 +3,12 @@
 New features and fixes in Macro Grid. For technical details, see [CHANGELOG-developer.md](CHANGELOG-developer.md).
 
 ## Unreleased
+
+## 1.0.1 - 2026-09-26
+### Fixed
+- **Start-up log:** Macro Grid now writes into its log what it finds in its data folder and what it loads from it, and whether it can write there. If something is missing after a start, the log says why.
+
+## 1.0.0 - 2026-09-26
 ### Changed
 - **One version number:** Macro Grid and the tools plugins are built with now share one version number, so it is easy to tell which plugins fit which version. Plugins that work today keep working.
 - **Clearer plugin messages:** When a plugin does not fit, the Plugins window now says which Macro Grid version it needs.
