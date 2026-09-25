@@ -43,4 +43,12 @@ public sealed record PluginManifest
 
     /// <summary>JS plugins only — permission strings like "variables", "actions", "http:localhost:4455". Ignored for csharp plugins.</summary>
     public string[]? Permissions { get; init; }
+
+    /// <summary>Optional path (relative to the plugin folder, e.g. "icon.svg") to a small square logo shown
+    /// in the editor's Plugins window and the Store instead of the generic category glyph. Additive: an
+    /// older host ignores it. Must be .svg or .png, at most 100 KB — square, roughly 256x256 recommended for
+    /// .png (the host does not decode the image to check pixel size, only the file extension and size, so a
+    /// too-large or wrong-shaped picture is a plugin-author mistake, not a load failure: the host just falls
+    /// back to no icon for it, logged as a warning). A missing or invalid path is the same as not set.</summary>
+    public string? Icon { get; init; }
 }

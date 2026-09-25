@@ -16,6 +16,21 @@ public enum SettingFieldKind
     Bool,
     Select,
     Segmented,
+
+    /// <summary>A path text box plus a Browse button; the host shows a native file picker filtered by <see cref="SettingField.FileFilter"/>.</summary>
+    File,
+
+    /// <summary>Repeated rows, each shaped by <see cref="SettingField.ItemFields"/>. The value is a <c>JsonArray</c> of <c>JsonObject</c>.</summary>
+    List,
+
+    /// <summary>A button; clicking it sends <see cref="SettingField.Command"/> and the current form/row values to
+    /// the plugin's <see cref="ISettingsCommandHandler"/> — a generic "run this and show me what happened" hook,
+    /// e.g. a preview, a connection test or a one-off cleanup action. Not a value field — never appears in the
+    /// saved settings.</summary>
+    Button,
+
+    /// <summary>Read-only text, styled as a warning. Not a value field — never appears in the saved settings.</summary>
+    Notice,
 }
 
 /// <summary>One labeled option in a <see cref="SettingFieldKind.Select"/> or <see cref="SettingFieldKind.Segmented"/> field.
@@ -52,6 +67,20 @@ public sealed record SettingField(string Key, string Label, SettingFieldKind Kin
     /// <summary>Shows the {var} insert button on a text field.</summary>
     public bool AllowVariables { get; init; }
 
-    /// <summary>Only show this field when another field's value equals the given one, e.g. "mode=pause".</summary>
+    /// <summary>Only show this field when another field's value equals the given one, e.g. "mode=pause".
+    /// Inside a <see cref="SettingFieldKind.List"/> row, evaluated against that row's own values.</summary>
     public string? VisibleWhen { get; init; }
+
+    /// <summary>Required for <see cref="SettingFieldKind.File"/>: a WinForms file filter, passed to the host's
+    /// native file picker as-is — the plugin decides what it accepts, e.g. <c>"Audio files (*.wav;*.mp3)|*.wav;*.mp3"</c>
+    /// or <c>"Images (*.png;*.jpg)|*.png;*.jpg"</c>. The SDK has no opinion on file types.</summary>
+    public string? FileFilter { get; init; }
+
+    /// <summary>Required for <see cref="SettingFieldKind.List"/>: the schema of one row. Row keys outside this
+    /// schema (a plugin-assigned id, a computed flag, ...) are preserved by the editor across a save.</summary>
+    public SettingField[]? ItemFields { get; init; }
+
+    /// <summary>Required for <see cref="SettingFieldKind.Button"/>: the command id sent to
+    /// <see cref="ISettingsCommandHandler.RunCommandAsync"/> when the button is clicked.</summary>
+    public string? Command { get; init; }
 }
