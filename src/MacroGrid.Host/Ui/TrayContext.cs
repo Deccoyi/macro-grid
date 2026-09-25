@@ -2,6 +2,8 @@ using System.Diagnostics;
 using MacroGrid.Core.Preferences;
 using MacroGrid.Core.Profiles;
 using MacroGrid.Core.Sessions;
+using MacroGrid.Core.Updates;
+using MacroGrid.Host.Updates;
 
 namespace MacroGrid.Host.Ui;
 
@@ -13,14 +15,21 @@ internal sealed class TrayContext : ApplicationContext
     private readonly ToolStripMenuItem _openEditorItem;
     private readonly ToolStripMenuItem _openTestPageItem;
     private readonly ToolStripMenuItem _openDataFolderItem;
+    private readonly ToolStripMenuItem _checkUpdatesItem;
     private readonly ToolStripMenuItem _exitItem;
     private readonly ClientHub _hub;
     private readonly SynchronizationContext _ui;
+    private readonly UpdateService _updates;
+    private readonly IUiWindowService _windows;
+    // What a click on the balloon does; set by whoever showed it, so a balloon that has nothing to open leaves it empty.
+    private Action? _balloonClick;
 
-    public TrayContext(WebApplication server, bool openEditor)
+    public TrayContext(WebApplication server, bool openEditor, bool updated = false)
     {
         _ui = SynchronizationContext.Current ?? new WindowsFormsSynchronizationContext();
         _hub = server.Services.GetRequiredService<ClientHub>();
+        _updates = server.Services.GetRequiredService<UpdateService>();
+        _windows = server.Services.GetRequiredService<IUiWindowService>();
 
         var addresses = NetworkInfo.GetLanAddresses();
         var addressText = addresses.Count > 0
@@ -37,10 +46,12 @@ internal sealed class TrayContext : ApplicationContext
         _openEditorItem = new ToolStripMenuItem(null, null, (_, _) => OpenEditor());
         _openTestPageItem = new ToolStripMenuItem(null, null, (_, _) => Open($"http://localhost:{ServerApp.Port}/"));
         _openDataFolderItem = new ToolStripMenuItem(null, null, (_, _) => Open(ProfileStore.DefaultDataDir));
+        _checkUpdatesItem = new ToolStripMenuItem(null, null, (_, _) => _ = CheckForUpdatesAsync());
         _exitItem = new ToolStripMenuItem(null, null, (_, _) => ExitThread());
         menu.Items.Add(_openEditorItem);
         menu.Items.Add(_openTestPageItem);
         menu.Items.Add(_openDataFolderItem);
+        menu.Items.Add(_checkUpdatesItem);
         menu.Items.Add(new ToolStripSeparator());
         menu.Items.Add(_exitItem);
 
@@ -52,6 +63,10 @@ internal sealed class TrayContext : ApplicationContext
             Visible = true,
         };
         _icon.DoubleClick += (_, _) => OpenEditor();
+        _icon.BalloonTipClicked += (_, _) => _balloonClick?.Invoke();
+        _updates.UpdateAnnounced += offer => _ui.Post(_ => AnnounceUpdate(offer), null);
+        // The installer has been started; leave the way the Exit item does, so the tray icon and the server go down cleanly.
+        server.Services.GetRequiredService<UpdateInstaller>().ExitRequested += () => _ui.Post(_ => ExitThread(), null);
 
         _hub.SessionsChanged += () => _ui.Post(_ => UpdateClients(), null);
         // The menu texts follow the language preference, also while the app is running.
@@ -60,7 +75,9 @@ internal sealed class TrayContext : ApplicationContext
 
         if (openEditor)
             OpenEditor();
-        else
+        if (updated)
+            _icon.ShowBalloonTip(5000, "Macro Grid", HostText.Get("tray.updated", ClientHub.ServerVersion), ToolTipIcon.Info);
+        else if (!openEditor)
             _icon.ShowBalloonTip(3000, HostText.Get("tray.running"), HostText.Get("tray.connectFrom", addressText), ToolTipIcon.Info);
     }
 
@@ -69,6 +86,7 @@ internal sealed class TrayContext : ApplicationContext
         _openEditorItem.Text = HostText.Get("tray.openEditor");
         _openTestPageItem.Text = HostText.Get("tray.openTestPage");
         _openDataFolderItem.Text = HostText.Get("tray.openDataFolder");
+        _checkUpdatesItem.Text = HostText.Get("tray.checkForUpdates");
         _exitItem.Text = HostText.Get("tray.exit");
         UpdateClients();
     }
@@ -80,6 +98,42 @@ internal sealed class TrayContext : ApplicationContext
             ? HostText.Get("tray.noClients")
             : HostText.Get("tray.clients", string.Join(", ", sessions.Select(s => s.DeviceName)));
     }
+
+    private void AnnounceUpdate(UpdateOffer offer)
+    {
+        _balloonClick = OpenUpdateWindow;
+        _icon.ShowBalloonTip(8000, HostText.Get("tray.updateAvailable", offer.Latest.Version), HostText.Get("tray.updateAvailableHint"), ToolTipIcon.Info);
+    }
+
+    /// <summary>The manual check: the update window when there is something, a short balloon otherwise.</summary>
+    private async Task CheckForUpdatesAsync()
+    {
+        _checkUpdatesItem.Enabled = false;
+        try
+        {
+            var result = await _updates.CheckNowAsync(CancellationToken.None);
+            _balloonClick = null;
+            switch (result.Outcome)
+            {
+                case UpdateCheckOutcome.Available:
+                    OpenUpdateWindow();
+                    break;
+                case UpdateCheckOutcome.UpToDate:
+                    _icon.ShowBalloonTip(4000, "Macro Grid", HostText.Get("tray.upToDate"), ToolTipIcon.Info);
+                    break;
+                default:
+                    _icon.ShowBalloonTip(4000, "Macro Grid", HostText.Get("tray.updateCheckFailed"), ToolTipIcon.Warning);
+                    break;
+            }
+        }
+        finally
+        {
+            _checkUpdatesItem.Enabled = true;
+        }
+    }
+
+    private void OpenUpdateWindow() =>
+        _ = _windows.ShowToolWindowAsync("update", "Update", $"http://localhost:{ServerApp.Port}/editor/?window=update", 640, 560);
 
     private static void OpenEditor() => EditorWindow.ShowOrFocus($"http://localhost:{ServerApp.Port}/editor/");
 

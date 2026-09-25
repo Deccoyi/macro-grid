@@ -14,6 +14,8 @@ const DEFAULTS: AppPreferences = {
   defaultProfileId: null,
   launchMode: "window",
   autostartMode: "tray",
+  checkForUpdates: true,
+  includePreReleases: true,
 };
 
 interface PreferencesContextValue {
@@ -34,6 +36,10 @@ interface PreferencesContextValue {
   setLaunchMode: (mode: AppPreferences["launchMode"]) => void;
   autostartMode: AppPreferences["autostartMode"];
   setAutostartMode: (mode: AppPreferences["autostartMode"]) => void;
+  checkForUpdates: boolean;
+  setCheckForUpdates: (enabled: boolean) => void;
+  includePreReleases: boolean;
+  setIncludePreReleases: (enabled: boolean) => void;
 }
 
 const PreferencesContext = createContext<PreferencesContextValue | null>(null);
@@ -134,9 +140,24 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
     [prefs, persist],
   );
 
+  const setCheckForUpdates = useCallback(
+    (checkForUpdates: boolean) => persist({ ...prefs, checkForUpdates }),
+    [prefs, persist],
+  );
+
+  const setIncludePreReleases = useCallback(
+    (includePreReleases: boolean) => persist({ ...prefs, includePreReleases }),
+    [prefs, persist],
+  );
+
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", prefs.theme);
   }, [prefs.theme]);
+
+  // The page starts as lang="tr"; CSS upper-casing follows it, so an English label showed a Turkish dotted capital I ("VERSİON").
+  useEffect(() => {
+    document.documentElement.lang = prefs.language;
+  }, [prefs.language]);
 
   const value = useMemo(
     () => ({
@@ -156,8 +177,12 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
       setLaunchMode,
       autostartMode: prefs.autostartMode,
       setAutostartMode,
+      checkForUpdates: prefs.checkForUpdates,
+      setCheckForUpdates,
+      includePreReleases: prefs.includePreReleases,
+      setIncludePreReleases,
     }),
-    [prefs, savedLanguage, setTheme, setLanguage, addPreviewProfile, removePreviewProfile, setInspectorSectionCollapsed, setDefaultProfileId, setLaunchMode, setAutostartMode],
+    [prefs, savedLanguage, setTheme, setLanguage, addPreviewProfile, removePreviewProfile, setInspectorSectionCollapsed, setDefaultProfileId, setLaunchMode, setAutostartMode, setCheckForUpdates, setIncludePreReleases],
   );
 
   return <PreferencesContext.Provider value={value}>{children}</PreferencesContext.Provider>;

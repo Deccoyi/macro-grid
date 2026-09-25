@@ -15,12 +15,14 @@ import type {
   RunningWindowInfo,
   SettingField,
   StatusEntry,
+  UpdateCheckOutcome,
+  UpdateSnapshot,
   VariableInfo,
   VariableSnapshot,
 } from "./types";
 
 /** Every editor API call must bypass the HTTP cache — a GET right after a save must never return a
- * stale cached body (the same trap as the editor's own HTML/JS bundle caching, see docs/development.md). */
+ * stale cached body (the same trap as the editor's own HTML/JS bundle caching, see docs/guides/development.md). */
 function req(url: string, init?: RequestInit): Promise<Response> {
   return fetch(url, { ...init, cache: "no-store" });
 }
@@ -162,9 +164,9 @@ export const api = {
    * package (the profile plus a manifest naming the plugins it needs). */
   exportProfileDialog: (profile: Profile): Promise<ExportProfileResult> => send("POST", "/api/browse/export-profile", profile),
 
-  /** Opens (or focuses) a real, separate OS window for a tool panel — see docs/ui-guidelines.md:
+  /** Opens (or focuses) a real, separate OS window for a tool panel — see docs/ui/ui-guidelines.md:
    * Preferences/Plugins are native windows, not in-page modals. */
-  openToolWindow: (kind: "preferences" | "plugins" | "help" | "pairing", tab?: string): Promise<void> =>
+  openToolWindow: (kind: "preferences" | "plugins" | "help" | "pairing" | "update", tab?: string): Promise<void> =>
     send("POST", `/api/windows/${kind}${tab ? `?tab=${encodeURIComponent(tab)}` : ""}`),
 
   /** The agreement, the project license, the third-party notice index and the names of the bundled libraries (null when a file is missing, as in a development build). */
@@ -173,6 +175,21 @@ export const api = {
   /** The original license text of one bundled library. */
   getLegalLibrary: (name: string): Promise<string> =>
     req(`/api/legal/library/${encodeURIComponent(name)}`).then((res) => res.text()),
+
+  /** The server's update state: the running version and the release that is available, if any. */
+  getUpdate: (): Promise<UpdateSnapshot> => get("/api/update"),
+
+  /** A check the person asked for; it ignores "Later" and "Skip this version". */
+  checkForUpdates: (): Promise<{ outcome: UpdateCheckOutcome; snapshot: UpdateSnapshot }> => send("POST", "/api/update/check"),
+
+  /** "Install now": starts the download in the background; follow it in getUpdate().install. */
+  installUpdate: (): Promise<void> => send("POST", "/api/update/install"),
+
+  /** "Later": no notification for 24 hours. */
+  snoozeUpdate: (): Promise<void> => send("POST", "/api/update/snooze"),
+
+  /** "Skip this version": no notification for the offered version again. */
+  skipUpdate: (): Promise<void> => send("POST", "/api/update/skip"),
 
   openPluginSettingsWindow: (id: string): Promise<void> =>
     send("POST", `/api/windows/plugin-settings/${encodeURIComponent(id)}`),

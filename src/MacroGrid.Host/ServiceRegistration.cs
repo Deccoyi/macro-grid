@@ -6,6 +6,8 @@ using MacroGrid.Core.Plugins;
 using MacroGrid.Core.Preferences;
 using MacroGrid.Core.Profiles;
 using MacroGrid.Core.Sessions;
+using MacroGrid.Core.Updates;
+using MacroGrid.Host.Updates;
 using MacroGrid.Core.Variables;
 using MacroGrid.Plugin.Abstractions;
 using MacroGrid.Windows.Audio;
@@ -104,6 +106,42 @@ internal static class ServiceRegistration
         services.AddHostedSingleton<AutoProfileSwitcher>();
         services.AddSingleton<ClientHub>();
         return services;
+    }
+
+    /// <summary>
+    /// The update checks. The server's first connection of its own goes to the GitHub releases list only (see the Security model in
+    /// docs/architecture.md); it is off when the person switched automatic checks off.
+    /// </summary>
+    public static IServiceCollection AddUpdates(this IServiceCollection services, string dataDir)
+    {
+        services.AddSingleton(new UpdateStateStore(dataDir));
+        services.AddSingleton(new UpdatePolicy(TimeProvider.System));
+        services.AddSingleton(sp => new UpdateChecker(
+            CreateReleaseFeed(),
+            sp.GetRequiredService<UpdateStateStore>(),
+            sp.GetRequiredService<UpdatePolicy>(),
+            ReleaseVersion.TryParse(ClientHub.ServerVersion, out var current) ? current : default,
+            TimeProvider.System));
+        services.AddHostedSingleton<UpdateService>();
+        // Redirects are switched off so the downloader can check every hop against the GitHub host allow-list itself.
+        services.AddSingleton(new InstallerDownloader(new HttpClient(new SocketsHttpHandler { AllowAutoRedirect = false })
+        {
+            Timeout = TimeSpan.FromMinutes(10),
+        }));
+        services.AddSingleton<UpdateInstaller>();
+        return services;
+    }
+
+    private static ReleaseFeed CreateReleaseFeed()
+    {
+        var localFeed = Environment.GetEnvironmentVariable(LocalFeedHandler.EnvironmentVariable);
+        var http = string.IsNullOrWhiteSpace(localFeed)
+            ? new HttpClient()
+            : new HttpClient(new LocalFeedHandler(localFeed));
+        http.Timeout = TimeSpan.FromSeconds(30);
+        // GitHub requires a User-Agent; it names the app and its version and nothing about the person.
+        http.DefaultRequestHeaders.UserAgent.ParseAdd($"MacroGrid/{ClientHub.ServerVersion}");
+        return new ReleaseFeed(http, new Uri("https://api.github.com/repos/Deccoyi/macro-grid/releases?per_page=50"));
     }
 
     private static IServiceCollection AddActionHandler<THandler>(this IServiceCollection services)

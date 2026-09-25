@@ -3,6 +3,7 @@ import { api, type LegalOverview } from "../api/client";
 import { useT } from "../i18n/I18nContext";
 import { useDocumentTitle } from "../i18n/useDocumentTitle";
 import { useServerVersion } from "../state/useServerVersion";
+import { useUpdate } from "../state/useUpdate";
 import { SectionLabel } from "../panels/fields/controls";
 import { ToolWindowLayout } from "./ToolWindowLayout";
 
@@ -27,6 +28,7 @@ export function HelpWindow() {
   const { t } = useT();
   useDocumentTitle("help.title");
   const serverVersion = useServerVersion();
+  const update = useUpdate();
   const requested = new URLSearchParams(location.search).get("tab");
   const [category, setCategory] = useState<Category>(isCategory(requested) ? requested : "about");
   const [legal, setLegal] = useState<LegalOverview | null>(null);
@@ -57,9 +59,22 @@ export function HelpWindow() {
       {category === "about" && (
         <div style={{ display: "flex", flexDirection: "column", gap: 14, maxWidth: 560 }}>
           <SectionLabel>{t("menu.help.version", serverVersion)}</SectionLabel>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+            <button type="button" onClick={() => void update.check()} disabled={update.checking}>
+              {update.checking ? t("update.checking") : t("update.checkNow")}
+            </button>
+            {update.outcome === "upToDate" && <span style={{ fontSize: 12, color: "var(--ms-text-secondary)" }}>{t("update.upToDate")}</span>}
+            {update.outcome === "failed" && <span style={{ fontSize: 12, color: "var(--ms-danger)" }}>{t("update.checkFailed")}</span>}
+            {update.outcome === "available" && update.snapshot?.available && (
+              <button type="button" className="primary" onClick={() => void api.openToolWindow("update")}>
+                {t("update.available", update.snapshot.available.version)}
+              </button>
+            )}
+          </div>
           <p style={{ ...textStyle, fontFamily: "inherit", fontSize: 13 }}>{t("help.about.aiNotice")}</p>
           <p style={{ ...textStyle, fontFamily: "inherit", fontSize: 13 }}>{t("help.about.noWarranty")}</p>
           <p style={{ ...textStyle, fontFamily: "inherit", fontSize: 13 }}>{t("help.about.risk")}</p>
+          <p style={{ ...textStyle, fontFamily: "inherit", fontSize: 13 }}>{t("help.about.updates")}</p>
         </div>
       )}
 

@@ -18,6 +18,7 @@ export function PreferencesWindow() {
   const {
     theme, setTheme, previewProfiles, addPreviewProfile, removePreviewProfile, defaultProfileId, setDefaultProfileId,
     launchMode, setLaunchMode, autostartMode, setAutostartMode,
+    checkForUpdates, setCheckForUpdates, includePreReleases, setIncludePreReleases,
   } = usePreferences();
   const [category, setCategory] = useState<Category>("general");
   const [name, setName] = useState("");
@@ -78,6 +79,15 @@ export function PreferencesWindow() {
               <option value="window">{t("preferences.launchMode.window")}</option>
               <option value="tray">{t("preferences.launchMode.tray")}</option>
             </select>
+          </label>
+          <label style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <input type="checkbox" checked={checkForUpdates} onChange={(e) => setCheckForUpdates(e.target.checked)} />
+            {t("preferences.updates.auto")}
+          </label>
+          <p style={{ fontSize: 11.5, color: "var(--ms-text-secondary)", margin: 0 }}>{t("preferences.updates.auto.hint")}</p>
+          <label style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <input type="checkbox" checked={includePreReleases} onChange={(e) => setIncludePreReleases(e.target.checked)} />
+            {t("preferences.updates.prerelease")}
           </label>
         </div>
       )}

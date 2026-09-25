@@ -66,6 +66,7 @@ internal static class AppApi
     /// <summary>The core status items are written in English; the device counter is the one that carries words to translate.</summary>
     private static string LocalizeCoreStatus(PluginStatusEntry status, string language, PluginLocalizer localizer)
     {
+        if (status.Id == "update") return language == "tr" ? "Güncelleme var" : status.Text;
         if (status.Id == "actionError") return localizer.TranslateAny(status.Text) ?? status.Text;
         if (status.Id != "devices" || !int.TryParse(status.Text.Split(' ')[0], out var count)) return status.Text;
         return language == "tr" ? $"{count} cihaz" : count == 1 ? "1 device" : $"{count} devices";

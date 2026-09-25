@@ -31,6 +31,10 @@ internal static class WindowApi
         api.MapPost("/windows/pairing", (IUiWindowService windows) =>
             ShowAsync(windows, "pairing", "Pairing", "pairing", 760, 560));
 
+        // ?tab=check (the Help menu's "Check for Updates") makes the window run a check as soon as it opens.
+        api.MapPost("/windows/update", (HttpRequest request, IUiWindowService windows) =>
+            ShowAsync(windows, "update", "Update", request.Query["tab"] == "check" ? "update&check=1" : "update", 640, 560));
+
         return api;
     }
 
