@@ -7,9 +7,9 @@ using Microsoft.AspNetCore.Routing;
 namespace MacroGrid.Host.Api;
 
 /// <summary>
-/// Discover-tab endpoints: browsing and installing from the official catalog (phase 2) and from added
-/// third-party multi-plugin sources (phase 3) of the plugin distribution plan. Direct single-plugin links
-/// (phase 4) follow later. Loopback-only, like the rest of <c>/api</c>. The HTTP client behind <see
+/// Discover-tab endpoints: browsing and installing from the official catalog (phase 2), added third-party
+/// multi-plugin sources (phase 3), and a pasted single-plugin repository link (phase 4) of the plugin
+/// distribution plan. Loopback-only, like the rest of <c>/api</c>. The HTTP client behind <see
 /// cref="PluginCatalogClient"/> and <see cref="PluginPackageDownloader"/> is only ever used from these
 /// endpoints — nothing runs in the background.
 /// </summary>
@@ -99,6 +99,69 @@ internal static class PluginCatalogApi
             }
         });
 
+        api.MapPost("/plugin-link/inspect", async (PluginLinkRequest request, PluginCatalogClient client, CancellationToken cancellationToken) =>
+        {
+            if (string.IsNullOrWhiteSpace(request.Url) || !PluginSourceUrls.TryParseRepo(request.Url, out var owner, out var repo))
+                return ApiResults.BadRequest("That doesn't look like a GitHub repository (expected a URL or \"owner/repo\").");
+
+            try
+            {
+                // A multi-plugin repository is offered as a source instead of installed directly — see
+                // "3b. Single-plugin repo" in the plugin distribution plan.
+                if (await client.HasIndexAsync(owner, repo, cancellationToken))
+                    return ApiResults.Json(new { isMultiPlugin = true, owner, repo });
+
+                var manifest = await client.FetchSinglePluginManifestAsync(owner, repo, cancellationToken);
+                var compatible = SemVer.SatisfiesCaret(PluginSdk.Version, manifest.SdkVersion) && SemVer.SatisfiesMinimum(ClientHub.ServerVersion, manifest.MinServerVersion);
+                return ApiResults.Json(new
+                {
+                    isMultiPlugin = false,
+                    owner,
+                    repo,
+                    manifest.Id,
+                    manifest.Name,
+                    manifest.Description,
+                    manifest.Author,
+                    manifest.Homepage,
+                    manifest.Kind,
+                    manifest.Version,
+                    manifest.SdkVersion,
+                    manifest.MinServerVersion,
+                    permissions = manifest.Permissions ?? [],
+                    compatible,
+                });
+            }
+            catch (PluginCatalogException ex)
+            {
+                return ApiResults.Json(new { error = ex.Message, code = ex.Code });
+            }
+        });
+
+        api.MapPost("/plugin-link/install", async (PluginLinkRequest request, PluginCatalogClient client, PluginPackageDownloader downloader, PluginCatalogInstaller installer, CancellationToken cancellationToken) =>
+        {
+            if (string.IsNullOrWhiteSpace(request.Url) || !PluginSourceUrls.TryParseRepo(request.Url, out var owner, out var repo))
+                return ApiResults.BadRequest("That doesn't look like a GitHub repository (expected a URL or \"owner/repo\").");
+
+            try
+            {
+                var manifest = await client.FetchSinglePluginManifestAsync(owner, repo, cancellationToken);
+                var zipUrl = PluginSourceUrls.SinglePluginPackageUrl(owner, repo, manifest.Id, manifest.Version);
+                var sha256 = await downloader.FetchTextAssetAsync(PluginSourceUrls.SinglePluginPackageUrl(owner, repo, manifest.Id, manifest.Version, ".sha256"), cancellationToken);
+
+                var version = new PluginCatalogVersion(manifest.Version, manifest.SdkVersion, manifest.MinServerVersion, zipUrl.ToString(), sha256, Size: 0, manifest.Permissions, Signature: null);
+                var entry = new PluginCatalogEntry(manifest.Id, manifest.Name, manifest.Description, manifest.Author, manifest.Homepage, manifest.Kind, [version]);
+
+                var sourceUrl = $"https://github.com/{owner}/{repo}";
+                var result = await installer.InstallAsync(entry, version, sourceUrl, isOfficial: false, cancellationToken);
+                return ApiResults.Json(new { installed = true, id = result.Id, name = result.Name, status = result.Plugin.Status, detail = result.Plugin.Detail });
+            }
+            catch (Exception ex) when (ex is PluginCatalogException or PluginDownloadException or InvalidOperationException or IOException or UnauthorizedAccessException)
+            {
+                var code = (ex as PluginCatalogException)?.Code ?? (ex as PluginDownloadException)?.Code;
+                return ApiResults.Json(new { installed = false, error = ex.Message, code });
+            }
+        });
+
         return api;
     }
 
@@ -161,4 +224,6 @@ internal static class PluginCatalogApi
     private sealed record PluginAddSourceRequest(string? Url);
 
     private sealed record PluginCatalogInstallRequest(string? Source, string? Id, string? Version);
+
+    private sealed record PluginLinkRequest(string? Url);
 }

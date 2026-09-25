@@ -49,6 +49,12 @@ public static partial class PluginSourceUrls
     public static Uri ManifestUrl(string owner, string repo) =>
         new($"https://raw.githubusercontent.com/{owner}/{repo}/HEAD/plugin.json");
 
+    /// <summary>A single-plugin repository's release asset (method 4): tag <c>v&lt;version&gt;</c>, asset
+    /// <c>&lt;id&gt;-&lt;version&gt;.zip</c> (or that name plus <c>.sha256</c>), per the plugin repository's
+    /// website/reference/source-index.md.</summary>
+    public static Uri SinglePluginPackageUrl(string owner, string repo, string id, string version, string suffix = "") =>
+        new($"https://github.com/{owner}/{repo}/releases/download/v{version}/{id}-{version}.zip{suffix}");
+
     /// <summary>Only https on an allowed GitHub host; anything else is refused (nothing is ever fetched from
     /// elsewhere, even if an index or a pasted link says so).</summary>
     public static bool IsAllowedUrl(Uri? url) =>

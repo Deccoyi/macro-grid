@@ -35,8 +35,9 @@ public sealed class PluginCatalogClient(HttpClient http)
         return Parse(json, owner, repo);
     }
 
-    /// <summary>Method 4 step 1: reads a single-plugin repository's root <c>plugin.json</c> directly (no index).</summary>
-    public async Task<PluginCatalogVersion> FetchSinglePluginManifestAsync(string owner, string repo, CancellationToken cancellationToken)
+    /// <summary>Method 4 step 1: reads a single-plugin repository's root <c>plugin.json</c> directly (no index) —
+    /// enough to show compatibility and the confirmation dialog before anything is downloaded.</summary>
+    public async Task<PluginSingleManifest> FetchSinglePluginManifestAsync(string owner, string repo, CancellationToken cancellationToken)
     {
         var json = await FetchTextAsync(PluginSourceUrls.ManifestUrl(owner, repo), MaxManifestBytes, cancellationToken);
         JsonElement root;
@@ -50,18 +51,19 @@ public sealed class PluginCatalogClient(HttpClient http)
             throw new PluginCatalogException(PluginCatalogException.Invalid, "plugin.json is not valid JSON.", ex);
         }
 
-        var version = GetRequiredString(root, "version", "plugin.json");
-        return new PluginCatalogVersion(
-            version,
+        return new PluginSingleManifest(
+            GetRequiredString(root, "id", "plugin.json"),
+            GetRequiredString(root, "name", "plugin.json"),
+            GetString(root, "description"),
+            GetString(root, "author"),
+            GetString(root, "homepage"),
+            GetRequiredString(root, "kind", "plugin.json"),
+            GetRequiredString(root, "version", "plugin.json"),
             GetRequiredString(root, "sdkVersion", "plugin.json"),
             GetRequiredString(root, "minServerVersion", "plugin.json"),
-            Url: "", // resolved by the caller from the repo + version (see source-index.md "Single-plugin repository")
-            Sha256: "",
-            Size: 0,
-            Permissions: root.TryGetProperty("permissions", out var perms) && perms.ValueKind == JsonValueKind.Array
+            root.TryGetProperty("permissions", out var perms) && perms.ValueKind == JsonValueKind.Array
                 ? [.. perms.EnumerateArray().Where(p => p.ValueKind == JsonValueKind.String).Select(p => p.GetString()!)]
-                : null,
-            Signature: null);
+                : null);
     }
 
     /// <summary>True when the root has <c>macrogrid-index.json</c> rather than a single <c>plugin.json</c> — the

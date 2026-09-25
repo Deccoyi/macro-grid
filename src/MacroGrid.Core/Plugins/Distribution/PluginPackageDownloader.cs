@@ -45,7 +45,7 @@ public sealed class PluginPackageDownloader(HttpClient http)
         try
         {
             using var response = await GetFollowingRedirectsAsync(url, cancellationToken);
-            bytes = await ReadCappedAsync(response, version.Size, cancellationToken);
+            bytes = await ReadCappedAsync(response, version.Size, MaxPackageBytes, cancellationToken);
         }
         catch (HttpRequestException ex)
         {
@@ -56,7 +56,9 @@ public sealed class PluginPackageDownloader(HttpClient http)
             throw new PluginDownloadException(PluginDownloadException.Failed, "The download timed out.", ex);
         }
 
-        if (bytes.LongLength != version.Size)
+        // A single-plugin link (method 4) has no pre-declared size — version.Size is 0 there and only the
+        // MaxPackageBytes cap in ReadCappedAsync applies; every other source declares one and must match exactly.
+        if (version.Size > 0 && bytes.LongLength != version.Size)
             throw new PluginDownloadException(PluginDownloadException.Verify, "The download does not match the size the source reported.");
 
         var actualSha256 = Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(bytes));
@@ -67,6 +69,22 @@ public sealed class PluginPackageDownloader(HttpClient http)
             throw new PluginDownloadException(PluginDownloadException.Signature, "The package's signature could not be verified against the official key.");
 
         return bytes;
+    }
+
+    /// <summary>Fetches a small text asset (a <c>.sha256</c> file) from an allowed host, following redirects the
+    /// same way as the package download.</summary>
+    public async Task<string> FetchTextAssetAsync(Uri url, CancellationToken cancellationToken)
+    {
+        try
+        {
+            using var response = await GetFollowingRedirectsAsync(url, cancellationToken);
+            var bytes = await ReadCappedAsync(response, expectedSize: 0, maxBytes: 4096, cancellationToken);
+            return System.Text.Encoding.UTF8.GetString(bytes).Trim();
+        }
+        catch (HttpRequestException ex)
+        {
+            throw new PluginDownloadException(PluginDownloadException.Failed, "Could not reach the download server.", ex);
+        }
     }
 
     private async Task<HttpResponseMessage> GetFollowingRedirectsAsync(Uri start, CancellationToken cancellationToken)
@@ -95,13 +113,15 @@ public sealed class PluginPackageDownloader(HttpClient http)
         throw new PluginDownloadException(PluginDownloadException.Failed, "The download was redirected too many times.");
     }
 
-    private static async Task<byte[]> ReadCappedAsync(HttpResponseMessage response, long expectedSize, CancellationToken cancellationToken)
+    /// <param name="expectedSize">The size the source declared ahead of time, or 0 when none was declared (a
+    /// single-plugin link, or a small text asset) — then only <paramref name="maxBytes"/> is enforced.</param>
+    private static async Task<byte[]> ReadCappedAsync(HttpResponseMessage response, long expectedSize, long maxBytes, CancellationToken cancellationToken)
     {
         var declared = response.Content.Headers.ContentLength;
-        if (declared is { } announced && announced != expectedSize)
+        if (expectedSize > 0 && declared is { } announced && announced != expectedSize)
             throw new PluginDownloadException(PluginDownloadException.Verify, "The size of the download does not match the source.");
 
-        var limit = Math.Max(expectedSize, 1);
+        var limit = expectedSize > 0 ? expectedSize : maxBytes;
         await using var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
         using var buffer = new MemoryStream();
         var chunk = new byte[81920];
