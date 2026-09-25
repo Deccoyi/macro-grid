@@ -112,7 +112,7 @@ internal static class PluginCatalogApi
                     return ApiResults.Json(new { isMultiPlugin = true, owner, repo });
 
                 var manifest = await client.FetchSinglePluginManifestAsync(owner, repo, cancellationToken);
-                var compatible = SemVer.SatisfiesCaret(PluginSdk.Version, manifest.SdkVersion) && SemVer.SatisfiesMinimum(ClientHub.ServerVersion, manifest.MinServerVersion);
+                var compatibility = PluginCompatibility.Check(ClientHub.ServerVersion, manifest.MacroGrid, manifest.SdkVersion);
                 return ApiResults.Json(new
                 {
                     isMultiPlugin = false,
@@ -125,10 +125,12 @@ internal static class PluginCatalogApi
                     manifest.Homepage,
                     manifest.Kind,
                     manifest.Version,
+                    manifest.MacroGrid,
                     manifest.SdkVersion,
                     manifest.MinServerVersion,
                     permissions = manifest.Permissions ?? [],
-                    compatible,
+                    compatible = compatibility.Compatible,
+                    incompatibleReason = compatibility.Reason,
                 });
             }
             catch (PluginCatalogException ex)
@@ -148,7 +150,7 @@ internal static class PluginCatalogApi
                 var zipUrl = PluginSourceUrls.SinglePluginPackageUrl(owner, repo, manifest.Id, manifest.Version);
                 var sha256 = await downloader.FetchTextAssetAsync(PluginSourceUrls.SinglePluginPackageUrl(owner, repo, manifest.Id, manifest.Version, ".sha256"), cancellationToken);
 
-                var version = new PluginCatalogVersion(manifest.Version, manifest.SdkVersion, manifest.MinServerVersion, zipUrl.ToString(), sha256, Size: 0, manifest.Permissions, Signature: null);
+                var version = new PluginCatalogVersion(manifest.Version, manifest.MacroGrid, manifest.SdkVersion, manifest.MinServerVersion, zipUrl.ToString(), sha256, Size: 0, manifest.Permissions, Signature: null);
                 var entry = new PluginCatalogEntry(manifest.Id, manifest.Name, manifest.Description, manifest.Author, manifest.Homepage, manifest.Kind, [version]);
 
                 var sourceUrl = $"https://github.com/{owner}/{repo}";
@@ -196,10 +198,13 @@ internal static class PluginCatalogApi
         var origin = origins.Get(entry.Id);
 
         var compatible = entry.Versions
-            .Where(v => SemVer.SatisfiesCaret(PluginSdk.Version, v.SdkVersion) && SemVer.SatisfiesMinimum(ClientHub.ServerVersion, v.MinServerVersion))
+            .Where(v => PluginCompatibility.Check(ClientHub.ServerVersion, v.MacroGrid, v.SdkVersion).Compatible)
             .OrderByDescending(v => v.Version, Comparer<string>.Create(SemVer.CompareVersionStrings))
             .FirstOrDefault();
         var latest = entry.Versions.OrderByDescending(v => v.Version, Comparer<string>.Create(SemVer.CompareVersionStrings)).FirstOrDefault();
+        var incompatibleReason = compatible is null && latest is not null
+            ? PluginCompatibility.Check(ClientHub.ServerVersion, latest.MacroGrid, latest.SdkVersion).Reason
+            : null;
 
         return new
         {
@@ -212,6 +217,7 @@ internal static class PluginCatalogApi
             latestVersion = latest?.Version,
             installableVersion = compatible?.Version,
             compatible = compatible is not null,
+            incompatibleReason,
             permissions = compatible?.Permissions ?? latest?.Permissions ?? [],
             installed = installed is not null,
             installedVersion = installed?.Version,

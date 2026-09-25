@@ -3,7 +3,7 @@
   Builds the release folder of the server: the editor and browser deck bundles, then a self-contained single-file MacroGrid.exe.
 
 .DESCRIPTION
-  Output goes to artifacts/server/. The version comes from ClientHub.ServerVersion, the single place the
+  Output goes to artifacts/server/. The version comes from <Version> in Directory.Build.props, the single place the
   server version lives (docs/guides/versioning.md). Run installer\build-installer.ps1 afterwards to wrap the
   folder in a Windows installer.
 
@@ -19,8 +19,8 @@ $ErrorActionPreference = "Stop"
 $root = Split-Path -Parent $PSScriptRoot
 $out = Join-Path $root "artifacts\server"
 
-$hub = Get-Content (Join-Path $root "src\MacroGrid.Core\Sessions\ClientHub.cs") -Raw
-if ($hub -notmatch 'ServerVersion\s*=\s*"([^"]+)"') { throw "Could not read ServerVersion from ClientHub.cs" }
+$props = Get-Content (Join-Path $root "Directory.Build.props") -Raw
+if ($props -notmatch '<Version>(\d+\.\d+\.\d+)</Version>') { throw "Could not read <Version> (MAJOR.MINOR.PATCH) from Directory.Build.props" }
 $version = $Matches[1]
 Write-Host "Macro Grid server $version"
 

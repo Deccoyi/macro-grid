@@ -2,9 +2,8 @@
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
 
-    <!-- NuGet package metadata. Keep <Version> equal to PluginSdk.Version (PluginSdk.cs). -->
+    <!-- NuGet package metadata. The version comes from the repository's Directory.Build.props, the single source. -->
     <PackageId>MacroGrid.Plugin.Abstractions</PackageId>
-    <Version>0.4.0</Version>
     <Authors>Deccoyi</Authors>
     <Description>Plugin SDK for Macro Grid: the IPlugin entry point, action/variable/settings/icon-pack interfaces and the plugin manifest types that C# plugins compile against. The Macro Grid server supplies the runtime copy of this assembly.</Description>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>

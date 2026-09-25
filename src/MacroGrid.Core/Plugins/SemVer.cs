@@ -4,12 +4,16 @@ namespace MacroGrid.Core.Plugins;
 
 /// <summary>
 /// Minimal MAJOR.MINOR.PATCH comparison for plugin compatibility checks — not a full SemVer
-/// implementation (no pre-release/build metadata), which is all docs/guides/versioning.md's scheme needs.
+/// implementation (a pre-release label or build metadata after the three numbers is ignored), which is all
+/// docs/guides/versioning.md's scheme needs.
 /// </summary>
 public static partial class SemVer
 {
     [GeneratedRegex(@"^(\d+)\.(\d+)\.(\d+)")]
     private static partial Regex VersionPattern();
+
+    [GeneratedRegex(@"^\d+\.\d+\.\d+$")]
+    private static partial Regex ThreePartPattern();
 
     public static bool TryParse(string version, out (int Major, int Minor, int Patch) parsed)
     {
@@ -40,22 +44,16 @@ public static partial class SemVer
         return Compare(pa, pb);
     }
 
-    /// <summary>Is <paramref name="actual"/> &gt;= <paramref name="minimum"/>?</summary>
-    public static bool SatisfiesMinimum(string actual, string minimum)
+    /// <summary>True for exactly MAJOR.MINOR.PATCH (for example "1.3.0"): no label, no missing part.</summary>
+    public static bool IsThreePartVersion(string? version) =>
+        version is not null && ThreePartPattern().IsMatch(version);
+
+    /// <summary>The rule a plugin's <c>macroGrid</c> field follows: <paramref name="required"/> is the oldest Macro Grid the
+    /// plugin runs on, and it runs on every later version of the same MAJOR. So "1.3.0" runs on 1.3.0 up to (excluding)
+    /// 2.0.0. A label such as "-beta" on <paramref name="actual"/> is ignored.</summary>
+    public static bool SatisfiesPlatform(string actual, string required)
     {
-        if (!TryParse(actual, out var a) || !TryParse(minimum, out var m)) return false;
-        return Compare(a, m) >= 0;
-    }
-
-    /// <summary>npm-style caret range: "^1.2.3" matches 1.2.3 up to (excluding) 2.0.0, except for 0.x.y
-    /// where it matches 0.x.z (patch-level only, per npm's 0.x caret rule and this project's SemVer policy).</summary>
-    public static bool SatisfiesCaret(string actual, string range)
-    {
-        var trimmed = range.TrimStart('^');
-        if (!TryParse(actual, out var a) || !TryParse(trimmed, out var r)) return false;
-
-        if (Compare(a, r) < 0) return false;
-
-        return r.Major > 0 ? a.Major == r.Major : a.Minor == r.Minor;
+        if (!TryParse(actual, out var a) || !IsThreePartVersion(required) || !TryParse(required, out var r)) return false;
+        return a.Major == r.Major && Compare(a, r) >= 0;
     }
 }

@@ -77,11 +77,9 @@ public sealed partial class PluginManager
             return Fail(PluginLoadStatus.Error, "This id is already used by another installed plugin");
         }
 
-        if (!SemVer.SatisfiesCaret(PluginSdk.Version, manifest.SdkVersion))
-            return Fail(PluginLoadStatus.Incompatible, $"Needs SDK {manifest.SdkVersion}, the server has SDK {PluginSdk.Version}");
-
-        if (!SemVer.SatisfiesMinimum(serverVersion, manifest.MinServerVersion))
-            return Fail(PluginLoadStatus.Incompatible, $"Needs server {manifest.MinServerVersion}+, this server is {serverVersion}");
+        var compatibility = PluginCompatibility.Check(serverVersion, manifest.MacroGrid, manifest.SdkVersion);
+        if (!compatibility.Compatible)
+            return Fail(PluginLoadStatus.Incompatible, compatibility.Reason!);
 
         var entryPath = Path.Combine(dir, manifest.Entry);
         if (!File.Exists(entryPath))

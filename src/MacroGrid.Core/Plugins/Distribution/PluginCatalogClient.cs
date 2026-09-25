@@ -59,8 +59,9 @@ public sealed class PluginCatalogClient(HttpClient http)
             GetString(root, "homepage"),
             GetRequiredString(root, "kind", "plugin.json"),
             GetRequiredString(root, "version", "plugin.json"),
-            GetRequiredString(root, "sdkVersion", "plugin.json"),
-            GetRequiredString(root, "minServerVersion", "plugin.json"),
+            GetString(root, "macroGrid"),
+            GetString(root, "sdkVersion"),
+            GetString(root, "minServerVersion"),
             root.TryGetProperty("permissions", out var perms) && perms.ValueKind == JsonValueKind.Array
                 ? [.. perms.EnumerateArray().Where(p => p.ValueKind == JsonValueKind.String).Select(p => p.GetString()!)]
                 : null);
@@ -135,7 +136,8 @@ public sealed class PluginCatalogClient(HttpClient http)
         {
             var root = document.RootElement;
             var formatVersion = root.TryGetProperty("formatVersion", out var fv) && fv.TryGetInt32(out var f) ? f : 0;
-            if (formatVersion != 1)
+            // 1: entries carry sdkVersion + minServerVersion. 2: entries carry macroGrid (and may still carry the two for older servers).
+            if (formatVersion is not (1 or 2))
                 throw new PluginCatalogException(PluginCatalogException.Invalid, $"Unsupported index format version: {formatVersion}.");
 
             var name = GetRequiredString(root, "name", "macrogrid-index.json");
@@ -190,8 +192,9 @@ public sealed class PluginCatalogClient(HttpClient http)
 
         return new PluginCatalogVersion(
             version,
-            GetRequiredString(element, "sdkVersion", pluginId),
-            GetRequiredString(element, "minServerVersion", pluginId),
+            GetString(element, "macroGrid"),
+            GetString(element, "sdkVersion"),
+            GetString(element, "minServerVersion"),
             GetRequiredString(element, "url", pluginId),
             sha256,
             size,
