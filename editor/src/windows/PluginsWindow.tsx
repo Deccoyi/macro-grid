@@ -134,6 +134,13 @@ export function PluginsWindow() {
             <div key={p.id} style={{ borderTop: "1px solid var(--ms-border)" }}>
               <div style={{ display: "flex", alignItems: "flex-start", gap: 8, padding: "8px 0" }}>
                 <span style={{ width: 8, height: 8, borderRadius: "50%", marginTop: 5, flexShrink: 0, background: STATUS_COLOR[p.status] }} />
+                {p.hasIcon && (
+                  <img
+                    src={api.getPluginIconUrl(p.id)}
+                    alt=""
+                    style={{ width: 20, height: 20, borderRadius: 4, marginTop: 1, flexShrink: 0, objectFit: "contain" }}
+                  />
+                )}
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 13 }}>
                     {p.name} <span style={{ color: "var(--ms-text-disabled)" }}>v{p.version}</span>

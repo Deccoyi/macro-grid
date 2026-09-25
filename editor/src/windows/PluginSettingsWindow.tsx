@@ -62,12 +62,13 @@ export function PluginSettingsWindow({ id }: { id: string }) {
         )}
 
         {!loading && fields && fields.length > 0 && (
-          <div style={{ maxWidth: 420 }}>
+          <div style={{ maxWidth: 520 }}>
             <SchemaForm
               fields={fields}
               values={values}
               onChange={(next) => { setValues(next); setSaved(false); }}
               fetchOptions={(sourceId, current) => api.getPluginSettingsOptions(id, sourceId, current)}
+              runCommand={(command, current) => api.runPluginSettingsCommand(id, command, current)}
             />
 
             <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 14 }}>

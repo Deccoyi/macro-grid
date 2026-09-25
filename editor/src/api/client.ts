@@ -93,6 +93,11 @@ export const api = {
   browseForExecutable: (): Promise<string | null> =>
     send<{ path: string | null }>("POST", "/api/browse/executable").then((r) => r.path),
 
+  /** Shows a native "Open" dialog for a SettingFieldKind.File field and returns only the chosen path (the
+   * plugin stores the path itself and reads the file on its own — nothing is uploaded). */
+  browseForFile: (title: string, filter: string): Promise<string | null> =>
+    send<{ path: string | null }>("POST", "/api/browse/file", { title, filter }).then((r) => r.path),
+
   pairingQr: (): Promise<PairingQrInfo> => get("/api/pairing/qr"),
 
   regeneratePairingQr: (): Promise<PairingQrInfo> => send("POST", "/api/pairing/qr/regenerate"),
@@ -146,6 +151,15 @@ export const api = {
 
   getPluginSettingsOptions: (id: string, sourceId: string, currentValues: Record<string, unknown>): Promise<OptionsResult> =>
     send("POST", `${pluginPath(id)}/settings/options/${encodeURIComponent(sourceId)}`, currentValues),
+
+  /** Runs a SettingFieldKind.Button field's command against the plugin's ISettingsCommandHandler (e.g. a
+   * sound preview) — `values` is the current form/row values. 404 (thrown as an Error) if the plugin's
+   * settings page does not implement that interface. The returned text is a short info/error message. */
+  runPluginSettingsCommand: (id: string, command: string, values: Record<string, unknown>): Promise<{ text: string | null }> =>
+    send("POST", `${pluginPath(id)}/settings/command`, { command, values }),
+
+  /** URL of a plugin's manifest logo (PluginInfo.hasIcon) — an <img src>, not a fetch: nothing to parse. */
+  getPluginIconUrl: (id: string): string => `${pluginPath(id)}/icon`,
 
   getPreferences: (): Promise<AppPreferences> => get("/api/preferences"),
 

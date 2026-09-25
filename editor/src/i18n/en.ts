@@ -260,6 +260,10 @@ export const en: Record<DictKey, string | ((...args: string[]) => string)> = {
   // ---- Schema form (SettingField-driven action/plugin settings) ----
   "schemaForm.refresh": "Refresh",
   "schemaForm.notFound": "(not found)",
+  "schemaForm.browse": "Browse…",
+  "schemaForm.addRow": "+ Add",
+  "schemaForm.removeRow": "Remove",
+  "schemaForm.running": "Running…",
 
   "css.label": "Custom CSS",
 

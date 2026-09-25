@@ -1,5 +1,5 @@
 import type { Profile } from "@macro/renderer";
-type SettingFieldKind = "Text" | "Password" | "Number" | "Slider" | "Bool" | "Select" | "Segmented";
+type SettingFieldKind = "Text" | "Password" | "Number" | "Slider" | "Bool" | "Select" | "Segmented" | "File" | "List" | "Button" | "Notice";
 
 export interface SettingOption {
   value: string;
@@ -25,6 +25,13 @@ export interface SettingField {
   dependsOn?: string[] | null;
   allowVariables?: boolean;
   visibleWhen?: string | null;
+  /** Required for kind "File": a WinForms file filter, e.g. "Audio files (*.wav;*.mp3)|*.wav;*.mp3". */
+  fileFilter?: string | null;
+  /** Required for kind "List": the schema of one row. Extra row keys outside this schema (a plugin-assigned
+   * id, a computed flag, ...) are kept as-is across an edit — never dropped by the form. */
+  itemFields?: SettingField[] | null;
+  /** Required for kind "Button": the command id sent to the plugin's ISettingsCommandHandler. */
+  command?: string | null;
 }
 
 /** Mirrors MacroGrid.Plugin.Abstractions.OptionsResult — the response of a dynamic-dropdown query. */
@@ -91,6 +98,9 @@ export interface PluginInfo {
   hasSettings: boolean;
   /** For "NeedsApproval": the permissions a JS plugin declares and is waiting to be allowed. */
   pendingPermissions?: string[] | null;
+  /** True when the manifest's optional `icon` path resolved to a valid file — fetch it from
+   * api.getPluginIconUrl(id) instead of the generic category glyph. Missing from an older server. */
+  hasIcon?: boolean;
 }
 
 /** One icon pack contributed by a plugin via IPluginHost.RegisterIconPack — e.g. the PLC icon set.

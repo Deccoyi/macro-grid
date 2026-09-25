@@ -269,6 +269,10 @@ export const tr = {
   // ---- Schema form (SettingField-driven action/plugin settings) ----
   "schemaForm.refresh": "Yenile",
   "schemaForm.notFound": "(bulunamadı)",
+  "schemaForm.browse": "Gözat…",
+  "schemaForm.addRow": "+ Ekle",
+  "schemaForm.removeRow": "Kaldır",
+  "schemaForm.running": "Çalışıyor…",
 
   // ---- CSS editor ----
   "css.label": "Özel CSS",
