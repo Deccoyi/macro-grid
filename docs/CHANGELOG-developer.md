@@ -4,6 +4,26 @@ This file follows the [Keep a Changelog](https://keepachangelog.com/) format. Fo
 
 ## [Unreleased]
 
+### Added
+- **Plugin SDK 0.4.0** (`docs/plans/sound-plugin-plan.md`, Phase A): built for the upcoming Sound plugin, but generally usable.
+  - `SettingField` gained four kinds: `File` (`FileFilter`, a WinForms filter string) shows a path box with a native Browse
+    button (`POST /api/browse/file`, `IUiDialogService.BrowseForFileAsync`); `List` (`ItemFields: SettingField[]`) renders
+    repeated rows whose value is a `JsonArray` of `JsonObject` — a row's extra keys outside the schema (a plugin-assigned
+    `id`, a computed flag, ...) are preserved across an edit, and a row's own `VisibleWhen` is evaluated against that row's
+    values; `Button` (`Command: string`) posts the command and the current form/row values to the settings page's new
+    `ISettingsCommandHandler.RunCommandAsync`, showing the returned text; `Notice` is read-only warning text, gated by
+    `VisibleWhen` like any other field. `PluginLocalizer.Localize` recurses into `ItemFields`.
+  - New `IReleaseAwareAction`: when a `press` binding's handler implements it, `ActionDispatcher.DispatchAsync` calls
+    `ReleaseAsync` on the `release` event, before that event's own bindings run (a failing `ReleaseAsync` is collected the
+    same way a failing `ExecuteAsync` is). Lets an action know its widget button was let go, e.g. "play while held". Tests:
+    `ActionDispatcherTests`.
+  - New optional manifest field `icon` (a path relative to the plugin folder, `.svg` or `.png`, at most 100 KB): the
+    editor's Plugins window shows it next to the plugin's name (`GET /api/plugins/{id}/icon`, `LoadedPlugin.HasIcon`); an
+    invalid or oversized icon is silently treated as absent (cosmetic, never fails the plugin's own load). Additive —
+    older hosts ignore it. Tests: `PluginManagerTests`.
+  - Every plugin's `sdkVersion` range must now satisfy `^0.4.0`; the bundled OBS and PLCIcons plugins are updated in the
+    plugin repository (`macro-grid-plugin`) separately.
+
 ## [0.3.1] - 2026-09-25
 0.3.0 was published and withdrawn the same day (set back to a draft; its tag stays) because of the first fix below; 0.3.1 replaces it and has the same content.
 

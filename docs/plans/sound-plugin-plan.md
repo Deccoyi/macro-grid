@@ -1,6 +1,6 @@
 # Sound plugin plan
 
-Status: planned, not started. This is the canonical copy; phase A is in this repository, phase B in `macro-grid-plugin`. (`macro-grid-plugin/docs/sound-plugin-plan.md` is an untracked older copy: delete it or commit it as a pointer to this file.)
+Status: Phase A1-A3 done in this repository (SDK 0.4.0, host, editor). A4 (OBS and PLCIcons manifests in `macro-grid-plugin`) and Phase B (the Sound plugin itself) are not started. This is the canonical copy; phase A is in this repository, phase B in `macro-grid-plugin`. (`macro-grid-plugin/docs/sound-plugin-plan.md` is an untracked older copy: delete it or commit it as a pointer to this file.)
 
 **Repositories:** `macro-grid` (phase A: SDK 0.4.0, host, editor) and `macro-grid-plugin` (phase A4: OBS and PLCIcons manifests; phase B: the Sound plugin). Phase A must ship first. `macro-grid-client` is not touched.
 
@@ -9,7 +9,7 @@ A soundboard plugin (`Sound/`, C#). The user picks sound files in the plugin's s
 
 ## Phase A: SDK 0.4.0 (`macro-grid`)
 
-### A1. SDK additions (`src/MacroGrid.Plugin.Abstractions`)
+### A1. SDK additions (`src/MacroGrid.Plugin.Abstractions`) — done
 - `SettingField.cs`, new kinds and properties:
   - `SettingFieldKind.File` + `FileFilter` (a WinForms filter string): path text plus a Browse button.
   - `SettingFieldKind.List` + `ItemFields: SettingField[]`: repeated rows, value is a `JsonArray` of `JsonObject`. Row keys that are not in the schema (a plugin-assigned `id`, `missing`, ...) are preserved by the editor. `VisibleWhen` inside a row is evaluated against that row's own values.
@@ -18,14 +18,19 @@ A soundboard plugin (`Sound/`, C#). The user picks sound files in the plugin's s
 - New `IReleaseAwareAction`: `Task ReleaseAsync(ActionContext, JsonObject settings, CancellationToken)`. When a handler bound to a widget's **press** event implements it, the host calls it on release.
 - New `ISettingsCommandHandler` (optional side interface of a settings page): `Task<string?> RunCommandAsync(string command, JsonObject values, CancellationToken)`. The returned text is shown in the editor as a short info/error message.
 - `PluginSdk.Version = "0.4.0"`; update the table in `docs/guides/versioning.md`.
+- Also done in this bump, per `docs/roadmap.md` "Next" and `docs/plans/plugin-distribution-plan.md` section 3c: an optional
+  manifest field `icon` (a path to a small square logo, `.svg`/`.png`, at most 100 KB — the host does not decode pixel
+  dimensions, only the extension and file size). `LoadedPlugin.HasIcon`, `GET /api/plugins/{id}/icon`, shown by the
+  editor's Plugins window. The Store list/detail page and the release-zip/catalog-build changes are in `macro-grid-plugin`
+  (not part of this repository's work).
 
-### A2. Host (`src/MacroGrid.Core`, `src/MacroGrid.Host`)
+### A2. Host (`src/MacroGrid.Core`, `src/MacroGrid.Host`) — done
 - `Actions/ActionDispatcher.cs`: when `eventName == WidgetEvents.Release`, first call `ReleaseAsync` on the `Press` bindings whose handler is an `IReleaseAwareAction` (same `ResolveVariables` and error collection), then run the regular release bindings.
 - `Plugins/PluginLocalizer.cs`: localize `ItemFields` recursively.
 - `Host/UiDialogService.cs`: `BrowseForFileAsync(title, filter)` returning the path only. `ServerApp.cs`: `POST /api/browse/file` and `POST /api/plugins/{id}/settings/command` (404 when the settings page is not an `ISettingsCommandHandler`).
 - Tests: dispatcher release hook, command endpoint.
 
-### A3. Editor (`editor/src`)
+### A3. Editor (`editor/src`) — done
 - `api/types.ts` and the API client: new kinds and properties, `browseFile`, `runPluginSettingsCommand`.
 - `panels/actionForms/SchemaForm.tsx`: `File` (input + Browse), `List` (row cards, recursive `SchemaForm`, extra keys kept via `{...row}`, add/remove, key `row.id ?? index`), `Button` (runs the command, shows the returned text), `Notice` (warning-colored text). Options fetching and command calls are supplied by `PluginSettingsWindow.tsx`.
 - i18n strings; make sure the settings window is wide enough and scrolls for a list.
