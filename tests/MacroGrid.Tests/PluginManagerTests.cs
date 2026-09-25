@@ -51,14 +51,14 @@ public sealed class PluginManagerTests : IAsyncLifetime
     }
 
     /// <summary>A ready-to-install copy of the compiled stub plugin (a real assembly load, not a mock).</summary>
-    private string NewStubSource(string id = "stub")
+    private string NewStubSource(string id = "stub", string? icon = null)
     {
         var dir = Path.Combine(_sourcesDir, id + "-" + Guid.NewGuid().ToString("N")[..6]);
         Directory.CreateDirectory(dir);
         var entryAssembly = typeof(StubPlugin.StubPlugin).Assembly.Location;
         foreach (var file in Directory.GetFiles(Path.GetDirectoryName(entryAssembly)!, "*.dll"))
             File.Copy(file, Path.Combine(dir, Path.GetFileName(file)), overwrite: true);
-        WriteManifest(dir, id: id, entry: Path.GetFileName(entryAssembly));
+        WriteManifest(dir, id: id, entry: Path.GetFileName(entryAssembly), icon: icon);
         return dir;
     }
 
@@ -216,6 +216,48 @@ public sealed class PluginManagerTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Install_with_a_valid_manifest_icon_reports_HasIcon()
+    {
+        await _manager.StartAsync(CancellationToken.None);
+        var source = NewStubSource(icon: "icon.svg");
+        File.WriteAllText(Path.Combine(source, "icon.svg"), "<svg></svg>");
+
+        var result = await _manager.InstallFromFolderAsync(source);
+
+        Assert.True(result.Plugin.HasIcon);
+        Assert.Equal(Path.Combine(_pluginsDir, "stub", "icon.svg"), _manager.GetPluginIconPath("stub"));
+    }
+
+    [Theory]
+    [InlineData(null)] // manifest names no icon
+    [InlineData("missing.svg")] // manifest names a file that was never written
+    [InlineData("icon.txt")] // wrong extension
+    [InlineData("../outside.svg")] // escapes the plugin folder
+    public async Task Install_without_a_usable_icon_reports_no_HasIcon(string? icon)
+    {
+        await _manager.StartAsync(CancellationToken.None);
+        var source = NewStubSource(icon: icon);
+        if (icon == "icon.txt") File.WriteAllText(Path.Combine(source, "icon.txt"), "not an image");
+
+        var result = await _manager.InstallFromFolderAsync(source);
+
+        Assert.False(result.Plugin.HasIcon);
+        Assert.Null(_manager.GetPluginIconPath("stub"));
+    }
+
+    [Fact]
+    public async Task Install_with_an_oversized_icon_reports_no_HasIcon()
+    {
+        await _manager.StartAsync(CancellationToken.None);
+        var source = NewStubSource(icon: "icon.png");
+        File.WriteAllBytes(Path.Combine(source, "icon.png"), new byte[101 * 1024]);
+
+        var result = await _manager.InstallFromFolderAsync(source);
+
+        Assert.False(result.Plugin.HasIcon);
+    }
+
+    [Fact]
     public async Task Uninstall_removes_everything_the_plugin_registered_and_deletes_its_folder()
     {
         await _manager.StartAsync(CancellationToken.None);
@@ -306,7 +348,7 @@ public sealed class PluginManagerTests : IAsyncLifetime
     private static void WriteJsPlugin(string dir, string id, string[] permissions, string script)
     {
         var list = string.Join(", ", permissions.Select(p => "\"" + p + "\""));
-        var manifest = "{ \"id\": \"" + id + "\", \"name\": \"Js\", \"version\": \"1.0.0\", \"sdkVersion\": \"^0.3.0\", "
+        var manifest = "{ \"id\": \"" + id + "\", \"name\": \"Js\", \"version\": \"1.0.0\", \"sdkVersion\": \"^0.4.0\", "
             + "\"minServerVersion\": \"0.1.0\", \"entry\": \"index.js\", \"kind\": \"js\", \"permissions\": [" + list + "] }";
         File.WriteAllText(Path.Combine(dir, "plugin.json"), manifest);
         File.WriteAllText(Path.Combine(dir, "index.js"), script);
@@ -319,8 +361,11 @@ public sealed class PluginManagerTests : IAsyncLifetime
         Assert.True(condition(), "Condition was not met in time.");
     }
 
-    private static void WriteManifest(string dir, string? id = null, string sdkVersion = "^0.3.0", string minServerVersion = "0.1.0", string kind = "csharp", string entry = "Plugin.dll")
+    private static void WriteManifest(string dir, string? id = null, string sdkVersion = "^0.4.0", string minServerVersion = "0.1.0", string kind = "csharp", string entry = "Plugin.dll", string? icon = null)
     {
+        var iconLine = icon is null ? "" : $$"""
+          ,"icon": "{{icon}}"
+        """;
         var json = $$"""
         {
           "id": "{{id ?? Path.GetFileName(dir)}}",
@@ -329,7 +374,7 @@ public sealed class PluginManagerTests : IAsyncLifetime
           "sdkVersion": "{{sdkVersion}}",
           "minServerVersion": "{{minServerVersion}}",
           "entry": "{{entry}}",
-          "kind": "{{kind}}"
+          "kind": "{{kind}}"{{iconLine}}
         }
         """;
         File.WriteAllText(Path.Combine(dir, "plugin.json"), json);
