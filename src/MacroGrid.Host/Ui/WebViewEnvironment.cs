@@ -2,7 +2,7 @@ using System.Text;
 using Microsoft.Web.WebView2.Core;
 using Microsoft.Web.WebView2.WinForms;
 
-namespace MacroGrid.Host;
+namespace MacroGrid.Host.Ui;
 
 /// <summary>
 /// Starts the WebView2 control of the editor and of every tool window. WebView2 needs a user data folder it can write to.

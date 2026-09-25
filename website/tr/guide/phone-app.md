@@ -26,7 +26,7 @@ Android uygulaması deck'i tam ekran çizer ve dokunuşlarınızı sunucuya gön
 | Basılı tutmak | Uzun basma. |
 | İki kez dokunmak | Çift dokunma. |
 | Slider veya knob'u sürüklemek | Değer gönderilir. Bir değişkene bağlıysa başka yerde yapılan değişiklikleri de takip eder. |
-| Sola veya sağa kaydırmak | Sayfa değişir. |
+| İki parmakla sola veya sağa kaydırmak | Sayfa değişir. Deck üzerinde her yerde çalışır, slider ve knob üstünde de. Tek parmak asla sayfa değiştirmez. |
 | Kenardan çekmek (veya tutamacı kullanmak) | **Profil çekmecesi** açılır. |
 
 Çekmece profilleri, kayıtlı sunucuları ve **kilit** anahtarını listeler. Kilit açıkken [otomatik profil geçişi](/tr/guide/auto-switch) durur. Profili elle seçmek ise her zaman çalışır.

@@ -1,4 +1,4 @@
-export interface ConfirmRequest {
+interface ConfirmRequest {
   kind: "confirm";
   message: string;
   title?: string;
@@ -6,7 +6,7 @@ export interface ConfirmRequest {
   resolve: (value: boolean) => void;
 }
 
-export interface PromptRequest {
+interface PromptRequest {
   kind: "prompt";
   message: string;
   title?: string;
@@ -14,21 +14,21 @@ export interface PromptRequest {
   resolve: (value: string | null) => void;
 }
 
-export interface AlertRequest {
+interface AlertRequest {
   kind: "alert";
   message: string;
   title?: string;
   resolve: () => void;
 }
 
-export interface ChoiceOption {
+interface ChoiceOption {
   value: string;
   label: string;
   primary?: boolean;
   danger?: boolean;
 }
 
-export interface ChoiceRequest {
+interface ChoiceRequest {
   kind: "choice";
   message: string;
   title?: string;

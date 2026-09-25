@@ -6,7 +6,7 @@ namespace MacroGrid.Core.Plugins;
 /// <summary>
 /// The <see cref="IPluginHost"/> handed to each plugin's Initialize(). Registrations are only collected
 /// here — PluginLoader adds the collected instances to the app's own DI container afterwards, the same
-/// way built-in actions/providers are registered in ServerApp.cs.
+/// way built-in actions/providers are registered in ServiceRegistration.cs.
 /// </summary>
 internal sealed class PluginHostCollector(string serverVersion, string dataDirectory, string pluginId, PluginStatusRegistry statusRegistry, ILogger logger) : IPluginHost
 {

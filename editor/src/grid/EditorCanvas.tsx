@@ -4,7 +4,7 @@ import { useT } from "../i18n/I18nContext";
 import { canPlace, clamp } from "./collision";
 import { evaluateWidgetDynamicStyle, evaluateWidgetDynamicText } from "./evaluateDynamic";
 
-export interface EditorCanvasProps {
+interface EditorCanvasProps {
   page: Page;
   selectedIds: string[];
   onSelect: (ids: string[]) => void;

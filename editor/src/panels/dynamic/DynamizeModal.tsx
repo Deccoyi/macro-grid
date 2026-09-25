@@ -23,7 +23,7 @@ const OPERATOR_KEYS: Record<EditCondition["operator"], DictKey> = {
 /** What each rule's "then" value is: a free color, free text (may contain {variables}), an icon, or a fixed set of choices (e.g. animation names). */
 export type ResultKind = "color" | "text" | "icon" | { select: { value: string; label: string }[] };
 
-export interface DynamizeModalProps {
+interface DynamizeModalProps {
   propertyLabel: string;
   binding: DynamicBinding | undefined;
   variableCatalog: VariableInfo[];

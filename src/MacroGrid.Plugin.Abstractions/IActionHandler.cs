@@ -8,7 +8,7 @@ namespace MacroGrid.Plugin.Abstractions;
 /// </summary>
 public interface IActionHandler
 {
-    /// <summary>Unique id, e.g. "core.hotkey" or "obs.switchScene".</summary>
+    /// <summary>Unique id, e.g. "core.hotkey" or "demo.switchScene".</summary>
     string Type { get; }
 
     string DisplayName { get; }

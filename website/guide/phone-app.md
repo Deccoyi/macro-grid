@@ -26,7 +26,7 @@ The Android app draws the deck full screen and sends your touches to the server.
 | Hold | Long press. |
 | Tap twice | Double tap. |
 | Drag a slider or knob | The value is sent; if it is tied to a variable it also follows changes made elsewhere. |
-| Swipe left or right | Change page. |
+| Swipe left or right with two fingers | Change page. It works anywhere on the deck, also over a slider or knob. One finger never changes page. |
 | Pull from the edge (or use the handle) | Open the **profile drawer**. |
 
 The drawer lists profiles, saved servers and the **lock** switch. While the lock is on, [automatic profile switching](/guide/auto-switch) pauses; choosing a profile by hand always works.

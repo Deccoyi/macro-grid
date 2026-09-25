@@ -11,6 +11,7 @@ using MacroGrid.Core.Profiles;
 using MacroGrid.Plugin.Abstractions;
 using MacroGrid.Protocol;
 using Microsoft.Extensions.Logging;
+using MacroGrid.Core.Widgets;
 
 namespace MacroGrid.Core.Sessions;
 
@@ -43,7 +44,7 @@ public sealed class ClientHub(
 
     public async Task HandleAsync(WebSocket socket, string remoteAddress, CancellationToken cancellationToken)
     {
-        var session = new ClientSession(socket, remoteAddress);
+        var session = new ClientSession(socket);
         sessions.Add(session);
         logger.LogInformation("Client {Session} connected from {Remote}", session.Id, remoteAddress);
 
@@ -291,14 +292,22 @@ public sealed class ClientHub(
         });
     }
 
+    /// <summary>How long a failed action stays in the status bar if nothing else clears it.</summary>
+    private static readonly TimeSpan ActionErrorStatusLifetime = TimeSpan.FromSeconds(15);
+
     /// <summary>Surfaces a failed action both to the device that triggered it (toast, via the same "error"
     /// envelope pairing failures already use) and in the editor's status bar — a stale binding (e.g. a
-    /// button pointed at a since-deleted OBS scene) must never fail silently.</summary>
+    /// button pointed at a since-deleted scene of a plugin) must never fail silently.</summary>
     private async Task ReportActionErrorsAsync(ClientSession session, IReadOnlyList<string> errors)
     {
-        if (errors.Count == 0) return;
+        if (errors.Count == 0)
+        {
+            statusRegistry.RemoveCore("actionError"); // the next action that works clears the old failure
+            return;
+        }
+
         var message = localizer.TranslateAny(errors[0]) ?? errors[0];
-        statusRegistry.SetCore("actionError", message, StatusLevel.Warning, "triangle-alert");
+        statusRegistry.SetCore("actionError", message, StatusLevel.Warning, "triangle-alert", lifetime: ActionErrorStatusLifetime);
         await session.SendAsync(MessageTypes.Error, new ErrorMessage("action_failed", message));
     }
 

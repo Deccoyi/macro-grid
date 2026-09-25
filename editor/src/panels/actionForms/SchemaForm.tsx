@@ -5,7 +5,7 @@ import { useT } from "../../i18n/I18nContext";
 import { VariablePicker } from "../VariablePicker";
 import { Seg } from "../fields/controls";
 
-export interface SchemaFormProps {
+interface SchemaFormProps {
   fields: SettingField[];
   values: Record<string, unknown>;
   onChange: (values: Record<string, unknown>) => void;

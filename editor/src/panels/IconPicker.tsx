@@ -76,7 +76,7 @@ async function iconToDataUri(name: string, color: string): Promise<string | null
   return pack ? pluginIconToDataUri(pack.id, name, color) : null;
 }
 
-export interface IconPickerProps {
+interface IconPickerProps {
   /** The widget's current icon, as a data: URI (what WidgetStyle.icon holds). */
   value?: string;
   /** Baked into the generated SVG's stroke color at pick time — usually the widget's own foreground. */

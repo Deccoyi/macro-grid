@@ -5,7 +5,7 @@ export interface DeviceSize {
   height: number;
 }
 
-export interface DevicePreviewFrameProps {
+interface DevicePreviewFrameProps {
   /** Target device size in CSS px, or null for "free" (fills the container, no frame/scaling). */
   size: DeviceSize | null;
   children: ReactNode;

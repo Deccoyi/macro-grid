@@ -15,7 +15,7 @@ public enum PluginKind
 /// </summary>
 public sealed record PluginManifest
 {
-    /// <summary>Unique, stable id (e.g. "obs", "audio"). The host refuses to load a second plugin with the same id.</summary>
+    /// <summary>Unique, stable id (e.g. "demo", "audio"). The host refuses to load a second plugin with the same id.</summary>
     public required string Id { get; init; }
 
     /// <summary>Display name shown in the editor's plugin list.</summary>
@@ -30,7 +30,7 @@ public sealed record PluginManifest
     /// <summary>Minimum host (server) semver this plugin requires.</summary>
     public required string MinServerVersion { get; init; }
 
-    /// <summary>Entry assembly file name for a csharp plugin (e.g. "Obs.Plugin.dll"). Entry script for js (not yet supported by the loader).</summary>
+    /// <summary>Entry assembly file name for a csharp plugin (e.g. "Demo.Plugin.dll"). Entry script for js (not yet supported by the loader).</summary>
     public required string Entry { get; init; }
 
     [JsonConverter(typeof(JsonStringEnumConverter<PluginKind>))]

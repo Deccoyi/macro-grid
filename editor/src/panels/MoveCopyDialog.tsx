@@ -5,7 +5,7 @@ import type { ProfileSummary } from "../api/types";
 import { useT } from "../i18n/I18nContext";
 import { useBackdropClose } from "../components/useBackdropClose";
 
-export interface MoveCopyDialogProps {
+interface MoveCopyDialogProps {
   title: string;
   profiles: ProfileSummary[];
   currentProfileId: string;

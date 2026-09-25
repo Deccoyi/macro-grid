@@ -1,6 +1,7 @@
 using MacroGrid.Core.Profiles;
 using MacroGrid.Plugin.Abstractions;
 using MacroGrid.Protocol;
+using MacroGrid.Core.Widgets;
 
 namespace MacroGrid.Core.Sessions;
 

@@ -5,7 +5,7 @@ import type { VariableInfo } from "../../api/types";
 import { useT } from "../../i18n/I18nContext";
 import { DynamizeModal, type ResultKind } from "./DynamizeModal";
 
-export interface DynamicFieldLabelProps {
+interface DynamicFieldLabelProps {
   label: string;
   /** Dotted path into the widget, e.g. "style.background" — matches server DynamizableProperties. */
   propertyKey: string;

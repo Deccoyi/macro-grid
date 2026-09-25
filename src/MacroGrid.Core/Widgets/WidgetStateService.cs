@@ -4,8 +4,9 @@ using MacroGrid.Core.Variables;
 using MacroGrid.Protocol;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using MacroGrid.Core.Sessions;
 
-namespace MacroGrid.Core.Sessions;
+namespace MacroGrid.Core.Widgets;
 
 /// <summary>
 /// Pushes template-driven widget text and toggle state to clients.

@@ -16,7 +16,7 @@ Profil, bir düğmeyle (**Profil değiştir** aksiyonu), telefondaki çekmeceden
 
 ## Sayfalar
 
-Bir profilin birçok sayfası olabilir. Telefonda aralarında geçmek için sola ya da sağa kaydırın. **Sayfa değiştir** aksiyonlu bir düğme de ekleyebilirsiniz (bir sayfaya git, sonraki, önceki ya da geri).
+Bir profilin birçok sayfası olabilir. Telefonda aralarında geçmek için iki parmakla sola ya da sağa kaydırın. **Sayfa değiştir** aksiyonlu bir düğme de ekleyebilirsiniz (bir sayfaya git, sonraki, önceki ya da geri).
 
 Sayfalar panelinde sayfa ekleyebilir, yeniden adlandırabilir, çoğaltabilir, silebilir ve **bir sayfayı başka bir profile kopyalayabilirsiniz**. Seçili widget'ları da başka bir sayfaya ya da profile **taşıyabilir veya kopyalayabilirsiniz**.
 

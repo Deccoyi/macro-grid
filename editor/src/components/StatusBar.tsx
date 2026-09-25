@@ -48,8 +48,8 @@ function StatusChip({ entry, onClick }: { entry: StatusEntry; onClick?: () => vo
 
 /**
  * Window-wide status bar — the last row of App.tsx's root grid. Core items (server version, connected
- * device count) sit on the left; plugin-owned items (see IPluginHost.CreateStatusItem, e.g. OBS's
- * connection state) on the right. Clicking a plugin item opens that plugin's settings window; a plugin
+ * device count) sit on the left; plugin-owned items (see IPluginHost.CreateStatusItem, e.g. a connection state)
+ * on the right. Clicking a plugin item opens that plugin's settings window; a plugin
  * with no registered IPluginSettingsPage just shows an empty window (see PluginSettingsWindow.tsx).
  */
 export function StatusBar({ items }: { items: StatusEntry[] }) {

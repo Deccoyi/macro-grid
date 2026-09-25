@@ -6,7 +6,7 @@ it is built and why.
 
 ## Shape
 
-`JsPlugin` (`Core/Plugins/Js/JsPlugin.cs`) implements `IPlugin`. `PluginManager` creates it instead of loading an assembly
+`JsPlugin` (`Core/Plugins/Js/JsPlugin*.cs`) implements `IPlugin`. `PluginManager` creates it instead of loading an assembly
 and then treats it exactly like a C# plugin: `Initialize(host)` collects registrations, they are applied to the live
 registries, and unload / reload / uninstall / hot loading all work unchanged (`Dispose` stops the thread and the timers).
 The script may only register at its top level; `Initialize` returns once the script's first run has finished (10 s cap).

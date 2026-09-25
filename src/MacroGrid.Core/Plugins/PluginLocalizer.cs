@@ -11,7 +11,7 @@ namespace MacroGrid.Core.Plugins;
 /// ship <c>locales/&lt;language&gt;.json</c> next to its <c>plugin.json</c>: one object that maps the default-language text to
 /// its translation. A language without a file, or a text without an entry, falls back to the text as the plugin wrote it.
 /// A text with a value put into it at run time is translated through a template: the key holds <c>{0}</c>, <c>{1}</c> ... where the values
-/// go (<c>"OBS · retrying in {0}s"</c>) and the translation moves them where the language wants them.
+/// go (<c>"Plugin · retrying in {0}s"</c>) and the translation moves them where the language wants them.
 /// </summary>
 public sealed class PluginLocalizer(Func<string> currentLanguage)
 {

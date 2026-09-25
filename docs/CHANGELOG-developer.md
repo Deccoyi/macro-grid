@@ -3,6 +3,12 @@
 This file follows the [Keep a Changelog](https://keepachangelog.com/) format. For versioning rules, see [versioning.md](versioning.md). The short, public changelog is [CHANGELOG.md](CHANGELOG.md).
 
 ## [Unreleased]
+### Fixed
+- **Stale `actionError` status item:** `ClientHub.ReportActionErrorsAsync` set the core status item `actionError` and never cleared it. `PluginStatusRegistry.SetCore` takes an optional `lifetime` (expired items are dropped when `All` is read, a plugin's own items never expire) and has `RemoveCore`; the item now lives 15 s and is removed when an action runs without errors. Unit tests: `PluginStatusRegistryTests`.
+
+### Changed
+- **Internal cleanup (no behavior change):** `ServerApp` is now only the composition root; the 45 editor endpoints live in `Host/Api/*Api.cs` (shared `ApiResults`, `OptionsEndpoint`) and DI registration in `Host/ServiceRegistration.cs`. `PluginManager` and `JsPlugin` are partial classes by concern, `Model/Profile.cs` is one file per type, `AssetStore` / `ToggleStateStore` / `WidgetStateService` moved to `Core/Widgets`, tray/window/dialog classes to `Host/Ui`. Editor: `useEditorState` is composed from `useProfileDocument`, `usePageActions`, `useWidgetActions` and `useServerCatalogs`; the API client shares `get` / `send` helpers. Webclient: `App.tsx` split into components and its UI text moved to `i18n/`. `ClientSession` lost the never-read address and timestamp. `.editorconfig`, `noUnusedLocals` / `noUnusedParameters` and `docs/engineering-guidelines.md` added. Details: `docs/refactor-notes.md`; open questions: `docs/proposals/`.
+- `/ws` answers a non-WebSocket request with an English message (was Turkish).
 
 ## [0.2.1] - 2026-09-24
 ### Changed

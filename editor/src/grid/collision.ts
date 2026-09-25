@@ -2,11 +2,11 @@ import type { Widget } from "@macro/renderer";
 
 type Rect = Pick<Widget, "x" | "y" | "w" | "h">;
 
-export function overlaps(a: Rect, b: Rect): boolean {
+function overlaps(a: Rect, b: Rect): boolean {
   return a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
 }
 
-export function fitsOnGrid(rect: Rect, cols: number, rows: number): boolean {
+function fitsOnGrid(rect: Rect, cols: number, rows: number): boolean {
   return rect.x >= 0 && rect.y >= 0 && rect.x + rect.w <= cols && rect.y + rect.h <= rows;
 }
 

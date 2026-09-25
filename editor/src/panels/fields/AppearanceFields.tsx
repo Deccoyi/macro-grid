@@ -9,7 +9,7 @@ export interface FieldGroupProps {
   onChange: (fn: (widget: Widget) => void) => void;
 }
 
-export interface AppearanceFieldsProps extends FieldGroupProps {
+interface AppearanceFieldsProps extends FieldGroupProps {
   variableCatalog: VariableInfo[];
 }
 

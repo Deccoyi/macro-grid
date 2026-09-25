@@ -16,7 +16,7 @@ pasted link. Anything not published by us must be clearly marked as third-party.
 - **Install:** `PluginManager.InstallFromFolderAsync` (`src/MacroGrid.Core/Plugins/PluginManager.cs`)
   copies the folder to `%AppData%\MacroGrid\plugins\<id>\` with `CopyDirectory`
   (overwrite only, not atomic) and loads it. Endpoint: `POST /api/plugins/install`
-  (`src/MacroGrid.Host/ServerApp.cs`), backed by the native folder dialog.
+  (`src/MacroGrid.Host/Api/PluginApi.cs`), backed by the native folder dialog.
 - **Manifest:** `plugin.json` → `PluginManifest` (SDK): `id`, `name`, `version`,
   `sdkVersion` (caret range), `minServerVersion`, `entry`, `kind`, `permissions` (JS only).
   Compatibility: `SemVer.SatisfiesCaret` / `SatisfiesMinimum`; failures get the
@@ -141,6 +141,10 @@ main ─────────●──[tag]───●──[tag]
 
 - New optional manifest fields: `description`, `author`, `homepage`. Additive; older
   hosts ignore unknown properties.
+- Planned optional manifest field for a plugin logo (avatar): a path to a small square image (SVG or PNG) inside the
+  package. The Store list and detail page and the editor's Plugins window show it; without one they keep the category
+  glyph. To do with the next manifest or SDK change. Needs a size and format limit, and the release zip and the
+  Store catalog build must carry the image (`website/store/icons/` holds only the category glyphs today).
 - Copyable GitHub Actions workflows (one per repo type) that build, zip, hash, publish
   the release and update the index/metadata on `main`.
 - Author docs on the plugins website: update `website/guides/publishing.md`, add

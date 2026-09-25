@@ -1,5 +1,5 @@
 import type { Profile } from "@macro/renderer";
-export type SettingFieldKind = "Text" | "Password" | "Number" | "Slider" | "Bool" | "Select" | "Segmented";
+type SettingFieldKind = "Text" | "Password" | "Number" | "Slider" | "Bool" | "Select" | "Segmented";
 
 export interface SettingOption {
   value: string;
@@ -164,7 +164,7 @@ export interface AppPreferences {
 }
 
 /** A plugin a packaged profile needs (from the manifest of a .msprofile file). */
-export interface PackagePluginRef {
+interface PackagePluginRef {
   id: string;
   name: string;
   version: string;

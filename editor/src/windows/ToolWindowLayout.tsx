@@ -1,11 +1,11 @@
 import type { ReactNode } from "react";
 
-export interface ToolWindowCategory {
+interface ToolWindowCategory {
   id: string;
   label: string;
 }
 
-export interface ToolWindowLayoutProps {
+interface ToolWindowLayoutProps {
   categories: ToolWindowCategory[];
   activeId: string;
   onSelect: (id: string) => void;
