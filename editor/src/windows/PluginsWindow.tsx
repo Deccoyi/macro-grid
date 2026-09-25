@@ -307,8 +307,24 @@ export function PluginsWindow() {
                   />
                 )}
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 13 }}>
-                    {p.name} <span style={{ color: "var(--ms-text-disabled)" }}>v{p.version}</span>
+                  <div style={{ fontSize: 13, display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+                    <span>
+                      {p.name} <span style={{ color: "var(--ms-text-disabled)" }}>v{p.version}</span>
+                    </span>
+                    <span
+                      style={{
+                        fontSize: 10,
+                        padding: "1px 6px",
+                        borderRadius: 10,
+                        border: "1px solid var(--ms-border)",
+                        color: "var(--ms-text-secondary)",
+                      }}
+                    >
+                      {t(`plugins.badge.${p.trust === "ThirdParty" ? "thirdParty" : p.trust === "Official" ? "official" : "local"}`)}
+                    </span>
+                    {catalog?.find((e) => e.id === p.id)?.updateAvailable && (
+                      <span style={{ fontSize: 10, color: "var(--ms-warning, #facc15)" }}>{t("plugins.updateAvailable")}</span>
+                    )}
                   </div>
                   {p.detail && <div style={{ fontSize: 11, color: "var(--ms-text-secondary)", marginTop: 2 }}>{p.detail}</div>}
                   {p.status === "NeedsApproval" && (

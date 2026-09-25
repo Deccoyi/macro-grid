@@ -101,6 +101,10 @@ export interface PluginInfo {
   /** True when the manifest's optional `icon` path resolved to a valid file — fetch it from
    * api.getPluginIconUrl(id) instead of the generic category glyph. Missing from an older server. */
   hasIcon?: boolean;
+  /** "Official" | "ThirdParty" | "Local" — where GET /api/plugins says this plugin came from. Missing from an
+   * older server (treat as "Local"). Only GET /api/plugins sends this; approve/reload's single-plugin response
+   * does not, since the caller already has it from the list. */
+  trust?: "Official" | "ThirdParty" | "Local";
 }
 
 /** One icon pack contributed by a plugin via IPluginHost.RegisterIconPack — e.g. the PLC icon set.
