@@ -30,7 +30,8 @@ public sealed class ClientHub(
     ILogger<ClientHub> logger,
     PluginLocalizer localizer)
 {
-    public const string ServerVersion = "0.3.2";
+    /// <summary>The server's version. It is the SDK's version on purpose: the two carry one number (docs/guides/versioning.md).</summary>
+    public static string ServerVersion => PluginSdk.Version;
     private const int MaxMessageBytes = 64 * 1024;
     private const int MaxAssetsPerRequest = 256;
 

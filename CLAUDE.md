@@ -12,6 +12,11 @@
 - `CHANGELOG-developer.md` records only: changes to the plugin SDK or the WebSocket protocol, breaking or incompatible changes, migrations, and anything a plugin author, integrator or maintainer has to do differently. Everything else (how a feature was built, refactors, internal details, small fixes) goes in the commit message and the pull request description, not in this file. Entries already there stay as they are.
 - When a change is finished, update `CHANGELOG.md` under `[Unreleased]`, and `CHANGELOG-developer.md` only if the change is one of the kinds above. See `docs/guides/versioning.md` and the `commit-all` skill.
 
+## Versions, releases and signing
+- Any version, release, tag or signing work (server, SDK, phone app or plugins): read `docs/guides/release.md` first (the one release guide, with the tag table, the order and the signing keys), then `docs/guides/versioning.md` for the rules. The other repositories link here; do not copy their content into other documents.
+- The server and the SDK share one version, set only in `<Version>` in `Directory.Build.props`. Never write a version into code or a project file.
+- Tags, NuGet publishing and plugin or APK releases are outward-facing: ask the owner before each one.
+
 ## Commits
 - Conventional Commits (`type(scope): description`), always in English.
 

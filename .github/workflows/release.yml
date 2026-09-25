@@ -1,6 +1,6 @@
 name: Release
 
-# Runs when a tag such as server-v0.2.0-alpha is pushed. It builds the release folder with scripts/publish.ps1, zips it,
+# Runs when a tag such as server-v1.0.0-beta is pushed. It builds the release folder with scripts/publish.ps1, zips it,
 # builds the Windows installer with Inno Setup and attaches both to a DRAFT GitHub Release (nothing is published until the
 # maintainer publishes the draft). The installer is built on every run because the app's own updater downloads
 # MacroGrid-Setup-<version>.exe from the release. The release body is the section of docs/CHANGELOG.md for that version
@@ -11,7 +11,7 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: "Release tag to build and attach to (for example server-v0.2.0-alpha); the tag must already exist"
+        description: "Release tag to build and attach to (for example server-v1.0.0-beta); the tag must already exist"
         required: true
         type: string
 
@@ -33,6 +33,14 @@ jobs:
       - uses: actions/setup-node@v7
         with:
           node-version: 24
+
+      - name: Check that the tag matches the version
+        shell: pwsh
+        run: |
+          if ($env:TAG -notmatch '^server-v(\d+\.\d+\.\d+)(-beta)?$') { throw "The tag '$env:TAG' must look like server-vX.Y.Z or server-vX.Y.Z-beta." }
+          $tagVersion = $Matches[1]
+          if ((Get-Content Directory.Build.props -Raw) -notmatch '<Version>(\d+\.\d+\.\d+)</Version>') { throw "No <Version> in Directory.Build.props" }
+          if ($Matches[1] -ne $tagVersion) { throw "The tag says $tagVersion but Directory.Build.props says $($Matches[1])." }
 
       - name: Test
         run: dotnet test -c Release

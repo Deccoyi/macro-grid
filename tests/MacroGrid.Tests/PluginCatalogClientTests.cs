@@ -57,6 +57,24 @@ public sealed class PluginCatalogClientTests
     }
 
     [Fact]
+    public async Task Parses_a_format_2_index_with_macro_grid_and_no_legacy_fields()
+    {
+        var json = ValidIndexJson()
+            .Replace("\"formatVersion\": 1", "\"formatVersion\": 2")
+            .Replace("\"sdkVersion\": \"^0.3.0\",", "\"macroGrid\": \"1.0.0\",")
+            .Replace("\"minServerVersion\": \"0.1.0\",", "");
+        var handler = new FakeHttpHandler(r => r.RequestUri!.Host == "raw.githubusercontent.com" ? Text200(json) : new HttpResponseMessage(HttpStatusCode.NotFound));
+        var client = new PluginCatalogClient(new HttpClient(handler));
+
+        var index = await client.FetchIndexAsync(Owner, Repo, CancellationToken.None);
+
+        var version = Assert.Single(Assert.Single(index.Plugins).Versions);
+        Assert.Equal("1.0.0", version.MacroGrid);
+        Assert.Null(version.SdkVersion);
+        Assert.Null(version.MinServerVersion);
+    }
+
+    [Fact]
     public async Task Refuses_a_version_whose_url_points_at_a_different_repository()
     {
         var handler = new FakeHttpHandler(_ => Text200(ValidIndexJson("https://github.com/someone-else/other-repo/releases/download/v1/x.zip")));
@@ -69,7 +87,7 @@ public sealed class PluginCatalogClientTests
     [Fact]
     public async Task Refuses_an_unsupported_format_version()
     {
-        var handler = new FakeHttpHandler(_ => Text200("""{ "formatVersion": 2, "name": "x", "plugins": [] }"""));
+        var handler = new FakeHttpHandler(_ => Text200("""{ "formatVersion": 3, "name": "x", "plugins": [] }"""));
         var client = new PluginCatalogClient(new HttpClient(handler));
 
         var ex = await Assert.ThrowsAsync<PluginCatalogException>(() => client.FetchIndexAsync(Owner, Repo, CancellationToken.None));
