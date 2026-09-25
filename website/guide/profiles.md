@@ -16,7 +16,7 @@ A profile can also be switched by a button (the **Change profile** action), from
 
 ## Pages
 
-A profile can have many pages. On the phone, swipe left or right to move between them. You can also add a button with the **Change page** action (go to a page, next, previous or back).
+A profile can have many pages. On the phone, swipe left or right with two fingers to move between them. You can also add a button with the **Change page** action (go to a page, next, previous or back).
 
 In the pages panel you can add, rename, duplicate and delete pages, and **copy a page to another profile**. Selected widgets can be **moved or copied** to another page or profile, too.
 
