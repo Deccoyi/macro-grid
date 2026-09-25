@@ -3,7 +3,12 @@
 This file follows the [Keep a Changelog](https://keepachangelog.com/) format. For versioning rules, see [versioning.md](guides/versioning.md). The short, public changelog is [CHANGELOG.md](CHANGELOG.md).
 
 ## [Unreleased]
+
+## [0.3.1] - 2026-09-25
+0.3.0 was published and withdrawn the same day (set back to a draft; its tag stays) because of the first fix below; 0.3.1 replaces it and has the same content.
+
 ### Fixed
+- **The app came back elevated after an update:** when the app started the setup itself (an administrator prompt from another process), neither a plain `[Run]` entry nor a `postinstall` entry with `runasoriginaluser` started it again as the person; only a setup started from Explorer did. The update run now starts `explorer.exe "<app>\MacroGrid.exe"` (`postinstall`, `IsUpdateRun`), which uses the person's normal token. That passes no `--updated`, so `StartupPolicy.WasUpdated(args, lastRunVersion, currentVersion)` also compares the version that ran last (`UpdateState.LastRunVersion`, written at every start) with the current one; the argument still counts. Tests: `StartupPolicyTests`.
 - **Update download deleted right after it finished:** `UpdateInstaller` cleaned the downloads folder after each download, and `DownloadedInstallers.CleanUp` kept the newest version there, so a newer leftover (a made-up test release) made it delete the installer that had just been fetched; the setup then failed to start with "cannot find the file". `CleanUp` takes the version just downloaded (`keep`) and always keeps that one. Test: `The_version_that_was_just_downloaded_stays_even_when_a_newer_leftover_exists`.
 - **Website workflow failed when a release was published:** a release runs the workflow on its tag, and the `github-pages` environment accepts only `main`, so the download page was not refreshed. A release now only starts a manual run of the workflow on `main` (job `refresh`); build and deploy skip the release event.
 
