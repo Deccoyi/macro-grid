@@ -14,6 +14,12 @@ public static class StartupPolicy
     /// <summary>Command-line argument the Windows startup entry passes to the exe.</summary>
     public const string AutostartArgument = "--autostart";
 
+    /// <summary>Command-line argument the installer passes when it starts the app again after an automatic update.</summary>
+    public const string UpdatedArgument = "--updated";
+
+    public static bool WasUpdated(IEnumerable<string> args) =>
+        args.Any(a => string.Equals(a, UpdatedArgument, StringComparison.OrdinalIgnoreCase));
+
     public static bool ShouldOpenEditor(IEnumerable<string> args, AppPreferences preferences)
     {
         var startedByWindows = args.Any(a => string.Equals(a, AutostartArgument, StringComparison.OrdinalIgnoreCase));

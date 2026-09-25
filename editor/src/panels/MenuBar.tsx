@@ -33,7 +33,7 @@ function mnemonicLabel(label: string, letter: string | undefined, show: boolean)
 }
 
 /** The single top row above the toolbar: File / Settings / Plugins / Help — styled and behaving like a
- * real Windows desktop app menu bar (see docs/ui-guidelines.md), not a website nav: flat, no accent tint
+ * real Windows desktop app menu bar (see docs/ui/ui-guidelines.md), not a website nav: flat, no accent tint
  * on the label itself, hovering a menu button switches to it while another menu is already open, and
  * holding Alt reveals mnemonic underlines (Alt+letter opens that menu directly). Settings/Plugins open
  * as real separate OS windows (ToolWindow.cs) rather than in-page modals; only File's import/export use
@@ -90,6 +90,7 @@ export function MenuBar({ profile, onImportProfile }: MenuBarProps) {
   const pluginsItems: ContextMenuItem[] = [{ label: t("menu.plugins.manage"), onSelect: () => api.openToolWindow("plugins") }];
   const helpItems: ContextMenuItem[] = [
     { label: t("menu.help.version", serverVersion), disabled: true, onSelect: () => {} },
+    { label: t("menu.help.checkForUpdates"), onSelect: () => api.openToolWindow("update", "check") },
     { label: t("menu.help.about"), onSelect: () => api.openToolWindow("help", "about") },
     { label: t("menu.help.agreement"), onSelect: () => api.openToolWindow("help", "agreement") },
     { label: t("menu.help.licenses"), onSelect: () => api.openToolWindow("help", "licenses") },

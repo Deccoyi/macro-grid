@@ -20,12 +20,36 @@ Where the project stands. The project is before 1.0.0 and under active developme
   Official plugins live in the plugin repository: OBS, an icon pack and a JavaScript example.
 - **Browser deck** served by the server at `/deck/`.
 - **Packaging:** a single-file release build and a Windows installer with a user agreement, tested on a clean company PC (install, WebView2 setup, start with
-  Windows, upgrade, uninstall; [release.md](release.md)); a signed release build of the phone app; the plugin SDK is published on NuGet.
+  Windows, upgrade, uninstall; [release.md](guides/release.md)); a signed release build of the phone app; the plugin SDK is published on NuGet.
 - **Phone app** (its own repository): connection with saved servers and QR pairing, the profile drawer, page swipes, kiosk mode and orientation lock,
   keep-awake, automatic reconnection and an offline layout cache.
 
 ## Next
 
+The order of the bigger pieces of work, and their plans, are in [plans/README.md](plans/README.md). The items below have no plan file yet.
+
+- **Keyboard shortcuts and undo/redo in the editor:** today the editor has no shortcuts beyond Enter and Escape in windows and menus, no undo, and
+  duplicating or copying a widget goes through the right-click menu. Wanted: **Delete**, **Ctrl+C / Ctrl+X / Ctrl+V** and **Ctrl+D** on the selected
+  widgets, with paste working across pages and across profiles (a copy carries its actions and dynamic rules), and **Ctrl+Z / Ctrl+Y** to step back
+  and forward through every change the person makes: moving or resizing a widget, adding, deleting or pasting, renaming, dynamization rules, action
+  and event bindings, and any value in the properties panel (text fields, dropdowns, switches, modes, colors). All of them go on **one shared history
+  stack**, in the order they happened, so Ctrl+Z always undoes the latest change whatever kind it was and Ctrl+Y redoes it. Shortcuts must not fire while a text field has focus, apart from the field's own text undo. They
+  belong in the Edit menu with their key hints too. It needs a plan file before it is built (`plans/`).
+- **A branded installer:** today the setup uses the plain modern wizard style with Inno Setup's default pictures and no icon of its own. Wanted: the
+  Macro Grid logo and the product colors. What the setup tool can do natively: an icon for the setup file and the uninstaller (`SetupIconFile`, from
+  `src/MacroGrid.Host/app.ico`), the large picture on the welcome and finished pages (`WizardImageFile`), the small logo in the corner of the
+  other pages (`WizardSmallImageFile`, several sizes for high-DPI screens), the color behind the large picture, and the texts on each page. What it
+  cannot do natively: restyle the buttons, fonts and page background in our accent color; that needs a third-party skin library, which is not
+  worth its size, its licence and the antivirus false alarms it can bring. So the plan is the native part, drawn from `docs/ui/color-bible.md`
+  and `website/public/logo.png`. The automatic update shows few pages (see `design/agreement-acceptance.md`), so the logo appears mostly
+  in its progress window. The exact picture sizes are checked against the Inno Setup version the release workflow installs. It needs a small
+  plan file first (`plans/`).
+- **A much faster install and update (fewer files):** the editor bundle installs as about 6,000 tiny files (one per icon in `wwwroot\editor\assets`,
+  because the editor loads each icon on demand), and copying them one by one made a setup on a fast PC take over a minute; an update shows this
+  in its progress window, and antivirus scanning makes it slower on other PCs. An upgrade also leaves the previous version's hashed editor files behind (`wwwroot\editor\assets` collects several `index-*.js`), so the setup should clear the old `wwwroot` first (an `[InstallDelete]` entry) or, better, install far fewer files. Wanted: a setup of a few seconds. Ideas to weigh: bundle the
+  icons into a few chunks or one file (the editor still loads only what it draws), or ship the editor as one archive that the app unpacks or
+  serves from; the setup itself gets faster with fewer, larger files. Measure the file count and the setup time before and after. It needs a
+  small plan file first (`plans/`).
 - **The `plugin-html` widget:** a plugin ships its own HTML and JavaScript widget. It would run in a sandboxed iframe on the client and talk to the
   server only through `postMessage`. It needs the widget type in the renderers, a bridge in the client and a message route on the server. Today the
   `plugin-html` type draws a placeholder.
@@ -34,14 +58,16 @@ Where the project stands. The project is before 1.0.0 and under active developme
 - **A logo (avatar) for plugin packages:** a plugin can ship a small image (SVG or PNG, square) and name it in an optional manifest field, so the Store
   (list and detail page) and the editor's Plugins window show it instead of the generic category glyph. It is an additive manifest field, so older
   hosts ignore it. Do it with the next manifest or SDK change, or earlier if it fits. Plugin packages and the Store catalog need the file rules
-  (size limit, format check) and the release zip must include the image. See `plugin-distribution-plan.md`, section 3c.
+  (size limit, format check) and the release zip must include the image. See `plans/plugin-distribution-plan.md`, section 3c.
 - **An async host API for JavaScript plugins** (today scripts are synchronous, so `host.http` blocks the plugin's own thread).
 
-## Before a first public release
+## Release status
 
-- Decide on code signing for the installer (it is unsigned, so Windows shows an unknown-publisher warning).
-- Publish the first release as an alpha (`server-v0.2.0-alpha`, `client-v0.1.0-alpha`): merge `dev` into `main`, tag, attach the installer and the APK to the draft releases.
-- After the repositories are public: turn on private vulnerability reporting, the tag protection for `sdk-v*` and the documentation site.
+- The repositories are public and the first alpha is published: the server (`server-v0.2.0-alpha`, installer and zip), the phone app and the
+  official plugins.
+- The installer and the APK are **not code-signed**, by decision: no certificate will be bought, so Windows SmartScreen and Play Protect warn
+  on first run.
+- Private vulnerability reporting, the tag protection for `sdk-v*` and the documentation sites are on.
 
 ## Known gaps
 

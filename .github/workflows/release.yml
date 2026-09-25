@@ -1,8 +1,10 @@
 name: Release
 
-# Runs when a tag such as server-v0.2.0-alpha is pushed. It builds the release folder with scripts/publish.ps1, zips it
-# and attaches it to a DRAFT GitHub Release (nothing is published until the maintainer publishes the draft).
-# The installer needs Inno Setup, so it is only built on a manual run with "installer" ticked.
+# Runs when a tag such as server-v0.2.0-alpha is pushed. It builds the release folder with scripts/publish.ps1, zips it,
+# builds the Windows installer with Inno Setup and attaches both to a DRAFT GitHub Release (nothing is published until the
+# maintainer publishes the draft). The installer is built on every run because the app's own updater downloads
+# MacroGrid-Setup-<version>.exe from the release. The release body is the section of docs/CHANGELOG.md for that version
+# (scripts/release-notes.ps1), since the update window shows it.
 on:
   push:
     tags: ["server-v*"]
@@ -12,11 +14,6 @@ on:
         description: "Release tag to build and attach to (for example server-v0.2.0-alpha); the tag must already exist"
         required: true
         type: string
-      installer:
-        description: "Also build the Windows installer (installs Inno Setup on the runner)"
-        required: false
-        default: false
-        type: boolean
 
 permissions:
   contents: write
@@ -54,14 +51,16 @@ jobs:
           "zip=$zip" >> $env:GITHUB_OUTPUT
 
       - name: Install Inno Setup
-        if: ${{ github.event_name == 'workflow_dispatch' && inputs.installer }}
         shell: pwsh
         run: choco install innosetup --yes --no-progress
 
       - name: Build the installer
-        if: ${{ github.event_name == 'workflow_dispatch' && inputs.installer }}
         shell: pwsh
         run: installer/build-installer.ps1
+
+      - name: Write the release notes
+        shell: pwsh
+        run: scripts/release-notes.ps1 -Tag $env:TAG | Set-Content artifacts/release-notes.md -Encoding utf8
 
       - name: Upload to a draft release
         shell: pwsh
@@ -72,6 +71,6 @@ jobs:
           if (Test-Path artifacts) { $files += (Get-ChildItem artifacts -Filter "MacroGrid-Setup-*.exe" | ForEach-Object FullName) }
           gh release view $env:TAG *> $null
           if ($LASTEXITCODE -ne 0) {
-            gh release create $env:TAG --draft --prerelease --title "Macro Grid server $($env:TAG -replace '^server-v','')" --notes "Draft. See docs/release-notes-v0.2.0-alpha.md for the notes."
+            gh release create $env:TAG --draft --prerelease --title "Macro Grid server $($env:TAG -replace '^server-v','')" --notes-file artifacts/release-notes.md
           }
           gh release upload $env:TAG @files --clobber

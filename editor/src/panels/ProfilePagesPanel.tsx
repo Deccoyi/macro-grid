@@ -28,7 +28,7 @@ interface ProfilePagesPanelProps {
 }
 
 /** Left sidebar, top half — a layer-panel-style tree: current profile at top, its pages below.
- * Replaces the old top-bar profile controls and the separate PageTabs strip (see docs/ui-guidelines.md:51). */
+ * Replaces the old top-bar profile controls and the separate PageTabs strip (see docs/ui/ui-guidelines.md:51). */
 export function ProfilePagesPanel({
   profile,
   profiles,

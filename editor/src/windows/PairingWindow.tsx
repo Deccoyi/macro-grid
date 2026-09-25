@@ -12,7 +12,7 @@ type Category = "code" | "devices";
 
 /** The whole page of the "Pairing" tool window (see ToolWindow.cs) — a real separate, non-modal OS
  * window using the same left-categories/right-content shell as Plugins/Preferences/Help, instead of the
- * old centered modal-over-a-dark-backdrop (see docs/ui-guidelines.md: Device Manager-style screens get
+ * old centered modal-over-a-dark-backdrop (see docs/ui/ui-guidelines.md: Device Manager-style screens get
  * their own window, never an in-page overlay). A fresh, short-lived PIN/QR is issued every time this
  * window opens: a static code that stayed valid would defeat the point of scanning it. */
 export function PairingWindow() {

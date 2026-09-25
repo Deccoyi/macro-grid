@@ -48,4 +48,14 @@ public sealed class StartupPolicyTests
         Assert.True(StartupPolicy.ShouldOpenEditor(Manual, prefs));
         Assert.False(StartupPolicy.ShouldOpenEditor(["--AUTOSTART"], prefs));
     }
+
+    [Fact]
+    public void An_update_restart_is_recognised_and_still_follows_the_launch_mode()
+    {
+        Assert.True(StartupPolicy.WasUpdated(["--updated"]));
+        Assert.True(StartupPolicy.WasUpdated(["--UPDATED"]));
+        Assert.False(StartupPolicy.WasUpdated(Manual));
+        Assert.True(StartupPolicy.ShouldOpenEditor(["--updated"], new AppPreferences()));
+        Assert.False(StartupPolicy.ShouldOpenEditor(["--updated"], new AppPreferences { LaunchMode = StartupPolicy.Tray }));
+    }
 }

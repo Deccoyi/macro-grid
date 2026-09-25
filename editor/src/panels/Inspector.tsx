@@ -128,7 +128,7 @@ export function Inspector({
       <hr className="sep" />
 
       {/* Collapsed by default (unlike the sections above) — advanced/rarely-needed, kept out of the
-         way at the very bottom (see docs/ui-guidelines.md); whoever wants it clicks to open it. */}
+         way at the very bottom (see docs/ui/ui-guidelines.md); whoever wants it clicks to open it. */}
       <CollapsibleSection id="css" label={t("css.label")} defaultCollapsed>
         <CssEditor value={widget.customCss} onChange={(css) => onChange((w) => { w.customCss = css; })} />
       </CollapsibleSection>

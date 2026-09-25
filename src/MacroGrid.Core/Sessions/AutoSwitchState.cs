@@ -18,11 +18,11 @@ public readonly record struct AutoSwitchResult(bool Changed, bool ToDefault, str
 }
 
 /// <summary>
-/// Pure per-session "which profile should be showing" stack — see docs/auto-profile-switch.md. Knows
+/// Pure per-session "which profile should be showing" stack — see docs/design/auto-profile-switch.md. Knows
 /// nothing about ProfileStore, plugin-provided live state, or the actual foreground window; it is
 /// only ever told "process X came to the foreground and resolves to profile Y" or "prune anything whose
 /// process no longer has a visible window", by <see cref="AutoProfileSwitcher"/>. Kept side-effect-free
-/// so the whole stack/lock/manual-base interplay (docs/auto-profile-switch.md's "Behavior model") can be
+/// so the whole stack/lock/manual-base interplay (docs/design/auto-profile-switch.md's "Behavior model") can be
 /// unit tested without any Windows dependency or live session.
 /// </summary>
 public sealed class AutoSwitchState

@@ -18,8 +18,8 @@ public sealed class SystemAudioProvider(IAudioService audio) : IVariableProvider
 
     public IEnumerable<VariableInfo> Describe() =>
     [
-        new("system.audio.master", "Master volume (%)", "{system.audio.master|0}%", Category),
-        new("system.audio.muted", "Whether the sound is muted", "{system.audio.muted}", Category),
+        new("system.audio.master", "Master volume (%)", "{system.audio.master|0}%", Category) { Type = VariableType.Number, Unit = "%" },
+        new("system.audio.muted", "Whether the sound is muted", "{system.audio.muted}", Category) { Type = VariableType.Boolean },
     ];
 
     public async Task RunAsync(IVariableStore store, CancellationToken cancellationToken)

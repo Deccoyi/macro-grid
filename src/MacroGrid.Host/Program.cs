@@ -1,5 +1,7 @@
 using MacroGrid.Core.Preferences;
 using MacroGrid.Host.Ui;
+using MacroGrid.Host.Updates;
+using MacroGrid.Windows.Agreement;
 
 namespace MacroGrid.Host;
 
@@ -17,6 +19,10 @@ internal static class Program
         }
 
         ApplicationConfiguration.Initialize();
+
+        // The person has to have accepted the user agreement this copy ships before anything runs (see AgreementGate); declining ends the app here.
+        if (!AgreementGate.EnsureAccepted(AppContext.BaseDirectory, new AgreementRecord()))
+            return;
 
         // Captured here (on the real UI thread, before the message loop even starts) so API handlers
         // running on Kestrel's thread pool can still marshal a native dialog (OpenFileDialog, ...) onto it.
@@ -37,8 +43,13 @@ internal static class Program
             return;
         }
 
+        // The installer starts the app again with this argument after an automatic update: say so once.
+        var updated = StartupPolicy.WasUpdated(args);
+        // Downloaded installers never pile up: on every start only the newest one that is still newer than this version stays.
+        server.Services.GetRequiredService<UpdateInstaller>().CleanUpDownloads();
+
         var openEditor = StartupPolicy.ShouldOpenEditor(args, server.Services.GetRequiredService<PreferencesStore>().Get());
-        Application.Run(new TrayContext(server, openEditor));
+        Application.Run(new TrayContext(server, openEditor, updated));
 
         // The tray icon is gone at this point. If stopping the server hangs (for example a hosted service waiting for
         // the UI thread, whose message loop has just ended) or a foreground thread survives, the process would stay

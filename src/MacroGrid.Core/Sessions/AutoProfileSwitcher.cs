@@ -10,7 +10,7 @@ namespace MacroGrid.Core.Sessions;
 
 /// <summary>
 /// Reacts to <see cref="IActiveWindowSource"/> foreground-window changes by driving each opted-in
-/// session's <see cref="AutoSwitchState"/> and applying the result — see docs/auto-profile-switch.md. The
+/// session's <see cref="AutoSwitchState"/> and applying the result — see docs/design/auto-profile-switch.md. The
 /// stack/lock logic itself lives in the pure <see cref="AutoSwitchState"/>; this class is just the glue
 /// between the Windows event source, <see cref="ProfileStore"/>'s <c>AppMatch</c> rules, and the device's
 /// own opt-in (<see cref="PairedDevice.FollowActiveWindow"/>).

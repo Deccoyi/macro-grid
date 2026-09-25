@@ -40,10 +40,21 @@ Register actions, variable providers, a settings page, status items or icon pack
 `plugin.json` next to the dll; see the plugin authoring guide in the
 [plugin repository](https://github.com/Deccoyi/macro-grid-plugin/blob/main/docs/plugin-authoring.md).
 
+When a provider describes its variables (`IVariableCatalogSource`), give each one a type so the editor can offer the right
+value in a condition (for example a true/false choice for a boolean instead of a free text box):
+
+```csharp
+new VariableInfo("myplugin.connected", "Whether it is connected", "{myplugin.connected}", "My plugin") { Type = VariableType.Boolean },
+new VariableInfo("myplugin.bitrate", "Bitrate", "{myplugin.bitrate|0} kbps", "My plugin") { Type = VariableType.Number, Unit = "kbps" },
+new VariableInfo("myplugin.state", "State", "{myplugin.state}", "My plugin") { Values = ["idle", "busy"] },
+```
+
+`Type` defaults to `Text`; `Unit` and `Values` are optional.
+
 ## Compatibility
 
 `PluginSdk.Version` is the SDK version. A plugin declares `"sdkVersion": "^0.3.0"` in `plugin.json`; while the SDK is
 `0.x`, that matches `0.3.x` only. The package version equals `PluginSdk.Version`, so package `0.3.1` works with
-Macro Grid servers whose SDK is `0.3.x`. Breaking rules are in the server repo's `docs/versioning.md`.
+Macro Grid servers whose SDK is `0.3.x`. Breaking rules are in the server repo's `docs/guides/versioning.md`.
 
 Target framework: `net10.0`. License: MIT.

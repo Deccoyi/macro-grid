@@ -21,4 +21,32 @@ public class VariableCatalogTests
 
         Assert.Equal(["a.one", "z.two"], catalog.All.Select(v => v.Name));
     }
+
+    [Fact]
+    public void Type_metadata_serializes_for_the_editor_and_reads_back()
+    {
+        var info = new VariableInfo("a.muted", "Muted", "{a.muted}", "Test") { Type = VariableType.Boolean };
+
+        var json = System.Text.Json.JsonSerializer.Serialize(info, MacroGrid.Protocol.ProtocolJson.Options);
+        Assert.Contains("\"type\":\"boolean\"", json);
+        Assert.DoesNotContain("unit", json);
+
+        var parsed = System.Text.Json.JsonSerializer.Deserialize<VariableInfo>(
+            """{"name":"a.cpu","description":"CPU","example":"{a.cpu}","category":"Test","type":"number","unit":"%","values":["x"]}""",
+            MacroGrid.Protocol.ProtocolJson.Options)!;
+        Assert.Equal(VariableType.Number, parsed.Type);
+        Assert.Equal("%", parsed.Unit);
+        Assert.Equal(["x"], parsed.Values!);
+    }
+
+    [Fact]
+    public void Variables_without_type_metadata_are_text()
+    {
+        var parsed = System.Text.Json.JsonSerializer.Deserialize<VariableInfo>(
+            """{"name":"a.b","description":"B","example":"{a.b}","category":"Test"}""",
+            MacroGrid.Protocol.ProtocolJson.Options)!;
+
+        Assert.Equal(VariableType.Text, parsed.Type);
+        Assert.Null(parsed.Unit);
+    }
 }

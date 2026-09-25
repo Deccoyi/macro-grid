@@ -4,7 +4,7 @@ using MacroGrid.Core.Preferences;
 namespace MacroGrid.Core.Profiles;
 
 /// <summary>Resolves which profile a device opens when nothing more specific applies — the empty-stack
-/// end of docs/auto-profile-switch.md's fallback chain, and also the plain (pre-auto-switch) default a
+/// end of docs/design/auto-profile-switch.md's fallback chain, and also the plain (pre-auto-switch) default a
 /// device without <c>AssignedProfileId</c> always used. One place so <c>ClientHub.OnHelloAsync</c> and
 /// <see cref="Sessions.AutoProfileSwitcher"/> agree on the same chain.</summary>
 public static class ProfileResolver

@@ -1,6 +1,8 @@
 # Variable types and readable conditions
 
-**Status: planned, not implemented.**
+**Status: implemented** (2026-09-25), except step 5 (tagging the official plugins' variables, a follow-up in the plugin repository
+after the next SDK release). One deviation: `Type`, `Unit` and `Values` are init properties instead of optional constructor parameters,
+because a changed constructor signature would break plugins already built against SDK 0.3.x at load time.
 
 ## Problem
 
@@ -47,7 +49,7 @@ public sealed record VariableInfo(
 ```
 
 - This is an additive change to the plugin abstraction, so bump the `MacroGrid.Plugin.Abstractions` minor version and note it in
-  `docs/versioning.md` / both changelogs. Plugins that do not pass a type stay `Text` (today's behavior).
+  `docs/guides/versioning.md` / both changelogs. Plugins that do not pass a type stay `Text` (today's behavior).
 - The catalog API already serializes `VariableInfo` to the editor; add `type`, `unit`, `values` to `editor/src/api/types.ts`
   (`VariableInfo`), with the type as a string union.
 

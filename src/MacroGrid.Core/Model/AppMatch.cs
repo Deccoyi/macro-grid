@@ -1,6 +1,6 @@
 namespace MacroGrid.Core.Model;
 
-/// <summary>One "switch to this profile when this app is in the foreground" rule (docs/auto-profile-switch.md).</summary>
+/// <summary>One "switch to this profile when this app is in the foreground" rule (docs/design/auto-profile-switch.md).</summary>
 public sealed class AppMatch
 {
     /// <summary>Executable name, e.g. "Player.exe" — matched case-insensitively against the foreground

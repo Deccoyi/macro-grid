@@ -1,6 +1,6 @@
 # Macro Grid server 0.2.0 (alpha)
 
-Notes as published on the GitHub Release `server-v0.2.0-alpha`. Derived from [CHANGELOG.md](CHANGELOG.md); the text between the lines is the release body.
+Notes as published on the GitHub Release `server-v0.2.0-alpha`. Derived from [CHANGELOG.md](../CHANGELOG.md); the text between the lines is the release body.
 
 ---
 

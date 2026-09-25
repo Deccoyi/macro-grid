@@ -3,7 +3,18 @@
 New features and fixes in Macro Grid. For technical details, see [CHANGELOG-developer.md](CHANGELOG-developer.md).
 
 ## Unreleased
+
+## 0.3.0 - 2026-09-25
+This version has a new user agreement: you are asked to accept it once, in the installer or, if someone else installed it, the first time you start Macro Grid.
+
+### New
+- **Clearer conditions:** The variable list shows what kind of value each variable has (number, yes/no, text, time). For a yes/no value, such as "sound muted", you now pick On or Off instead of guessing what to type.
+- **User agreement:** The agreement is shown again when its text changes. An update shows it in the installer only if it is new to you, and Macro Grid asks anyone else who uses the PC once at start.
+- **Faster installer:** The editor is now a handful of files instead of about 1,500, so installing and updating take a fraction of the time.
+- **Automatic updates:** Macro Grid now looks for a new version on its own, shortly after it starts and every few hours. When there is one, you get a notification and a window with what is new. Choose Install now, Later or Skip this version. You can also check by hand from the tray icon or the Help window, and switch the automatic check off in Preferences.
+
 ### Fixed
+- **English labels in Turkish capitals:** Section titles such as "Version" no longer show a Turkish dotted capital I when the editor is set to English.
 - **Error message in the status bar:** After a button press failed (for example a scene that does not exist), the message stayed at the bottom of the editor for good. It now disappears after 15 seconds, or as soon as the next action works.
 
 ## 0.2.1 - 2026-09-24

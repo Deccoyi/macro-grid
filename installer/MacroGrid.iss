@@ -10,6 +10,11 @@
 #ifndef OutputDir
   #define OutputDir "..\artifacts"
 #endif
+; SHA-256 of license-agreement.txt, computed and passed in by build-installer.ps1. The license page is shown unless the person already
+; accepted exactly this text (the [Registry] entry below records it); empty means "always show it" (a build made by hand).
+#ifndef AgreementHash
+  #define AgreementHash ""
+#endif
 
 #define AppName "Macro Grid"
 #define AppExe "MacroGrid.exe"
@@ -53,6 +58,10 @@ Source: "{#SourceDir}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs 
 Source: "{#WebView2Setup}"; DestDir: "{tmp}"; DestName: "MicrosoftEdgeWebview2Setup.exe"; Flags: deleteafterinstall; Check: not WebView2Installed
 #endif
 
+[InstallDelete]
+; The editor and deck files carry a content hash in their names, so without this every upgrade would leave the previous version's files next to the new ones.
+Type: filesandordirs; Name: "{app}\wwwroot"
+
 [Icons]
 Name: "{group}\{#AppName}"; Filename: "{app}\{#AppExe}"
 Name: "{group}\Uninstall {#AppName}"; Filename: "{uninstallexe}"
@@ -63,13 +72,26 @@ Name: "{autodesktop}\{#AppName}"; Filename: "{app}\{#AppExe}"; Tasks: desktopico
 ; "when Windows starts Macro Grid" preference applies (tray by default) instead of the "when I open it" one.
 Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\Run"; ValueType: string; ValueName: "MacroGrid"; ValueData: """{app}\{#AppExe}"" --autostart"; Flags: uninsdeletevalue; Tasks: autostart
 
+#if AgreementHash != ""
+; The text this setup showed (or skipped because it was already accepted). Per person: HKCU is the account that approved the administrator prompt,
+; normally the person themselves. Another administrator approving would leave a hash that does not match, so the page is shown again (too much, never too little).
+Root: HKCU; Subkey: "Software\Macro Grid"; ValueType: string; ValueName: "AcceptedAgreement"; ValueData: "{#AgreementHash}"; Flags: uninsdeletevalue uninsdeletekeyifempty
+#endif
+
 [Run]
 #ifdef WebView2Setup
 Filename: "{tmp}\MicrosoftEdgeWebview2Setup.exe"; Parameters: "/silent /install"; StatusMsg: "Installing the WebView2 Runtime (needs an internet connection)..."; Flags: waituntilterminated; Check: not WebView2Installed
 #endif
 ; Phones connect over the local network on port 9820; allow it on private and domain (company) networks, never on public ones.
+; The old rule goes first, so an upgrade replaces it instead of adding another copy of the same rule (no match is not an error).
+Filename: "{sys}\netsh.exe"; Parameters: "advfirewall firewall delete rule name=""Macro Grid"""; Flags: runhidden; StatusMsg: "Allowing phones on your private network..."
 Filename: "{sys}\netsh.exe"; Parameters: "advfirewall firewall add rule name=""Macro Grid"" dir=in action=allow protocol=TCP localport=9820 profile=domain,private program=""{app}\{#AppExe}"""; Flags: runhidden; StatusMsg: "Allowing phones on your private network..."
-Filename: "{app}\{#AppExe}"; Description: "Start {#AppName}"; Flags: nowait postinstall skipifsilent
+Filename: "{app}\{#AppExe}"; Description: "Start {#AppName}"; Flags: nowait postinstall skipifsilent; Check: not IsUpdateRun
+; After an automatic update (the app started this setup with /UPDATE) start it again as the person, not as administrator. The argument makes
+; it show "Updated to <version>" once. The finished page closes by itself in that case, so the "Start" entry above is left out.
+; runasoriginaluser only takes effect on a postinstall entry (without postinstall the app came back elevated, found by testing); a postinstall
+; entry runs when the finished page is left, which the auto-close in CurPageChanged does.
+Filename: "{app}\{#AppExe}"; Parameters: "--updated"; Description: "Start {#AppName}"; Flags: nowait postinstall runasoriginaluser; Check: IsUpdateRun
 
 ; Profiles, paired devices, plugins and logs live in %AppData%\MacroGrid and are deliberately left in place
 ; on uninstall, so a reinstall picks up where the user left off.
@@ -92,6 +114,45 @@ var
 begin
   Exec(ExpandConstant('{sys}\taskkill.exe'), '/F /IM {#AppExe}', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
   Result := '';
+end;
+
+{ True when the app started this setup itself to update (the /UPDATE switch). The setup is visible (a progress window), not silent. }
+function IsUpdateRun: Boolean;
+var
+  I: Integer;
+begin
+  Result := False;
+  for I := 1 to ParamCount do
+    if CompareText(ParamStr(I), '/UPDATE') = 0 then
+      Result := True;
+end;
+
+{ The agreement text this person accepted earlier, as the hash the previous setup recorded in their HKCU; empty when there is none. }
+function AcceptedAgreementHash: string;
+begin
+  if not RegQueryStringValue(HKCU, 'Software\Macro Grid', 'AcceptedAgreement', Result) then
+    Result := '';
+end;
+
+{ A setup run by hand (a first install or a downloaded setup) always shows the agreement. An update (the /UPDATE switch) shows it only when its text
+  changed since this person accepted it, and none of the other pages: administrator prompt, progress window, done. }
+function ShouldSkipPage(PageID: Integer): Boolean;
+begin
+  Result := False;
+  if not IsUpdateRun then
+    Exit;
+  if PageID = wpLicense then
+    Result := ('{#AgreementHash}' <> '') and (CompareText(AcceptedAgreementHash, '{#AgreementHash}') = 0)
+  else
+    Result := (PageID = wpWelcome) or (PageID = wpSelectDir) or (PageID = wpSelectProgramGroup)
+           or (PageID = wpSelectTasks) or (PageID = wpReady);
+end;
+
+{ After an update the finished page has nothing to say: move on by itself, so the person sees the progress window and then the app comes back. }
+procedure CurPageChanged(CurPageID: Integer);
+begin
+  if (CurPageID = wpFinished) and IsUpdateRun then
+    WizardForm.NextButton.OnClick(WizardForm.NextButton);
 end;
 
 const

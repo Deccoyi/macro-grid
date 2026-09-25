@@ -53,6 +53,11 @@ internal static class WebViewEnvironment
                             host.Text = view.CoreWebView2.DocumentTitle;
                     };
                 }
+                // A page that calls window.close() (the update window after "Later" or "Skip") closes its own native window.
+                view.CoreWebView2.WindowCloseRequested += (_, _) =>
+                {
+                    if (!host.IsDisposed) host.Close();
+                };
                 view.CoreWebView2.ContextMenuRequested += (_, e) => ShowLocalizedContextMenu(view, e);
                 view.CoreWebView2.Navigate(url);
                 _workingFolder = folder;

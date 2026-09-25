@@ -22,7 +22,7 @@ public sealed class AppPreferences
     public List<PreviewProfile> PreviewProfiles { get; set; } = [];
 
     /// <summary>Fallback profile a device resolves to when it has no explicit assignment and no
-    /// auto-switch rule currently applies (docs/auto-profile-switch.md). Null means "no preference set" —
+    /// auto-switch rule currently applies (docs/design/auto-profile-switch.md). Null means "no preference set" —
     /// falls back to <c>ProfileStore.First()</c>, same as before this existed.</summary>
     public string? DefaultProfileId { get; set; }
 
@@ -33,6 +33,13 @@ public sealed class AppPreferences
     /// <summary>What happens when Windows starts Macro Grid at sign-in: <c>"tray"</c> only starts in the notification area
     /// (default), <c>"window"</c> also opens the editor window. See <see cref="StartupPolicy"/>.</summary>
     public string AutostartMode { get; set; } = StartupPolicy.Tray;
+
+    /// <summary>Whether the server looks for a newer release on its own (a check shortly after start and then every few hours).
+    /// Off stops the automatic checks and notifications; "Check for updates" still works. See docs/design/auto-update.md.</summary>
+    public bool CheckForUpdates { get; set; } = true;
+
+    /// <summary>Whether pre-releases (for example an alpha) count as updates. On by default while every release is an alpha.</summary>
+    public bool IncludePreReleases { get; set; } = true;
 
     /// <summary>Whether each Inspector section ("appearance", "typeFields", "actions", "css") is
     /// collapsed — only entries the user actually toggled are stored; a missing key falls back to that

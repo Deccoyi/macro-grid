@@ -10,7 +10,7 @@ public enum PluginKind
 
 /// <summary>
 /// A plugin's <c>plugin.json</c>, one per plugin folder. Schema mirrors the "Plugin compatibility" section of
-/// docs/versioning.md and the manifest table in the plugin repository's docs/plugin-authoring.md; keep them in
+/// docs/guides/versioning.md and the manifest table in the plugin repository's docs/plugin-authoring.md; keep them in
 /// sync with this record if the schema changes (that is a MINOR/MAJOR host change, see versioning.md).
 /// </summary>
 public sealed record PluginManifest
@@ -21,7 +21,7 @@ public sealed record PluginManifest
     /// <summary>Display name shown in the editor's plugin list.</summary>
     public required string Name { get; init; }
 
-    /// <summary>The plugin's own semver — independent of the host's version (docs/versioning.md).</summary>
+    /// <summary>The plugin's own semver — independent of the host's version (docs/guides/versioning.md).</summary>
     public required string Version { get; init; }
 
     /// <summary>npm-style caret range against the Plugin SDK version, e.g. "^1.0.0".</summary>

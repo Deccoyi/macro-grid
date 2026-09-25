@@ -23,7 +23,7 @@ public sealed class ClientSession(WebSocket socket)
     /// <summary>Pages this client navigated away from, for <c>core.page</c> "back". Only touched by this session's own single-threaded action queue.</summary>
     internal Stack<string> PageHistory { get; } = new();
 
-    /// <summary>This session's auto-profile-switch stack (docs/auto-profile-switch.md) — always present,
+    /// <summary>This session's auto-profile-switch stack (docs/design/auto-profile-switch.md) — always present,
     /// but only ever driven by <c>AutoProfileSwitcher</c> for a device with <c>FollowActiveWindow</c> on.</summary>
     internal AutoSwitchState AutoSwitch { get; } = new();
 

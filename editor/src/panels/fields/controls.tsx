@@ -10,7 +10,7 @@ const SWATCHES = [
 ];
 
 /** Small caps label above a group of fields — the only "section" affordance in the properties panel
- * (see docs/ui-guidelines.md: no card-per-section, a thin divider + label is enough). */
+ * (see docs/ui/ui-guidelines.md: no card-per-section, a thin divider + label is enough). */
 export function SectionLabel({ children }: { children: string }) {
   return <div className="section-label">{children}</div>;
 }
@@ -57,7 +57,7 @@ export function CollapsibleSection({
  * portaled to <body> and positioned from the trigger's own screen rect, right-edge-aligned to it, so an
  * `overflow-y: auto` ancestor (the Properties panel) can never clip it — a plain absolutely-positioned
  * child WOULD be clipped there, because a lone `overflow-y` forces the element's `overflow-x` to `auto`
- * too (see docs/ui-guidelines.md: "compact desktop menu", never a floating web card). */
+ * too (see docs/ui/ui-guidelines.md: "compact desktop menu", never a floating web card). */
 export function ColorField({ value, onChange, disabled, title }: { value?: string; onChange: (v: string) => void; disabled?: boolean; title?: string }) {
   const { t } = useT();
   const [open, setOpen] = useState(false);

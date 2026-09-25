@@ -29,7 +29,7 @@ public sealed record WidgetEventMessage(string PageId, string WidgetId);
 public sealed record WidgetValueMessage(string PageId, string WidgetId, double Value);
 public sealed record PageChangeMessage(string PageId);
 public sealed record ProfileChangeMessage(string ProfileId);
-/// <summary>The drawer's auto-switch pause toggle (docs/auto-profile-switch.md). A no-op for a device
+/// <summary>The drawer's auto-switch pause toggle (docs/design/auto-profile-switch.md). A no-op for a device
 /// that doesn't have <c>FollowActiveWindow</c> on — there's nothing to lock.</summary>
 public sealed record ProfileLockMessage(bool Locked);
 
@@ -39,7 +39,7 @@ public sealed record ProfileLockMessage(bool Locked);
 public sealed record WelcomeMessage(string ServerName, string ServerVersion, string? Token = null);
 public sealed record PageShowMessage(string PageId);
 public sealed record ProfileSummary(string Id, string Name);
-/// <summary>This device's auto-profile-switch opt-in and current lock state (docs/auto-profile-switch.md).
+/// <summary>This device's auto-profile-switch opt-in and current lock state (docs/design/auto-profile-switch.md).
 /// <paramref name="Enabled"/> false means the device never auto-switches — the client can hide the lock
 /// control entirely in that case, since there's nothing to pause.</summary>
 public sealed record AutoSwitchInfo(bool Enabled, bool Locked);

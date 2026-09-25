@@ -1,6 +1,28 @@
 MACRO GRID - LICENSE AGREEMENT AND IMPORTANT NOTICES
+Last updated: 2026-09-25
 
 Please read this text. To install Macro Grid you must accept it.
+
+------------------------------------------------------------------------
+NO WARRANTY AND DISCLAIMER OF RESPONSIBILITY
+------------------------------------------------------------------------
+
+Macro Grid comes with NO WARRANTY and NO GUARANTEE of any kind. It is
+provided free of charge and "as is". Nothing is promised: not that it
+works, not that it is free of errors, not that it is safe or secure, and
+not that it will keep working or be updated. To the fullest extent
+permitted by law, the developer and all contributors accept no
+responsibility or liability for the software, or for anything that
+results from installing it, using it, or being unable to use it. This
+includes damage to your computer, files, data, accounts, network or
+devices, anything done by a button, a macro or a plugin, loss of data or
+money, and any security problem.
+
+You use this software entirely at your own risk and on your own
+responsibility. If you do not agree, please do not install or use it.
+
+The notices below explain this in more detail. They do not limit this
+disclaimer.
 
 ------------------------------------------------------------------------
 IMPORTANT NOTICES
@@ -35,7 +57,11 @@ IMPORTANT NOTICES
    its traffic is not encrypted. You are responsible for who can reach it,
    for which devices you pair, and for which plugins you install. Plugins
    are separate programs and can do whatever your user account can do; the
-   authors do not review or vouch for plugins written by others.
+   authors do not review or vouch for plugins written by others. The
+   software also contacts github.com by itself, about every six hours, to
+   check for a newer version; nothing about you or your computer is sent.
+   You can switch this off in Preferences. Updates are downloaded and
+   installed only after you click Install now.
 
 5. Automatic input. Buttons can press keys and run commands on your
    computer. You are responsible for checking what a button does before you
@@ -95,4 +121,5 @@ SOFTWARE.
 
 ------------------------------------------------------------------------
 By clicking "I accept the agreement" you confirm that you have read and
-understood this text and agree to it.
+understood this text, including that the developer is not responsible
+for the software or for what you do with it, and agree to it.

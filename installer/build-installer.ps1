@@ -31,5 +31,9 @@ if ($signature.Status -ne "Valid" -or $signature.SignerCertificate.Subject -notm
     throw "The WebView2 bootstrapper is not signed by Microsoft (status $($signature.Status)); it was deleted."
 }
 
-& ($candidates | Select-Object -First 1) "/DAppVersion=$version" "/DSourceDir=$publish" "/DOutputDir=$(Join-Path $root 'artifacts')" "/DWebView2Setup=$bootstrapper" (Join-Path $PSScriptRoot "MacroGrid.iss")
+# The setup shows the user agreement only to people who have not accepted this exact text (see AgreementHash in MacroGrid.iss), so
+# it needs the hash of the file it ships. Any edit of the text, even a typo, changes it and asks everyone again.
+$agreementHash = (Get-FileHash (Join-Path $PSScriptRoot "license-agreement.txt") -Algorithm SHA256).Hash.ToLowerInvariant()
+
+& ($candidates | Select-Object -First 1) "/DAppVersion=$version" "/DAgreementHash=$agreementHash" "/DSourceDir=$publish" "/DOutputDir=$(Join-Path $root 'artifacts')" "/DWebView2Setup=$bootstrapper" (Join-Path $PSScriptRoot "MacroGrid.iss")
 if ($LASTEXITCODE) { throw "Inno Setup failed" }

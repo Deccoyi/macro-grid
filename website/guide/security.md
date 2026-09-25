@@ -12,6 +12,7 @@ All code, design and documentation were created by an AI assistant and have not 
 - **A paired device can press keys, type text and start programs on your PC.** Pair only devices you trust, and remove old ones.
 - **The editor API is only for the PC itself.** The server answers 403 to editor API requests from other machines, so nobody else on your network can change your profiles or read your PIN.
 - **C# plugins have full trust**; JavaScript plugins are sandboxed and need approved permissions.
-- **Everything stays local.** There is no cloud service and no account.
+- **Your data stays local.** There is no cloud service and no account.
+- **One optional connection: the update check.** About every six hours the server asks github.com whether a newer version exists. It sends only a program name and version (`MacroGrid/<version>`), nothing about you or your PC, and it installs nothing until you click "Install now". The downloaded installer is checked against the SHA-256 GitHub reports for it; it is not code-signed, so Windows asks for administrator permission. You can switch the check off in Preferences > General.
 
 To report a vulnerability see [SECURITY.md](https://github.com/Deccoyi/macro-grid/blob/main/SECURITY.md).

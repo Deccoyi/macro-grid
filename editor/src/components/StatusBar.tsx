@@ -64,7 +64,9 @@ export function StatusBar({ items }: { items: StatusEntry[] }) {
       }}
     >
       <div style={{ display: "flex", alignItems: "center" }}>
-        {core.map((entry) => <StatusChip key={entry.id} entry={entry} />)}
+        {core.map((entry) => (
+          <StatusChip key={entry.id} entry={entry} onClick={entry.id === "update" ? () => api.openToolWindow("update") : undefined} />
+        ))}
       </div>
       <div style={{ flex: 1 }} />
       <div style={{ display: "flex", alignItems: "center" }}>

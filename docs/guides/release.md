@@ -18,15 +18,18 @@ inside the program (`ClientHub.ServerVersion`) stays plain `0.2.0`; the suffix e
 
 1. On `dev`: decide the version bump with the maintainer and set `ClientHub.ServerVersion` (versioning.md). Never bump it silently.
 2. Move the `[Unreleased]` entries of `docs/CHANGELOG-developer.md` and `docs/CHANGELOG.md` under the new version and date.
-3. Write the release notes from the short `CHANGELOG.md` (a draft for the first one is in [release-notes-v0.2.0-alpha.md](release-notes-v0.2.0-alpha.md)).
+3. Check that the new version's section in the short `CHANGELOG.md` reads well as the release notes: the workflow uses that section (`## X.Y.Z - date`) as the body of the GitHub Release, and the app's update window shows it to everyone who updates. Preview it with `scripts\release-notes.ps1 -Tag server-vX.Y.Z`.
 4. Run `dotnet test`, and `npm run typecheck` in `editor/`, `webclient/` and `packages/renderer/`; the CI must be green on `dev`.
 5. Build locally once with `scripts\publish.ps1` (below) and start `artifacts\server\MacroGrid.exe`; pair a device and press a button.
 6. Merge `dev` into `main` (no squash; the maintainer does this, never automatically).
 7. Tag `main` and push the tag: `git tag server-vX.Y.Z` then `git push origin server-vX.Y.Z`.
-8. The `Release` workflow (`.github/workflows/release.yml`) runs the tests, `scripts/publish.ps1`, zips the folder and attaches it to a **draft**
-   GitHub Release. The installer is built on the runner only when the workflow is started by hand (Actions, Release, Run workflow) with
-   "installer" ticked; otherwise build it locally (section 2) and drag `MacroGrid-Setup-<version>.exe` onto the draft.
-9. Test the installer on a clean PC (install, upgrade over the old version, uninstall), paste the release notes, and publish the draft.
+8. The `Release` workflow (`.github/workflows/release.yml`) runs the tests, `scripts/publish.ps1`, zips the folder, builds
+   `MacroGrid-Setup-<version>.exe` with Inno Setup (on every tag; the updater downloads exactly this file name) and attaches both to a **draft**
+   GitHub Release whose body is the changelog section from step 3. If the installer is missing from the draft, the app offers the release page
+   instead of "Install now".
+9. Test the installer on a clean PC (install, upgrade over the old version, uninstall), and test the update on a PC that has the previous
+   version installed (see "Updating from inside the app" below). **Publishing the draft is what reaches people: every running install checks
+   for updates about a minute after start and every 6 hours after that, so an untested installer must not be published.**
 10. Merge `main` back into `dev` if the release commit changed anything.
 
 Client and plugin releases follow the same shape in their own repositories: bump, changelogs, merge to `main`, tag, draft release.
@@ -59,7 +62,9 @@ It produces `artifacts\MacroGrid-Setup-<version>.exe`. The installer (`installer
 - first asks the person to accept the user agreement (`installer\license-agreement.txt`: no warranty, limitation of liability, the MIT license); the same text is shown in the editor's Help window;
 - installs to `Program Files\Macro Grid` with a Start menu entry and a desktop shortcut (the task is ticked by default);
 - has an unchecked task "Start Macro Grid when I sign in to Windows" (a per-user `Run` entry that carries `--autostart`, removed on uninstall). The same switch is in the editor under Preferences, General, together with what a start by Windows and a start by the person do (tray only or open the editor window);
-- opens TCP port 9820 in the Windows firewall for private and domain networks (never public ones), and removes the rule on uninstall;
+- opens TCP port 9820 in the Windows firewall for private and domain networks (never public ones), replacing the old rule on an upgrade, and removes the rule on uninstall;
+- always shows the agreement page in a setup run by hand (a first install or a downloaded setup); an automatic update (`/UPDATE`) shows it only to people who have not accepted this exact text: `build-installer.ps1` passes the SHA-256 of `license-agreement.txt` as `AgreementHash`, and the setup records it per person in `HKCU\Software\Macro Grid` (`AcceptedAgreement`; if another administrator approves the administrator prompt, the hash is theirs and the page shows again, which is the safe direction). **When the agreement changes, bump its "Last updated" date; one hash is one text, and even a typo fix asks everyone again, so batch wording changes.** If a release changes the agreement, add "This version has a new user agreement." to its changelog section (the old app cannot read the new text, so the release notes are the only warning);
+- when the app started it with `/UPDATE` (an automatic update, a visible setup, not silent), skips every page except the agreement page (when needed) and the progress window, and starts `MacroGrid.exe --updated` again as the person who was signed in, not as administrator; the app then shows "Updated to X" once;
 - closes a running Macro Grid before installing or uninstalling, and removes the whole program folder on uninstall;
 - leaves `%AppData%\MacroGrid` (profiles, paired devices, plugins, logs) in place on uninstall.
 
@@ -68,12 +73,20 @@ It produces `artifacts\MacroGrid-Setup-<version>.exe`. The installer (`installer
 Always do an install / upgrade / uninstall test on a clean PC before publishing an installer. The clean-PC checks are: the
 editor window opens (the WebView2 bootstrapper ran if the runtime was missing), a phone pairs, "Start Macro Grid when I sign in"
 works after a restart, running the new installer over the old one keeps profiles and paired devices, the entry in the installed
-programs list shows the plain name "Macro Grid", and quitting from the tray icon ends the process in Task Manager.
+programs list shows the plain name "Macro Grid", and quitting from the tray icon ends the process in Task Manager. If the agreement text changed: the update setup shows the agreement page, and a second Windows user of the same PC is asked to accept it once when they start Macro Grid (Decline closes the app).
+
+## Updating from inside the app
+
+The app finds new releases by itself (design: [../design/auto-update.md](../design/auto-update.md)). What a release has to look like for that:
+
+- The tag is `server-vX.Y.Z` or `server-vX.Y.Z-label`, the release is not a draft, and it has an asset named exactly `MacroGrid-Setup-X.Y.Z.exe` (the version without the label). GitHub reports its SHA-256 as the asset's `digest`, and the app refuses to install without it. A release missing the installer or the digest is announced with a button to the release page instead of "Install now".
+- The body of the release is what the update window shows, for every release between the installed version and the newest one.
+- Only an installed copy updates itself. The portable zip gets the release page.
+- Try it without publishing: set the environment variable `MACROGRID_UPDATE_FEED_FILE` to a JSON file in the shape of the GitHub releases list, and the app reads that instead of GitHub (checks and the update window; the download still needs a real release).
 
 ## Not done yet
 
-- The installer is not code-signed, so Windows SmartScreen will warn on first run. Signing needs a code-signing certificate.
-- No update check inside the app; upgrading is running a newer installer over the old one.
+- The installer is not code-signed, so Windows SmartScreen will warn on first run. Signing needs a code-signing certificate. Updates are checked only against the SHA-256 that GitHub reports, which protects against a broken download, not against a compromised GitHub account.
 
 ## Publishing the plugin SDK to NuGet
 

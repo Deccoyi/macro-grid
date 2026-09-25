@@ -171,4 +171,35 @@ public class DynamicRuleEvaluatorTests
 
         Assert.Null(DynamicRuleEvaluator.Evaluate(binding, new VariableStore()));
     }
+
+    [Theory]
+    [InlineData(true, "==", "true", true)]
+    [InlineData(true, "==", "True", true)]
+    [InlineData(true, "==", "1", true)]
+    [InlineData(true, "==", "0", false)]
+    [InlineData(true, "!=", "false", true)]
+    [InlineData(false, "==", "false", true)]
+    [InlineData(false, "==", "0", true)]
+    [InlineData(false, "==", " FALSE ", true)]
+    [InlineData(false, "!=", "1", true)]
+    [InlineData(false, "==", "1", false)]
+    [InlineData(true, ">", "0", false)] // only == and != mean anything for a boolean
+    [InlineData(true, "==", "On", false)] // the display word of a template is not a condition value
+    public void Boolean_accepts_true_false_and_one_zero(bool liveValue, string op, string value, bool expected)
+    {
+        var binding = new DynamicBinding { Cases = [new DynamicCase(Compare("muted", op, value), "match")] };
+
+        var result = DynamicRuleEvaluator.Evaluate(binding, StoreWith("muted", liveValue));
+
+        Assert.Equal(expected ? "match" : null, result);
+    }
+
+    [Fact]
+    public void One_and_zero_stay_numeric_for_a_number()
+    {
+        var binding = new DynamicBinding { Cases = [new DynamicCase(Compare("v", "==", "1"), "match")] };
+
+        Assert.Equal("match", DynamicRuleEvaluator.Evaluate(binding, StoreWith("v", 1.0)));
+        Assert.Null(DynamicRuleEvaluator.Evaluate(binding, StoreWith("v", 2.0)));
+    }
 }

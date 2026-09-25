@@ -19,6 +19,18 @@ The installer puts the app in `Program Files\Macro Grid` and adds a firewall rul
 The installer is not code-signed yet, so Windows SmartScreen may warn on first run. Choose **More info**, then **Run anyway**, if you trust the download.
 :::
 
+## Updates
+
+Macro Grid looks for a new version on its own, about a minute after it starts and every six hours after that. It only reads the public list of releases on GitHub and sends nothing about you or your PC. When there is a new version you get a notification and an update window that lists what changed in every version in between. Choose:
+
+- **Install now:** downloads the installer, checks it against the SHA-256 that GitHub reports, asks Windows for administrator permission and updates in place. Macro Grid starts again by itself, and your profiles and paired devices stay.
+- **Later:** asks again after a day.
+- **Skip this version:** stays quiet about this version; a newer one is announced as usual.
+
+If a new version has a **new user agreement**, the installer shows it and you have to accept it to go on. Cancelling changes nothing and the version you have keeps running. Anyone else who uses the same PC is asked to accept it once, the first time they start Macro Grid.
+
+You can also check by hand from the tray menu or **Help > Check for Updates**. To stop the automatic check, switch it off in [Preferences](/guide/preferences). A copy from the zip file is not updated in place; the update window then opens the release page.
+
 ## The tray icon
 
 Hover to see the server address. The menu shows the version, the addresses phones can use, how many devices are connected, and lets you open the editor, the data folder or quit. Double-clicking the icon opens the editor.

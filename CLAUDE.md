@@ -9,10 +9,14 @@
 ## Changelogs
 - Keep two changelogs in `docs/`: `CHANGELOG-developer.md` (detailed, technical) and `CHANGELOG.md` (short, public, for non-developers).
 - `CHANGELOG.md` uses short, simple sentences, one line per change ("New / Changed / Fixed"). No code, file or API names. Leave out small bug fixes and stability or internal improvements.
-- Update both under `[Unreleased]` when a change is finished. See `docs/versioning.md` and the `commit-all` skill.
+- Update both under `[Unreleased]` when a change is finished. See `docs/guides/versioning.md` and the `commit-all` skill.
 
 ## Commits
 - Conventional Commits (`type(scope): description`), always in English.
 
 ## Names
 - Never mention third-party product or brand names in code, comments, docs or commits. Describe the pattern generically.
+
+## Docs layout
+- `docs/` is sorted by kind: `guides/` (how to work on the code), `ui/`, `design/` (built features), `plans/` (not built yet), `releases/`, and `agents/` (notes and proposals written by AI agents). The index is `docs/README.md`.
+- Put a new document in the folder that fits (see the end of `docs/README.md`), never loose in `docs/`. Only the changelogs, `roadmap.md`, `architecture.md` and `README.md` live at its top.

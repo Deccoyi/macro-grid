@@ -57,6 +57,17 @@ public static class DynamicRuleEvaluator
                 && v >= Math.Min(a, b) && v <= Math.Max(a, b);
         }
 
+        // A boolean matches "true"/"false" and "1"/"0" alike (case-insensitive); only == and != mean anything for it.
+        if (liveValue is bool actualBool && TryParseBool(node.Value, out var expectedBool))
+        {
+            return node.Operator switch
+            {
+                DynamicOperators.Equal => actualBool == expectedBool,
+                DynamicOperators.NotEqual => actualBool != expectedBool,
+                _ => false,
+            };
+        }
+
         if (TryToDouble(liveValue, out var actual) && double.TryParse(node.Value, NumberStyles.Float, CultureInfo.InvariantCulture, out var expected))
         {
             return node.Operator switch
@@ -79,6 +90,16 @@ public static class DynamicRuleEvaluator
             DynamicOperators.NotEqual => !string.Equals(actualText, node.Value, StringComparison.OrdinalIgnoreCase),
             _ => false,
         };
+    }
+
+    private static bool TryParseBool(string text, out bool result)
+    {
+        switch (text.Trim().ToLowerInvariant())
+        {
+            case "true" or "1": result = true; return true;
+            case "false" or "0": result = false; return true;
+            default: result = false; return false;
+        }
     }
 
     private static bool TryToDouble(object? value, out double result)

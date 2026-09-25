@@ -2,7 +2,7 @@ namespace MacroGrid.Host.Ui;
 
 /// <summary>
 /// A tool window (Tercihler, Eklentiler, ...) — a real separate OS window with its own WebView2 and native
-/// title bar, not an in-page modal overlay (see docs/ui-guidelines.md: desktop apps show Preferences as
+/// title bar, not an in-page modal overlay (see docs/ui/ui-guidelines.md: desktop apps show Preferences as
 /// its own window, never a dimmed dialog on top of the canvas). Like an ordinary dialog it is owned by the editor
 /// window, stays above it and blocks it while open: the editor is disabled, so clicking it plays the Windows
 /// warning sound and flashes the tool window instead of working behind it. This is done with Owner plus

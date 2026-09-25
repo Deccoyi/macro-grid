@@ -64,11 +64,20 @@ export interface ProfileSummary {
 
 export type VariableSnapshot = Record<string, unknown>;
 
+/** Mirrors MacroGrid.Plugin.Abstractions.VariableType (sent as these strings). */
+export type VariableType = "text" | "number" | "boolean" | "duration" | "dateTime";
+
 export interface VariableInfo {
   name: string;
   description: string;
   example: string;
   category: string;
+  /** Missing from an older server; treat as "text". */
+  type?: VariableType;
+  /** Unit of a number, e.g. "%" or "GB". */
+  unit?: string | null;
+  /** Allowed values of a fixed-choice text variable. */
+  values?: string[] | null;
 }
 
 /** Mirrors MacroGrid.Core.Plugins.LoadedPlugin. `status` is "Loaded" | "Incompatible" | "Error"
@@ -116,7 +125,7 @@ export interface PairedDeviceInfo {
   lastSeenAt: string;
   assignedProfileId: string | null;
   /** Opt-in: this device's session auto-switches profile based on the server's foreground window — see
-   * docs/auto-profile-switch.md. */
+   * docs/design/auto-profile-switch.md. */
   followActiveWindow: boolean;
   /** The drawer's auto-switch pause, persisted so it survives a reconnect. */
   autoSwitchLocked: boolean;
@@ -155,13 +164,48 @@ export interface AppPreferences {
   previewProfiles: PreviewProfileInfo[];
   collapsedInspectorSections: Record<string, boolean>;
   /** Fallback profile a device resolves to with no explicit assignment and no auto-switch rule currently
-   * applying — see docs/auto-profile-switch.md. Null means "no preference set". */
+   * applying — see docs/design/auto-profile-switch.md. Null means "no preference set". */
   defaultProfileId: string | null;
   /** What happens when the person opens Macro Grid themselves: the editor window ("window", default) or only the tray icon ("tray"). */
   launchMode: "window" | "tray";
   /** What happens when Windows starts Macro Grid at sign-in: only the tray icon ("tray", default) or also the editor window ("window"). */
   autostartMode: "window" | "tray";
+  /** Whether the server looks for a newer release by itself (a check shortly after start, then every few hours). */
+  checkForUpdates: boolean;
+  /** Whether pre-releases (alpha versions) count as updates. */
+  includePreReleases: boolean;
 }
+
+/** GET /api/update: the running version and, when a newer release exists, what it brings. */
+export interface UpdateSnapshot {
+  currentVersion: string;
+  lastCheckedAt?: string | null;
+  checking: boolean;
+  error?: string | null;
+  install?: UpdateInstallStatus | null;
+  available?: {
+    version: string;
+    name: string;
+    pageUrl?: string | null;
+    /** Whether "Install now" works for this release (installer and digest are present). */
+    canInstall: boolean;
+    /** The person chose "Skip this version" for it. */
+    skipped: boolean;
+    /** Every release between the running version and this one, newest first. */
+    releases: { version: string; name: string; notes: string; publishedAt?: string | null }[];
+  } | null;
+}
+
+/** The state of "Install now" inside GET /api/update. */
+export interface UpdateInstallStatus {
+  state: "idle" | "downloading" | "starting" | "cancelled" | "failed";
+  /** Download progress, 0 to 100. */
+  percent: number;
+  /** For "failed": declined (administrator prompt refused), refused, download, verify or start. */
+  error?: "declined" | "refused" | "download" | "verify" | "start" | null;
+}
+
+export type UpdateCheckOutcome = "available" | "upToDate" | "failed";
 
 /** A plugin a packaged profile needs (from the manifest of a .msprofile file). */
 interface PackagePluginRef {

@@ -4,7 +4,7 @@
 
 .DESCRIPTION
   Output goes to artifacts/server/. The version comes from ClientHub.ServerVersion, the single place the
-  server version lives (docs/versioning.md). Run installer\build-installer.ps1 afterwards to wrap the
+  server version lives (docs/guides/versioning.md). Run installer\build-installer.ps1 afterwards to wrap the
   folder in a Windows installer.
 
   The runtime and ASP.NET are bundled, so the target PC needs nothing installed except the WebView2
