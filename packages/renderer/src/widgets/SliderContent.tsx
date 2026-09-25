@@ -1,4 +1,5 @@
-import type { ChangeEvent, PointerEvent as ReactPointerEvent } from "react";
+import { useRef, type ChangeEvent, type PointerEvent as ReactPointerEvent } from "react";
+import { isMultiTouch, multiTouchEpoch } from "../interaction/multiTouch";
 import { numberProp } from "./numberProp";
 
 export interface SliderContentProps {
@@ -18,8 +19,25 @@ export function SliderContent({ text, value, props, onChange, onCommit }: Slider
   const step = numberProp(props, "step", 1);
   const current = value ?? numberProp(props, "value", min);
 
+  // A second finger during the drag (the deck's two-finger page swipe) is not a slider drag: the value goes back to
+  // where it was and nothing is sent.
+  const drag = useRef<{ startValue: number; startEpoch: number; multi: boolean } | null>(null);
+
+  const handleDown = (e: ReactPointerEvent<HTMLInputElement>) => {
+    // Stops the widget's own press/long-press gesture from firing while the user is only dragging the thumb.
+    e.stopPropagation();
+    drag.current = { startValue: current, startEpoch: multiTouchEpoch(), multi: isMultiTouch() };
+  };
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => onChange?.(Number(e.target.value));
-  const handleCommit = (e: ReactPointerEvent<HTMLInputElement>) => onCommit?.(Number((e.target as HTMLInputElement).value));
+  const endDrag = (commit: boolean, e: ReactPointerEvent<HTMLInputElement>) => {
+    const start = drag.current;
+    drag.current = null;
+    if (start && (!commit || start.multi || multiTouchEpoch() !== start.startEpoch)) {
+      onChange?.(start.startValue);
+      return;
+    }
+    onCommit?.(Number((e.target as HTMLInputElement).value));
+  };
 
   return (
     <div className="ms-content ms-slider">
@@ -31,10 +49,10 @@ export function SliderContent({ text, value, props, onChange, onCommit }: Slider
         max={max}
         step={step}
         value={current}
-        // Stops the widget's own press/long-press gesture from firing while the user is only dragging the thumb.
-        onPointerDown={(e) => e.stopPropagation()}
+        onPointerDown={handleDown}
         onChange={handleChange}
-        onPointerUp={handleCommit}
+        onPointerUp={(e) => endDrag(true, e)}
+        onPointerCancel={(e) => endDrag(false, e)}
       />
     </div>
   );

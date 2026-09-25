@@ -4,6 +4,7 @@ This file follows the [Keep a Changelog](https://keepachangelog.com/) format. Fo
 
 ## [Unreleased]
 ### Fixed
+- **Two-finger swipe over widgets (renderer, shared with the phone app):** touch presses wait 45 ms and are dropped when a second finger lands in that window; a slider or knob drag that a second finger joins sends nothing and restores its value (`interaction/multiTouch.ts`, `test/multiTouch.test.tsx`).
 - **Stale `actionError` status item:** `ClientHub.ReportActionErrorsAsync` set the core status item `actionError` and never cleared it. `PluginStatusRegistry.SetCore` takes an optional `lifetime` (expired items are dropped when `All` is read, a plugin's own items never expire) and has `RemoveCore`; the item now lives 15 s and is removed when an action runs without errors. Unit tests: `PluginStatusRegistryTests`.
 
 ### Changed
