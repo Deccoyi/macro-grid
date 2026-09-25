@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
-import { Download, FolderOpen, Plus, RefreshCw, RotateCw, Settings, Trash2 } from "lucide-react";
+import { Download, FolderOpen, Link as LinkIcon, Plus, RefreshCw, RotateCw, Settings, Trash2 } from "lucide-react";
 import { api } from "../api/client";
-import type { PluginCatalogEntryInfo, PluginInfo, PluginSourceInfo } from "../api/types";
+import type { PluginCatalogEntryInfo, PluginInfo, PluginLinkInspectResult, PluginSourceInfo } from "../api/types";
 import { DialogHost } from "../dialogs/DialogHost";
 import { confirmAsync, promptAsync } from "../dialogs/dialogStore";
 import { useT } from "../i18n/I18nContext";
@@ -73,9 +73,7 @@ export function PluginsWindow() {
     refreshCatalog(id);
   };
 
-  const addSource = async () => {
-    const url = await promptAsync(t("plugins.discover.source.addPrompt"), "", { title: t("plugins.discover.source.addTitle") });
-    if (!url) return;
+  const addSourceUrl = async (url: string) => {
     setError(null);
     try {
       const result = await api.addPluginSource(url);
@@ -88,6 +86,64 @@ export function PluginsWindow() {
       selectSource(result.id);
     } catch (err) {
       setError(t("plugins.discover.source.addFailed", err instanceof Error ? err.message : String(err)));
+    }
+  };
+
+  const addSource = async () => {
+    const url = await promptAsync(t("plugins.discover.source.addPrompt"), "", { title: t("plugins.discover.source.addTitle") });
+    if (!url) return;
+    await addSourceUrl(url);
+  };
+
+  const installFromLink = async () => {
+    const url = await promptAsync(t("plugins.discover.link.prompt"), "", { title: t("plugins.discover.link.title") });
+    if (!url) return;
+    setError(null);
+    setNotice(null);
+
+    let inspected: PluginLinkInspectResult;
+    try {
+      inspected = await api.inspectPluginLink(url);
+    } catch (err) {
+      setError(t("plugins.discover.link.failed", err instanceof Error ? err.message : String(err)));
+      return;
+    }
+    if (inspected.error) {
+      setError(t("plugins.discover.link.failed", inspected.error));
+      return;
+    }
+
+    if (inspected.isMultiPlugin) {
+      if (await confirmAsync(t("plugins.discover.link.isSource", `${inspected.owner}/${inspected.repo}`), { title: t("plugins.discover.link.title") })) {
+        await addSourceUrl(url);
+      }
+      return;
+    }
+    if (!inspected.compatible) {
+      setError(t("plugins.discover.link.failed", t("plugins.discover.incompatible")));
+      return;
+    }
+
+    const risk = inspected.kind === "js" && (inspected.permissions?.length ?? 0) > 0
+      ? t("plugins.discover.thirdParty.permissions", inspected.permissions!.map(permissionText).join(", "))
+      : t("plugins.discover.thirdParty.fullAccess");
+    const repoLabel = `${inspected.owner}/${inspected.repo}`;
+    const proceed = await confirmAsync(`${t("plugins.discover.thirdParty.warning", repoLabel)} ${risk}`.trim(), {
+      title: t("plugins.discover.thirdParty.title"),
+      danger: true,
+    });
+    if (!proceed) return;
+
+    try {
+      const result = await api.installFromPluginLink(url);
+      if (result.installed) {
+        setNotice(t("plugins.discover.installSuccess", result.name ?? inspected.name ?? inspected.id ?? ""));
+        refresh();
+      } else {
+        setError(t("plugins.discover.link.failed", result.error ?? "?"));
+      }
+    } catch (err) {
+      setError(t("plugins.discover.link.failed", err instanceof Error ? err.message : String(err)));
     }
   };
 
@@ -354,6 +410,16 @@ export function PluginsWindow() {
               <Plus size={14} />
             </button>
           </div>
+
+          <button
+            type="button"
+            className="ghost"
+            onClick={installFromLink}
+            style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 10, fontSize: 12 }}
+          >
+            <LinkIcon size={14} />
+            {t("plugins.discover.link.install")}
+          </button>
 
           {catalogLoading && <div style={{ fontSize: 12, color: "var(--ms-text-secondary)", marginTop: 8 }}>{t("plugins.discover.loading")}</div>}
           {!catalogLoading && catalogError && (

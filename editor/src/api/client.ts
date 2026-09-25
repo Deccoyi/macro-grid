@@ -11,6 +11,8 @@ import type {
   PluginAddSourceResult,
   PluginCatalogInstallResult,
   PluginCatalogResponse,
+  PluginLinkInspectResult,
+  PluginLinkInstallResult,
   PluginSourcesResponse,
   PluginInfo,
   PluginInstallResult,
@@ -182,6 +184,12 @@ export const api = {
   addPluginSource: (url: string): Promise<PluginAddSourceResult> => send("POST", "/api/plugin-sources", { url }),
 
   removePluginSource: (id: string): Promise<void> => send("DELETE", `/api/plugin-sources/${encodeURIComponent(id)}`),
+
+  /** Reads a pasted single-plugin repository's plugin.json (or detects it's actually a multi-plugin source) —
+   * nothing is downloaded yet. */
+  inspectPluginLink: (url: string): Promise<PluginLinkInspectResult> => send("POST", "/api/plugin-link/inspect", { url }),
+
+  installFromPluginLink: (url: string): Promise<PluginLinkInstallResult> => send("POST", "/api/plugin-link/install", { url }),
 
   getPreferences: (): Promise<AppPreferences> => get("/api/preferences"),
 

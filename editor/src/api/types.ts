@@ -181,6 +181,37 @@ export interface PluginAddSourceResult extends Partial<PluginSourceInfo> {
   code?: string;
 }
 
+/** POST /api/plugin-link/inspect — a pasted single-plugin repository link, read before anything is downloaded. */
+export interface PluginLinkInspectResult {
+  /** True when the repo has a macrogrid-index.json instead of a root plugin.json — install it as a source (method 3) instead. */
+  isMultiPlugin: boolean;
+  owner: string;
+  repo: string;
+  id?: string;
+  name?: string;
+  description?: string | null;
+  author?: string | null;
+  homepage?: string | null;
+  kind?: string;
+  version?: string;
+  sdkVersion?: string;
+  minServerVersion?: string;
+  permissions?: string[];
+  compatible?: boolean;
+  error?: string;
+  code?: string;
+}
+
+export interface PluginLinkInstallResult {
+  installed: boolean;
+  id?: string;
+  name?: string;
+  status?: PluginInfo["status"];
+  detail?: string | null;
+  error?: string;
+  code?: string;
+}
+
 export interface PluginCatalogInstallResult {
   installed: boolean;
   id?: string;
