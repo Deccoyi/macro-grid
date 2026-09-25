@@ -1,3 +1,5 @@
+using System.Text.RegularExpressions;
+
 namespace MacroGrid.Core.Plugins.Distribution;
 
 /// <summary>
@@ -6,10 +8,30 @@ namespace MacroGrid.Core.Plugins.Distribution;
 /// the plugin repository's website/reference/source-index.md for why (no rate limit, and this is the host's
 /// first outbound connection, opt-in and user-triggered only).
 /// </summary>
-public static class PluginSourceUrls
+public static partial class PluginSourceUrls
 {
     public const string OfficialOwner = "Deccoyi";
     public const string OfficialRepo = "macro-grid-plugin";
+
+    [GeneratedRegex(@"^(?:https?://github\.com/)?(?<owner>[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?)/(?<repo>[A-Za-z0-9._-]+?)(?:\.git)?/?$")]
+    private static partial Regex RepoPattern();
+
+    /// <summary>Parses a pasted GitHub repository reference — a full URL or a bare <c>owner/repo</c> — into its
+    /// owner and repo. Rejects anything that is not that shape; the caller still needs to check the repository
+    /// actually exists and is reachable (this is a syntax check only).</summary>
+    public static bool TryParseRepo(string input, out string owner, out string repo)
+    {
+        var match = RepoPattern().Match(input.Trim());
+        if (!match.Success)
+        {
+            owner = "";
+            repo = "";
+            return false;
+        }
+        owner = match.Groups["owner"].Value;
+        repo = match.Groups["repo"].Value;
+        return true;
+    }
 
     /// <summary>Hosts a package or asset URL may point at: raw.githubusercontent.com for metadata, github.com for
     /// the releases/download redirect, and the hosts that redirect actually resolves to.</summary>

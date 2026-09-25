@@ -107,6 +107,7 @@ internal static class ServiceRegistration
         services.AddSingleton(new PluginCatalogClient(http));
         services.AddSingleton(new PluginPackageDownloader(http));
         services.AddSingleton(new PluginInstallOriginStore(dataDir));
+        services.AddSingleton(new PluginSourceStore(dataDir));
         services.AddSingleton(sp => new PluginCatalogInstaller(
             sp.GetRequiredService<PluginPackageDownloader>(),
             sp.GetRequiredService<PluginManager>(),
