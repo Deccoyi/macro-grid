@@ -3,6 +3,9 @@
 This file follows the [Keep a Changelog](https://keepachangelog.com/) format. For versioning rules, see [versioning.md](guides/versioning.md). The short, public changelog is [CHANGELOG.md](CHANGELOG.md).
 
 ## [Unreleased]
+### Fixed
+- **Update download deleted right after it finished:** `UpdateInstaller` cleaned the downloads folder after each download, and `DownloadedInstallers.CleanUp` kept the newest version there, so a newer leftover (a made-up test release) made it delete the installer that had just been fetched; the setup then failed to start with "cannot find the file". `CleanUp` takes the version just downloaded (`keep`) and always keeps that one. Test: `The_version_that_was_just_downloaded_stays_even_when_a_newer_leftover_exists`.
+- **Website workflow failed when a release was published:** a release runs the workflow on its tag, and the `github-pages` environment accepts only `main`, so the download page was not refreshed. A release now only starts a manual run of the workflow on `main` (job `refresh`); build and deploy skip the release event.
 
 ## [0.3.0] - 2026-09-25
 ### Added

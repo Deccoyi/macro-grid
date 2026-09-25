@@ -2,6 +2,8 @@ name: Website
 
 # Builds the VitePress site in website/ and deploys it to GitHub Pages (Settings, Pages, Source: GitHub Actions).
 # Pull requests only build; the deploy job runs for pushes to main and manual runs.
+# A published release runs this workflow on the release's tag, and the github-pages environment only accepts main, so a release does not build
+# or deploy here: the refresh job starts a manual run on main instead, which regenerates the download page.
 on:
   push:
     branches: [main]
@@ -25,13 +27,25 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  refresh:
+    if: github.event_name == 'release'
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+    steps:
+      - name: Run the site workflow on main
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run pages.yml --repo ${{ github.repository }} --ref main
+
   build:
+    if: github.event_name != 'release'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v7
         with:
-          ref: ${{ github.event_name == 'release' && 'main' || github.ref }}
+          ref: ${{ github.ref }}
 
       - name: Set up Node.js
         uses: actions/setup-node@v7
@@ -62,7 +76,7 @@ jobs:
           path: website/.vitepress/dist
 
   deploy:
-    if: github.event_name != 'pull_request'
+    if: github.event_name != 'pull_request' && github.event_name != 'release'
     needs: build
     runs-on: ubuntu-latest
     permissions:
