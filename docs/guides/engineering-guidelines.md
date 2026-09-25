@@ -1,6 +1,6 @@
 # Engineering guidelines
 
-Short applied checklist for this repository. It only lists rules that are actually followed here; it is a summary, not a copy of any external text. Deviations are recorded in `docs/refactor-notes.md`.
+Short applied checklist for this repository. It only lists rules that are actually followed here; it is a summary, not a copy of any external text. Deviations are recorded in `docs/agents/refactor-notes.md`.
 
 ## C# / .NET
 
@@ -68,5 +68,5 @@ Tests
 - English everywhere in code, comments, docs and commits; UI text only in i18n files.
 - Conventional Commits, small and grouped by topic.
 - No commented-out code; delete it, git remembers. No TODO without a tracked reason.
-- Delete code only when it is proven unused (search including reflection, DI, JSON names, routes and other repositories, then build and test). Otherwise list it in `docs/proposals/dead-code-review.md`.
-- Behavior-changing ideas go to `docs/proposals/`, not into a cleanup commit.
+- Delete code only when it is proven unused (search including reflection, DI, JSON names, routes and other repositories, then build and test). Otherwise list it in `docs/agents/proposals/dead-code-review.md`.
+- Behavior-changing ideas go to `docs/agents/proposals/`, not into a cleanup commit.

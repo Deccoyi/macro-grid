@@ -50,7 +50,7 @@ export function subscribe(fn: (request: DialogRequest | null) => void): () => vo
   };
 }
 
-/** Replaces window.confirm with an app-styled modal (see docs/ui-guidelines.md: no native browser chrome). */
+/** Replaces window.confirm with an app-styled modal (see docs/ui/ui-guidelines.md: no native browser chrome). */
 export function confirmAsync(message: string, opts?: { title?: string; danger?: boolean }): Promise<boolean> {
   return new Promise((resolve) => {
     listener?.({ kind: "confirm", message, title: opts?.title, danger: opts?.danger, resolve });

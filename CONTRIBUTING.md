@@ -16,7 +16,7 @@ promise that a request will be accepted or a pull request merged. Please be pati
 
 ## Getting set up
 
-See [docs/development.md](docs/development.md) for the requirements, how to build and run, how to test, and the pitfalls. In short: Windows 10 or 11,
+See [docs/guides/development.md](docs/guides/development.md) for the requirements, how to build and run, how to test, and the pitfalls. In short: Windows 10 or 11,
 the .NET 10 SDK and Node.js 20+.
 
 ```powershell
@@ -32,7 +32,7 @@ dotnet test
 
 - For anything bigger than a small fix, open an issue first so we can agree on the approach. Look at [docs/roadmap.md](docs/roadmap.md) for what is planned.
 - Branching: `main` holds releases and `dev` is the integration branch. Work on a branch from `dev` and open pull requests against `dev`.
-  The maintainer merges `dev` into `main` for a release ([docs/release.md](docs/release.md)).
+  The maintainer merges `dev` into `main` for a release ([docs/guides/release.md](docs/guides/release.md)).
 - Keep a pull request to one topic. Several small, focused commits are better than one large one.
 
 ## Rules
@@ -44,12 +44,12 @@ dotnet test
   `fix(editor): keep the selection when a widget is resized`.
 - **Changelogs.** Update both under `[Unreleased]` when a change is finished: `docs/CHANGELOG-developer.md` (detailed, technical, Keep a Changelog style) and
   `docs/CHANGELOG.md` (short, plain sentences for non-developers, no code, file or API names, and without small fixes or internal changes).
-- **Versions** are never bumped in a pull request. The maintainer decides that at release time ([docs/versioning.md](docs/versioning.md)). Changes to the
+- **Versions** are never bumped in a pull request. The maintainer decides that at release time ([docs/guides/versioning.md](docs/guides/versioning.md)). Changes to the
   WebSocket protocol must stay compatible with older clients (add optional capabilities instead of changing existing messages), and changes to the plugin SDK
   (`MacroGrid.Plugin.Abstractions`) can break plugins, so call them out.
 - **Names.** Do not mention third-party product or brand names in code, comments, docs or commits, except where the product is the functional target of the code
   itself (for example a plugin that talks to it). Describe patterns generically.
-- **UI.** Read [docs/ui-guidelines.md](docs/ui-guidelines.md) and use the colors in [docs/color-bible.md](docs/color-bible.md). No emoji or text symbols as icons; use
+- **UI.** Read [docs/ui/ui-guidelines.md](docs/ui/ui-guidelines.md) and use the colors in [docs/ui/color-bible.md](docs/ui/color-bible.md). No emoji or text symbols as icons; use
   `lucide-react`.
 - **Dependencies.** Check the license of a new dependency and add it to [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). No copyleft dependencies without a
   discussion.

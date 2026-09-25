@@ -17,7 +17,7 @@ interface ContextMenuProps {
 }
 
 /** A small right-click menu, styled like the rest of the app chrome (flat, thin border, no shadow-heavy
- * "web" look) — see docs/ui-guidelines.md. Closes on outside click, Escape, or scroll. */
+ * "web" look) — see docs/ui/ui-guidelines.md. Closes on outside click, Escape, or scroll. */
 export function ContextMenu({ x, y, items, onClose }: ContextMenuProps) {
   const ref = useRef<HTMLDivElement>(null);
 

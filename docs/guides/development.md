@@ -1,7 +1,7 @@
 # Development
 
 How to build, run and test the server and editor, and the pitfalls that are easy to hit. For how it fits together see
-[architecture.md](architecture.md); for the rules for contributions see [../CONTRIBUTING.md](../CONTRIBUTING.md).
+[architecture.md](../architecture.md); for the rules for contributions see [../CONTRIBUTING.md](../../CONTRIBUTING.md).
 
 ## Requirements
 
@@ -66,7 +66,7 @@ When you test the editor or the API by hand, use a separate test profile (**+ Pr
 ## Data and logs
 
 The server keeps everything in `%AppData%\MacroGrid\` (profiles, paired devices, preferences, plugins, logs; see
-[architecture.md](architecture.md#data-model)). The tray menu opens the folder. Logs are in `logs\`.
+[architecture.md](../architecture.md#data-model)). The tray menu opens the folder. Logs are in `logs\`.
 
 ## Pitfalls
 
@@ -83,7 +83,7 @@ The server keeps everything in `%AppData%\MacroGrid\` (profiles, paired devices,
   `confirmDiscardIfDirty()` first (`useEditorState.ts`); there is also a `beforeunload` guard.
 - **A CSS grid trap:** do not use `min()` inside `minmax()`; the whole declaration was treated as invalid and the grid collapsed to one column.
 - **Keys and names:** a new key name for `core.hotkey` must be added to both `KnownKeys` and `VirtualKeys`; a test checks that they agree.
-- **No emoji or text symbols as icons** in the UI; use `lucide-react` (see [ui-guidelines.md](ui-guidelines.md)).
+- **No emoji or text symbols as icons** in the UI; use `lucide-react` (see [ui-guidelines.md](../ui/ui-guidelines.md)).
 - **UI text** goes through `editor/src/i18n/tr.ts` and `en.ts`, never hard-coded in components. Some server strings (the tray menu and a few
   native dialogs) are not translated yet.
 - **The editor's copy of the rule evaluator** (`editor/src/grid/evaluateDynamic.ts`) only drives the live preview. The server's

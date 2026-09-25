@@ -10,7 +10,7 @@ export default defineConfig({
     dedupe: ["react", "react-dom"],
   },
   build: {
-    // Copied into the Host's wwwroot/deck at build time and served same-origin (see docs/development.md).
+    // Copied into the Host's wwwroot/deck at build time and served same-origin (see docs/guides/development.md).
     outDir: "dist",
   },
   server: {

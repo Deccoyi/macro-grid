@@ -4,7 +4,7 @@ namespace MacroGrid.Core.Plugins;
 
 /// <summary>
 /// Minimal MAJOR.MINOR.PATCH comparison for plugin compatibility checks — not a full SemVer
-/// implementation (no pre-release/build metadata), which is all docs/versioning.md's scheme needs.
+/// implementation (no pre-release/build metadata), which is all docs/guides/versioning.md's scheme needs.
 /// </summary>
 public static partial class SemVer
 {

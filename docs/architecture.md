@@ -1,7 +1,7 @@
 # Architecture
 
 How Macro Grid is put together. For what is done and what is planned see [roadmap.md](roadmap.md); for building and working on the code see
-[development.md](development.md).
+[development.md](guides/development.md).
 
 ## Big picture
 
@@ -129,6 +129,16 @@ Properties that can be dynamic: `style.background`, `style.foreground`, `style.b
 may contain `{variables}` too). The server re-evaluates the affected rules when a variable changes and pushes the result in `widget.state`. The
 editor has a small copy of the evaluator for its live preview; **the server's `DynamicRuleEvaluator` is what actually runs.**
 
+### Variable types
+
+Each catalog entry (`VariableInfo`) carries a `Type`: `text` (the default, also for plugins that declare nothing), `number` (with an optional
+`Unit` such as `%` or `GB`), `boolean`, `duration` or `dateTime`. A text variable may list its allowed `Values`. The editor shows the type in
+the variable picker and picks the value input of a condition from it: a true/false choice for a boolean, a list for `Values`, free input
+otherwise (with the unit as a suffix for a number). Booleans and fixed values only offer `==` and `!=`.
+
+In a condition a boolean matches `true` / `false` and `1` / `0` alike, case-insensitively; other operators never match it. The template words
+(`On` / `Off`, `Açık` / `Kapalı`) are display only and do not match. A number is compared numerically and anything else as text, case-insensitively.
+
 ## Custom CSS
 
 Each widget renders inside its own Shadow DOM. Its custom CSS is parsed with PostCSS and sanitized: properties that would let a widget change
@@ -163,3 +173,12 @@ Macro Grid is meant for a home or office network you trust. It is not hardened f
   ones you do not.
 - **C# plugins have full trust** and can do anything the server can. Install only ones you trust. JavaScript plugins are sandboxed and need
   approved permissions.
+- **The server checks for updates on its own, once every few hours.** This is the one connection it makes without being asked, and it is on by
+  default (Preferences, General, "Check for updates automatically"; off stops the schedule, "Check for updates" still works by hand). It reads
+  the public releases list of the project on `api.github.com` (HTTPS, an ETag so an unchanged list costs nothing, a `User-Agent` with the app
+  version and nothing else) and sends nothing about the person or the PC. Nothing is downloaded or installed until the person clicks
+  "Install now". The installer is fetched only from HTTPS addresses on GitHub (every redirect is checked against the same list), must match the
+  SHA-256 GitHub reports for the release file, and runs only after Windows asks for administrator permission. The installer is not code-signed,
+  so this protects against a broken download but **not against a compromised GitHub account** or release. Release notes are shown as text,
+  never as HTML. Design: [design/auto-update.md](design/auto-update.md).
+- **The user agreement has to be accepted, per Windows user.** The setup shows it (an update only when its text changed) and records its SHA-256 in `HKCU`. At start, before the server exists, the app compares that record with the agreement it ships and asks once when they differ (another Windows user of the same PC, or a changed text); declining exits. Until then nothing listens and nothing runs. Design: [design/agreement-acceptance.md](design/agreement-acceptance.md).

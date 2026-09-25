@@ -13,7 +13,7 @@ public sealed class Profile
     public string? PreviewDeviceId { get; set; }
 
     /// <summary>Foreground-window rules that auto-switch an opted-in device to this profile — see
-    /// docs/auto-profile-switch.md. Empty means this profile never triggers an automatic switch.</summary>
+    /// docs/design/auto-profile-switch.md. Empty means this profile never triggers an automatic switch.</summary>
     public List<AppMatch> AppMatches { get; set; } = [];
 
     public Page? FindPage(string pageId) => Pages.FirstOrDefault(p => p.Id == pageId);

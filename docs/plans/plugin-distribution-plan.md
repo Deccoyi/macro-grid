@@ -4,6 +4,8 @@
 > found, downloaded and installed from GitHub, and the repo format plugin authors
 > must follow.
 
+**Repositories:** `macro-grid` (phases 2 to 5: host, editor, docs) and `macro-grid-plugin` (phase 1: `release.yml`, index generator, author docs, the store website). `macro-grid-client` is not touched.
+
 ## Context
 
 Today plugins can only be installed from a local folder. We want three more ways:

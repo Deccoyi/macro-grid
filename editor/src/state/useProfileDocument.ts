@@ -176,7 +176,7 @@ export function useProfileDocument() {
     [mutate],
   );
 
-  /** Foreground-window auto-switch rules for this profile — see docs/auto-profile-switch.md. */
+  /** Foreground-window auto-switch rules for this profile — see docs/design/auto-profile-switch.md. */
   const setAppMatches = useCallback(
     (appMatches: AppMatch[]) => mutate((draft) => ({ ...draft, appMatches })),
     [mutate],

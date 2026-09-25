@@ -13,7 +13,7 @@ Copy-Item webclient\dist\* src\MacroGrid.Host\wwwroot\deck -Recurse -Force
 dotnet run --project src/MacroGrid.Host
 ```
 
-Run the tests with `dotnet test`. More in [development.md](https://github.com/Deccoyi/macro-grid/blob/main/docs/development.md).
+Run the tests with `dotnet test`. More in [development.md](https://github.com/Deccoyi/macro-grid/blob/main/docs/guides/development.md).
 
 ## Android app
 

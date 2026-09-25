@@ -1,9 +1,9 @@
 # Refactor notes (branch `refactor/cleanup`)
 
-Behavior is unchanged unless a line says otherwise. Suspicious leftovers: `docs/proposals/dead-code-review.md`. Behavior-changing ideas: `docs/proposals/`.
+Behavior is unchanged unless a line says otherwise. Suspicious leftovers: `docs/agents/proposals/dead-code-review.md`. Behavior-changing ideas: `docs/agents/proposals/`.
 
 ## Tooling
-- Added `.editorconfig` and `docs/engineering-guidelines.md`.
+- Added `.editorconfig` and `docs/guides/engineering-guidelines.md`.
 - `noUnusedLocals` / `noUnusedParameters` on in editor, webclient and renderer; one unused test import removed.
 - Unused C# usings removed (only one was found in the whole solution).
 

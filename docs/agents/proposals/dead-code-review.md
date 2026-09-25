@@ -1,6 +1,6 @@
 # Dead code review
 
-Scans run on this branch: unused usings and private members (compiler style rules), unused TypeScript locals/parameters (`noUnused*`), TypeScript exports without an importer, C# public/internal types, methods and properties referenced only once in `src/` and `tests/`, and a duplicate-code scan. Everything provably unused was removed (see `docs/refactor-notes.md`). What is left below was **not** deleted because it is reached in ways a text search cannot prove.
+Scans run on this branch: unused usings and private members (compiler style rules), unused TypeScript locals/parameters (`noUnused*`), TypeScript exports without an importer, C# public/internal types, methods and properties referenced only once in `src/` and `tests/`, and a duplicate-code scan. Everything provably unused was removed (see `docs/agents/refactor-notes.md`). What is left below was **not** deleted because it is reached in ways a text search cannot prove.
 
 ## Kept on purpose (looks unused, is not)
 - `packages/renderer/src/types.ts` exports (for example `DynamicCase`): part of the renderer package surface (`export *` from `index.ts`) and mirrored by the server model.

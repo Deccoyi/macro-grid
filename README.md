@@ -66,7 +66,7 @@ All communication stays on your local network.
 
 Get the latest Windows installer (`MacroGrid-Setup-<version>.exe`) from the [download page](https://deccoyi.github.io/macro-grid/download), which also lists the
 previous versions, or from the [GitHub Releases](https://github.com/Deccoyi/macro-grid/releases) page, and run it. You can also build from source (below). The installer is not
-code-signed yet, so Windows SmartScreen may warn on first run. How releases are made: [docs/release.md](docs/release.md).
+code-signed yet, so Windows SmartScreen may warn on first run. How releases are made: [docs/guides/release.md](docs/guides/release.md).
 
 ## Getting started
 
@@ -90,7 +90,7 @@ Copy-Item webclient\dist\* src\MacroGrid.Host\wwwroot\deck -Recurse -Force
 dotnet run --project src/MacroGrid.Host
 ```
 
-Run the tests with `dotnet test`. More in [docs/development.md](docs/development.md).
+Run the tests with `dotnet test`. More in [docs/guides/development.md](docs/guides/development.md).
 
 ## Security
 
@@ -109,11 +109,11 @@ Details are in [docs/architecture.md](docs/architecture.md#security-model). To r
 
 - [Website and user guide](https://deccoyi.github.io/macro-grid/): getting started, tutorials and reference for users (its source is in `website/`)
 - [Architecture](docs/architecture.md): how it is put together, the protocol and the security model
-- [Development](docs/development.md): building, running, testing and the pitfalls
+- [Development](docs/guides/development.md): building, running, testing and the pitfalls
 - [Roadmap](docs/roadmap.md): what is done and what is next
-- [Releasing](docs/release.md) and [versioning](docs/versioning.md)
+- [Releasing](docs/guides/release.md) and [versioning](docs/guides/versioning.md)
 - [Design notes](docs/design/): automatic profile switching, layout patches and cached assets, JavaScript plugins
-- [UI guidelines](docs/ui-guidelines.md) and [color system](docs/color-bible.md)
+- [UI guidelines](docs/ui/ui-guidelines.md) and [color system](docs/ui/color-bible.md)
 - [Changelog](docs/CHANGELOG.md) (short) and [developer changelog](docs/CHANGELOG-developer.md)
 - Writing plugins: `docs/plugin-authoring.md` in the [plugin repository](https://github.com/Deccoyi/macro-grid-plugin)
 
