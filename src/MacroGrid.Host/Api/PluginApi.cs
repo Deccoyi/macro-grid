@@ -2,6 +2,7 @@ using MacroGrid.Host.Ui;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using MacroGrid.Core.Plugins;
+using MacroGrid.Core.Plugins.Distribution;
 using MacroGrid.Plugin.Abstractions;
 using Microsoft.AspNetCore.Routing;
 
@@ -12,8 +13,21 @@ internal static class PluginApi
 {
     public static RouteGroupBuilder MapPluginApi(this RouteGroupBuilder api)
     {
-        api.MapGet("/plugins", (PluginManager plugins, PluginLocalizer localizer) =>
-            plugins.Plugins.Select(p => p with { Name = localizer.Translate(p.Id, p.Name)! }));
+        // trust is Official / ThirdParty / Local — Local also covers a plugin installed before this feature
+        // existed (from a folder), which has no recorded origin.
+        api.MapGet("/plugins", (PluginManager plugins, PluginLocalizer localizer, PluginInstallOriginStore origins) =>
+            plugins.Plugins.Select(p => new
+            {
+                p.Id,
+                Name = localizer.Translate(p.Id, p.Name)!,
+                p.Version,
+                p.Status,
+                p.Detail,
+                p.HasSettings,
+                p.PendingPermissions,
+                p.HasIcon,
+                Trust = (origins.Get(p.Id)?.Trust ?? PluginTrust.Local).ToString(),
+            }));
 
         api.MapGet("/icon-packs", (PluginManager plugins, PluginLocalizer localizer) =>
             plugins.IconPacksWithOwner.Select(o => new { o.Pack.Id, DisplayName = localizer.Translate(o.PluginId, o.Pack.DisplayName)!, Icons = o.Pack.IconNames }));
