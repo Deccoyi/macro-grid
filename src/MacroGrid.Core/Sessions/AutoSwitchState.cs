@@ -19,7 +19,7 @@ public readonly record struct AutoSwitchResult(bool Changed, bool ToDefault, str
 
 /// <summary>
 /// Pure per-session "which profile should be showing" stack — see docs/auto-profile-switch.md. Knows
-/// nothing about ProfileStore, ObsConnection-style live OBS state, or the actual foreground window; it is
+/// nothing about ProfileStore, plugin-provided live state, or the actual foreground window; it is
 /// only ever told "process X came to the foreground and resolves to profile Y" or "prune anything whose
 /// process no longer has a visible window", by <see cref="AutoProfileSwitcher"/>. Kept side-effect-free
 /// so the whole stack/lock/manual-base interplay (docs/auto-profile-switch.md's "Behavior model") can be

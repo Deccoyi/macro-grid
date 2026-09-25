@@ -4,6 +4,7 @@ using MacroGrid.Core.Preferences;
 using MacroGrid.Core.Profiles;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using MacroGrid.Core.Widgets;
 
 namespace MacroGrid.Core.Sessions;
 

@@ -1,36 +1,18 @@
-using System.Text.Json;
-using System.Text.Json.Nodes;
-using MacroGrid.Core.Actions;
 using MacroGrid.Core.Devices;
-using MacroGrid.Core.Model;
-using MacroGrid.Core;
 using MacroGrid.Core.Plugins;
-using MacroGrid.Core.Preferences;
 using MacroGrid.Core.Profiles;
 using MacroGrid.Core.Sessions;
-using MacroGrid.Core.Variables;
+using MacroGrid.Host.Ui;
+using MacroGrid.Host.Api;
 using MacroGrid.Host.Logging;
 using MacroGrid.Plugin.Abstractions;
-using MacroGrid.Protocol;
-using MacroGrid.Windows.Audio;
-using MacroGrid.Windows.Autostart;
-using MacroGrid.Windows.Input;
-using MacroGrid.Windows.Variables;
-using MacroGrid.Windows.Windows;
 
 namespace MacroGrid.Host;
 
+/// <summary>Composition root of the embedded server: services, middleware, the WebSocket endpoint and the editor API.</summary>
 internal static class ServerApp
 {
     public const int Port = 9820;
-
-    /// <summary>The core status items are written in English; the device counter is the one that carries words to translate.</summary>
-    private static string LocalizeCoreStatus(PluginStatusEntry status, string language, PluginLocalizer localizer)
-    {
-        if (status.Id == "actionError") return localizer.TranslateAny(status.Text) ?? status.Text;
-        if (status.Id != "devices" || !int.TryParse(status.Text.Split(' ')[0], out var count)) return status.Text;
-        return language == "tr" ? $"{count} cihaz" : count == 1 ? "1 device" : $"{count} devices";
-    }
 
     public static WebApplication Build(string[] args, IUiDialogService dialogs, IUiWindowService windows)
     {
@@ -49,83 +31,22 @@ internal static class ServerApp
         builder.Logging.AddDebug();
         builder.Logging.AddProvider(new FileLoggerProvider(Path.Combine(dataDir, "logs")));
 
-        builder.Services.AddSingleton(new ProfileStore(dataDir));
-        var preferencesStore = new PreferencesStore(dataDir);
-        AppLanguage.Current = preferencesStore.Get().Language;
-        preferencesStore.Changed += () => AppLanguage.Current = preferencesStore.Get().Language;
-        builder.Services.AddSingleton(preferencesStore);
-        builder.Services.AddSingleton(new LegalDocuments(AppContext.BaseDirectory));
-        builder.Services.AddSingleton(new AutostartService(Environment.ProcessPath ?? Application.ExecutablePath));
-        builder.Services.AddSingleton<IInputService, WindowsInputService>();
-        builder.Services.AddSingleton<IActionHandler, HotkeyAction>();
-        builder.Services.AddSingleton<IActionHandler, TypeTextAction>();
-        builder.Services.AddSingleton<IActionHandler, PageAction>();
-        builder.Services.AddSingleton<IActionHandler, ProfileAction>();
-        builder.Services.AddSingleton<IActionHandler, OpenAction>();
-        builder.Services.AddSingleton<IActionHandler, OpenUrlAction>();
-        builder.Services.AddSingleton<IActionHandler, DelayAction>();
-        builder.Services.AddSingleton<IAudioService, WindowsAudioService>();
-        builder.Services.AddSingleton<IActionHandler, SetVolumeAction>();
-        builder.Services.AddSingleton<IActionHandler, SetMuteAction>();
-        builder.Services.AddSingleton<IActionHandler, ToggleMuteAction>();
-        builder.Services.AddSingleton<ActionDispatcher>();
-        builder.Services.AddSingleton(dialogs);
-        builder.Services.AddSingleton(windows);
-
-        builder.Services.AddSingleton<VariableStore>();
-        builder.Services.AddSingleton<IVariableStore>(sp => sp.GetRequiredService<VariableStore>());
-        builder.Services.AddSingleton<SystemMetricsProvider>();
-        builder.Services.AddSingleton<IVariableProvider>(sp => sp.GetRequiredService<SystemMetricsProvider>());
-        builder.Services.AddSingleton<IVariableCatalogSource>(sp => sp.GetRequiredService<SystemMetricsProvider>());
-        builder.Services.AddSingleton<SystemAudioProvider>();
-        builder.Services.AddSingleton<IVariableProvider>(sp => sp.GetRequiredService<SystemAudioProvider>());
-        builder.Services.AddSingleton<IVariableCatalogSource>(sp => sp.GetRequiredService<SystemAudioProvider>());
-        var statusRegistry = new PluginStatusRegistry();
-        builder.Services.AddSingleton(statusRegistry);
-        statusRegistry.SetCore("server", $"Macro Grid {ClientHub.ServerVersion}", StatusLevel.Idle, "server");
-
-        var pluginsRoot = Path.Combine(dataDir, "plugins");
-
-        builder.Services.AddSingleton(sp => new PluginLocalizer(() => sp.GetRequiredService<PreferencesStore>().Get().Language));
-        builder.Services.AddSingleton<VariableCatalog>();
-        builder.Services.AddSingleton<VariableProviderHost>();
-        builder.Services.AddHostedService(sp => sp.GetRequiredService<VariableProviderHost>());
-        // Registered after the provider host: loading a plugin starts its variable providers on that host.
-        builder.Services.AddSingleton(sp => new PluginManager(pluginsRoot, ClientHub.ServerVersion,
-            sp.GetRequiredService<PluginStatusRegistry>(), sp.GetRequiredService<ActionDispatcher>(),
-            sp.GetRequiredService<VariableCatalog>(), sp.GetRequiredService<VariableProviderHost>(),
-            sp.GetRequiredService<VariableStore>(), new PluginPermissionStore(dataDir),
-            sp.GetRequiredService<IInputService>(), sp.GetRequiredService<ILogger<PluginManager>>(),
-            sp.GetRequiredService<PluginLocalizer>()));
-        builder.Services.AddHostedService(sp => sp.GetRequiredService<PluginManager>());
-
-        builder.Services.AddSingleton(new DeviceStore(dataDir));
-        builder.Services.AddSingleton<PairingService>();
-
-        builder.Services.AddSingleton<SessionRegistry>();
-        builder.Services.AddSingleton<ToggleStateStore>();
-        builder.Services.AddSingleton<AssetStore>();
-        builder.Services.AddSingleton<LayoutSender>();
-        builder.Services.AddSingleton<WidgetStateService>();
-        builder.Services.AddHostedService(sp => sp.GetRequiredService<WidgetStateService>());
-        builder.Services.AddSingleton<IActiveWindowSource, ForegroundWindowMonitor>();
-        builder.Services.AddSingleton<AutoProfileSwitcher>();
-        builder.Services.AddHostedService(sp => sp.GetRequiredService<AutoProfileSwitcher>());
-        builder.Services.AddSingleton<ClientHub>();
+        builder.Services
+            .AddHostStores(dataDir)
+            .AddBuiltInActions(dialogs, windows)
+            .AddVariablesAndStatus()
+            .AddPlugins(dataDir)
+            .AddClientSessions(dataDir);
 
         var app = builder.Build();
 
-        var sessionRegistry = app.Services.GetRequiredService<SessionRegistry>();
-        void UpdateDeviceStatus() => statusRegistry.SetCore("devices", $"{sessionRegistry.All.Count} devices",
-            sessionRegistry.All.Count > 0 ? StatusLevel.Ok : StatusLevel.Idle, "smartphone");
-        sessionRegistry.Changed += UpdateDeviceStatus;
-        UpdateDeviceStatus();
+        TrackDeviceCount(app.Services);
 
         app.UseWebSockets(new WebSocketOptions { KeepAliveInterval = TimeSpan.FromSeconds(15) });
         app.Map("/ws", async (HttpContext http, ClientHub hub) =>
         {
             if (!http.WebSockets.IsWebSocketRequest)
-                return Results.BadRequest("WebSocket bekleniyor.");
+                return Results.BadRequest("A WebSocket request is expected.");
 
             using var socket = await http.WebSockets.AcceptWebSocketAsync();
             var remote = http.Connection.RemoteIpAddress?.ToString() ?? "?";
@@ -177,393 +98,28 @@ internal static class ServerApp
         return app;
     }
 
+    /// <summary>Keeps the "devices" status item in step with the number of connected clients.</summary>
+    private static void TrackDeviceCount(IServiceProvider services)
+    {
+        var statusRegistry = services.GetRequiredService<PluginStatusRegistry>();
+        var sessionRegistry = services.GetRequiredService<SessionRegistry>();
+        void UpdateDeviceStatus() => statusRegistry.SetCore("devices", $"{sessionRegistry.All.Count} devices",
+            sessionRegistry.All.Count > 0 ? StatusLevel.Ok : StatusLevel.Idle, "smartphone");
+        sessionRegistry.Changed += UpdateDeviceStatus;
+        UpdateDeviceStatus();
+    }
+
     /// <summary>
-    /// Editor-only HTTP API (profile CRUD, action catalog, a one-shot variable snapshot for preview).
-    /// No auth yet: like the WebSocket endpoint, this trusts anything on the LAN until Stage 5 (pairing) covers it too.
+    /// Editor-only HTTP API. It is loopback-only (see the guard above), so phones and browser decks on the LAN cannot reach it.
     /// </summary>
     private static void MapEditorApi(WebApplication app)
     {
-        var api = app.MapGroup("/api");
-
-        api.MapGet("/profiles", (ProfileStore profiles) =>
-            profiles.All.Select(p => new { p.Id, p.Name }));
-
-        api.MapGet("/profiles/{id}", (string id, ProfileStore profiles) =>
-            profiles.Get(id) is { } profile ? Results.Json(profile, ProtocolJson.Options) : Results.NotFound());
-
-        api.MapPost("/profiles", (ProfileStore profiles) =>
-        {
-            var profile = new Profile { Name = AppLanguage.Pick("New profile", "Yeni Profil"), Pages = [new Page { Name = AppLanguage.Pick("Page 1", "Sayfa 1"), Cols = 4, Rows = 3 }] };
-            profiles.Save(profile);
-            return Results.Json(profile, ProtocolJson.Options);
-        });
-
-        api.MapPut("/profiles/{id}", async (string id, HttpRequest request, ProfileStore profiles, WidgetStateService widgetState) =>
-        {
-            Profile? profile;
-            try
-            {
-                profile = await JsonSerializer.DeserializeAsync<Profile>(request.Body, ProtocolJson.Options);
-            }
-            catch (JsonException)
-            {
-                return Results.BadRequest(new { error = "Invalid JSON." });
-            }
-
-            if (profile is null || profile.Id != id)
-                return Results.BadRequest(new { error = "The profile id does not match." });
-
-            if (!ProfileValidator.Validate(profile, out var error))
-                return Results.BadRequest(new { error });
-
-            profiles.Save(profile);
-            await widgetState.BroadcastProfileAsync(profile);
-            return Results.NoContent();
-        });
-
-        api.MapDelete("/profiles/{id}", (string id, ProfileStore profiles) =>
-            profiles.Delete(id) ? Results.NoContent() : Results.BadRequest(new { error = "The last profile cannot be deleted." }));
-
-        api.MapGet("/preferences", (PreferencesStore preferences) =>
-            Results.Json(preferences.Get(), ProtocolJson.Options));
-
-        api.MapPut("/preferences", async (HttpRequest request, PreferencesStore preferences) =>
-        {
-            AppPreferences? parsed;
-            try
-            {
-                parsed = await JsonSerializer.DeserializeAsync<AppPreferences>(request.Body, ProtocolJson.Options);
-            }
-            catch (JsonException)
-            {
-                return Results.BadRequest(new { error = "Invalid JSON." });
-            }
-            if (parsed is null)
-                return Results.BadRequest(new { error = "Invalid JSON." });
-
-            preferences.Save(parsed);
-            return Results.NoContent();
-        });
-
-        api.MapGet("/legal", (LegalDocuments legal) => Results.Json(legal.GetOverview(), ProtocolJson.Options));
-
-        api.MapGet("/legal/library/{name}", (string name, LegalDocuments legal) =>
-            legal.GetLibrary(name) is { } text ? Results.Text(text, "text/plain; charset=utf-8") : Results.NotFound());
-
-        api.MapGet("/system/autostart", (AutostartService autostart) => Results.Json(new { enabled = autostart.IsEnabled() }));
-
-        api.MapPut("/system/autostart", async (HttpRequest request, AutostartService autostart) =>
-        {
-            JsonNode? body;
-            try
-            {
-                body = await JsonNode.ParseAsync(request.Body);
-            }
-            catch (JsonException)
-            {
-                return Results.BadRequest(new { error = "Invalid JSON." });
-            }
-            if (body?["enabled"] is not JsonValue value || !value.TryGetValue<bool>(out var enabled))
-                return Results.BadRequest(new { error = "\"enabled\" (true/false) is required." });
-
-            autostart.SetEnabled(enabled);
-            return Results.Json(new { enabled = autostart.IsEnabled() });
-        });
-
-        api.MapGet("/actions", (ActionDispatcher dispatcher, PluginManager plugins, PluginLocalizer localizer) =>
-            dispatcher.Handlers.Select(h =>
-            {
-                var descriptor = h as IActionDescriptor;
-                var pluginId = plugins.GetActionPluginId(h.Type);
-                return new
-                {
-                    h.Type,
-                    DisplayName = localizer.Translate(pluginId, h.DisplayName)!,
-                    Category = localizer.Translate(pluginId, descriptor?.Category ?? "Other")!,
-                    Description = localizer.Translate(pluginId, descriptor?.Description),
-                    Icon = descriptor?.Icon,
-                    PluginId = pluginId,
-                    Fields = descriptor is { Fields.Count: > 0 } ? descriptor.Fields.Select(f => localizer.Localize(pluginId, f)).ToList() : null,
-                };
-            }).OrderBy(a => a.DisplayName));
-
-        api.MapPost("/actions/{type}/options/{sourceId}", async (string type, string sourceId, HttpRequest request, ActionDispatcher dispatcher, PluginManager plugins, PluginLocalizer localizer) =>
-        {
-            var handler = dispatcher.Handlers.FirstOrDefault(h => h.Type == type);
-            if (handler is not IOptionsSource optionsSource)
-                return Results.Json(new OptionsResult([], "This action does not provide dynamic options"));
-
-            JsonObject? currentValues;
-            try { currentValues = await JsonSerializer.DeserializeAsync<JsonObject>(request.Body, ProtocolJson.Options); }
-            catch (JsonException) { return Results.BadRequest(new { error = "Invalid JSON." }); }
-
-            try
-            {
-                var result = await optionsSource.GetOptionsAsync(sourceId, currentValues ?? [], request.HttpContext.RequestAborted);
-                return Results.Json(result with { Error = localizer.Translate(plugins.GetActionPluginId(type), result.Error) }, ProtocolJson.Options);
-            }
-            catch (Exception ex) when (ex is not OperationCanceledException)
-            {
-                return Results.Json(new OptionsResult([], ex.Message));
-            }
-        });
-
-        api.MapGet("/variables/snapshot", (VariableStore variables) =>
-            Results.Json(variables.Snapshot(), ProtocolJson.Options));
-
-        api.MapGet("/variables/catalog", (VariableCatalog catalog, PluginLocalizer localizer) => catalog.Localized(localizer));
-
-        api.MapPost("/browse/executable", async (IUiDialogService dialogs) =>
-        {
-            var path = await dialogs.BrowseForExecutableAsync();
-            return Results.Json(new { path });
-        });
-
-        // .msprofile (a zip with the profile and a manifest naming the plugins it needs) or a plain profile JSON file.
-        api.MapPost("/browse/import-profile", async (IUiDialogService dialogs, PluginManager plugins, ActionDispatcher dispatcher) =>
-        {
-            var (path, bytes) = await dialogs.OpenFileAsync("Import profile", "Macro Grid profile (*.msprofile;*.json)|*.msprofile;*.json");
-            if (bytes is null) return Results.Json(new { path = (string?)null });
-
-            ProfilePackageContent package;
-            try { package = ProfilePackage.Read(bytes); }
-            catch (InvalidDataException ex) { return Results.BadRequest(new { error = ex.Message }); }
-
-            var missing = plugins.MissingPlugins(package.Manifest);
-            var known = dispatcher.Handlers.Select(h => h.Type).ToHashSet(StringComparer.OrdinalIgnoreCase);
-            var unknownTypes = ProfilePackage.ActionTypes(package.Profile).Where(t => !known.Contains(t)).ToList();
-            return Results.Json(new { path, profile = package.Profile, missingPlugins = missing, unknownActionTypes = unknownTypes }, ProtocolJson.Options);
-        });
-
-        api.MapPost("/browse/export-profile", async (HttpRequest request, IUiDialogService dialogs, PluginManager plugins) =>
-        {
-            Profile? profile;
-            try { profile = await JsonSerializer.DeserializeAsync<Profile>(request.Body, ProtocolJson.Options); }
-            catch (JsonException) { return Results.BadRequest(new { error = "Invalid JSON." }); }
-            if (profile is null) return Results.BadRequest(new { error = "Invalid JSON." });
-
-            var manifest = new ProfilePackageManifest(
-                ProfilePackage.CurrentFormatVersion, profile.Name, DateTimeOffset.UtcNow, ClientHub.ServerVersion,
-                plugins.DescribeRequiredPlugins(ProfilePackage.ActionTypes(profile)));
-            var invalid = Path.GetInvalidFileNameChars();
-            var fileName = string.Concat(profile.Name.Select(c => invalid.Contains(c) ? '_' : c)).Trim();
-            var path = await dialogs.SaveFileAsync("Export profile", (fileName.Length > 0 ? fileName : "profile") + ProfilePackage.Extension,
-                "Macro Grid profile (*.msprofile)|*.msprofile", "msprofile", ProfilePackage.Write(profile, manifest));
-            return Results.Json(new { path });
-        });
-
-        api.MapGet("/plugins", (PluginManager plugins, PluginLocalizer localizer) =>
-            plugins.Plugins.Select(p => p with { Name = localizer.Translate(p.Id, p.Name)! }));
-
-        api.MapGet("/icon-packs", (PluginManager plugins, PluginLocalizer localizer) =>
-            plugins.IconPacksWithOwner.Select(o => new { o.Pack.Id, DisplayName = localizer.Translate(o.PluginId, o.Pack.DisplayName)!, Icons = o.Pack.IconNames }));
-
-        api.MapGet("/icon-packs/{packId}/{iconName}", (string packId, string iconName, PluginManager plugins) =>
-        {
-            var pack = plugins.IconPacks.FirstOrDefault(p => p.Id == packId);
-            var svg = pack?.GetIconSvg(iconName);
-            return svg is null ? Results.NotFound() : Results.Text(svg, "image/svg+xml");
-        });
-
-        api.MapPost("/plugins/install", async (IUiDialogService dialogs, PluginManager plugins) =>
-        {
-            var sourceDir = await dialogs.BrowseForFolderAsync("Choose the plugin folder (must contain plugin.json)");
-            if (sourceDir is null) return Results.Json(new { installed = false, canceled = true });
-
-            if (!File.Exists(Path.Combine(sourceDir, "plugin.json")))
-                return Results.BadRequest(new { error = $"No plugin.json in the selected folder: {sourceDir}" });
-
-            try
-            {
-                var result = await plugins.InstallFromFolderAsync(sourceDir);
-                return Results.Json(new { installed = true, id = result.Id, name = result.Name, status = result.Plugin.Status, detail = result.Plugin.Detail }, ProtocolJson.Options);
-            }
-            catch (Exception ex) when (ex is JsonException or NotSupportedException or InvalidOperationException or IOException or UnauthorizedAccessException)
-            {
-                return Results.BadRequest(new { error = ex.Message });
-            }
-        });
-
-        // The user approved the permissions a JS plugin declares (shown to them in the Plugins window first).
-        api.MapPost("/plugins/{id}/approve", async (string id, PluginManager plugins) =>
-            await plugins.ApproveAsync(id) is { } info ? Results.Json(info, ProtocolJson.Options) : Results.NotFound());
-
-        api.MapPost("/plugins/{id}/reload", async (string id, PluginManager plugins) =>
-            await plugins.ReloadAsync(id) is { } info ? Results.Json(info, ProtocolJson.Options) : Results.NotFound());
-
-        // Unloads the plugin (its actions, variables and status items disappear immediately) and deletes its
-        // folder. Plugin DLLs are loaded from memory so they are not locked; if a file is still in use anyway
-        // the folder is marked and removed at the next start ("pending").
-        api.MapDelete("/plugins/{id}", async (string id, PluginManager plugins) =>
-            await plugins.UninstallAsync(id) is { } result
-                ? Results.Json(new { removed = result.Removed, pending = result.Pending })
-                : Results.NotFound());
-
-        // A registered IPluginSettingsPage (schema-driven form) takes precedence; a plugin without one
-        // falls back to the raw settings.json passthrough it always had (see docs/plugin-authoring.md
-        // §"Settings") so older plugins keep working unchanged.
-        api.MapGet("/plugins/{id}/settings/schema", (string id, PluginManager plugins, PluginLocalizer localizer) =>
-            plugins.GetSettingsPage(id) is { } page
-                ? Results.Json(page.Fields.Select(f => localizer.Localize(id, f)).ToList(), ProtocolJson.Options)
-                : Results.NotFound());
-
-        api.MapGet("/plugins/{id}/settings", (string id, PluginManager plugins) =>
-        {
-            if (plugins.GetSettingsPage(id) is { } page)
-                return Results.Json(page.Load(), ProtocolJson.Options);
-
-            var dir = plugins.GetPluginDir(id);
-            if (dir is null) return Results.NotFound();
-            var path = Path.Combine(dir, "settings.json");
-            return File.Exists(path) ? Results.Text(File.ReadAllText(path), "application/json") : Results.NotFound();
-        });
-
-        api.MapPut("/plugins/{id}/settings", async (string id, HttpRequest request, PluginManager plugins) =>
-        {
-            if (plugins.GetSettingsPage(id) is { } page)
-            {
-                JsonObject? values;
-                try { values = await JsonSerializer.DeserializeAsync<JsonObject>(request.Body, ProtocolJson.Options); }
-                catch (JsonException) { return Results.BadRequest(new { error = "Invalid JSON." }); }
-                if (values is null) return Results.BadRequest(new { error = "Invalid JSON." });
-                page.Save(values);
-                return Results.NoContent();
-            }
-
-            var dir = plugins.GetPluginDir(id);
-            if (dir is null) return Results.NotFound();
-
-            using var reader = new StreamReader(request.Body);
-            var body = await reader.ReadToEndAsync();
-            try { JsonDocument.Parse(body); }
-            catch (JsonException) { return Results.BadRequest(new { error = "Invalid JSON." }); }
-
-            await File.WriteAllTextAsync(Path.Combine(dir, "settings.json"), body);
-            return Results.NoContent();
-        });
-
-        api.MapPost("/plugins/{id}/settings/options/{sourceId}", async (string id, string sourceId, HttpRequest request, PluginManager plugins, PluginLocalizer localizer) =>
-        {
-            if (plugins.GetSettingsPage(id) is not IOptionsSource optionsSource)
-                return Results.Json(new OptionsResult([], "This plugin does not provide dynamic options"));
-
-            JsonObject? currentValues;
-            try { currentValues = await JsonSerializer.DeserializeAsync<JsonObject>(request.Body, ProtocolJson.Options); }
-            catch (JsonException) { return Results.BadRequest(new { error = "Invalid JSON." }); }
-
-            try
-            {
-                var result = await optionsSource.GetOptionsAsync(sourceId, currentValues ?? [], request.HttpContext.RequestAborted);
-                return Results.Json(result with { Error = localizer.Translate(id, result.Error) }, ProtocolJson.Options);
-            }
-            catch (Exception ex) when (ex is not OperationCanceledException)
-            {
-                return Results.Json(new OptionsResult([], ex.Message));
-            }
-        });
-
-        api.MapGet("/status", (PluginStatusRegistry statusRegistry, PluginLocalizer localizer, PreferencesStore preferences) =>
-            statusRegistry.All.Select(s => s.PluginId == "core"
-                ? s with { Text = LocalizeCoreStatus(s, preferences.Get().Language, localizer) }
-                : s with { Text = localizer.Translate(s.PluginId, s.Text)!, Tooltip = localizer.Translate(s.PluginId, s.Tooltip) }));
-
-        api.MapGet("/version", () => new { version = ClientHub.ServerVersion });
-
-        api.MapPost("/windows/preferences", async (IUiWindowService windows) =>
-        {
-            await windows.ShowToolWindowAsync("preferences", "Preferences", $"http://localhost:{Port}/editor/?window=preferences", 640, 520);
-            return Results.NoContent();
-        });
-
-        api.MapPost("/windows/plugins", async (IUiWindowService windows) =>
-        {
-            await windows.ShowToolWindowAsync("plugins", "Plugins", $"http://localhost:{Port}/editor/?window=plugins", 640, 520);
-            return Results.NoContent();
-        });
-
-        api.MapPost("/windows/plugin-settings/{id}", async (string id, IUiWindowService windows, PluginManager plugins, PluginLocalizer localizer) =>
-        {
-            var name = localizer.Translate(id, plugins.Plugins.FirstOrDefault(p => p.Id == id)?.Name) ?? id;
-            await windows.ShowToolWindowAsync($"plugin-settings-{id}", name,
-                $"http://localhost:{Port}/editor/?window=plugin-settings&id={Uri.EscapeDataString(id)}", 520, 560);
-            return Results.NoContent();
-        });
-
-        api.MapPost("/windows/help", async (HttpRequest request, IUiWindowService windows) =>
-        {
-            var tab = request.Query["tab"].ToString();
-            var tabQuery = tab is "about" or "agreement" or "licenses" ? $"&tab={tab}" : "";
-            await windows.ShowToolWindowAsync("help", "Help", $"http://localhost:{Port}/editor/?window=help{tabQuery}", 760, 560);
-            return Results.NoContent();
-        });
-
-        api.MapPost("/windows/pairing", async (IUiWindowService windows) =>
-        {
-            await windows.ShowToolWindowAsync("pairing", "Pairing", $"http://localhost:{Port}/editor/?window=pairing", 760, 560);
-            return Results.NoContent();
-        });
-
-        api.MapGet("/pairing/pin", (PairingService pairing) => new { pin = pairing.CurrentPin });
-
-        api.MapPost("/pairing/pin/regenerate", (PairingService pairing) => new { pin = pairing.Regenerate() });
-
-        api.MapGet("/pairing/qr", (PairingService pairing) => BuildPairingQr(pairing.CurrentPin, pairing.ExpiresAt));
-
-        api.MapPost("/pairing/qr/regenerate", (PairingService pairing) => BuildPairingQr(pairing.Regenerate(), pairing.ExpiresAt));
-
-        api.MapGet("/devices", (DeviceStore devices) =>
-            devices.All.Select(d => new { d.Id, d.Name, d.PairedAt, d.LastSeenAt, d.AssignedProfileId, d.FollowActiveWindow, d.AutoSwitchLocked }));
-
-        api.MapDelete("/devices/{id}", (string id, DeviceStore devices) =>
-            devices.Revoke(id) ? Results.NoContent() : Results.NotFound());
-
-        api.MapPut("/devices/{id}/profile", async (string id, HttpRequest request, DeviceStore devices) =>
-        {
-            AssignProfileRequest? body;
-            try { body = await JsonSerializer.DeserializeAsync<AssignProfileRequest>(request.Body, ProtocolJson.Options); }
-            catch (JsonException) { return Results.BadRequest(); }
-
-            return devices.AssignProfile(id, body?.ProfileId) ? Results.NoContent() : Results.NotFound();
-        });
-
-        api.MapPut("/devices/{id}/follow-window", async (string id, HttpRequest request, DeviceStore devices, SessionRegistry sessions, AutoProfileSwitcher autoSwitcher) =>
-        {
-            FollowWindowRequest? body;
-            try { body = await JsonSerializer.DeserializeAsync<FollowWindowRequest>(request.Body, ProtocolJson.Options); }
-            catch (JsonException) { return Results.BadRequest(); }
-            if (body is null) return Results.BadRequest();
-
-            if (!devices.SetFollowActiveWindow(id, body.FollowActiveWindow)) return Results.NotFound();
-
-            // Applies to the live session too, not just future connections — re-evaluate against the
-            // current foreground window right away if it was just turned on.
-            var session = sessions.All.FirstOrDefault(s => s.DeviceId == id);
-            if (session is not null && body.FollowActiveWindow)
-                await autoSwitcher.ReevaluateAsync(session);
-
-            return Results.NoContent();
-        });
-
-        api.MapGet("/system/windows", (IActiveWindowSource windowSource) => windowSource.ListVisibleWindows());
-    }
-
-    private sealed record AssignProfileRequest(string? ProfileId);
-    private sealed record FollowWindowRequest(bool FollowActiveWindow);
-
-    /// <summary>
-    /// The pairing QR's payload: a <c>macrogrid://pair</c> deep-link URI carrying the LAN host, port and
-    /// current PIN, so a client can decode it without agreeing on a bespoke delimited format. Uses the first
-    /// LAN address <see cref="NetworkInfo.GetLanAddresses"/> reports (gateway-having adapters first); if the
-    /// host has no LAN adapter up, <c>host</c> comes back empty and the editor should show a warning instead
-    /// of a QR code, since a QR with no reachable host is useless.
-    /// </summary>
-    private static object BuildPairingQr(string pin, DateTimeOffset expiresAt)
-    {
-        var host = NetworkInfo.GetLanAddresses().FirstOrDefault()?.ToString() ?? "";
-        var text = string.IsNullOrEmpty(host)
-            ? ""
-            : $"macrogrid://pair?host={Uri.EscapeDataString(host)}&port={Port}&pin={pin}";
-        return new { text, host, port = Port, pin, expiresAt };
+        app.MapGroup("/api")
+            .MapProfileApi()
+            .MapAppApi()
+            .MapCatalogApi()
+            .MapPluginApi()
+            .MapWindowApi()
+            .MapDeviceApi();
     }
 }
-

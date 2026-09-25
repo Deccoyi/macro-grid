@@ -4,7 +4,7 @@ import type { AppPreferences, PreviewProfileInfo } from "../api/types";
 
 export type Theme = "dark" | "light";
 export type Language = "tr" | "en";
-export type PreviewProfile = PreviewProfileInfo;
+type PreviewProfile = PreviewProfileInfo;
 
 const DEFAULTS: AppPreferences = {
   theme: "dark",

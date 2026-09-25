@@ -1,6 +1,6 @@
 using System.Collections.Concurrent;
 
-namespace MacroGrid.Core.Sessions;
+namespace MacroGrid.Core.Widgets;
 
 /// <summary>
 /// On/off state of every toggle-type widget, keyed by widget id (ids are globally unique, so no profile/page key is needed).

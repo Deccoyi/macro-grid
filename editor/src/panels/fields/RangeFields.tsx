@@ -7,7 +7,7 @@ import type { FieldGroupProps } from "./AppearanceFields";
 const num = (v: unknown, fallback: number) => (typeof v === "number" ? v : fallback);
 const str = (v: unknown): string | undefined => (typeof v === "string" && v ? v : undefined);
 
-export interface RangeFieldsProps extends FieldGroupProps {
+interface RangeFieldsProps extends FieldGroupProps {
   variableCatalog: VariableInfo[];
 }
 

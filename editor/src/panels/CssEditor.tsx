@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { sanitizeWidgetCss } from "@macro/renderer";
 
-export interface CssEditorProps {
+interface CssEditorProps {
   value: string | undefined;
   onChange: (css: string) => void;
 }

@@ -3,7 +3,7 @@ using MacroGrid.Core.Preferences;
 using MacroGrid.Core.Profiles;
 using MacroGrid.Core.Sessions;
 
-namespace MacroGrid.Host;
+namespace MacroGrid.Host.Ui;
 
 /// <summary>Owns the tray icon; the application lives as long as this context.</summary>
 internal sealed class TrayContext : ApplicationContext

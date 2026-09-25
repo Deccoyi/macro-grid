@@ -2,7 +2,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json.Nodes;
 
-namespace MacroGrid.Core.Sessions;
+namespace MacroGrid.Core.Widgets;
 
 /// <summary>
 /// Holds the large <c>data:</c> values (icons, images) that were pulled out of layouts sent to clients, keyed by

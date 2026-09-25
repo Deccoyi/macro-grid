@@ -9,7 +9,7 @@ export interface ContextMenuItem {
   onSelect: () => void;
 }
 
-export interface ContextMenuProps {
+interface ContextMenuProps {
   x: number;
   y: number;
   items: ContextMenuItem[];

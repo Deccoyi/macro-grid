@@ -2,14 +2,14 @@ import { useMemo, useState, type ReactNode } from "react";
 import { useT } from "../i18n/I18nContext";
 import { useBackdropClose } from "../components/useBackdropClose";
 
-export interface PickerCategory {
+interface PickerCategory {
   id: string;
   label: string;
   /** Shown next to the label, e.g. an item count. */
   badge?: string | number;
 }
 
-export interface PickerShellProps {
+interface PickerShellProps {
   title: string;
   categories: PickerCategory[];
   /** "all" is always available in addition to whatever ids are passed. */

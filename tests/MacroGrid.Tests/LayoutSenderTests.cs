@@ -1,9 +1,9 @@
 using System.Net.WebSockets;
 using System.Text;
-using System.Text.Json.Nodes;
 using MacroGrid.Core.Model;
 using MacroGrid.Core.Sessions;
 using MacroGrid.Protocol;
+using MacroGrid.Core.Widgets;
 
 namespace MacroGrid.Tests;
 
@@ -61,7 +61,7 @@ public class LayoutSenderTests
     private static (ClientSession Session, RecordingSocket Socket) NewSession(params string[] capabilities)
     {
         var socket = new RecordingSocket();
-        return (new ClientSession(socket, "test") { Capabilities = [.. capabilities] }, socket);
+        return (new ClientSession(socket) { Capabilities = [.. capabilities] }, socket);
     }
 
     [Fact]

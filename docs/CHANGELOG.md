@@ -3,6 +3,8 @@
 New features and fixes in Macro Grid. For technical details, see [CHANGELOG-developer.md](CHANGELOG-developer.md).
 
 ## Unreleased
+### Fixed
+- **Error message in the status bar:** After a button press failed (for example a scene that does not exist), the message stayed at the bottom of the editor for good. It now disappears after 15 seconds, or as soon as the next action works.
 
 ## 0.2.1 - 2026-09-24
 ### New

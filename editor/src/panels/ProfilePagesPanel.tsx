@@ -7,7 +7,7 @@ import { useT } from "../i18n/I18nContext";
 import { AppMatchesEditor } from "./AppMatchesEditor";
 import { SectionLabel } from "./fields/controls";
 
-export interface ProfilePagesPanelProps {
+interface ProfilePagesPanelProps {
   profile: { id: string; name: string };
   profiles: ProfileSummary[];
   pages: Page[];

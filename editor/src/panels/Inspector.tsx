@@ -11,7 +11,7 @@ import { RangeFields } from "./fields/RangeFields";
 import { TextFields } from "./fields/TextFields";
 import { WebFields } from "./fields/WebFields";
 
-export interface InspectorProps {
+interface InspectorProps {
   selectedWidgets: Widget[];
   page: Page;
   pages: Page[];

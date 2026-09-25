@@ -1,4 +1,4 @@
-namespace MacroGrid.Host;
+namespace MacroGrid.Host.Ui;
 
 /// <summary>Opens native tool windows (Tercihler, Eklentiler, ...) — see <see cref="ToolWindow"/>. Marshaled
 /// onto the WinForms UI thread the same way <see cref="UiDialogService"/> marshals native dialogs.</summary>

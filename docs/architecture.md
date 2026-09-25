@@ -28,7 +28,7 @@ server runs the actions on the PC and pushes live values back.
 
 | Project | What it is |
 |---|---|
-| `src/MacroGrid.Host` | The executable: tray icon, WebView2 windows, Kestrel and the HTTP/WebSocket endpoints (`ServerApp.cs`). |
+| `src/MacroGrid.Host` | The executable: tray icon, WebView2 windows, Kestrel and the HTTP/WebSocket endpoints (`ServerApp.cs`, `Api/`). |
 | `src/MacroGrid.Core` | The platform-independent logic: profile model and storage, actions, variables and templates, sessions and layout sending, pairing, plugin loading. |
 | `src/MacroGrid.Protocol` | The WebSocket message types and payloads. |
 | `src/MacroGrid.Windows` | Windows-specific parts: `SendInput` key presses, audio through NAudio (`WASAPI`), CPU and RAM, the foreground-window hook. |

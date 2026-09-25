@@ -6,7 +6,7 @@ import { useT } from "../../i18n/I18nContext";
 import { HotkeyCapture } from "./HotkeyCapture";
 import { SchemaForm } from "./SchemaForm";
 
-export interface ActionFormProps {
+interface ActionFormProps {
   binding: ActionBinding;
   onChange: (settings: Record<string, unknown>) => void;
   pages: Page[];
@@ -18,7 +18,7 @@ export interface ActionFormProps {
 const str = (v: unknown, fallback = "") => (typeof v === "string" ? v : fallback);
 const num = (v: unknown, fallback = 0) => (typeof v === "number" ? v : fallback);
 
-export function HotkeyForm({ binding, onChange }: ActionFormProps) {
+function HotkeyForm({ binding, onChange }: ActionFormProps) {
   const { t } = useT();
   return (
     <label className="field">
@@ -28,7 +28,7 @@ export function HotkeyForm({ binding, onChange }: ActionFormProps) {
   );
 }
 
-export function TypeTextForm({ binding, onChange }: ActionFormProps) {
+function TypeTextForm({ binding, onChange }: ActionFormProps) {
   const { t } = useT();
   return (
     <label className="field">
@@ -38,7 +38,7 @@ export function TypeTextForm({ binding, onChange }: ActionFormProps) {
   );
 }
 
-export function PageActionForm({ binding, onChange, pages }: ActionFormProps) {
+function PageActionForm({ binding, onChange, pages }: ActionFormProps) {
   const { t } = useT();
   const mode = str(binding.settings.mode, "goto");
   return (
@@ -67,7 +67,7 @@ export function PageActionForm({ binding, onChange, pages }: ActionFormProps) {
   );
 }
 
-export function ProfileActionForm({ binding, onChange, profiles }: ActionFormProps) {
+function ProfileActionForm({ binding, onChange, profiles }: ActionFormProps) {
   const { t } = useT();
   return (
     <label className="field">
@@ -82,7 +82,7 @@ export function ProfileActionForm({ binding, onChange, profiles }: ActionFormPro
   );
 }
 
-export function OpenApplicationForm({ binding, onChange }: ActionFormProps) {
+function OpenApplicationForm({ binding, onChange }: ActionFormProps) {
   const { t } = useT();
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
@@ -119,7 +119,7 @@ export function OpenApplicationForm({ binding, onChange }: ActionFormProps) {
   );
 }
 
-export function OpenUrlActionForm({ binding, onChange }: ActionFormProps) {
+function OpenUrlActionForm({ binding, onChange }: ActionFormProps) {
   const { t } = useT();
   const url = str(binding.settings.url);
   const looksValid = url === "" || /^https?:\/\/.+/i.test(url);
@@ -138,7 +138,7 @@ export function OpenUrlActionForm({ binding, onChange }: ActionFormProps) {
   );
 }
 
-export function DelayActionForm({ binding, onChange }: ActionFormProps) {
+function DelayActionForm({ binding, onChange }: ActionFormProps) {
   const { t } = useT();
   return (
     <label className="field">
@@ -155,12 +155,12 @@ export function DelayActionForm({ binding, onChange }: ActionFormProps) {
 }
 
 /** No settings to configure — the action reads the widget's live dragged value instead (core.setVolume). */
-export function NoSettingsForm() {
+function NoSettingsForm() {
   const { t } = useT();
   return <p style={{ fontSize: 11.5, color: "var(--ms-text-secondary)", margin: 0 }}>{t("form.noSettings")}</p>;
 }
 
-export function SetMuteActionForm({ binding, onChange }: ActionFormProps) {
+function SetMuteActionForm({ binding, onChange }: ActionFormProps) {
   const { t } = useT();
   const muted = binding.settings.muted !== false;
   return (
@@ -175,7 +175,7 @@ export function SetMuteActionForm({ binding, onChange }: ActionFormProps) {
 }
 
 /** Raw JSON fallback for action types the editor doesn't have a dedicated form for yet (future plugins). */
-export function GenericJsonForm({ binding, onChange }: ActionFormProps) {
+function GenericJsonForm({ binding, onChange }: ActionFormProps) {
   const { t } = useT();
   const text = JSON.stringify(binding.settings, null, 2);
   return (
@@ -197,7 +197,7 @@ export function GenericJsonForm({ binding, onChange }: ActionFormProps) {
   );
 }
 
-export const ACTION_FORMS: Record<string, (props: ActionFormProps) => JSX.Element> = {
+const ACTION_FORMS: Record<string, (props: ActionFormProps) => JSX.Element> = {
   "core.hotkey": HotkeyForm,
   "core.typeText": TypeTextForm,
   "core.page": PageActionForm,
