@@ -3,9 +3,10 @@ using System.Security.Cryptography;
 namespace MacroGrid.Core.Plugins.Distribution;
 
 /// <summary>
-/// Verifies the official plugin source's signature: the plugin-signing repository secret's matching public key,
-/// embedded here since it is not a secret. See the plugin repository's website/reference/source-index.md for how
-/// <c>release.yml</c> produces the signature (ECDSA P-256 over the release zip's own bytes, SHA-256, base64).
+/// Verifies the official plugin source's signature against the public key of the plugin-signing key, embedded here since
+/// it is not a secret. The private key stays on the maintainer's PC (docs/guides/release.md, "Signing and keys"):
+/// <c>scripts/release-plugin.ps1</c> in the plugin repository signs the release zip locally (ECDSA P-256 over the zip's own
+/// bytes, SHA-256, base64); no workflow signs. See the plugin repository's website/reference/source-index.md for the index format.
 /// A signature on a non-official source's entry is never checked here or trusted as official — see
 /// <see cref="PluginCatalogClient"/>, which only asks for verification when the source is the built-in official one.
 /// </summary>
