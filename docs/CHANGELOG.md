@@ -3,6 +3,8 @@
 New features and fixes in Macro Grid. For technical details, see [CHANGELOG-developer.md](CHANGELOG-developer.md).
 
 ## Unreleased
+### New
+- **Discover plugins:** The Plugins window's Discover tab can now browse and install plugins from the official catalog, with compatibility, install and update status shown for each one.
 
 ## 0.3.1 - 2026-09-25
 This version has a new user agreement: you are asked to accept it once, in the installer or, if someone else installed it, the first time you start Macro Grid.
