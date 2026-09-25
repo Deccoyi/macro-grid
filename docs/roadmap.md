@@ -28,6 +28,13 @@ Where the project stands. The project is before 1.0.0 and under active developme
 
 The order of the bigger pieces of work, and their plans, are in [plans/README.md](plans/README.md). The items below have no plan file yet.
 
+- **Publish the SDK package only when the SDK changes (priority, to be discussed):** the server and the SDK share one version number, and today every
+  `server-v*` tag also publishes `MacroGrid.Plugin.Abstractions` with that number, even when the SDK did not change (1.0.1 was such a release).
+  Wanted: the publish workflow compares `src/MacroGrid.Plugin.Abstractions` with the previous server tag and skips NuGet when it is unchanged, so the
+  package version is the Macro Grid version in which the SDK last changed. Plugins are not affected (`macroGrid` means "the oldest Macro Grid", and the plugin
+  build only requires the same MAJOR and not newer than the SDK it builds against); the plugin docs would say to use the newest published SDK. Alongside it:
+  a check that fails the build when a public SDK member is removed or changed within a MAJOR (package validation against the last published package), and a
+  test that loads a plugin built for an older SDK on the new server. Not decided yet.
 - **An encrypted connection:** the phone and the server talk over plain `ws://` and `http://` on the local network, so anyone on the same Wi-Fi
   can read the traffic and take the pairing PIN or a device token, and then press the buttons of your profiles. Fine on a home network you trust,
   a real gap on a shared one (cafe, school, office). Wanted: the server makes its own certificate and puts its fingerprint into the pairing QR
