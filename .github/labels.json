@@ -1,0 +1,67 @@
+[
+  {
+    "name": "regression",
+    "color": "b60205",
+    "description": "It worked in an earlier version"
+  },
+  {
+    "name": "priority: high",
+    "color": "b60205",
+    "description": "Blocks people: a crash, lost data or a broken install"
+  },
+  {
+    "name": "needs-triage",
+    "color": "fbca04",
+    "description": "New issue, not looked at yet (added automatically)"
+  },
+  {
+    "name": "needs-info",
+    "color": "e4e669",
+    "description": "We asked a question and are waiting for the reporter"
+  },
+  {
+    "name": "confirmed",
+    "color": "d9c400",
+    "description": "Reproduced or accepted by a maintainer"
+  },
+  {
+    "name": "in progress",
+    "color": "b7a600",
+    "description": "Someone is working on it"
+  },
+  {
+    "name": "area: editor",
+    "color": "1d76db",
+    "description": "The editor window"
+  },
+  {
+    "name": "area: server",
+    "color": "1d76db",
+    "description": "The server or the tray app"
+  },
+  {
+    "name": "area: deck",
+    "color": "1d76db",
+    "description": "The browser deck"
+  },
+  {
+    "name": "area: pairing",
+    "color": "1d76db",
+    "description": "Pairing and connecting phones"
+  },
+  {
+    "name": "area: installer",
+    "color": "1d76db",
+    "description": "The installer or an update"
+  },
+  {
+    "name": "area: plugins",
+    "color": "1d76db",
+    "description": "Loading or running plugins"
+  },
+  {
+    "name": "area: updates",
+    "color": "1d76db",
+    "description": "Checking for or installing updates"
+  }
+]

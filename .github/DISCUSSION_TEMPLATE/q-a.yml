@@ -1,0 +1,20 @@
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Ask about the Windows server, the editor, the browser deck and the installer. Found a bug? Please open an issue instead.
+  - type: textarea
+    id: goal
+    attributes:
+      label: What are you trying to do?
+    validations:
+      required: true
+  - type: textarea
+    id: tried
+    attributes:
+      label: What have you tried, and what happened?
+  - type: input
+    id: versions
+    attributes:
+      label: Versions
+      description: For example the server, the app and the plugin versions you use.

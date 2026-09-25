@@ -1,0 +1,67 @@
+name: Triage
+
+# Sorts a new issue: adds "needs-triage", the area from the form's or the text template's "where" answer, and "regression".
+# It only adds labels that already exist, never removes one, never comments and never closes. Permission: issues write, nothing else.
+on:
+  issues:
+    types: [opened]
+
+permissions:
+  issues: write
+
+jobs:
+  label:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          script: |
+            const CONFIG = {
+              "areas": {
+                "editor": "area: editor",
+                "server or tray app": "area: server",
+                "server or tray": "area: server",
+                "server": "area: server",
+                "browser deck": "area: deck",
+                "deck": "area: deck",
+                "phone app connection or pairing": "area: pairing",
+                "pairing": "area: pairing",
+                "plugin loading": "area: plugins",
+                "plugins": "area: plugins",
+                "installer": "area: installer",
+                "updates": "area: updates"
+              },
+              "areaHeading": "Where does it happen?",
+              "areaText": "Where",
+              "regressionHeading": "Did it work in an earlier version?",
+              "regressionText": "Worked in an earlier version"
+            };
+            const issue = context.payload.issue;
+            const body = String(issue.body || '').replace(/\r\n/g, '\n');
+            const esc = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+            // The issue text is written by strangers: it is only ever compared with the known words below,
+            // never run, never put into a command or a comment.
+            function answer(heading, textKey) {
+              let m = body.match(new RegExp('###\\s+' + esc(heading) + '\\s*\\n+([^\\n]+)', 'i'));
+              if (!m && textKey) m = body.match(new RegExp('^\\s*' + esc(textKey) + '\\s*:\\s*(.+)$', 'im'));
+              return m ? m[1].trim().toLowerCase() : '';
+            }
+
+            const areas = new Map(Object.entries(CONFIG.areas));
+            const wanted = new Set(['needs-triage']);
+            const area = areas.get(answer(CONFIG.areaHeading, CONFIG.areaText));
+            if (area) wanted.add(area);
+            if (answer(CONFIG.regressionHeading, CONFIG.regressionText).startsWith('yes')) wanted.add('regression');
+
+            // Add only labels that already exist: adding a missing one would create it with a default color.
+            const existing = await github.paginate(github.rest.issues.listLabelsForRepo, {
+              owner: context.repo.owner, repo: context.repo.repo, per_page: 100,
+            });
+            const names = new Set(existing.map((l) => l.name));
+            const labels = [...wanted].filter((n) => names.has(n));
+            if (labels.length > 0) {
+              await github.rest.issues.addLabels({
+                owner: context.repo.owner, repo: context.repo.repo, issue_number: issue.number, labels,
+              });
+            }

@@ -1,0 +1,18 @@
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Share an idea for the Windows server, the editor, the browser deck and the installer. Check the [roadmap](https://github.com/Deccoyi/macro-grid/blob/main/docs/roadmap.md) first: it may already be planned.
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem would it solve?
+      description: Describe the situation, not only the solution.
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: What would you like to see?
+    validations:
+      required: true

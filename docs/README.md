@@ -27,6 +27,7 @@ Where things live. Public entry points (`README.md`, `CONTRIBUTING.md`, `SECURIT
 | [guides/engineering-guidelines.md](guides/engineering-guidelines.md) | The coding rules that are followed in this repository. |
 | [guides/versioning.md](guides/versioning.md) | What is versioned, where each version lives, what counts as breaking. |
 | [guides/release.md](guides/release.md) | How a release is made: build, installer, tags. |
+| [guides/triage.md](guides/triage.md) | How the maintainer handles a new issue, and answers to copy. |
 | [ui/ui-guidelines.md](ui/ui-guidelines.md) | UI rules for the editor and the phone deck. |
 | [ui/color-bible.md](ui/color-bible.md) | The color system ([live preview](ui/color-bible-preview.html)). |
 

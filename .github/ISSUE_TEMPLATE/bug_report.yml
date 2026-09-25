@@ -42,6 +42,7 @@ body:
         - Phone app connection or pairing
         - Plugin loading
         - Installer
+        - Updates
         - Other
     validations:
       required: true
@@ -56,3 +57,18 @@ body:
       label: Logs or screenshots
       description: Logs are in the `logs` folder of the data folder (tray menu, open data folder). Remove anything private before pasting.
       render: shell
+  - type: dropdown
+    id: regression
+    attributes:
+      label: Did it work in an earlier version?
+      options:
+        - No, or I am not sure
+        - Yes, it worked in an earlier version (write which one below)
+      default: 0
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before you send
+      options:
+        - label: I searched the existing issues and Discussions, and this is not already reported.
+          required: true
