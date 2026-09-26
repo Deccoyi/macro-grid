@@ -4,6 +4,7 @@ using System.Text.Json;
 using System.Threading.Channels;
 using MacroGrid.Core.Actions;
 using MacroGrid.Core.Devices;
+using MacroGrid.Core.Diagnostics;
 using MacroGrid.Core.Model;
 using MacroGrid.Core.Plugins;
 using MacroGrid.Core.Preferences;
@@ -44,7 +45,7 @@ public sealed class ClientHub(
 
     public async Task HandleAsync(WebSocket socket, string remoteAddress, CancellationToken cancellationToken)
     {
-        var session = new ClientSession(socket);
+        var session = new ClientSession(socket) { RemoteAddress = remoteAddress };
         sessions.Add(session);
         logger.LogInformation("Client {Session} connected from {Remote}", session.Id, remoteAddress);
 
@@ -211,13 +212,16 @@ public sealed class ClientHub(
 
         if (device is null)
         {
-            if (!pairing.Verify(hello.Pin))
+            var result = pairing.TryPair(hello.Pin, session.RemoteAddress);
+            if (result.Outcome != PairingOutcome.Accepted)
             {
-                await session.SendAsync(MessageTypes.Error, new ErrorMessage("pairing_required", "Pairing is required. Enter the PIN shown in the Macro Grid editor on the computer."), ct);
+                LogPairingFailure(result, session.RemoteAddress);
+                await session.SendAsync(MessageTypes.Error, new ErrorMessage("pairing_required", PairingMessage(result)), ct);
                 return;
             }
             device = devices.Pair(hello.DeviceId, deviceName);
             issuedToken = device.Token;
+            logger.LogInformation(SecurityEvents.DevicePaired, "Security: device {Name} ({Device}) paired from {Remote}", deviceName, device.Id, session.RemoteAddress);
         }
         else
         {
@@ -247,6 +251,32 @@ public sealed class ClientHub(
 
     /// <summary>Every profile, not just the current one, so the client can offer a profile-switcher
     /// drawer — plus this device's auto-switch opt-in/lock state, re-sent whenever either changes.</summary>
+    private void LogPairingFailure(PairingResult result, string remote)
+    {
+        switch (result.Outcome)
+        {
+            case PairingOutcome.WrongPin:
+                logger.LogWarning(SecurityEvents.WrongPin, "Security: wrong pairing PIN from {Remote} ({Failures} in a row)", remote, result.Failures);
+                break;
+            case PairingOutcome.Closed:
+                logger.LogWarning(SecurityEvents.PinWhileClosed, "Security: pairing PIN from {Remote} while pairing is closed ({Failures} in a row)", remote, result.Failures);
+                break;
+            case PairingOutcome.Blocked when result.NewlyBlocked:
+                logger.LogWarning(SecurityEvents.PairingBlocked, "Security: {Remote} blocked from pairing for {Seconds} s after {Failures} wrong PINs", remote, (int)result.RetryAfter.TotalSeconds, result.Failures);
+                break;
+        }
+        if (result.PinRenewed)
+            logger.LogWarning(SecurityEvents.PinRenewed, "Security: pairing PIN replaced after {Count} wrong attempts", PairingService.FailuresBeforeNewPin);
+    }
+
+    private static string PairingMessage(PairingResult result) => result.Outcome switch
+    {
+        PairingOutcome.Blocked => $"Too many wrong PINs. Try again in {Math.Max(1, (int)Math.Ceiling(result.RetryAfter.TotalSeconds))} seconds.",
+        PairingOutcome.Closed => "Pairing is closed. Open the Pairing window in the Macro Grid editor on the computer, then enter the PIN shown there.",
+        PairingOutcome.WrongPin => "Wrong PIN. Enter the PIN shown in the Pairing window of the Macro Grid editor on the computer.",
+        _ => "Pairing is required. Open the Pairing window in the Macro Grid editor on the computer and enter the PIN shown there.",
+    };
+
     private Task SendProfilesListAsync(ClientSession session, PairedDevice device, CancellationToken ct) =>
         session.SendAsync(MessageTypes.ProfilesList, new ProfilesListPayload(
             profiles.All.Select(p => new ProfileSummary(p.Id, p.Name)).ToList(),

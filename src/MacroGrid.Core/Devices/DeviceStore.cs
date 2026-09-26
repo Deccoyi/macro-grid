@@ -1,3 +1,5 @@
+using System.Security.Cryptography;
+using System.Text;
 using System.Text.Json;
 using MacroGrid.Core.Model;
 using MacroGrid.Protocol;
@@ -29,7 +31,9 @@ public sealed class DeviceStore
     public PairedDevice? FindByToken(string? token)
     {
         if (string.IsNullOrEmpty(token)) return null;
-        lock (_lock) return _devices.Values.FirstOrDefault(d => d.Token == token);
+        var sent = Encoding.UTF8.GetBytes(token);
+        // Fixed-time comparison, so the time an answer takes says nothing about how much of a token was right.
+        lock (_lock) return _devices.Values.FirstOrDefault(d => CryptographicOperations.FixedTimeEquals(Encoding.UTF8.GetBytes(d.Token), sent));
     }
 
     /// <summary>Issues a brand-new token for this device id, overwriting any previous pairing for it (a
@@ -40,7 +44,7 @@ public sealed class DeviceStore
         {
             Id = deviceId,
             Name = deviceName,
-            Token = Guid.NewGuid().ToString("N"),
+            Token = RandomNumberGenerator.GetHexString(32, lowercase: true),
             PairedAt = DateTimeOffset.UtcNow,
             LastSeenAt = DateTimeOffset.UtcNow,
         };

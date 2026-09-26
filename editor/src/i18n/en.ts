@@ -257,7 +257,7 @@ export const en: Record<DictKey, string | ((...args: string[]) => string)> = {
   "pairing.newDeviceCode": "Code for a new device",
   "pairing.regenerate": "Generate a new code",
   "pairing.noLan": "No active local network (LAN) address found on the server — can't generate a QR code. Check that Wi-Fi/Ethernet is connected.",
-  "pairing.instructions": "Scan this with \"Scan QR\" in the phone app, or enter the server address, connect, and type the PIN by hand. The code expires on its own after 5 minutes — a fresh one is generated each time this panel opens. Once paired, the device reconnects with its own token; the code isn't asked for again.",
+  "pairing.instructions": "Scan this with \"Scan QR\" in the phone app, or enter the server address, connect, and type the PIN by hand. The code works only while this window is open, for at most 5 minutes, and pairs one device; then a new one is shown. After too many wrong tries a device has to wait a while. Once paired, the device reconnects with its own token; the code isn't asked for again.",
   "pairing.pairedDevices": "Paired devices",
   "pairing.loading": "Loading…",
   "pairing.noDevices": "No devices paired yet.",
@@ -266,7 +266,7 @@ export const en: Record<DictKey, string | ((...args: string[]) => string)> = {
   "pairing.followActiveWindow.hint": "On: this device auto-switches profile based on which app is in the foreground on the PC (via each profile's own rules).",
   "pairing.revoke": "Remove pairing",
   "pairing.browser": "Connect from a browser",
-  "pairing.browser.hint": "Without installing the phone app, any device on the same network can open the deck from this address in its browser. A PIN is still required.",
+  "pairing.browser.hint": "Without installing the phone app, any device on the same network can open the deck from this address in its browser. A PIN is still required, entered while this window is open.",
   "pairing.deviceProfile": "Profile this device opens",
   "pairing.deviceProfile.default": "Default (first profile)",
 

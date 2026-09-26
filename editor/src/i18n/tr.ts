@@ -265,7 +265,7 @@ export const tr = {
   "pairing.newDeviceCode": "Yeni cihaz için kod",
   "pairing.regenerate": "Yeni kod üret",
   "pairing.noLan": "Sunucunun aktif bir yerel ağ (LAN) adresi bulunamadı — QR üretilemiyor. Wi-Fi/Ethernet bağlı mı kontrol edin.",
-  "pairing.instructions": "Telefon uygulamasında \"QR ile tara\" ile bu kodu okutun, ya da sunucu adresini girip bağlandıktan sonra PIN'i elle yazın. Kod 5 dakika sonra kendiliğinden geçersiz olur — panel her açıldığında yenisi üretilir. Eşleştikten sonra cihaz kendi belirteciyle (token) bağlanır, kod tekrar sorulmaz.",
+  "pairing.instructions": "Telefon uygulamasında \"QR ile tara\" ile bu kodu okutun, ya da sunucu adresini girip bağlandıktan sonra PIN'i elle yazın. Kod sadece bu pencere açıkken ve en fazla 5 dakika geçerlidir; her kod tek bir cihazı eşleştirir, sonra yenisi gösterilir. Çok sayıda yanlış denemede o cihaz bir süre bekletilir. Eşleştikten sonra cihaz kendi belirteciyle (token) bağlanır, kod tekrar sorulmaz.",
   "pairing.pairedDevices": "Eşleşmiş cihazlar",
   "pairing.loading": "Yükleniyor…",
   "pairing.noDevices": "Henüz eşleşmiş cihaz yok.",
@@ -274,7 +274,7 @@ export const tr = {
   "pairing.followActiveWindow.hint": "Açık: bilgisayarda öne gelen uygulamaya göre (profildeki kurallar üzerinden) bu cihaz otomatik profil değiştirir.",
   "pairing.revoke": "Eşleşmeyi kaldır",
   "pairing.browser": "Tarayıcıdan bağlan",
-  "pairing.browser.hint": "Telefon uygulaması kurmadan, aynı ağdaki herhangi bir cihazın tarayıcısından bu adrese girerek deck'i açabilirsiniz. PIN yine sorulur.",
+  "pairing.browser.hint": "Telefon uygulaması kurmadan, aynı ağdaki herhangi bir cihazın tarayıcısından bu adrese girerek deck'i açabilirsiniz. PIN yine sorulur; bu pencere açıkken girilmelidir.",
   "pairing.deviceProfile": "Bu cihazda açılacak profil",
   "pairing.deviceProfile.default": "Varsayılan (ilk profil)",
 

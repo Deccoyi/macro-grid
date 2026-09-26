@@ -1,5 +1,6 @@
 using System.Text.Json;
 using MacroGrid.Core.Actions;
+using MacroGrid.Core.Diagnostics;
 using MacroGrid.Core.Profiles;
 using MacroGrid.Core.Variables;
 using MacroGrid.Plugin.Abstractions;
@@ -176,6 +177,7 @@ public sealed partial class PluginManager(
             CopyDirectory(sourceDir, destDir);
 
             var info = await LoadFolderCoreAsync(destDir);
+            logger.LogInformation(SecurityEvents.PluginInstalled, "Security: plugin {Id} {Version} ({Kind}) installed", manifest.Id, manifest.Version, manifest.Kind);
             return new PluginInstallResult(manifest.Id, manifest.Name, info);
         }
         finally { _gate.Release(); }
@@ -209,6 +211,7 @@ public sealed partial class PluginManager(
                 return null;
 
             permissionStore.Grant(pluginId, pending);
+            logger.LogInformation(SecurityEvents.PluginPermissionsGranted, "Security: plugin {Id} was granted: {Permissions}", pluginId, string.Join(", ", pending));
             lock (_stateLock) _entries.Remove(pluginId);
             return await LoadFolderCoreAsync(entry.Dir);
         }
@@ -245,6 +248,7 @@ public sealed partial class PluginManager(
             await UnloadCoreAsync(entry);
             lock (_stateLock) _entries.Remove(pluginId);
             permissionStore.Revoke(pluginId);
+            logger.LogInformation(SecurityEvents.PluginUninstalled, "Security: plugin {Id} uninstalled", pluginId);
 
             try
             {
