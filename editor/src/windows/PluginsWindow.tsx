@@ -121,7 +121,7 @@ export function PluginsWindow() {
       return;
     }
     if (!inspected.compatible) {
-      setError(t("plugins.discover.link.failed", t("plugins.discover.incompatible")));
+      setError(t("plugins.discover.link.failed", inspected.incompatibleReason ?? t("plugins.discover.incompatible")));
       return;
     }
 
@@ -465,7 +465,7 @@ export function PluginsWindow() {
                       <div style={{ fontSize: 11.5, color: "var(--ms-text-secondary)", marginTop: 4 }}>{entry.description}</div>
                     )}
                     {!entry.compatible && (
-                      <div style={{ fontSize: 11, color: "var(--ms-warning, #facc15)", marginTop: 4 }}>{t("plugins.discover.incompatible")}</div>
+                      <div style={{ fontSize: 11, color: "var(--ms-warning, #facc15)", marginTop: 4 }}>{entry.incompatibleReason ?? t("plugins.discover.incompatible")}</div>
                     )}
                   </div>
                   {entry.installed && !entry.updateAvailable && (

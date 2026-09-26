@@ -27,6 +27,15 @@ jobs:
       - uses: actions/setup-dotnet@v6
         with:
           dotnet-version: 10.x
+      - name: Check that the version has a single source
+        shell: bash
+        run: |
+          # <Version> in Directory.Build.props is the only place; PluginSdk.Version and ClientHub.ServerVersion read it from the assembly.
+          grep -qE '<Version>[0-9]+\.[0-9]+\.[0-9]+</Version>' Directory.Build.props || { echo "::error::Directory.Build.props needs <Version>MAJOR.MINOR.PATCH</Version>."; exit 1; }
+          if grep -nE '(ServerVersion|Version)\s*(=|=>)\s*"[0-9]' src/MacroGrid.Core/Sessions/ClientHub.cs src/MacroGrid.Plugin.Abstractions/PluginSdk.cs; then
+            echo "::error::Do not write the version in code; set <Version> in Directory.Build.props."; exit 1
+          fi
+          if grep -n '<Version>' src/*/*.csproj; then echo "::error::Do not set <Version> in a project; use Directory.Build.props."; exit 1; fi
       - name: Restore
         run: dotnet restore
       - name: Build

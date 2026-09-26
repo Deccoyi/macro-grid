@@ -4,11 +4,13 @@ name: Publish SDK
 # nuget.org exchanges this run's GitHub identity for a short-lived key. The file name of this workflow is part of the
 # trusted-publishing policy on nuget.org, so do not rename it.
 #
-# Release: bump <Version> in src/MacroGrid.Plugin.Abstractions/MacroGrid.Plugin.Abstractions.csproj (and PluginSdk.Version),
-# commit, then push the tag:  git tag sdk-v0.3.0 && git push origin sdk-v0.3.0
+# The server and the SDK carry one version (docs/guides/versioning.md), so the SDK is published by the same tag as the server
+# release (release.yml builds the installer from it). Release: set <Version> in Directory.Build.props, commit, then push the tag:
+#   git tag server-v1.0.0-beta && git push origin server-v1.0.0-beta
+# The tag may end in "-beta" (the GitHub pre-release label); only the MAJOR.MINOR.PATCH before it is compared with <Version>.
 on:
   push:
-    tags: ["sdk-v*"]
+    tags: ["server-v*"]
 
 permissions:
   contents: read
@@ -42,19 +44,25 @@ jobs:
         with:
           dotnet-version: 10.0.x
 
-      - name: Check that the tag matches the package version
+      - name: Check that the tag matches the version
         shell: bash
         run: |
-          project=src/MacroGrid.Plugin.Abstractions/MacroGrid.Plugin.Abstractions.csproj
-          version=$(sed -n 's:.*<Version>\(.*\)</Version>.*:\1:p' "$project" | head -n1)
-          sdk=$(sed -n 's:.*Version = "\(.*\)";.*:\1:p' src/MacroGrid.Plugin.Abstractions/PluginSdk.cs | head -n1)
-          tag="${GITHUB_REF_NAME#sdk-v}"
-          echo "tag=$tag csproj=$version PluginSdk.Version=$sdk"
-          test -n "$version" && test "$tag" = "$version" && test "$sdk" = "$version" \
-            || { echo "::error::Tag, <Version> in the csproj and PluginSdk.Version must be identical."; exit 1; }
+          version=$(sed -n 's:.*<Version>\([0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*\)</Version>.*:\1:p' Directory.Build.props | head -n1)
+          if [[ ! "$GITHUB_REF_NAME" =~ ^server-v([0-9]+\.[0-9]+\.[0-9]+)(-beta)?$ ]]; then
+            echo "::error::The tag must look like server-vX.Y.Z or server-vX.Y.Z-beta."; exit 1
+          fi
+          tag="${BASH_REMATCH[1]}"
+          echo "tag=$GITHUB_REF_NAME core=$tag Directory.Build.props=$version"
+          test -n "$version" && test "$tag" = "$version" \
+            || { echo "::error::The tag's version and <Version> in Directory.Build.props must be identical."; exit 1; }
+          echo "PACKAGE_VERSION=$version" >> "$GITHUB_ENV"
 
       - name: Pack
         run: dotnet pack src/MacroGrid.Plugin.Abstractions -c Release -o artifacts/nuget
+
+      - name: Check the package version
+        shell: bash
+        run: test -f "artifacts/nuget/MacroGrid.Plugin.Abstractions.${PACKAGE_VERSION}.nupkg" || { echo "::error::The package is not version ${PACKAGE_VERSION}."; ls artifacts/nuget; exit 1; }
 
       - name: Log in to nuget.org (trusted publishing)
         id: login

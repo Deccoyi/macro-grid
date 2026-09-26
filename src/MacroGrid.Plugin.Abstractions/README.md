@@ -13,7 +13,7 @@ loads your plugin and supplies its own copy of this assembly at runtime.
 
 ```xml
 <ItemGroup>
-  <PackageReference Include="MacroGrid.Plugin.Abstractions" Version="0.3.1"
+  <PackageReference Include="MacroGrid.Plugin.Abstractions" Version="1.0.0"
                     PrivateAssets="all" ExcludeAssets="runtime" />
 </ItemGroup>
 ```
@@ -53,8 +53,10 @@ new VariableInfo("myplugin.state", "State", "{myplugin.state}", "My plugin") { V
 
 ## Compatibility
 
-`PluginSdk.Version` is the SDK version. A plugin declares `"sdkVersion": "^0.3.0"` in `plugin.json`; while the SDK is
-`0.x`, that matches `0.3.x` only. The package version equals `PluginSdk.Version`, so package `0.3.1` works with
-Macro Grid servers whose SDK is `0.3.x`. Breaking rules are in the server repo's `docs/guides/versioning.md`.
+The SDK and the Macro Grid server share one version number: package `1.3.0` is the SDK of Macro Grid `1.3.0`, and `PluginSdk.Version` is that number.
+A plugin declares the oldest Macro Grid it runs on in `plugin.json`, as `"macroGrid": "1.3.0"` (three parts). It then runs on every Macro Grid from
+1.3.0 up to, but not including, 2.0.0; use the SDK version you build against, or older if you use nothing newer. Manifests from before 1.0.0
+(`sdkVersion`, `minServerVersion`) are still read: `^0.4.x` counts as `macroGrid: 1.0.0`. The rules for what changes the MAJOR, MINOR and PATCH
+number are in the server repo's `docs/guides/versioning.md`.
 
 Target framework: `net10.0`. License: MIT.
