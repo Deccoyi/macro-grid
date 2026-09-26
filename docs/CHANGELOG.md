@@ -5,6 +5,7 @@ New features and fixes in Macro Grid. For technical details, see [CHANGELOG-deve
 ## Unreleased
 ### New
 - **Safer pairing:** A new device can only be paired while the Pairing window is open. Each code pairs one device, and a device that enters too many wrong codes has to wait before it can try again.
+- **Encrypted pairings:** The tokens of paired devices are now stored encrypted for your Windows account. Copying the data folder to another PC or account means pairing those devices again.
 - **Security log:** Pairings, removed devices and plugin installs and permissions are now written to the log files. Log files are kept for 14 days and no longer pile up on the PC.
 - **Component lists:** Every release now comes with a list of the components it contains, and a release is only built when none of them has a known security problem.
 - **Clearer plugin warnings:** When a plugin asks to send web requests, the permission now says whether that is this computer, your local network or the internet. The warning for other authors' plugins now says they can connect to the internet and send data.

@@ -56,7 +56,7 @@ half-written profile).
   - `dynamic`: property path to a rule (see [Dynamic values](#dynamic-values)).
   - `customCss`: the user's own CSS for the widget (see [Custom CSS](#custom-css)).
 
-Other data in `%AppData%\MacroGrid\`: `devices.json` (paired devices and their tokens, in plain text), `preferences.json`,
+Other data in `%AppData%\MacroGrid\`: `devices.json` (paired devices; their tokens encrypted with DPAPI as `protectedToken`), `preferences.json`,
 `plugins\<id>\` (installed plugins), `plugin-permissions.json` (approved permissions of JavaScript plugins), `logs\`.
 
 ## The WebSocket protocol
@@ -164,8 +164,8 @@ Macro Grid is meant for a home or office network you trust. It is not hardened f
 - **Nothing is encrypted.** Traffic is plain `ws://` and `http://` on the local network. The phone app allows cleartext for this reason.
 - **The server listens on all network interfaces** on port 9820. Do not forward the port to the internet, and allow it in the firewall only for
   private networks (the installer does this).
-- **Pairing protects the WebSocket.** A device must present the PIN once, then a token. Tokens are stored in plain text in `devices.json`.
-  Anyone who can read your `%AppData%` folder can read them. Pairing is a pairing mode (`PairingService`): a PIN is valid only while the
+- **Pairing protects the WebSocket.** A device must present the PIN once, then a token. Tokens are stored in `devices.json` encrypted with Windows DPAPI for the current user (`ISecretProtector`, `DpapiSecretProtector`); a file from an older version is converted on load, and a token that cannot be decrypted (another user or PC) drops that device with a `Security:` warning.
+  DPAPI does not protect against other programs running as the same user. Pairing is a pairing mode (`PairingService`): a PIN is valid only while the
   editor's Pairing window polls for it (a 15-second lease, renewed every 3 seconds), for at most 5 minutes, and for one pairing. Five wrong PINs
   from one address block it (30 seconds, doubling up to 15 minutes); twenty wrong PINs against one PIN replace it. The per-address table is
   capped at 256 entries. PINs and tokens are compared in fixed time.

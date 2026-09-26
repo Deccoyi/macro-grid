@@ -8,7 +8,7 @@ All code, design and documentation were created by an AI assistant and have not 
 
 - **Nothing is encrypted.** Traffic is plain `ws://` and `http://` on your network.
 - **Never forward port 9820** to the internet. Allow it in the firewall for private networks only (the installer does this).
-- **Pairing uses a PIN**, then a per-device token. The PIN works only while the Pairing window is open, for at most five minutes, and for one device. A device that enters too many wrong PINs has to wait, and the PIN is replaced. Tokens are stored in plain text in `%AppData%\MacroGrid\devices.json`.
+- **Pairing uses a PIN**, then a per-device token. The PIN works only while the Pairing window is open, for at most five minutes, and for one device. A device that enters too many wrong PINs has to wait, and the PIN is replaced. Tokens are stored in `%AppData%\MacroGrid\devices.json`, encrypted with Windows DPAPI for your Windows account, so a copy of the file on another account or PC is useless (those devices then have to pair again).
 - **A paired device can press keys, type text and start programs on your PC.** Pair only devices you trust, and remove old ones.
 - **The editor API is only for the PC itself.** The server answers 403 to editor API requests from other machines, so nobody else on your network can change your profiles or read your PIN.
 - **C# plugins have full trust**; JavaScript plugins are sandboxed and need approved permissions.

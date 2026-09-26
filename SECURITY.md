@@ -13,7 +13,7 @@ Macro Grid is designed for a home or office network you trust. It is **not** har
 - **Pairing exists.** A new device must present the six-digit PIN shown in the editor's Pairing window (also as a QR code). A PIN is valid only
   while that window is open, for at most five minutes, and pairs one device. An address that sends five wrong PINs has to wait, longer each time,
   and after twenty wrong PINs the PIN is replaced. The server then issues a device token that the device uses from then on. Tokens are stored in
-  plain text in `%AppData%\MacroGrid\devices.json`.
+  `%AppData%\MacroGrid\devices.json`, encrypted with Windows DPAPI for your Windows account, so a copy of the file on another account or PC is useless (those devices then have to pair again). DPAPI does not protect against other programs running as you.
   Because the PIN and the token travel unencrypted, they protect against casual access, not against an attacker who can watch the network.
 - A paired device can press keys, type text and start programs on the PC. Pair only devices you trust and remove the ones you no longer use.
 - The editor API is reachable only from the server's own computer.

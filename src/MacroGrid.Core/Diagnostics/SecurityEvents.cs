@@ -16,6 +16,7 @@ public static class SecurityEvents
     public static readonly EventId PairingBlocked = new(1005, nameof(PairingBlocked));
     public static readonly EventId PinRenewed = new(1006, nameof(PinRenewed));
     public static readonly EventId DeviceRemoved = new(1007, nameof(DeviceRemoved));
+    public static readonly EventId DeviceTokenUnreadable = new(1008, nameof(DeviceTokenUnreadable));
     public static readonly EventId PluginInstalled = new(1101, nameof(PluginInstalled));
     public static readonly EventId PluginPermissionsGranted = new(1102, nameof(PluginPermissionsGranted));
     public static readonly EventId PluginUninstalled = new(1103, nameof(PluginUninstalled));

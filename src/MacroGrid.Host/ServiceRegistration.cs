@@ -17,6 +17,7 @@ using MacroGrid.Windows.Input;
 using MacroGrid.Windows.Variables;
 using MacroGrid.Windows.Windows;
 using MacroGrid.Core.Widgets;
+using MacroGrid.Windows.Security;
 
 namespace MacroGrid.Host;
 
@@ -119,7 +120,7 @@ internal static class ServiceRegistration
     /// <summary>Paired devices, client sessions and everything that pushes state to them.</summary>
     public static IServiceCollection AddClientSessions(this IServiceCollection services, string dataDir)
     {
-        services.AddSingleton(new DeviceStore(dataDir));
+        services.AddSingleton(new DeviceStore(dataDir, new DpapiSecretProtector()));
         services.AddSingleton<PairingService>();
 
         services.AddSingleton<SessionRegistry>();

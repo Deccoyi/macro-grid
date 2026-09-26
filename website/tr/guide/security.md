@@ -8,7 +8,7 @@ Tüm kod, tasarım ve dokümantasyon bir yapay zekâ asistanı tarafından oluş
 
 - **Hiçbir şey şifrelenmez.** Trafik, ağınızda düz `ws://` ve `http://` olarak akar.
 - **9820 numaralı bağlantı noktasını asla** internete yönlendirmeyin. Güvenlik duvarında yalnızca özel ağlara izin verin (yükleyici bunu yapar).
-- **Eşleştirme bir PIN kullanır**, ardından cihaz başına bir belirtece (token) geçilir. PIN yalnızca Eşleştirme penceresi açıkken, en fazla beş dakika ve tek bir cihaz için geçerlidir. Çok sayıda yanlış PIN giren cihaz bir süre bekletilir ve PIN değiştirilir. Belirteçler `%AppData%\MacroGrid\devices.json` dosyasında düz metin olarak saklanır.
+- **Eşleştirme bir PIN kullanır**, ardından cihaz başına bir belirtece (token) geçilir. PIN yalnızca Eşleştirme penceresi açıkken, en fazla beş dakika ve tek bir cihaz için geçerlidir. Çok sayıda yanlış PIN giren cihaz bir süre bekletilir ve PIN değiştirilir. Belirteçler `%AppData%\MacroGrid\devices.json` dosyasında Windows hesabınıza özel olarak (DPAPI ile) şifreli saklanır; dosyanın başka bir hesaba ya da bilgisayara kopyası işe yaramaz (o cihazların yeniden eşleşmesi gerekir).
 - **Eşleşmiş bir cihaz, bilgisayarınızda tuşlara basabilir, metin yazabilir ve programlar başlatabilir.** Yalnızca güvendiğiniz cihazları eşleştirin ve eskilerini kaldırın.
 - **Düzenleyici API'si yalnızca bilgisayarın kendisi içindir.** Sunucu, başka makinelerden gelen Düzenleyici API isteklerine 403 döndürür; böylece ağınızdaki kimse profillerinizi değiştiremez ya da PIN'inizi okuyamaz.
 - **C# eklentileri tam güvenle çalışır**; JavaScript eklentileri korumalı alanda çalışır ve onaylanmış izinlere ihtiyaç duyar.

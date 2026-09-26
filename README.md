@@ -98,7 +98,7 @@ Macro Grid is designed for a home or office network you trust, not for the inter
 
 - Traffic is not encrypted. The server listens on all network interfaces on port 9820; do not forward the port, and allow it in the firewall only for
   private networks.
-- A device must be paired with the PIN, and tokens are stored in plain text in `%AppData%\MacroGrid\devices.json`.
+- A device must be paired with the PIN, and tokens are stored in `%AppData%\MacroGrid\devices.json`, encrypted for your Windows account.
 - A paired device can press keys, type text and start programs on your PC. Pair only devices you trust.
 - The editor API is reachable only from the server's own computer.
 - C# plugins have full trust and can do anything the server can; install only ones you trust. JavaScript plugins are sandboxed.

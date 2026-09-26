@@ -1,4 +1,5 @@
 using MacroGrid.Core.Devices;
+using MacroGrid.Core.Diagnostics;
 using MacroGrid.Core.Plugins;
 using MacroGrid.Core.Profiles;
 using MacroGrid.Core.Sessions;
@@ -43,6 +44,13 @@ internal static class ServerApp
         var app = builder.Build();
 
         TrackDeviceCount(app.Services);
+
+        // A devices.json copied from another Windows user or PC cannot be decrypted here; say so instead of losing
+        // the pairings silently.
+        var deviceStore = app.Services.GetRequiredService<DeviceStore>();
+        if (deviceStore.UnreadableOnLoad > 0)
+            app.Services.GetRequiredService<ILoggerFactory>().CreateLogger("MacroGrid.Security").LogWarning(SecurityEvents.DeviceTokenUnreadable,
+                "Security: {Count} paired device(s) dropped because their token cannot be decrypted by this Windows user on this PC; they have to pair again", deviceStore.UnreadableOnLoad);
 
         app.UseWebSockets(new WebSocketOptions { KeepAliveInterval = TimeSpan.FromSeconds(15) });
         app.Map("/ws", async (HttpContext http, ClientHub hub) =>
