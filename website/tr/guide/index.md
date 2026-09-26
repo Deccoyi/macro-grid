@@ -19,7 +19,7 @@ Macro Grid, saatin yanında bir **sistem tepsisi simgesi** olarak başlar. Düze
 
 ## 2. Telefonunuzu eşleştirin
 
-1. Düzenleyicide **Eşleştirme**'ye tıklayın. Beş dakika geçerli olan altı haneli bir PIN ve bir QR kod görürsünüz.
+1. Düzenleyicide **Eşleştirme**'ye tıklayın. Pencere açık kaldığı sürece (en fazla beş dakika) geçerli olan altı haneli bir PIN ve bir QR kod görürsünüz.
 2. Telefonda uygulamayı açıp QR kodu okutun. Bilgisayarın adresini ve PIN'i elle de girebilirsiniz.
 3. Telefonda profiliniz görünür. Bir dahaki sefere kendiliğinden yeniden bağlanır.
 

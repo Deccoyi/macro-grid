@@ -19,7 +19,7 @@ Macro Grid starts as a **tray icon** near the clock. Double-click it (or use its
 
 ## 2. Pair your phone
 
-1. In the editor, click **Pairing**. It shows a six-digit PIN and a QR code, valid for five minutes.
+1. In the editor, click **Pairing**. It shows a six-digit PIN and a QR code, valid while the window is open (at most five minutes).
 2. On the phone, open the app and scan the QR code. You can also type the PC address and the PIN.
 3. The phone shows your profile. Next time it reconnects on its own.
 

@@ -8,6 +8,9 @@ New features and fixes in Macro Grid. For technical details, see [CHANGELOG-deve
 - **Third-party plugin sources:** Discover can add another author's plugin repository as a source and install from it, with a clear warning before installing anything that isn't from the official source.
 - **Install from a link:** Discover can also install a single plugin straight from a pasted repository link, with the same compatibility check and third-party warning first.
 - **Where a plugin came from:** Installed Plugins now shows an Official / Third-party / Local badge for each plugin, and flags one with an update available once Discover has been opened.
+- **Safer pairing:** A new device can only be paired while the Pairing window is open. Each code pairs one device, and a device that enters too many wrong codes has to wait before it can try again.
+- **Security log:** Pairings, removed devices and plugin installs and permissions are now written to the log files. Log files are kept for 14 days and no longer pile up on the PC.
+- **Clearer plugin warnings:** When a plugin asks to send web requests, the permission now says whether that is this computer, your local network or the internet. The warning for other authors' plugins now says they can connect to the internet and send data.
 
 ## 0.3.1 - 2026-09-25
 This version has a new user agreement: you are asked to accept it once, in the installer or, if someone else installed it, the first time you start Macro Grid.

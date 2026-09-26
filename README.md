@@ -71,7 +71,7 @@ code-signed yet, so Windows SmartScreen may warn on first run. How releases are 
 ## Getting started
 
 1. Install and start the server (see above; or build it from source, below). It appears as a tray icon; the menu opens the editor.
-2. Open the editor's **Pairing** window: it shows a six-digit PIN and a QR code, valid for five minutes.
+2. Open the editor's **Pairing** window: it shows a six-digit PIN and a QR code, valid while the window is open (at most five minutes).
 3. On the phone, open the app, then scan the QR code (or enter the PC's address and the PIN). The device is paired and shows the profile.
 4. Design your pages in the editor. Saving updates connected devices immediately.
 

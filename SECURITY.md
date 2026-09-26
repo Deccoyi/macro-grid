@@ -10,21 +10,28 @@ Macro Grid is designed for a home or office network you trust. It is **not** har
 
 - Traffic between the server and a deck is not encrypted (plain HTTP and WebSocket on port 9820), and the server listens on all network interfaces.
   Do not forward the port to the internet, and allow it in the firewall for private networks only.
-- **Pairing exists.** A new device must present the six-digit PIN (valid for five minutes, shown in the editor's Pairing window, also as a QR code).
-  The server then issues a device token that the device uses from then on. Tokens are stored in plain text in `%AppData%\MacroGrid\devices.json`.
+- **Pairing exists.** A new device must present the six-digit PIN shown in the editor's Pairing window (also as a QR code). A PIN is valid only
+  while that window is open, for at most five minutes, and pairs one device. An address that sends five wrong PINs has to wait, longer each time,
+  and after twenty wrong PINs the PIN is replaced. The server then issues a device token that the device uses from then on. Tokens are stored in
+  plain text in `%AppData%\MacroGrid\devices.json`.
   Because the PIN and the token travel unencrypted, they protect against casual access, not against an attacker who can watch the network.
 - A paired device can press keys, type text and start programs on the PC. Pair only devices you trust and remove the ones you no longer use.
 - The editor API is reachable only from the server's own computer.
 - C# plugins run with full trust and can do anything the server can; install only plugins you trust. JavaScript plugins run in a sandbox and only
   get the permissions you allow.
+- **Plugins by other authors** are not reviewed by this project. A C# plugin can read your files, start programs and connect to the internet and
+  send data, and Macro Grid cannot limit or check that. A JavaScript plugin can only send web requests to the exact addresses it lists, and the
+  permission it asks for says whether each one is on this computer, your local network or the internet.
+- **Security log.** Pairings, wrong PINs, removed devices and plugin installs and permissions are written to the log files in
+  `%AppData%\MacroGrid\logs` with the address they came from (never a PIN or a token). The logs stay on this computer and are kept for 14
+  days, at most 5 MB a day and 20 MB in total; older ones are deleted automatically.
 
 The full model, including what is and is not protected, is in [docs/architecture.md](docs/architecture.md#security-model).
 
 ## Reporting a vulnerability
 
 Please report security problems **privately**, not in a public issue. Use GitHub's private vulnerability reporting: open the **Security** tab of this
-repository, then **Advisories**, then **Report a vulnerability**. (Private vulnerability reporting will be enabled on the repository when it is
-made public.)
+repository, then **Advisories**, then **Report a vulnerability**.
 
 If that channel is not available, open a normal issue that says only that you have a security report, with no details, and a maintainer will
 arrange a private way to receive it.

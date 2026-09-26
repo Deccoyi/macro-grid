@@ -6,7 +6,7 @@ Bir cihazın PIN ile yalnızca bir kez eşleştirilmesi gerekir. Sonrasında cih
 
 ![Kod, QR kod ve tarayıcı adresini (bulanık) gösteren Eşleştirme penceresi](/img/pairing.png)
 
-1. Düzenleyicide **Eşleştirme**'yi açın. Altı haneli bir PIN ve bir QR kod görürsünüz. **Beş dakika** geçerlidirler. Pencere her açıldığında yenisi üretilir, ya da **Yeni kod üret**'e tıklayabilirsiniz.
+1. Düzenleyicide **Eşleştirme**'yi açın. Altı haneli bir PIN ve bir QR kod görürsünüz. Yalnızca **bu pencere açıkken**, en fazla beş dakika ve tek bir cihaz için geçerlidirler; sonra yeni kod gösterilir. Pencere her açıldığında da yenisi üretilir, ya da **Yeni kod üret**'e tıklayabilirsiniz.
 2. [Telefon uygulamasında](/tr/guide/phone-app) QR kodu okutun ya da sunucu adresini ve PIN'i elle girin.
 3. Cihaz **Eşleşmiş cihazlar** altında görünür.
 

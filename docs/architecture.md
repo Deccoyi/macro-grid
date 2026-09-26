@@ -165,7 +165,14 @@ Macro Grid is meant for a home or office network you trust. It is not hardened f
 - **The server listens on all network interfaces** on port 9820. Do not forward the port to the internet, and allow it in the firewall only for
   private networks (the installer does this).
 - **Pairing protects the WebSocket.** A device must present the PIN once, then a token. Tokens are stored in plain text in `devices.json`.
-  Anyone who can read your `%AppData%` folder can read them.
+  Anyone who can read your `%AppData%` folder can read them. Pairing is a pairing mode (`PairingService`): a PIN is valid only while the
+  editor's Pairing window polls for it (a 15-second lease, renewed every 3 seconds), for at most 5 minutes, and for one pairing. Five wrong PINs
+  from one address block it (30 seconds, doubling up to 15 minutes); twenty wrong PINs against one PIN replace it. The per-address table is
+  capped at 256 entries. PINs and tokens are compared in fixed time.
+- **Security events are logged, and logs are pruned.** Pairing opened, devices paired or removed, wrong PINs, blocks, replaced PINs and plugin
+  installs, permission grants and uninstalls are logged with a `Security:` prefix and an event id (`SecurityEvents`), with the remote address but
+  never a PIN or a token. A block is logged once, not per attempt, so a flood cannot fill the log. The daily files are kept 14 days, capped at
+  5 MB a day and 20 MB in total (`LogRetention`); the cap also bounds what a flood of connections can write.
 - **The editor API (`/api`) is only for this computer.** It can read the pairing PIN, install and approve plugins and change profiles, so the
   server answers `403` to any `/api` request that does not come from the machine it runs on. The static editor and deck pages themselves are
   served to the network but do nothing without the API and the WebSocket.
