@@ -56,7 +56,7 @@ on the maintainer's PC, and `examples/third-party-release.yml` in that repositor
 ## Release checklist (server and SDK)
 
 1. On `dev`: decide the version bump with the maintainer and set `<Version>` in `Directory.Build.props` (versioning.md). Never bump it silently. This one number is the server and the SDK.
-2. Move the `[Unreleased]` entries of `docs/CHANGELOG-developer.md` and `docs/CHANGELOG.md` under the new version and date. A fixed vulnerability goes under a `### Security` heading in both, and gets a GitHub security advisory (see `SECURITY.md`).
+2. Move the `[Unreleased]` entries of `docs/CHANGELOG-developer.md` and `docs/CHANGELOG.md` under the new version and date. A fixed vulnerability goes under a `### Security` heading in both; a GitHub security advisory is optional (see `SECURITY.md`, which promises nothing).
 3. Check that the new version's section in the short `CHANGELOG.md` reads well as the release notes: the workflow uses that section (`## X.Y.Z - date`) as the body of the GitHub Release, and the app's update window shows it to everyone who updates. Preview it with `scripts\release-notes.ps1 -Tag server-vX.Y.Z`.
 4. Run `dotnet test`, and `npm run typecheck` in `editor/`, `webclient/` and `packages/renderer/`; the CI must be green on `dev`.
 5. Build locally once with `scripts\publish.ps1` (below) and start `artifacts\server\MacroGrid.exe`; pair a device and press a button.

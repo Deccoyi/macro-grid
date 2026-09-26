@@ -54,10 +54,10 @@ Reporters are credited if they wish.
 
 ## How fixes are announced
 
-When a reported vulnerability is fixed, the fix is described in a GitHub security advisory on this repository and under "Security" in the
-changelog of the release that contains it.
+This is a hobby project, so nothing here is a promise. If a reported vulnerability gets fixed, the fix may be described in a GitHub
+security advisory on this repository and under "Security" in the changelog.
 
 ## Supported versions
 
-Only the latest release (or, before the first release, the `dev` branch) receives fixes. A version stops receiving fixes as soon as a newer
-one is released; there is no longer support period. The project is in alpha, so expect changes.
+There is no support period and no promise of fixes: Macro Grid is a hobby project maintained in spare time. If a fix is made, it only goes
+into a new release; older versions are not updated. Before the first release, fixes land on the `dev` branch. The project is in alpha, so expect changes.
