@@ -56,14 +56,16 @@ on the maintainer's PC, and `examples/third-party-release.yml` in that repositor
 ## Release checklist (server and SDK)
 
 1. On `dev`: decide the version bump with the maintainer and set `<Version>` in `Directory.Build.props` (versioning.md). Never bump it silently. This one number is the server and the SDK.
-2. Move the `[Unreleased]` entries of `docs/CHANGELOG-developer.md` and `docs/CHANGELOG.md` under the new version and date.
+2. Move the `[Unreleased]` entries of `docs/CHANGELOG-developer.md` and `docs/CHANGELOG.md` under the new version and date. A fixed vulnerability goes under a `### Security` heading in both, and gets a GitHub security advisory (see `SECURITY.md`).
 3. Check that the new version's section in the short `CHANGELOG.md` reads well as the release notes: the workflow uses that section (`## X.Y.Z - date`) as the body of the GitHub Release, and the app's update window shows it to everyone who updates. Preview it with `scripts\release-notes.ps1 -Tag server-vX.Y.Z`.
 4. Run `dotnet test`, and `npm run typecheck` in `editor/`, `webclient/` and `packages/renderer/`; the CI must be green on `dev`.
 5. Build locally once with `scripts\publish.ps1` (below) and start `artifacts\server\MacroGrid.exe`; pair a device and press a button.
 6. Merge `dev` into `main` (no squash; the maintainer does this, never automatically).
 7. Tag `main` and push the tag: `git tag server-vX.Y.Z-beta` then `git push origin server-vX.Y.Z-beta` (the tag's version must equal `<Version>`; both workflows refuse it otherwise).
 8. The tag starts two workflows:
-   - `Release` (`.github/workflows/release.yml`) runs the tests, `scripts/publish.ps1`, zips the folder, builds
+   - `Release` (`.github/workflows/release.yml`) runs the tests, stops if a shipped dependency has a known vulnerability
+     (`scripts/check-vulnerabilities.ps1`, the same check CI runs), runs `scripts/publish.ps1`, writes the SBOM files
+     (`scripts/sbom.ps1`, `MacroGrid-Server-<version>-*.cdx.json`, attached to the release), zips the folder, builds
      `MacroGrid-Setup-<version>.exe` with Inno Setup (on every tag; the updater downloads exactly this file name) and attaches both to a **draft**
      GitHub Release whose body is the changelog section from step 3. If the installer is missing from the draft, the app offers the release page
      instead of "Install now".

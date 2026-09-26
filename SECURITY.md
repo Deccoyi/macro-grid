@@ -28,6 +28,12 @@ Macro Grid is designed for a home or office network you trust. It is **not** har
 
 The full model, including what is and is not protected, is in [docs/architecture.md](docs/architecture.md#security-model).
 
+### What a release contains
+
+Every server release has software bills of materials (SBOM) attached: CycloneDX JSON files (`MacroGrid-Server-<version>-*.cdx.json`) that list
+the .NET and npm components shipped in `MacroGrid.exe`, the editor and the browser deck. A release is only built when none of those components
+has a known vulnerability at that moment (npm: moderate or higher), and every pull request runs the same check.
+
 ## Reporting a vulnerability
 
 Please report security problems **privately**, not in a public issue. Use GitHub's private vulnerability reporting: open the **Security** tab of this
@@ -46,6 +52,12 @@ maintainer will try to fix real problems, but there is no guaranteed response ti
 bounty. Fixes land when there is time for them. If that is not acceptable for how you use the software, do not rely on it.
 Reporters are credited if they wish.
 
+## How fixes are announced
+
+When a reported vulnerability is fixed, the fix is described in a GitHub security advisory on this repository and under "Security" in the
+changelog of the release that contains it.
+
 ## Supported versions
 
-Only the latest release (or, before the first release, the `dev` branch) receives fixes. The project is in alpha, so expect changes.
+Only the latest release (or, before the first release, the `dev` branch) receives fixes. A version stops receiving fixes as soon as a newer
+one is released; there is no longer support period. The project is in alpha, so expect changes.
