@@ -45,6 +45,10 @@ jobs:
       - name: Test
         run: dotnet test -c Release
 
+      - name: Stop on known vulnerable dependencies
+        shell: pwsh
+        run: scripts/check-vulnerabilities.ps1
+
       - name: Publish the release folder
         shell: pwsh
         run: scripts/publish.ps1
@@ -66,6 +70,10 @@ jobs:
         shell: pwsh
         run: installer/build-installer.ps1
 
+      - name: Write the software bill of materials
+        shell: pwsh
+        run: scripts/sbom.ps1
+
       - name: Write the release notes
         shell: pwsh
         run: scripts/release-notes.ps1 -Tag $env:TAG | Set-Content artifacts/release-notes.md -Encoding utf8
@@ -77,6 +85,7 @@ jobs:
         run: |
           $files = @("${{ steps.zip.outputs.zip }}")
           if (Test-Path artifacts) { $files += (Get-ChildItem artifacts -Filter "MacroGrid-Setup-*.exe" | ForEach-Object FullName) }
+          $files += (Get-ChildItem artifacts/sbom -Filter "*.cdx.json" | ForEach-Object FullName)
           gh release view $env:TAG *> $null
           if ($LASTEXITCODE -ne 0) {
             gh release create $env:TAG --draft --prerelease --title "Macro Grid server $($env:TAG -replace '^server-v','')" --notes-file artifacts/release-notes.md

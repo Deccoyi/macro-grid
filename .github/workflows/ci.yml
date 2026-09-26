@@ -43,6 +43,31 @@ jobs:
       - name: Test
         run: dotnet test --no-build -c Release
 
+  vulnerabilities:
+    name: Known vulnerabilities in shipped dependencies
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: 10.x
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+      - name: Check .NET and npm dependencies
+        shell: pwsh
+        run: scripts/check-vulnerabilities.ps1
+
+  dependency-review:
+    name: Dependencies added by this pull request
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      # Pinned to a commit: a moved tag cannot change what runs here.
+      - uses: actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294 # v5.0.0
+        with:
+          fail-on-severity: moderate
+
   frontend:
     name: ${{ matrix.project }} (typecheck, build, test)
     runs-on: windows-latest
