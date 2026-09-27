@@ -1,7 +1,7 @@
 # Handling a new issue
 
 For the maintainer, in five steps. The same steps apply to the server, phone app and plugin repositories. The labels are described in each
-repository's `CONTRIBUTING.md`; the design is in [../plans/issues-and-discussions-plan.md](../plans/issues-and-discussions-plan.md).
+repository's `CONTRIBUTING.md`; the design is in [../done/issues-and-discussions.md](../done/issues-and-discussions.md).
 
 1. **Read it.** A new issue already carries `needs-triage` and, when the form or the text answer named one, the area and `regression`.
    Is it a question? Move it to Discussions (the button "Convert to discussion") and close the issue.

@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <!-- Outer frame -->
+  <rect x="2" y="3" width="20" height="18" rx="2" />
+  <!-- Filled right third region -->
+  <path d="M 16,3 L 20,3 A 2,2 0 0,1 22,5 L 22,19 A 2,2 0 0,1 20,21 L 16,21 Z" fill="currentColor" stroke="none" />
+  <!-- Vertical divider line -->
+  <line x1="16" y1="3" x2="16" y2="21" />
+</svg>

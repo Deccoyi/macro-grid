@@ -6,6 +6,7 @@ using MacroGrid.Core.Plugins;
 using MacroGrid.Core.Plugins.Distribution;
 using MacroGrid.Core.Preferences;
 using MacroGrid.Core.Profiles;
+using MacroGrid.Core.Security;
 using MacroGrid.Core.Sessions;
 using MacroGrid.Core.Updates;
 using MacroGrid.Host.Updates;
@@ -17,6 +18,8 @@ using MacroGrid.Windows.Input;
 using MacroGrid.Windows.Variables;
 using MacroGrid.Windows.Windows;
 using MacroGrid.Core.Widgets;
+using MacroGrid.Windows.Security;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace MacroGrid.Host;
 
@@ -78,6 +81,10 @@ internal static class ServiceRegistration
     {
         var pluginsRoot = Path.Combine(dataDir, "plugins");
 
+        // Also used elsewhere a secret needs protecting at rest (e.g. a paired device's token); registered
+        // here rather than assumed already present, since this plugin-secrets feature must not depend on
+        // anything else in this repository's DI setup already having added it.
+        services.TryAddSingleton<ISecretProtector, DpapiSecretProtector>();
         services.AddSingleton(sp => new PluginLocalizer(() => sp.GetRequiredService<PreferencesStore>().Get().Language));
         services.AddSingleton<VariableCatalog>();
         services.AddHostedSingleton<VariableProviderHost>();
@@ -87,7 +94,7 @@ internal static class ServiceRegistration
             sp.GetRequiredService<VariableCatalog>(), sp.GetRequiredService<VariableProviderHost>(),
             sp.GetRequiredService<VariableStore>(), new PluginPermissionStore(dataDir),
             sp.GetRequiredService<IInputService>(), sp.GetRequiredService<ILogger<PluginManager>>(),
-            sp.GetRequiredService<PluginLocalizer>()));
+            sp.GetRequiredService<PluginLocalizer>(), sp.GetRequiredService<ISecretProtector>()));
         services.AddHostedService(sp => sp.GetRequiredService<PluginManager>());
         return services;
     }

@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="en">
+<!-- Static visual reference for docs/plans/docking-workspace-plan.md. Not production code; the plan text wins where they differ. -->
+<head>
+<meta charset="utf-8">
+<title>Custom layout — tabbed, auto-hide, floating</title>
+</head>
+<body>
+<style>
+  body{margin:0;background:#1c1e22;font-family:"Segoe UI",-apple-system,BlinkMacSystemFont,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+  *{box-sizing:border-box}
+</style>
+<div style="width:1440px;height:900px;position:relative;display:flex;flex-direction:column;background:#1c1e22;color:#e6e7ea;font-size:12.5px;overflow:hidden">
+
+  <div style="height:28px;flex:0 0 auto;display:flex;align-items:center;gap:20px;padding:0 12px;background:#232529;border-bottom:1px solid #35383e;font-size:12.5px;color:#9a9ea6">
+    <span style="color:#e6e7ea">File</span><span>Settings</span><span>Plugins</span><span>Help</span><span style="color:#e6e7ea">View</span>
+  </div>
+  <div style="height:40px;flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;padding:0 12px;background:#232529;border-bottom:1px solid #35383e">
+    <div style="display:flex;align-items:center;gap:8px">
+      <div style="display:flex;align-items:center;gap:6px;height:26px;padding:0 10px;background:#16171a;border:1px solid #46494f;border-radius:3px;color:#e6e7ea">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9a9ea6" stroke-width="1.75"><rect x="5" y="2" width="14" height="20" rx="2"></rect><line x1="9" y1="18" x2="15" y2="18"></line></svg>
+        <span>Phone portrait &middot; 390&times;844</span>
+      </div>
+    </div>
+    <div style="height:26px;padding:0 14px;background:#d97706;color:#1c1e22;border-radius:3px;display:flex;align-items:center;font-weight:600;font-size:12.5px">Save</div>
+  </div>
+
+  <div style="flex:1 1 auto;display:flex;min-height:0;position:relative">
+
+    <!-- Left: Hierarchy + Toolbox as a tabbed group -->
+    <div style="width:220px;flex:0 0 auto;display:flex;flex-direction:column;background:#232529;border-right:1px solid #35383e">
+      <div style="height:28px;flex:0 0 auto;display:flex;align-items:stretch;border-bottom:1px solid #35383e">
+        <div style="padding:0 12px;display:flex;align-items:center;background:#1c1e22;color:#e6e7ea;border-bottom:2px solid #d97706;font-size:12.5px">Hierarchy</div>
+        <div style="padding:0 12px;display:flex;align-items:center;color:#9a9ea6;font-size:12.5px;border-right:1px solid #35383e">Toolbox</div>
+        <div style="margin-left:auto;display:flex;align-items:center;gap:6px;padding:0 8px;color:#9a9ea6">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="17" x2="12" y2="22"></line><path d="M5 17h14l-1.5-1.5a3 3 0 0 1-.88-2.12V7a5 5 0 0 0-5-5 5 5 0 0 0-5 5v6.38a3 3 0 0 1-.88 2.12L5 17z"></path></svg>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </div>
+      </div>
+      <div style="flex:1 1 auto;overflow:auto;padding:6px 0">
+        <div style="padding:4px 10px;color:#9a9ea6;display:flex;align-items:center;gap:6px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><polyline points="6 9 12 15 18 9"></polyline></svg>Profile 1</div>
+        <div style="padding:5px 10px 5px 26px;background:rgba(217,119,6,.15);border-left:2px solid #d97706;color:#e6e7ea;display:flex;align-items:center;gap:6px;margin-left:-2px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><rect x="4" y="3" width="16" height="18" rx="1.5"></rect></svg>Main Screen</div>
+        <div style="padding:5px 10px 5px 26px;color:#9a9ea6;display:flex;align-items:center;gap:6px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><rect x="4" y="3" width="16" height="18" rx="1.5"></rect></svg>Settings</div>
+        <div style="padding:4px 10px;color:#9a9ea6;display:flex;align-items:center;gap:6px;margin-top:2px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><polyline points="9 6 15 12 9 18"></polyline></svg>Profile 2</div>
+      </div>
+    </div>
+
+    <div style="width:4px;background:#232529;border-left:1px solid #35383e;border-right:1px solid #35383e;flex:0 0 auto"></div>
+
+    <!-- Center: editor, wider now that Properties is auto-hidden -->
+    <div style="flex:1 1 auto;display:flex;flex-direction:column;min-width:0;background:#1c1e22;position:relative">
+      <div style="height:28px;flex:0 0 auto;display:flex;align-items:stretch;background:#232529;border-bottom:1px solid #35383e">
+        <div style="padding:0 16px;display:flex;align-items:center;background:#1c1e22;color:#e6e7ea;border-bottom:2px solid #d97706;gap:8px;font-size:12.5px">Main Screen<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#9a9ea6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></div>
+        <div style="padding:0 16px;display:flex;align-items:center;color:#9a9ea6;gap:8px;font-size:12.5px;border-right:1px solid #35383e">Settings<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#5b5e64" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></div>
+      </div>
+      <div style="flex:1 1 auto;display:flex;align-items:center;justify-content:center;min-height:0">
+        <div style="width:300px;height:500px;background:#050607;border-radius:22px;padding:10px;display:flex;flex-direction:column">
+          <div style="flex:1 1 auto;background:#0d0f12;border-radius:14px;padding:18px 14px;display:flex;flex-direction:column;gap:12px">
+            <div style="height:14px;width:60%;background:#2b2e33;border-radius:2px"></div>
+            <div style="height:80px;background:#1d4ed8;border-radius:6px"></div>
+            <div style="height:52px;border:2px solid #d97706;border-radius:6px"></div>
+            <div style="height:36px;width:70%;background:#0f766e;border-radius:4px"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Auto-hide overlay: Properties slid open, temporarily over the canvas -->
+      <div style="position:absolute;top:28px;right:0;bottom:0;width:280px;background:#232529;border-left:1px solid #46494f;display:flex;flex-direction:column;z-index:5">
+        <div style="height:28px;flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;padding:0 8px 0 10px;border-bottom:1px solid #35383e">
+          <span style="font-weight:600;color:#e6e7ea">Properties</span>
+          <div style="display:flex;align-items:center;gap:6px;color:#5b5e64">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="17" x2="12" y2="22"></line><path d="M5 17h14l-1.5-1.5a3 3 0 0 1-.88-2.12V7a5 5 0 0 0-5-5 5 5 0 0 0-5 5v6.38a3 3 0 0 1-.88 2.12L5 17z"></path></svg>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+          </div>
+        </div>
+        <div style="flex:1 1 auto;overflow:auto;padding:4px 0">
+          <div style="display:flex;align-items:center;gap:5px;padding:8px 10px 4px;color:#e6e7ea;font-weight:600;font-size:12px"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>Transform</div>
+          <div style="border-top:1px solid #35383e;margin:0 10px 6px"></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px 8px;padding:0 10px 10px">
+            <label style="display:flex;align-items:center;gap:6px;color:#9a9ea6;font-size:12px">X<span style="flex:1;height:22px;background:#16171a;border:1px solid #35383e;border-radius:3px;display:flex;align-items:center;padding:0 6px;color:#e6e7ea">24px</span></label>
+            <label style="display:flex;align-items:center;gap:6px;color:#9a9ea6;font-size:12px">Y<span style="flex:1;height:22px;background:#16171a;border:1px solid #35383e;border-radius:3px;display:flex;align-items:center;padding:0 6px;color:#e6e7ea">96px</span></label>
+          </div>
+        </div>
+      </div>
+      <!-- the collapsed edge tab this overlay slid out from -->
+      <div style="position:absolute;top:64px;right:0;width:22px;height:88px;background:#2b2e33;border:1px solid #46494f;border-right:none;border-radius:3px 0 0 3px;display:flex;align-items:center;justify-content:center;z-index:4">
+        <span style="writing-mode:vertical-rl;transform:rotate(180deg);font-size:11px;color:#9a9ea6;letter-spacing:.02em">Properties</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom edge: another auto-hidden tool window, unopened -->
+  <div style="position:absolute;left:224px;bottom:24px;width:96px;height:20px;background:#2b2e33;border:1px solid #46494f;border-bottom:none;border-radius:3px 3px 0 0;display:flex;align-items:center;justify-content:center;z-index:4">
+    <span style="font-size:11px;color:#9a9ea6">Output</span>
+  </div>
+
+  <div style="height:24px;flex:0 0 auto;display:flex;align-items:center;gap:16px;padding:0 12px;background:#232529;border-top:1px solid #35383e;color:#9a9ea6;font-size:11px">
+    <span style="display:flex;align-items:center;gap:5px"><span style="width:6px;height:6px;border-radius:50%;background:#3f9142"></span>Connected</span>
+    <span>2 errors, 2 warnings</span>
+    <span style="margin-left:auto">100%</span>
+  </div>
+
+  <!-- Floating Error List panel, detached over the canvas -->
+  <div style="position:absolute;left:620px;top:610px;width:440px;height:210px;background:#232529;border:1px solid #46494f;display:flex;flex-direction:column;z-index:10">
+    <div style="height:26px;flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;padding:0 8px 0 10px;border-bottom:1px solid #35383e;background:#2b2e33">
+      <span style="font-weight:600;color:#e6e7ea;display:flex;align-items:center;gap:7px"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#9a9ea6" stroke-width="1.75"><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="6" r="1"></circle><circle cx="12" cy="18" r="1"></circle><circle cx="7" cy="12" r="1"></circle><circle cx="7" cy="6" r="1"></circle><circle cx="7" cy="18" r="1"></circle></svg>Error List</span>
+      <div style="display:flex;align-items:center;gap:6px;color:#d97706">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="17" x2="12" y2="22"></line><path d="M5 17h14l-1.5-1.5a3 3 0 0 1-.88-2.12V7a5 5 0 0 0-5-5 5 5 0 0 0-5 5v6.38a3 3 0 0 1-.88 2.12L5 17z"></path></svg>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#9a9ea6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:70px 60px 1fr 90px;height:20px;flex:0 0 auto;align-items:center;padding:0 10px;color:#5b5e64;font-size:10.5px;border-bottom:1px solid #35383e">
+      <span>Severity</span><span>Code</span><span>Description</span><span>Location</span>
+    </div>
+    <div style="flex:1 1 auto;overflow:auto">
+      <div style="display:grid;grid-template-columns:70px 60px 1fr 90px;height:23px;align-items:center;padding:0 10px;font-size:11.5px;border-bottom:1px solid #1c1e22">
+        <span style="display:flex;align-items:center;gap:5px;color:#c0392b"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25"><circle cx="12" cy="12" r="9"></circle></svg>Error</span>
+        <span style="color:#9a9ea6;font-family:Consolas,monospace">E102</span>
+        <span style="color:#e6e7ea">Invalid property value</span>
+        <span style="color:#9a9ea6;font-family:Consolas,monospace">Start &rsaquo; Style</span>
+      </div>
+      <div style="display:grid;grid-template-columns:70px 60px 1fr 90px;height:23px;align-items:center;padding:0 10px;font-size:11.5px;border-bottom:1px solid #1c1e22">
+        <span style="display:flex;align-items:center;gap:5px;color:#9a9ea6"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path></svg>Warning</span>
+        <span style="color:#9a9ea6;font-family:Consolas,monospace">W201</span>
+        <span style="color:#e6e7ea">Variable {system.gpu} is not available</span>
+        <span style="color:#9a9ea6;font-family:Consolas,monospace">CPU label &rsaquo; Text</span>
+      </div>
+      <div style="display:grid;grid-template-columns:70px 60px 1fr 90px;height:23px;align-items:center;padding:0 10px;font-size:11.5px;border-bottom:1px solid #1c1e22">
+        <span style="display:flex;align-items:center;gap:5px;color:#9a9ea6"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25"><circle cx="12" cy="12" r="9"></circle></svg>Info</span>
+        <span style="color:#9a9ea6;font-family:Consolas,monospace">I301</span>
+        <span style="color:#e6e7ea">3 widgets share the same name</span>
+        <span style="color:#9a9ea6;font-family:Consolas,monospace">&mdash;</span>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>
