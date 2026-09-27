@@ -8,6 +8,10 @@ How a release is made (tags, order, signing) is in [release.md](release.md).
 
 > A plugin declares `"macroGrid": "1.3.0"` ⇒ it runs on every Macro Grid from **1.3.0 up to, but not including, 2.0.0**.
 
+**`macroGrid` is a minimum, not an exact match.** A plugin that declares `"macroGrid": "1.2.1"` does **not** run on Macro Grid `1.1.1`
+(older than what it asks for) — only on `1.2.1` and every later version of the same MAJOR. Server older than the declared value ⇒
+incompatible ("Needs Macro Grid 1.2.1 or newer"); server on another MAJOR ⇒ incompatible ("must be rebuilt"); anything in between runs.
+
 **The server and the plugin SDK are one thing and carry one number.** Macro Grid 1.3.0 is server 1.3.0 and SDK 1.3.0 (the NuGet package
 `MacroGrid.Plugin.Abstractions` 1.3.0). There is no separate SDK number to keep in step, and a plugin needs no second range.
 
