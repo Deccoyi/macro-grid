@@ -8,6 +8,12 @@ This file follows the [Keep a Changelog](https://keepachangelog.com/) format. Fo
 ### Added
 - **A package-validation guardrail on the SDK:** `dotnet pack` now runs .NET's package validation against the published `1.0.0` baseline (`EnablePackageValidation`, `PackageValidationBaselineVersion` in the SDK csproj) every time it packs, so removing or incompatibly changing a public member fails the build before it can reach nuget.org. Tested: renaming `IPluginHost.ServerVersion` fails the pack with `CP0002`/`CP0006`.
 - **`LegacyPluginCompatibilityTests`:** a real plugin (`tests/MacroGrid.Tests.LegacyPlugin`), compiled against the actually-published SDK 0.4.0 NuGet package with a legacy manifest (`sdkVersion`, no `macroGrid`), is loaded on the current server and asserted `Loaded` — proving `PluginLoadContext` really hands an old plugin the server's newer SDK assembly, not just that the compatibility rule says it should.
+- **`IPluginHost.Secrets` (`IPluginSecrets`):** a plugin can now protect a secret value (for example a password field in its own
+  `settings.json`) with `host.Secrets.Protect(string)` / `.Unprotect(string)`, backed by a new `ISecretProtector` abstraction
+  (`MacroGrid.Core.Security`; `DpapiSecretProtector` on Windows — the current Windows user's DPAPI, same trust boundary as any
+  other DPAPI-protected value on the machine). Optional: a plugin that does not call it keeps storing settings as before, and
+  a test host with no `ISecretProtector` registered gets a clear `InvalidOperationException` instead of a value that looks
+  protected but is not. Additive; a MINOR bump. Tests: `PluginSecretsTests`.
 
 ## [1.0.1] - 2026-09-26
 ### Added

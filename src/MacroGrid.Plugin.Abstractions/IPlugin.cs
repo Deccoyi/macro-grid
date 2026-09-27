@@ -46,4 +46,21 @@ public interface IPluginHost
 
     /// <summary>Registers a set of icons the plugin contributes to the editor's icon picker.</summary>
     void RegisterIconPack(IIconPackSource iconPack);
+
+    /// <summary>Protects secret values (for example a password field) the plugin writes to its own settings
+    /// file, so that copying the data folder does not copy a usable secret. Optional: a plugin that stores its
+    /// settings as plain JSON without using this keeps working exactly as before.</summary>
+    IPluginSecrets Secrets { get; }
+}
+
+/// <summary>Encrypts one plugin's own secret before it is written to disk and decrypts it when read back. Backed
+/// by the same protection the host uses for its own secrets (DPAPI for the current Windows user on Windows) —
+/// not plugin-specific encryption, and not a secure enclave: it only keeps a secret from being usable if the data
+/// folder is copied elsewhere or read by another account.</summary>
+public interface IPluginSecrets
+{
+    string Protect(string secret);
+
+    /// <summary>Null when the value cannot be decrypted here (a different Windows user, a different PC, or data this host did not protect).</summary>
+    string? Unprotect(string protectedSecret);
 }

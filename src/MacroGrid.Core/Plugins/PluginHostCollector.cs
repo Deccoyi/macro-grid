@@ -1,3 +1,4 @@
+using MacroGrid.Core.Security;
 using MacroGrid.Plugin.Abstractions;
 using Microsoft.Extensions.Logging;
 
@@ -8,11 +9,25 @@ namespace MacroGrid.Core.Plugins;
 /// here — PluginLoader adds the collected instances to the app's own DI container afterwards, the same
 /// way built-in actions/providers are registered in ServiceRegistration.cs.
 /// </summary>
-internal sealed class PluginHostCollector(string serverVersion, string dataDirectory, string pluginId, PluginStatusRegistry statusRegistry, ILogger logger) : IPluginHost
+internal sealed class PluginHostCollector(string serverVersion, string dataDirectory, string pluginId, PluginStatusRegistry statusRegistry, ILogger logger, ISecretProtector? secretProtector = null) : IPluginHost
 {
+    /// <summary>Adapts the host's own <see cref="ISecretProtector"/> to the SDK-facing <see cref="IPluginSecrets"/>.
+    /// <paramref name="protector"/> is only ever null in a test host that never registered one; a plugin that
+    /// calls <see cref="Protect"/> or <see cref="Unprotect"/> there gets a clear failure instead of a value that
+    /// looks protected but is not.</summary>
+    private sealed class SecretsAdapter(ISecretProtector? protector, string pluginId) : IPluginSecrets
+    {
+        public string Protect(string secret) => Require().Protect(secret);
+        public string? Unprotect(string protectedSecret) => Require().Unprotect(protectedSecret);
+
+        private ISecretProtector Require() => protector
+            ?? throw new InvalidOperationException($"Plugin '{pluginId}' called IPluginSecrets, but this host has no secret protector configured.");
+    }
+
     public string ServerVersion { get; } = serverVersion;
     public string SdkVersion { get; } = PluginSdk.Version;
     public string DataDirectory { get; } = dataDirectory;
+    public IPluginSecrets Secrets { get; } = new SecretsAdapter(secretProtector, pluginId);
 
     public List<IActionHandler> Actions { get; } = [];
     public List<IVariableProvider> VariableProviders { get; } = [];
