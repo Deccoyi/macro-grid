@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="en">
+<!-- Static visual reference for docs/plans/docking-workspace-plan.md. Not production code; the plan text wins where they differ. -->
+<head>
+<meta charset="utf-8">
+<title>Default docking layout</title>
+</head>
+<body>
+<style>
+  body{margin:0;background:#1c1e22;font-family:"Segoe UI",-apple-system,BlinkMacSystemFont,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+  *{box-sizing:border-box}
+</style>
+<div style="width:1440px;height:900px;display:flex;flex-direction:column;background:#1c1e22;color:#e6e7ea;font-size:12.5px;overflow:hidden">
+
+  <!-- Menu bar -->
+  <div style="height:28px;flex:0 0 auto;display:flex;align-items:center;gap:20px;padding:0 12px;background:#232529;border-bottom:1px solid #35383e;font-size:12.5px;color:#9a9ea6">
+    <span style="color:#e6e7ea">File</span>
+    <span>Settings</span>
+    <span>Plugins</span>
+    <span>Help</span>
+    <span style="color:#e6e7ea">View</span>
+  </div>
+
+  <!-- Toolbar -->
+  <div style="height:40px;flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;padding:0 12px;background:#232529;border-bottom:1px solid #35383e">
+    <div style="display:flex;align-items:center;gap:8px">
+      <div style="display:flex;align-items:center;gap:6px;height:26px;padding:0 10px;background:#16171a;border:1px solid #46494f;border-radius:3px;color:#e6e7ea">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9a9ea6" stroke-width="1.75"><rect x="5" y="2" width="14" height="20" rx="2"></rect><line x1="9" y1="18" x2="15" y2="18"></line></svg>
+        <span>Phone portrait &middot; 390&times;844</span>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#9a9ea6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+      </div>
+      <div style="width:1px;height:18px;background:#35383e;margin:0 4px"></div>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9a9ea6" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7v6h6"></path><path d="M3 13a9 9 0 1 0 3-7.7L3 8"></path></svg>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#5b5e64" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21 7v6h-6"></path><path d="M21 13a9 9 0 1 1-3-7.7L21 8"></path></svg>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px">
+      <span style="color:#9a9ea6;font-size:12px">Autosaved</span>
+      <div style="height:26px;padding:0 14px;background:#d97706;color:#1c1e22;border-radius:3px;display:flex;align-items:center;font-weight:600;font-size:12.5px">Save</div>
+    </div>
+  </div>
+
+  <!-- Workspace top row -->
+  <div style="flex:1 1 auto;display:flex;min-height:0">
+
+    <!-- Left column -->
+    <div style="width:200px;flex:0 0 auto;display:flex;flex-direction:column;background:#232529;border-right:1px solid #35383e">
+
+      <!-- Hierarchy panel -->
+      <div style="flex:0 0 45%;display:flex;flex-direction:column;min-height:0">
+        <div style="height:28px;flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;padding:0 8px 0 10px;border-bottom:1px solid #35383e">
+          <span style="font-weight:600;color:#e6e7ea">Hierarchy</span>
+          <div style="display:flex;align-items:center;gap:6px;color:#9a9ea6">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="17" x2="12" y2="22"></line><path d="M5 17h14l-1.5-1.5a3 3 0 0 1-.88-2.12V7a5 5 0 0 0-5-5 5 5 0 0 0-5 5v6.38a3 3 0 0 1-.88 2.12L5 17z"></path></svg>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+          </div>
+        </div>
+        <div style="flex:1 1 auto;overflow:auto;padding:6px 0">
+          <div style="padding:4px 10px;color:#9a9ea6;display:flex;align-items:center;gap:6px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><polyline points="6 9 12 15 18 9"></polyline></svg>Profile 1</div>
+          <div style="padding:5px 10px 5px 26px;background:rgba(217,119,6,.15);border-left:2px solid #d97706;color:#e6e7ea;display:flex;align-items:center;gap:6px;margin-left:-2px">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><rect x="4" y="3" width="16" height="18" rx="1.5"></rect><line x1="8" y1="8" x2="16" y2="8"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>Main Screen
+          </div>
+          <div style="padding:5px 10px 5px 26px;color:#9a9ea6;display:flex;align-items:center;gap:6px">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><rect x="4" y="3" width="16" height="18" rx="1.5"></rect><line x1="8" y1="8" x2="16" y2="8"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>Settings
+          </div>
+          <div style="padding:4px 10px;color:#9a9ea6;display:flex;align-items:center;gap:6px;margin-top:2px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><polyline points="9 6 15 12 9 18"></polyline></svg>Profile 2</div>
+          <div style="padding:4px 10px;color:#9a9ea6;display:flex;align-items:center;gap:6px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><polyline points="9 6 15 12 9 18"></polyline></svg>Profile 3</div>
+        </div>
+      </div>
+
+      <div style="height:1px;background:#35383e"></div>
+
+      <!-- Toolbox panel -->
+      <div style="flex:1 1 auto;display:flex;flex-direction:column;min-height:0">
+        <div style="height:28px;flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;padding:0 8px 0 10px;border-bottom:1px solid #35383e">
+          <span style="font-weight:600;color:#e6e7ea">Toolbox</span>
+          <div style="display:flex;align-items:center;gap:6px;color:#9a9ea6">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="17" x2="12" y2="22"></line><path d="M5 17h14l-1.5-1.5a3 3 0 0 1-.88-2.12V7a5 5 0 0 0-5-5 5 5 0 0 0-5 5v6.38a3 3 0 0 1-.88 2.12L5 17z"></path></svg>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+          </div>
+        </div>
+        <div style="flex:1 1 auto;overflow:auto;padding:8px;display:grid;grid-template-columns:repeat(2,1fr);gap:6px;align-content:start">
+          <div style="height:52px;background:#2b2e33;border:1px solid #35383e;border-radius:3px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;color:#9a9ea6"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><rect x="3" y="8" width="18" height="8" rx="1.5"></rect></svg><span style="font-size:10.5px">Button</span></div>
+          <div style="height:52px;background:#2b2e33;border:1px solid #46494f;border-radius:3px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;color:#e6e7ea"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><line x1="4" y1="7" x2="20" y2="7"></line><line x1="4" y1="12" x2="14" y2="12"></line><line x1="4" y1="17" x2="17" y2="17"></line></svg><span style="font-size:10.5px">Label</span></div>
+          <div style="height:52px;background:#2b2e33;border:1px solid #35383e;border-radius:3px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;color:#9a9ea6"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><circle cx="12" cy="12" r="9"></circle></svg><span style="font-size:10.5px">Indicator</span></div>
+          <div style="height:52px;background:#2b2e33;border:1px solid #35383e;border-radius:3px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;color:#9a9ea6"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><rect x="3" y="3" width="18" height="18" rx="2"></rect><path d="M8 12h8"></path></svg><span style="font-size:10.5px">Slider</span></div>
+          <div style="height:52px;background:#2b2e33;border:1px solid #35383e;border-radius:3px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;color:#9a9ea6"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><rect x="4" y="4" width="7" height="7"></rect><rect x="13" y="4" width="7" height="7"></rect><rect x="4" y="13" width="7" height="7"></rect><rect x="13" y="13" width="7" height="7"></rect></svg><span style="font-size:10.5px">Grid</span></div>
+          <div style="height:52px;background:#2b2e33;border:1px solid #35383e;border-radius:3px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;color:#9a9ea6"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M3 12h18"></path><path d="M3 6h18"></path><path d="M3 18h18"></path></svg><span style="font-size:10.5px">List</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div style="width:4px;background:#232529;border-left:1px solid #35383e;border-right:1px solid #35383e;flex:0 0 auto"></div>
+
+    <!-- Center: document area -->
+    <div style="flex:1 1 auto;display:flex;flex-direction:column;min-width:0;background:#1c1e22">
+      <div style="height:28px;flex:0 0 auto;display:flex;align-items:stretch;background:#232529;border-bottom:1px solid #35383e">
+        <div style="padding:0 16px;display:flex;align-items:center;background:#1c1e22;color:#e6e7ea;border-bottom:2px solid #d97706;gap:8px;font-size:12.5px">Main Screen<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#9a9ea6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></div>
+        <div style="padding:0 16px;display:flex;align-items:center;color:#9a9ea6;gap:8px;font-size:12.5px;border-right:1px solid #35383e">Settings<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#5b5e64" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></div>
+        <div style="padding:0 16px;display:flex;align-items:center;color:#9a9ea6;gap:8px;font-size:12.5px;border-right:1px solid #35383e">Login<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#5b5e64" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></div>
+        <div style="width:28px;display:flex;align-items:center;justify-content:center;color:#9a9ea6"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg></div>
+      </div>
+      <div style="flex:1 1 auto;display:flex;align-items:center;justify-content:center;min-height:0">
+        <div style="width:300px;height:500px;background:#050607;border-radius:22px;padding:10px;display:flex;flex-direction:column">
+          <div style="flex:1 1 auto;background:#0d0f12;border-radius:14px;padding:18px 14px;display:flex;flex-direction:column;gap:12px">
+            <div style="height:14px;width:60%;background:#2b2e33;border-radius:2px"></div>
+            <div style="height:80px;background:#1d4ed8;border-radius:6px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;font-weight:600">Start</div>
+            <div style="height:52px;border:2px solid #d97706;border-radius:6px;display:flex;align-items:center;justify-content:center;color:#d97706;font-size:12px">selected</div>
+            <div style="height:36px;width:70%;background:#0f766e;border-radius:4px"></div>
+            <div style="height:36px;width:45%;background:#2b2e33;border-radius:4px"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="width:4px;background:#232529;border-left:1px solid #35383e;border-right:1px solid #35383e;flex:0 0 auto"></div>
+
+    <!-- Right column: Properties -->
+    <div style="width:300px;flex:0 0 auto;display:flex;flex-direction:column;background:#232529;border-left:1px solid #35383e">
+      <div style="height:28px;flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;padding:0 8px 0 10px;border-bottom:1px solid #35383e">
+        <span style="font-weight:600;color:#e6e7ea">Properties</span>
+        <div style="display:flex;align-items:center;gap:6px;color:#9a9ea6">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="17" x2="12" y2="22"></line><path d="M5 17h14l-1.5-1.5a3 3 0 0 1-.88-2.12V7a5 5 0 0 0-5-5 5 5 0 0 0-5 5v6.38a3 3 0 0 1-.88 2.12L5 17z"></path></svg>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </div>
+      </div>
+      <div style="flex:1 1 auto;overflow:auto;padding:4px 0">
+        <div style="display:flex;align-items:center;gap:5px;padding:8px 10px 4px;color:#e6e7ea;font-weight:600;font-size:12px">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>Transform
+        </div>
+        <div style="border-top:1px solid #35383e;margin:0 10px 6px"></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px 8px;padding:0 10px 10px">
+          <label style="display:flex;align-items:center;gap:6px;color:#9a9ea6;font-size:12px">X<span style="flex:1;height:22px;background:#16171a;border:1px solid #35383e;border-radius:3px;display:flex;align-items:center;padding:0 6px;color:#e6e7ea">24<span style="margin-left:auto;color:#5b5e64">px</span></span></label>
+          <label style="display:flex;align-items:center;gap:6px;color:#9a9ea6;font-size:12px">Y<span style="flex:1;height:22px;background:#16171a;border:1px solid #35383e;border-radius:3px;display:flex;align-items:center;padding:0 6px;color:#e6e7ea">96<span style="margin-left:auto;color:#5b5e64">px</span></span></label>
+          <label style="display:flex;align-items:center;gap:6px;color:#9a9ea6;font-size:12px">W<span style="flex:1;height:22px;background:#16171a;border:1px solid #35383e;border-radius:3px;display:flex;align-items:center;padding:0 6px;color:#e6e7ea">240<span style="margin-left:auto;color:#5b5e64">px</span></span></label>
+          <label style="display:flex;align-items:center;gap:6px;color:#9a9ea6;font-size:12px">H<span style="flex:1;height:22px;background:#16171a;border:1px solid #35383e;border-radius:3px;display:flex;align-items:center;padding:0 6px;color:#e6e7ea">52<span style="margin-left:auto;color:#5b5e64">px</span></span></label>
+        </div>
+
+        <div style="display:flex;align-items:center;gap:5px;padding:8px 10px 4px;color:#e6e7ea;font-weight:600;font-size:12px">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>Appearance
+        </div>
+        <div style="border-top:1px solid #35383e;margin:0 10px 6px"></div>
+        <div style="display:flex;flex-direction:column;gap:6px;padding:0 10px 10px">
+          <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:#9a9ea6">
+            <span style="width:44px">Fill</span>
+            <span style="width:16px;height:16px;border-radius:3px;background:#d97706;border:1px solid #46494f"></span>
+            <span style="flex:1;height:22px;background:#16171a;border:1px solid #35383e;border-radius:3px;display:flex;align-items:center;padding:0 6px;color:#e6e7ea;font-family:Consolas,monospace;font-size:11.5px">#D97706</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:#9a9ea6">
+            <span style="width:44px">Radius</span>
+            <span style="flex:1;height:22px;background:#16171a;border:1px solid #35383e;border-radius:3px;display:flex;align-items:center;padding:0 6px;color:#e6e7ea">6<span style="margin-left:auto;color:#5b5e64">px</span></span>
+          </div>
+        </div>
+
+        <div style="display:flex;align-items:center;gap:5px;padding:8px 10px 4px;color:#9a9ea6;font-weight:600;font-size:12px">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 6 15 12 9 18"></polyline></svg>Actions
+        </div>
+        <div style="border-top:1px solid #35383e;margin:0 10px"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Error List -->
+  <div style="height:248px;flex:0 0 auto;display:flex;flex-direction:column;background:#232529;border-top:1px solid #35383e">
+    <div style="height:28px;flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;padding:0 8px 0 10px;border-bottom:1px solid #35383e">
+      <span style="font-weight:600;color:#e6e7ea">Error List</span>
+      <div style="display:flex;align-items:center;gap:6px;color:#9a9ea6">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="17" x2="12" y2="22"></line><path d="M5 17h14l-1.5-1.5a3 3 0 0 1-.88-2.12V7a5 5 0 0 0-5-5 5 5 0 0 0-5 5v6.38a3 3 0 0 1-.88 2.12L5 17z"></path></svg>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+      </div>
+    </div>
+    <div style="height:30px;flex:0 0 auto;display:flex;align-items:center;gap:10px;padding:0 10px;border-bottom:1px solid #35383e">
+      <div style="display:flex;align-items:center;gap:6px;height:22px;padding:0 8px;background:#16171a;border:1px solid #35383e;border-radius:3px;width:200px">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#5b5e64" stroke-width="2"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+        <span style="color:#5b5e64;font-size:11.5px">Filter messages</span>
+      </div>
+      <div style="display:flex;height:22px;border:1px solid #35383e;border-radius:3px;overflow:hidden;font-size:11.5px">
+        <span style="padding:0 10px;display:flex;align-items:center;background:#2b2e33;color:#e6e7ea;border-right:1px solid #35383e">All 6</span>
+        <span style="padding:0 10px;display:flex;align-items:center;color:#9a9ea6;border-right:1px solid #35383e;gap:5px"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#c0392b" stroke-width="2.5"><circle cx="12" cy="12" r="9"></circle></svg>2</span>
+        <span style="padding:0 10px;display:flex;align-items:center;color:#9a9ea6;border-right:1px solid #35383e;gap:5px"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#9a9ea6" stroke-width="2.5"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path></svg>3</span>
+        <span style="padding:0 10px;display:flex;align-items:center;color:#9a9ea6;gap:5px"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#9a9ea6" stroke-width="2.5"><circle cx="12" cy="12" r="9"></circle></svg>1</span>
+      </div>
+      <span style="margin-left:auto;color:#9a9ea6;font-size:11.5px;display:flex;align-items:center;gap:5px"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><polyline points="3 6 5 6 21 6"></polyline><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6"></path></svg>Clear</span>
+    </div>
+    <div style="display:grid;grid-template-columns:90px 70px 1fr 160px 110px;height:24px;flex:0 0 auto;align-items:center;padding:0 10px;color:#5b5e64;font-size:11px;border-bottom:1px solid #35383e">
+      <span>Severity</span><span>Code</span><span>Description</span><span>Screen</span><span>Location</span>
+    </div>
+    <div style="flex:1 1 auto;overflow:auto">
+      <div style="display:grid;grid-template-columns:90px 70px 1fr 160px 110px;height:24px;align-items:center;padding:0 10px;font-size:12px;border-bottom:1px solid #232529">
+        <span style="display:flex;align-items:center;gap:6px;color:#c0392b"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25"><circle cx="12" cy="12" r="9"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>Error</span>
+        <span style="color:#9a9ea6;font-family:Consolas,monospace">E102</span>
+        <span style="color:#e6e7ea">Invalid property value</span>
+        <span style="color:#9a9ea6">Main Screen</span>
+        <span style="color:#9a9ea6;font-family:Consolas,monospace">Start &rsaquo; Style</span>
+      </div>
+      <div style="display:grid;grid-template-columns:90px 70px 1fr 160px 110px;height:24px;align-items:center;padding:0 10px;font-size:12px;border-bottom:1px solid #232529;background:rgba(217,119,6,.08)">
+        <span style="display:flex;align-items:center;gap:6px;color:#c0392b"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25"><circle cx="12" cy="12" r="9"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>Error</span>
+        <span style="color:#9a9ea6;font-family:Consolas,monospace">E118</span>
+        <span style="color:#e6e7ea">"Go to page" target no longer exists</span>
+        <span style="color:#9a9ea6">Settings</span>
+        <span style="color:#9a9ea6;font-family:Consolas,monospace">Start &rsaquo; Press</span>
+      </div>
+      <div style="display:grid;grid-template-columns:90px 70px 1fr 160px 110px;height:24px;align-items:center;padding:0 10px;font-size:12px;border-bottom:1px solid #232529">
+        <span style="display:flex;align-items:center;gap:6px;color:#9a9ea6"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>Warning</span>
+        <span style="color:#9a9ea6;font-family:Consolas,monospace">W201</span>
+        <span style="color:#e6e7ea">Variable {system.gpu} is not available</span>
+        <span style="color:#9a9ea6">Main Screen</span>
+        <span style="color:#9a9ea6;font-family:Consolas,monospace">CPU label &rsaquo; Text</span>
+      </div>
+      <div style="display:grid;grid-template-columns:90px 70px 1fr 160px 110px;height:24px;align-items:center;padding:0 10px;font-size:12px;border-bottom:1px solid #232529">
+        <span style="display:flex;align-items:center;gap:6px;color:#9a9ea6"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>Warning</span>
+        <span style="color:#9a9ea6;font-family:Consolas,monospace">W205</span>
+        <span style="color:#e6e7ea">Widget overlaps screen edge</span>
+        <span style="color:#9a9ea6">Login</span>
+        <span style="color:#9a9ea6;font-family:Consolas,monospace">Volume &rsaquo; Position</span>
+      </div>
+      <div style="display:grid;grid-template-columns:90px 70px 1fr 160px 110px;height:24px;align-items:center;padding:0 10px;font-size:12px;border-bottom:1px solid #232529">
+        <span style="display:flex;align-items:center;gap:6px;color:#9a9ea6"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25"><circle cx="12" cy="12" r="9"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>Info</span>
+        <span style="color:#9a9ea6;font-family:Consolas,monospace">I301</span>
+        <span style="color:#e6e7ea">3 widgets share the same name</span>
+        <span style="color:#9a9ea6">Main Screen</span>
+        <span style="color:#9a9ea6;font-family:Consolas,monospace">&mdash;</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Status bar -->
+  <div style="height:24px;flex:0 0 auto;display:flex;align-items:center;gap:16px;padding:0 12px;background:#232529;border-top:1px solid #35383e;color:#9a9ea6;font-size:11px">
+    <span style="display:flex;align-items:center;gap:5px"><span style="width:6px;height:6px;border-radius:50%;background:#3f9142"></span>Connected &middot; 2 devices</span>
+    <span>2 errors, 2 warnings</span>
+    <span style="margin-left:auto">100%</span>
+  </div>
+</div>
+</body>
+</html>
