@@ -25,6 +25,12 @@
     <!-- IntelliSense docs ship in the package. Not every member is documented yet, so CS1591 stays quiet. -->
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <NoWarn>$(NoWarn);CS1591;CS1734</NoWarn>
+
+    <!-- Guards the "no breaking change within a MAJOR" rule (docs/guides/versioning.md): `dotnet pack` fetches this baseline
+         package from nuget.org and fails the build if the new one removed or incompatibly changed a public member. Pinned to
+         1.0.0 (the first version under the shared-version scheme) for the whole 1.x line; move it only when 2.0.0 ships. -->
+    <EnablePackageValidation>true</EnablePackageValidation>
+    <PackageValidationBaselineVersion>1.0.0</PackageValidationBaselineVersion>
   </PropertyGroup>
 
   <ItemGroup>
