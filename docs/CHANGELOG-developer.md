@@ -3,6 +3,8 @@
 This file follows the [Keep a Changelog](https://keepachangelog.com/) format. For versioning rules, see [versioning.md](guides/versioning.md). The short, public changelog is [CHANGELOG.md](CHANGELOG.md).
 
 ## [Unreleased]
+
+## [1.1.0] - 2026-09-28
 ### Changed
 - **The SDK NuGet package is no longer published on every server release.** `publish-sdk.yml` now diffs `src/MacroGrid.Plugin.Abstractions` against the previous `server-v*` tag and skips the NuGet publish when it is unchanged (most releases). A plugin author should reference the newest **published** SDK version, not necessarily the newest server version — see `docs/guides/versioning.md` and `docs/guides/release.md`.
 ### Added
