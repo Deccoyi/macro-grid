@@ -1,6 +1,6 @@
-# Sound plugin plan
+# SDK 0.4.0 and the SoundBoard plugin
 
-Status: Phase A1-A3 done in this repository (SDK 0.4.0, host, editor). A4 (OBS and PLCIcons manifests in `macro-grid-plugin`) and Phase B (the Sound plugin itself) are not started. This is the canonical copy; phase A is in this repository, phase B in `macro-grid-plugin`. (`macro-grid-plugin/docs/sound-plugin-plan.md` is an untracked older copy: delete it or commit it as a pointer to this file.)
+Status: **done and released.** Phase A (SDK 0.4.0: the file, list, button and notice setting fields, `IReleaseAwareAction`, `ISettingsCommandHandler`, the plugin icon field), A4 (OBS and PLCIcons manifests bumped to the new SDK) and Phase B (the plugin itself, since renamed from Sound to **SoundBoard**) all shipped; see [../plans/version-unification-plan.md](../plans/version-unification-plan.md) for the SDK's move to the 1.0.0 baseline that followed. Kept here as a design reference for the setting field kinds and the plugin's audio engine.
 
 **Repositories:** `macro-grid` (phase A: SDK 0.4.0, host, editor) and `macro-grid-plugin` (phase A4: OBS and PLCIcons manifests; phase B: the Sound plugin). Phase A must ship first. `macro-grid-client` is not touched.
 
@@ -18,7 +18,7 @@ A soundboard plugin (`Sound/`, C#). The user picks sound files in the plugin's s
 - New `IReleaseAwareAction`: `Task ReleaseAsync(ActionContext, JsonObject settings, CancellationToken)`. When a handler bound to a widget's **press** event implements it, the host calls it on release.
 - New `ISettingsCommandHandler` (optional side interface of a settings page): `Task<string?> RunCommandAsync(string command, JsonObject values, CancellationToken)`. The returned text is shown in the editor as a short info/error message.
 - `PluginSdk.Version = "0.4.0"`; update the table in `docs/guides/versioning.md`.
-- Also done in this bump, per `docs/roadmap.md` "Next" and `docs/plans/plugin-distribution-plan.md` section 3c: an optional
+- Also done in this bump, per `docs/roadmap.md` "Next" and `docs/design/plugin-distribution.md` section 3c: an optional
   manifest field `icon` (a path to a small square logo, `.svg`/`.png`, at most 100 KB — the host does not decode pixel
   dimensions, only the extension and file size). `LoadedPlugin.HasIcon`, `GET /api/plugins/{id}/icon`, shown by the
   editor's Plugins window. The Store list/detail page and the release-zip/catalog-build changes are in `macro-grid-plugin`

@@ -187,5 +187,5 @@ Macro Grid is meant for a home or office network you trust. It is not hardened f
   redirect resolves to), never the GitHub API. A package's SHA-256 must match what the index promised; the official source
   (`Deccoyi/macro-grid-plugin`) additionally signs every release (ECDSA P-256) and a package that fails that signature check is refused, not
   merely warned about. Every other source is always shown as third-party, signed or not. See the plugin repository's
-  `website/reference/source-index.md` for the index format and signing, and `docs/plans/plugin-distribution-plan.md` for the rollout.
+  `website/reference/source-index.md` for the index format and signing, and `docs/design/plugin-distribution.md` for the rollout.
 - **The user agreement has to be accepted, per Windows user.** The setup shows it (an update only when its text changed) and records its SHA-256 in `HKCU`. At start, before the server exists, the app compares that record with the agreement it ships and asks once when they differ (another Windows user of the same PC, or a changed text); declining exits. Until then nothing listens and nothing runs. Design: [design/agreement-acceptance.md](design/agreement-acceptance.md).
