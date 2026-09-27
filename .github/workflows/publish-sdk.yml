@@ -4,8 +4,11 @@ name: Publish SDK
 # nuget.org exchanges this run's GitHub identity for a short-lived key. The file name of this workflow is part of the
 # trusted-publishing policy on nuget.org, so do not rename it.
 #
-# The server and the SDK carry one version (docs/guides/versioning.md), so the SDK is published by the same tag as the server
-# release (release.yml builds the installer from it). Release: set <Version> in Directory.Build.props, commit, then push the tag:
+# The server and the SDK carry one version (docs/guides/versioning.md), so the SDK's version is set by the same tag as the
+# server release (release.yml builds the installer from it). But most server releases do not touch the SDK, and a NuGet
+# version can never be replaced once pushed, so this job only actually publishes when src/MacroGrid.Plugin.Abstractions
+# differs from the previous server-v* tag: a plugin author is told to use the newest published SDK version, not the newest
+# server version (docs/guides/versioning.md). Release: set <Version> in Directory.Build.props, commit, then push the tag:
 #   git tag server-v1.0.0-beta && git push origin server-v1.0.0-beta
 # The tag may end in "-beta" (the GitHub pre-release label); only the MAJOR.MINOR.PATCH before it is compared with <Version>.
 on:
@@ -57,14 +60,33 @@ jobs:
             || { echo "::error::The tag's version and <Version> in Directory.Build.props must be identical."; exit 1; }
           echo "PACKAGE_VERSION=$version" >> "$GITHUB_ENV"
 
+      - name: Check whether the SDK itself changed since the previous server release
+        id: sdk-diff
+        shell: bash
+        run: |
+          prev=$(git describe --tags --match 'server-v*' --exclude "$GITHUB_REF_NAME" --abbrev=0 "$GITHUB_SHA^" 2>/dev/null || true)
+          if [ -z "$prev" ]; then
+            echo "No previous server-v* tag found; publishing (first release or history not reachable)."
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          elif git diff --quiet "$prev" -- src/MacroGrid.Plugin.Abstractions; then
+            echo "src/MacroGrid.Plugin.Abstractions is unchanged since $prev; skipping the NuGet publish."
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "src/MacroGrid.Plugin.Abstractions changed since $prev; publishing."
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Pack
+        if: steps.sdk-diff.outputs.changed == 'true'
         run: dotnet pack src/MacroGrid.Plugin.Abstractions -c Release -o artifacts/nuget
 
       - name: Check the package version
+        if: steps.sdk-diff.outputs.changed == 'true'
         shell: bash
         run: test -f "artifacts/nuget/MacroGrid.Plugin.Abstractions.${PACKAGE_VERSION}.nupkg" || { echo "::error::The package is not version ${PACKAGE_VERSION}."; ls artifacts/nuget; exit 1; }
 
       - name: Log in to nuget.org (trusted publishing)
+        if: steps.sdk-diff.outputs.changed == 'true'
         id: login
         uses: NuGet/login@8d196754b4036150537f80ac539e15c2f1028841 # v1.2.0
         with:
@@ -73,6 +95,7 @@ jobs:
 
       # The temporary key is valid for one hour, so push right after logging in. The .snupkg goes along automatically.
       - name: Push
+        if: steps.sdk-diff.outputs.changed == 'true'
         run: >
           dotnet nuget push "artifacts/nuget/*.nupkg"
           --api-key "${{ steps.login.outputs.NUGET_API_KEY }}"

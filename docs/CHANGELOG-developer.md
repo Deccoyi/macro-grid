@@ -3,6 +3,11 @@
 This file follows the [Keep a Changelog](https://keepachangelog.com/) format. For versioning rules, see [versioning.md](guides/versioning.md). The short, public changelog is [CHANGELOG.md](CHANGELOG.md).
 
 ## [Unreleased]
+### Changed
+- **The SDK NuGet package is no longer published on every server release.** `publish-sdk.yml` now diffs `src/MacroGrid.Plugin.Abstractions` against the previous `server-v*` tag and skips the NuGet publish when it is unchanged (most releases). A plugin author should reference the newest **published** SDK version, not necessarily the newest server version — see `docs/guides/versioning.md` and `docs/guides/release.md`.
+### Added
+- **A package-validation guardrail on the SDK:** `dotnet pack` now runs .NET's package validation against the published `1.0.0` baseline (`EnablePackageValidation`, `PackageValidationBaselineVersion` in the SDK csproj) every time it packs, so removing or incompatibly changing a public member fails the build before it can reach nuget.org. Tested: renaming `IPluginHost.ServerVersion` fails the pack with `CP0002`/`CP0006`.
+- **`LegacyPluginCompatibilityTests`:** a real plugin (`tests/MacroGrid.Tests.LegacyPlugin`), compiled against the actually-published SDK 0.4.0 NuGet package with a legacy manifest (`sdkVersion`, no `macroGrid`), is loaded on the current server and asserted `Loaded` — proving `PluginLoadContext` really hands an old plugin the server's newer SDK assembly, not just that the compatibility rule says it should.
 
 ## [1.0.1] - 2026-09-26
 ### Added

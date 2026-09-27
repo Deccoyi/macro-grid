@@ -22,6 +22,7 @@
     <ProjectReference Include="..\..\src\MacroGrid.Core\MacroGrid.Core.csproj" />
     <ProjectReference Include="..\..\src\MacroGrid.Windows\MacroGrid.Windows.csproj" />
     <ProjectReference Include="..\MacroGrid.Tests.StubPlugin\MacroGrid.Tests.StubPlugin.csproj" />
+    <ProjectReference Include="..\MacroGrid.Tests.LegacyPlugin\MacroGrid.Tests.LegacyPlugin.csproj" />
   </ItemGroup>
 
 </Project>

@@ -133,8 +133,12 @@ The app finds new releases by itself (design: [../design/auto-update.md](../desi
 
 `MacroGrid.Plugin.Abstractions` is published from CI with NuGet Trusted Publishing, so no API key is stored in GitHub or on
 any machine. The workflow is `.github/workflows/publish-sdk.yml` (its file name is part of the policy on nuget.org: do not
-rename it). It runs on the same tag as the server release, `server-vX.Y.Z` or `server-vX.Y.Z-beta`, because the two share one version:
-every server release publishes an SDK package with the same number, even when the SDK itself did not change.
+rename it). It runs on the same tag as the server release, `server-vX.Y.Z` or `server-vX.Y.Z-beta`, because the two share one
+version — but it only actually publishes when `src/MacroGrid.Plugin.Abstractions` differs from the previous `server-v*` tag.
+Most server releases do not touch the SDK, and a NuGet version can never be replaced, so a release that leaves the SDK unchanged
+does not create a new package (a "Check whether the SDK itself changed" step decides this and the rest of the job is skipped when
+it did not). This means the SDK's NuGet version is not always the same as the running server's: a plugin author uses the newest
+*published* SDK version, not the newest server version — `docs/guides/versioning.md` says so.
 
 One-time setup:
 
@@ -149,15 +153,22 @@ One-time setup:
 A published version can never be replaced or deleted on nuget.org, only unlisted. Check everything before the tag (the server checklist above).
 
 1. **Tag and push** (only the owner does this; there is no API key to hand out): `git tag server-vX.Y.Z-beta` and `git push origin server-vX.Y.Z-beta`.
-2. **The workflow** (Actions > "Publish SDK") checks that the tagged commit is on `dev` or `main`, that the tag is `server-vX.Y.Z` or `server-vX.Y.Z-beta` and that
-   its `X.Y.Z` equals `<Version>` in `Directory.Build.props`, packs, logs in to nuget.org (short-lived key) and pushes the `.nupkg` and the `.snupkg` symbols.
-   `--skip-duplicate` makes a re-run of the same version harmless.
-3. **Verify** after 5 to 30 minutes: https://www.nuget.org/packages/MacroGrid.Plugin.Abstractions shows the new version, or
+2. **The workflow** (Actions > "Publish SDK") checks that the tagged commit is on `dev` or `main` and that the tag's `X.Y.Z` equals `<Version>` in
+   `Directory.Build.props`, then diffs `src/MacroGrid.Plugin.Abstractions` against the previous `server-v*` tag. Unchanged ⇒ the run ends there, nothing is
+   published, and that is expected, not a failure. Changed ⇒ it packs (also running the package-validation check below), logs in to nuget.org
+   (short-lived key) and pushes the `.nupkg` and the `.snupkg` symbols. `--skip-duplicate` makes a re-run of the same version harmless.
+3. **Verify**, only when the SDK changed: after 5 to 30 minutes https://www.nuget.org/packages/MacroGrid.Plugin.Abstractions shows the new version, or
    `https://api.nuget.org/v3-flatcontainer/macrogrid.plugin.abstractions/index.json` lists it.
 4. **Move the plugins over** when they need it (see "Order of a release"): in the plugin repository set `MacroGridSdkVersion` in `Directory.Build.props` to the new
    version and raise `macroGrid` in each `plugin.json` that uses the new API. Build and run the plugin CI.
 
 Update the SDK `README.md` if the reference snippet shows the version, and the changelogs (`docs/CHANGELOG-developer.md` for anything a plugin author must know).
+
+**Guardrail:** `dotnet pack` runs .NET's package validation (`EnablePackageValidation`) against the published `1.0.0` package (the SDK csproj's
+`PackageValidationBaselineVersion`) every time, changed or not. If a public member was removed or changed incompatibly since 1.0.0, the pack step fails
+right there with an `error CP0...`, before anything reaches nuget.org — that is the "no breaking change within a MAJOR" rule from `versioning.md`,
+enforced by the build instead of by memory. Move the baseline only when 2.0.0 ships. `LegacyPluginCompatibilityTests` (in the test suite) is the other
+half of that guarantee: it actually loads a plugin built against the real, published SDK 0.4.0 on the current server and asserts it is `Loaded`.
 
 If the publish fails:
 
