@@ -9,5 +9,6 @@
   <Folder Name="/tests/">
     <Project Path="tests/MacroGrid.Tests/MacroGrid.Tests.csproj" />
     <Project Path="tests/MacroGrid.Tests.StubPlugin/MacroGrid.Tests.StubPlugin.csproj" />
+    <Project Path="tests/MacroGrid.Tests.LegacyPlugin/MacroGrid.Tests.LegacyPlugin.csproj" />
   </Folder>
 </Solution>
