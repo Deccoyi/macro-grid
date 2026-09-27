@@ -105,13 +105,13 @@ export interface ToolWindowDefinition {
 export const TOOL_WINDOWS: ToolWindowDefinition[] = [
   { id: "hierarchy",  titleKey: "panel.hierarchy",  icon: FolderTree,    Content: HierarchyToolWindow,  defaultPlacement: { edge: "left",   group: "left-top",    order: 0, size: 220 }, minSize: { width: 160, height: 120 }, defaultOpen: true },
   { id: "toolbox",    titleKey: "panel.toolbox",    icon: Shapes,        Content: ToolboxToolWindow,    defaultPlacement: { edge: "left",   group: "left-bottom", order: 1, size: 220 }, minSize: { width: 160, height: 100 }, defaultOpen: true },
-  { id: "properties", titleKey: "panel.properties", icon: SlidersVertical, Content: PropertiesToolWindow, defaultPlacement: { edge: "right",  group: "right",       order: 0, size: 300 }, minSize: { width: 240, height: 160 }, defaultOpen: true },
-  { id: "errorList",  titleKey: "panel.errorList",  icon: CircleAlert,   Content: ErrorListPanel,       defaultPlacement: { edge: "bottom", group: "bottom",      order: 0, size: 220 }, minSize: { width: 320, height: 100 }, defaultOpen: true },
+  { id: "properties", titleKey: "panel.properties", icon: Wrench,          Content: PropertiesToolWindow, defaultPlacement: { edge: "right",  group: "right",       order: 0, size: 300 }, minSize: { width: 240, height: 160 }, defaultOpen: true },
+  { id: "errorList",  titleKey: "panel.errorList",  icon: ListX,         Content: ErrorListPanel,       defaultPlacement: { edge: "bottom", group: "bottom",      order: 0, size: 220 }, minSize: { width: 320, height: 100 }, defaultOpen: true },
 ];
 ```
 
-Panels know nothing about docking. `DockWorkspace` alone decides where a panel is. The icon names above are suggestions; pick the
-closest `lucide-react` icons.
+Panels know nothing about docking. `DockWorkspace` alone decides where a panel is. Every icon in this plan (sizes, colours, the
+custom ones) is specified in [../ui/editor-icons.md](../ui/editor-icons.md).
 
 ### Adding a tool window (the recipe the owner relies on)
 

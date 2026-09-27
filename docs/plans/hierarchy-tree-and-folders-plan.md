@@ -117,9 +117,10 @@ summaries and the open document; pure functions, no React), `dropRules.ts`, `use
 `AppMatchesEditor` and profile-level settings that `ProfilePagesPanel` shows today move to the Properties panel when a profile node is
 selected (guideline: "can it be solved in the Properties panel? Use it."). Then delete `ProfilePagesPanel`.
 
-- Rows 22 px, indent 14 px per level, a chevron for containers, 14 px `lucide-react` icons in `--ms-text-secondary`: `Folder` /
-  `FolderOpen` for folders (both kinds; the icon of a profile folder may use `FolderTree` if the owner wants them told apart), `LayoutGrid`
-  or similar for a profile, `File` / `PanelTop` for a page, `Puzzle` for a plugin.
+- Rows 22 px, indent 14 px per level, a chevron for containers, 14 px icons in `--ms-text-secondary`, as specified in
+  [../ui/editor-icons.md](../ui/editor-icons.md): `Folder` / `FolderOpen` for both folder kinds (the position tells them apart), the
+  `LibraryBig` for a profile and `LayoutTemplate` for a page, `Puzzle` for a plugin without a logo, no icon on the "Profiles" and
+  "Plugins" roots.
 - The open profile's name is drawn `--ms-text-primary` semibold; the active document page has a 2 px `--ms-accent` left bar; selected
   rows `--ms-accent-bg-muted`; the keyboard-focus row a 1 px `--ms-border-strong` outline.
 - Clicking a page selects it and opens it in a document tab (opening its profile first, through the existing discard-changes question,
@@ -312,4 +313,3 @@ SDK interface (additive, no existing plugin needs a change).
    Following the order only would be a server-side change without a protocol change; showing folders would change the protocol.
 2. Should a plugin item be draggable onto the canvas later (for example drop a sound to create a button that plays it)? Not in this
    plan; it would build on phase 6.
-3. Should profile folders and page folders look different in the tree (two icons), or is the position enough?

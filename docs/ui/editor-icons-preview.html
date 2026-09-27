@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+<!-- Preview of editor-icons.md: Profile/Page are lucide-react (LibraryBig/LayoutTemplate), the dock guides are the final drawn SVGs from icons/. -->
+<head>
+<meta charset="utf-8">
+<title>Editor icons preview</title>
+<style>
+  .dark  { --bg:#232529; --canvas:#1c1e22; --border:#35383e; --text:#e6e7ea; --secondary:#9a9ea6; --disabled:#5b5e64; --accent:#d97706; --accent-muted:rgba(217,119,6,.15); --danger:#c0392b; }
+  .light { --bg:#ffffff; --canvas:#f3f4f6; --border:#d4d7dc; --text:#1c1e22; --secondary:#565b63; --disabled:#9a9ea6; --accent:#b45f04; --accent-muted:rgba(180,95,4,.12); --danger:#b02e21; }
+  body { margin:0; font-family:"Segoe UI",system-ui,sans-serif; font-size:12.5px; background:#16171a; }
+  .theme { background:var(--canvas); color:var(--text); padding:24px 28px; }
+  h2 { margin:0 0 14px; font-size:13px; font-weight:600; }
+  table { border-collapse:collapse; margin-bottom:22px; }
+  th, td { border-bottom:1px solid var(--border); padding:8px 14px; text-align:left; vertical-align:middle; }
+  th { font-weight:400; color:var(--secondary); font-size:11px; }
+  td.name { font-family:Consolas,monospace; font-size:11.5px; }
+  .s-default { color:var(--secondary); } .s-accent { color:var(--accent); } .s-disabled { color:var(--disabled); }
+  .guide { width:28px; height:28px; box-sizing:border-box; border:1px solid var(--accent); background:var(--accent-muted); color:var(--accent); display:inline-flex; align-items:center; justify-content:center; margin-right:8px; }
+  .tree { background:var(--bg); border:1px solid var(--border); width:280px; padding:4px 0; }
+  .row { height:22px; display:flex; align-items:center; gap:5px; color:var(--text); }
+  .row .chev { width:12px; display:inline-flex; color:var(--secondary); }
+  .row .ic { display:inline-flex; color:var(--secondary); }
+  .row.head { font-weight:600; }
+  .row.open .ic { color:var(--accent); }
+  .row.active { background:var(--accent-muted); box-shadow:inset 2px 0 0 var(--accent); }
+  .row.active .ic { color:var(--accent); }
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <!-- lucide-react LibraryBig -->
+    <symbol id="profile" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="8" height="18" x="3" y="3" rx="1"/><path d="M7 3v18"/><path d="M20.4 18.9c.2.5-.1 1.1-.6 1.3l-1.9.7c-.5.2-1.1-.1-1.3-.6L11.1 5.1c-.2-.5.1-1.1.6-1.3l1.9-.7c.5-.2 1.1.1 1.3.6Z"/></g></symbol>
+    <!-- lucide-react LayoutTemplate -->
+    <symbol id="page" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="7" x="3" y="3" rx="1"/><rect width="9" height="7" x="3" y="14" rx="1"/><rect width="5" height="7" x="16" y="14" rx="1"/></g></symbol>
+    <symbol id="folder" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></symbol>
+    <symbol id="chev" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="m9 18 6-6-6-6"/></symbol>
+    <!-- final drawn glyphs, from icons/dock-*.svg -->
+    <symbol id="dock-left" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="18" rx="2"/><path d="M 4,3 L 8,3 L 8,21 L 4,21 A 2,2 0 0,1 2,19 L 2,5 A 2,2 0 0,1 4,3 Z" fill="currentColor" stroke="none"/><line x1="8" y1="3" x2="8" y2="21"/></g></symbol>
+    <symbol id="dock-right" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="18" rx="2"/><path d="M 16,3 L 20,3 A 2,2 0 0,1 22,5 L 22,19 A 2,2 0 0,1 20,21 L 16,21 Z" fill="currentColor" stroke="none"/><line x1="16" y1="3" x2="16" y2="21"/></g></symbol>
+    <symbol id="dock-top" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="2" width="18" height="20" rx="2"/><path d="M 5,2 L 19,2 A 2,2 0 0,1 21,4 L 21,8 L 3,8 L 3,4 A 2,2 0 0,1 5,2 Z" fill="currentColor" stroke="none"/><line x1="3" y1="8" x2="21" y2="8"/></g></symbol>
+    <symbol id="dock-bottom" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="2" width="18" height="20" rx="2"/><path d="M 3,16 L 21,16 L 21,20 A 2,2 0 0,1 19,22 L 5,22 A 2,2 0 0,1 3,20 Z" fill="currentColor" stroke="none"/><line x1="3" y1="16" x2="21" y2="16"/></g></symbol>
+    <symbol id="dock-center" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="18" rx="2"/><line x1="2" y1="8" x2="22" y2="8"/><line x1="9" y1="3" x2="9" y2="8"/><path d="M 2,8 L 22,8 L 22,19 A 2,2 0 0,1 20,21 L 4,21 A 2,2 0 0,1 2,19 Z" fill="currentColor" stroke="none"/></g></symbol>
+  </defs>
+</svg>
+
+<div class="theme dark">
+  <h2>Dark theme</h2>
+  <table>
+    <tr><th>Icon</th><th>12 px</th><th>14 px</th><th>16 px</th><th>24 px</th><th>default</th><th>accent</th><th>disabled</th></tr>
+    <tr><td class="name">Profile (LibraryBig)</td>
+      <td class="s-default"><svg width="12" height="12"><use href="#profile"/></svg></td><td class="s-default"><svg width="14" height="14"><use href="#profile"/></svg></td><td class="s-default"><svg width="16" height="16"><use href="#profile"/></svg></td><td class="s-default"><svg width="24" height="24"><use href="#profile"/></svg></td>
+      <td class="s-default"><svg width="14" height="14"><use href="#profile"/></svg></td><td class="s-accent"><svg width="14" height="14"><use href="#profile"/></svg></td><td class="s-disabled"><svg width="14" height="14"><use href="#profile"/></svg></td></tr>
+    <tr><td class="name">Page (LayoutTemplate)</td>
+      <td class="s-default"><svg width="12" height="12"><use href="#page"/></svg></td><td class="s-default"><svg width="14" height="14"><use href="#page"/></svg></td><td class="s-default"><svg width="16" height="16"><use href="#page"/></svg></td><td class="s-default"><svg width="24" height="24"><use href="#page"/></svg></td>
+      <td class="s-default"><svg width="14" height="14"><use href="#page"/></svg></td><td class="s-accent"><svg width="14" height="14"><use href="#page"/></svg></td><td class="s-disabled"><svg width="14" height="14"><use href="#page"/></svg></td></tr>
+  </table>
+  <h2>Dock guide glyphs, 16 px in 28 px targets</h2>
+  <div style="margin-bottom:22px">
+    <span class="guide"><svg width="16" height="16"><use href="#dock-left"/></svg></span><span class="guide"><svg width="16" height="16"><use href="#dock-right"/></svg></span><span class="guide"><svg width="16" height="16"><use href="#dock-top"/></svg></span><span class="guide"><svg width="16" height="16"><use href="#dock-bottom"/></svg></span><span class="guide"><svg width="16" height="16"><use href="#dock-center"/></svg></span>
+  </div>
+  <h2>In the tree (14 px, 22 px rows)</h2>
+  <div class="tree">
+    <div class="row head" style="padding-left:8px">Profiles</div>
+    <div class="row" style="padding-left:8px"><span class="chev" style="transform:rotate(90deg)"><svg width="12" height="12"><use href="#chev"/></svg></span><span class="ic"><svg width="14" height="14"><use href="#folder"/></svg></span>Streaming</div>
+    <div class="row open" style="padding-left:22px"><span class="chev" style="transform:rotate(90deg)"><svg width="12" height="12"><use href="#chev"/></svg></span><span class="ic"><svg width="14" height="14"><use href="#profile"/></svg></span><b>Profile 1</b></div>
+    <div class="row" style="padding-left:36px"><span class="chev" style="transform:rotate(90deg)"><svg width="12" height="12"><use href="#chev"/></svg></span><span class="ic"><svg width="14" height="14"><use href="#folder"/></svg></span>Scenes</div>
+    <div class="row active" style="padding-left:50px"><span class="chev"></span><span class="ic"><svg width="14" height="14"><use href="#page"/></svg></span>Page 1</div>
+    <div class="row" style="padding-left:50px"><span class="chev"></span><span class="ic"><svg width="14" height="14"><use href="#page"/></svg></span>Page 2</div>
+    <div class="row" style="padding-left:36px"><span class="chev"></span><span class="ic"><svg width="14" height="14"><use href="#page"/></svg></span>Page 3</div>
+    <div class="row" style="padding-left:22px"><span class="chev"><svg width="12" height="12"><use href="#chev"/></svg></span><span class="ic"><svg width="14" height="14"><use href="#profile"/></svg></span>Profile 2</div>
+    <div class="row" style="padding-left:8px"><span class="chev"><svg width="12" height="12"><use href="#chev"/></svg></span><span class="ic"><svg width="14" height="14"><use href="#profile"/></svg></span>Profile 3</div>
+  </div>
+</div>
+
+<div class="theme light">
+  <h2>Light theme</h2>
+  <table>
+    <tr><th>Icon</th><th>12 px</th><th>14 px</th><th>16 px</th><th>24 px</th><th>default</th><th>accent</th><th>disabled</th></tr>
+    <tr><td class="name">Profile (LibraryBig)</td>
+      <td class="s-default"><svg width="12" height="12"><use href="#profile"/></svg></td><td class="s-default"><svg width="14" height="14"><use href="#profile"/></svg></td><td class="s-default"><svg width="16" height="16"><use href="#profile"/></svg></td><td class="s-default"><svg width="24" height="24"><use href="#profile"/></svg></td>
+      <td class="s-default"><svg width="14" height="14"><use href="#profile"/></svg></td><td class="s-accent"><svg width="14" height="14"><use href="#profile"/></svg></td><td class="s-disabled"><svg width="14" height="14"><use href="#profile"/></svg></td></tr>
+    <tr><td class="name">Page (LayoutTemplate)</td>
+      <td class="s-default"><svg width="12" height="12"><use href="#page"/></svg></td><td class="s-default"><svg width="14" height="14"><use href="#page"/></svg></td><td class="s-default"><svg width="16" height="16"><use href="#page"/></svg></td><td class="s-default"><svg width="24" height="24"><use href="#page"/></svg></td>
+      <td class="s-default"><svg width="14" height="14"><use href="#page"/></svg></td><td class="s-accent"><svg width="14" height="14"><use href="#page"/></svg></td><td class="s-disabled"><svg width="14" height="14"><use href="#page"/></svg></td></tr>
+  </table>
+  <h2>Dock guide glyphs</h2>
+  <div style="margin-bottom:22px">
+    <span class="guide"><svg width="16" height="16"><use href="#dock-left"/></svg></span><span class="guide"><svg width="16" height="16"><use href="#dock-right"/></svg></span><span class="guide"><svg width="16" height="16"><use href="#dock-top"/></svg></span><span class="guide"><svg width="16" height="16"><use href="#dock-bottom"/></svg></span><span class="guide"><svg width="16" height="16"><use href="#dock-center"/></svg></span>
+  </div>
+</div>
+</body>
+</html>
