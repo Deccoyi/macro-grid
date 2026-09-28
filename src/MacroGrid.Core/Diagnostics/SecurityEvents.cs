@@ -20,4 +20,8 @@ public static class SecurityEvents
     public static readonly EventId PluginInstalled = new(1101, nameof(PluginInstalled));
     public static readonly EventId PluginPermissionsGranted = new(1102, nameof(PluginPermissionsGranted));
     public static readonly EventId PluginUninstalled = new(1103, nameof(PluginUninstalled));
+
+    /// <summary>Strips line breaks from a value before it goes into a security log line, so a device name or
+    /// plugin id chosen by an attacker cannot forge a second log entry.</summary>
+    public static string ForLog(string value) => value.Replace("\r", "").Replace("\n", "");
 }
