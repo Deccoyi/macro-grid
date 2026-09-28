@@ -40,6 +40,8 @@ pre-release; the version inside the program stays plain `1.0.0`, and the label i
 
 Within one MAJOR the SDK must stay compatible with plugins built for any earlier version of that MAJOR: add members, never remove or change them.
 
+`IPluginHost` is implemented only by the server; plugins receive it and call it. Adding a member to it therefore cannot break a plugin, but package validation reports it as `CP0006` ("cannot add interface member"). That single case is accepted on purpose and recorded in `src/MacroGrid.Plugin.Abstractions/CompatibilitySuppressions.xml` (currently: `IPluginHost.Secrets`, 1.1.0). Adding a member to an interface that a *plugin* implements is still a MAJOR change; do not suppress that. A new host member gets its suppression entry in the same change (`dotnet pack -p:ApiCompatGenerateSuppressionFile=true`), and the entry says why in the pull request.
+
 Before 1.0.0 the parts were numbered separately: the last one was server 0.3.2 with SDK 0.4.0. From 1.0.0 on there is one number.
 
 ## Plugin compatibility
