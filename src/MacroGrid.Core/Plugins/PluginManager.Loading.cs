@@ -77,7 +77,7 @@ public sealed partial class PluginManager
             return Fail(PluginLoadStatus.Error, "This id is already used by another installed plugin");
         }
 
-        var compatibility = PluginCompatibility.Check(serverVersion, manifest.MacroGrid, manifest.SdkVersion);
+        var compatibility = PluginCompatibility.Check(serverVersion, manifest.MinMacroGrid, manifest.MacroGrid, manifest.SdkVersion);
         if (!compatibility.Compatible)
             return Fail(PluginLoadStatus.Incompatible, compatibility.Reason!);
 

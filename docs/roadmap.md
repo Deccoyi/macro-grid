@@ -47,9 +47,6 @@ Where the project stands. The server and the SDK are at 1.0.0 and under active d
 
 The order of the bigger pieces of work, and their plans, are in [plans/README.md](plans/README.md). The items below have no plan file yet.
 
-- **Rename the plugin manifest's `macroGrid` field (priority, name not chosen):** it means "the oldest Macro Grid this plugin runs on", but the name alone
-  does not say "minimum", which was not obvious on a first read. Wanted: a clearer name (`minMacroGrid`, `requiresMacroGrid`, or better), with the old
-  name still read for at least one MAJOR so existing plugins keep working unchanged. Planned for the version after 1.0.x; no name decided yet.
 - **The "Allow unencrypted connections" preference:** now that the server and the phone app both support `wss://` (see "Done"
   above), plain `ws://`/`http://` (port 9820) stay open unconditionally; a preference to turn them off is not built yet. Default
   on for now (the browser deck cannot use `wss://` at all, and older paired phones have no TLS support), default off starting

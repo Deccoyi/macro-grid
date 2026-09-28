@@ -61,9 +61,10 @@ The components of the server that loads your plugin are listed in the SBOM files
 ## Compatibility
 
 The SDK and the Macro Grid server share one version number: package `1.3.0` is the SDK of Macro Grid `1.3.0`, and `PluginSdk.Version` is that number.
-A plugin declares the oldest Macro Grid it runs on in `plugin.json`, as `"macroGrid": "1.3.0"` (three parts). It then runs on every Macro Grid from
-1.3.0 up to, but not including, 2.0.0; use the SDK version you build against, or older if you use nothing newer. Manifests from before 1.0.0
-(`sdkVersion`, `minServerVersion`) are still read: `^0.4.x` counts as `macroGrid: 1.0.0`. The rules for what changes the MAJOR, MINOR and PATCH
+A plugin declares the oldest Macro Grid it runs on in `plugin.json`, as `"minMacroGrid": "1.3.0"` (three parts). It then runs on every Macro Grid from
+1.3.0 up to, but not including, 2.0.0; use the SDK version you build against, or older if you use nothing newer. Older manifests are still read:
+`macroGrid` (the earlier name of `minMacroGrid`, the only name Macro Grid up to 1.2.x reads), and from before 1.0.0 `sdkVersion` and
+`minServerVersion`, where `^0.4.x` counts as `minMacroGrid: 1.0.0`. The rules for what changes the MAJOR, MINOR and PATCH
 number are in the server repo's `docs/guides/versioning.md`.
 
 Target framework: `net10.0`. License: MIT.

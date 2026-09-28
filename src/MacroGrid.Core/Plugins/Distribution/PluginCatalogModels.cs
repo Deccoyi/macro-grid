@@ -9,6 +9,7 @@ namespace MacroGrid.Core.Plugins.Distribution;
 /// <paramref name="SdkVersion"/> and <paramref name="MinServerVersion"/> instead; see <see cref="Plugins.PluginCompatibility"/>.</param>
 public sealed record PluginCatalogVersion(
     string Version,
+    string? MinMacroGrid,
     string? MacroGrid,
     string? SdkVersion,
     string? MinServerVersion,
@@ -41,6 +42,7 @@ public sealed record PluginSingleManifest(
     string? Homepage,
     string Kind,
     string Version,
+    string? MinMacroGrid,
     string? MacroGrid,
     string? SdkVersion,
     string? MinServerVersion,

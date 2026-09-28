@@ -3,6 +3,8 @@
 This file follows the [Keep a Changelog](https://keepachangelog.com/) format. For versioning rules, see [versioning.md](guides/versioning.md). The short, public changelog is [CHANGELOG.md](CHANGELOG.md).
 
 ## [Unreleased]
+### Changed
+- **The plugin manifest's `macroGrid` field is now `minMacroGrid`:** same meaning and format (`MAJOR.MINOR.PATCH`, the oldest Macro Grid the plugin runs on); the old name did not say "minimum". `PluginManifest.MinMacroGrid` is new, `PluginManifest.MacroGrid` stays as the legacy name and is read only when `minMacroGrid` is absent (`minMacroGrid` wins when both are present; a malformed `minMacroGrid` does not fall back). The legacy name stays readable for at least one MAJOR. The same applies to source index entries (still `formatVersion` 2), the direct-link `plugin.json`, the install cross-check (it compares the resolved value, so an index and a package may use different names) and `POST /api/plugin-link/inspect`, which now returns `minMacroGrid` next to `macroGrid`. `PluginCompatibility.Required`/`Check` take `minMacroGrid` and `macroGrid` as separate arguments; `PluginCompatibility.Declared` resolves the two. Additive SDK and manifest change, a MINOR bump. Plugin authors: write `minMacroGrid`. Macro Grid up to 1.2.x reads only `macroGrid` and refuses a manifest without it, so a plugin that must still run there writes both, with the same value.
 
 ## [1.2.0] - 2026-09-28
 ### Added

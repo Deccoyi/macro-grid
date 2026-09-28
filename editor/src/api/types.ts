@@ -210,7 +210,9 @@ export interface PluginLinkInspectResult {
   homepage?: string | null;
   kind?: string;
   version?: string;
-  /** The oldest Macro Grid the plugin runs on. Older plugins list sdkVersion and minServerVersion instead. */
+  /** The oldest Macro Grid the plugin runs on. Older plugins list it as macroGrid, or list sdkVersion and minServerVersion instead. */
+  minMacroGrid?: string | null;
+  /** Legacy: the earlier name of minMacroGrid, read only when minMacroGrid is absent. */
   macroGrid?: string | null;
   sdkVersion?: string | null;
   minServerVersion?: string | null;

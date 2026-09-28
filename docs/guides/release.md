@@ -12,7 +12,7 @@ Read it first for any release, version or signing work; the repository documents
 ## Versions and tags
 
 The version rules are in [versioning.md](versioning.md): the server and the SDK share one number, the phone app and every plugin have their own,
-and a plugin says in `plugin.json` which Macro Grid it needs (`macroGrid`). A release is a Git tag on `main`; the tag name says what it releases:
+and a plugin says in `plugin.json` which Macro Grid it needs (`minMacroGrid`). A release is a Git tag on `main`; the tag name says what it releases:
 
 | What | Tag | Example | Version comes from |
 |---|---|---|---|
@@ -32,8 +32,8 @@ Each step waits for the one before it, because a plugin can only be built agains
 
 1. **Server and SDK** (below): set `<Version>`, changelogs, merge to `main`, tag `server-vX.Y.Z`. The tag builds the installer (draft release) and publishes the SDK package.
    Done when the installer draft is tested and published, and the package is listed on nuget.org (5 to 30 minutes after the tag).
-2. **Plugins**: nothing to do after a MINOR or PATCH server release, they keep running (`macroGrid` says the *oldest* Macro Grid). A plugin needs a new release only when it
-   has its own change, when it starts to use something from a newer MINOR (raise its `macroGrid` and `MacroGridSdkVersion`), or after a MAJOR (rebuild every plugin, set `macroGrid` to the new MAJOR).
+2. **Plugins**: nothing to do after a MINOR or PATCH server release, they keep running (`minMacroGrid` says the *oldest* Macro Grid). A plugin needs a new release only when it
+   has its own change, when it starts to use something from a newer MINOR (raise its `minMacroGrid` and `MacroGridSdkVersion`), or after a MAJOR (rebuild every plugin, set `minMacroGrid` to the new MAJOR).
 3. **Phone app**: independent. Raise the Macro Grid version it needs only when it starts to depend on something new in the server.
 
 Never publish a plugin that needs a Macro Grid version that is not released yet.
@@ -162,7 +162,7 @@ A published version can never be replaced or deleted on nuget.org, only unlisted
 3. **Verify**, only when the SDK changed: after 5 to 30 minutes https://www.nuget.org/packages/MacroGrid.Plugin.Abstractions shows the new version, or
    `https://api.nuget.org/v3-flatcontainer/macrogrid.plugin.abstractions/index.json` lists it.
 4. **Move the plugins over** when they need it (see "Order of a release"): in the plugin repository set `MacroGridSdkVersion` in `Directory.Build.props` to the new
-   version and raise `macroGrid` in each `plugin.json` that uses the new API. Build and run the plugin CI.
+   version and raise `minMacroGrid` in each `plugin.json` that uses the new API. Build and run the plugin CI.
 
 Update the SDK `README.md` if the reference snippet shows the version, and the changelogs (`docs/CHANGELOG-developer.md` for anything a plugin author must know).
 

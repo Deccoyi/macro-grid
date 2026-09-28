@@ -93,9 +93,9 @@ public sealed class PluginManagerTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task Start_flags_a_newer_required_macro_grid_as_incompatible()
+    public async Task Start_flags_a_newer_required_min_macro_grid_as_incompatible()
     {
-        WriteManifest(NewPluginFolder("NeedsNewer"), macroGrid: "1.5.0");
+        WriteManifest(NewPluginFolder("NeedsNewer"), minMacroGrid: "1.5.0");
 
         await _manager.StartAsync(CancellationToken.None);
 
@@ -107,7 +107,7 @@ public sealed class PluginManagerTests : IAsyncLifetime
     [Fact]
     public async Task Start_flags_a_different_major_as_incompatible_and_says_to_rebuild()
     {
-        WriteManifest(NewPluginFolder("NextMajor"), macroGrid: "2.0.0");
+        WriteManifest(NewPluginFolder("NextMajor"), minMacroGrid: "2.0.0");
 
         await _manager.StartAsync(CancellationToken.None);
 
@@ -117,9 +117,9 @@ public sealed class PluginManagerTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task Start_flags_a_two_part_macro_grid_as_incompatible()
+    public async Task Start_flags_a_two_part_min_macro_grid_as_incompatible()
     {
-        WriteManifest(NewPluginFolder("TwoParts"), macroGrid: "1.0");
+        WriteManifest(NewPluginFolder("TwoParts"), minMacroGrid: "1.0");
 
         await _manager.StartAsync(CancellationToken.None);
 
@@ -127,14 +127,41 @@ public sealed class PluginManagerTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task A_legacy_manifest_for_sdk_0_4_is_read_as_macro_grid_1_0_0()
+    public async Task A_legacy_manifest_for_sdk_0_4_is_read_as_min_macro_grid_1_0_0()
     {
         // No entry file in the folder, so a compatible manifest ends in Error (entry not found), never in Incompatible.
-        WriteManifest(NewPluginFolder("Legacy04"), macroGrid: null, sdkVersion: "^0.4.0", minServerVersion: "0.1.0");
+        WriteManifest(NewPluginFolder("Legacy04"), minMacroGrid: null, sdkVersion: "^0.4.0", minServerVersion: "0.1.0");
 
         await _manager.StartAsync(CancellationToken.None);
 
         Assert.NotEqual(PluginLoadStatus.Incompatible, Assert.Single(_manager.Plugins).Status);
+    }
+
+    [Fact]
+    public async Task A_legacy_macro_grid_field_is_read_as_min_macro_grid()
+    {
+        // No entry file in the folder, so a compatible manifest ends in Error (entry not found), never in Incompatible.
+        WriteManifest(NewPluginFolder("LegacyName"), minMacroGrid: null, macroGrid: "1.0.0");
+        WriteManifest(NewPluginFolder("LegacyNameNewer"), minMacroGrid: null, macroGrid: "1.5.0");
+
+        await _manager.StartAsync(CancellationToken.None);
+
+        Assert.NotEqual(PluginLoadStatus.Incompatible, _manager.Plugins.Single(p => p.Id == "LegacyName").Status);
+        var newer = _manager.Plugins.Single(p => p.Id == "LegacyNameNewer");
+        Assert.Equal(PluginLoadStatus.Incompatible, newer.Status);
+        Assert.Contains("1.5.0", newer.Detail);
+    }
+
+    [Fact]
+    public async Task Min_macro_grid_wins_over_the_legacy_macro_grid_field()
+    {
+        WriteManifest(NewPluginFolder("BothNames"), minMacroGrid: "1.5.0", macroGrid: "1.0.0");
+
+        await _manager.StartAsync(CancellationToken.None);
+
+        var plugin = Assert.Single(_manager.Plugins);
+        Assert.Equal(PluginLoadStatus.Incompatible, plugin.Status);
+        Assert.Contains("1.5.0", plugin.Detail);
     }
 
     [Theory]
@@ -143,7 +170,7 @@ public sealed class PluginManagerTests : IAsyncLifetime
     [InlineData("^1.0.0")]
     public async Task A_legacy_manifest_for_an_older_sdk_must_be_rebuilt(string sdkVersion)
     {
-        WriteManifest(NewPluginFolder("LegacyOld"), macroGrid: null, sdkVersion: sdkVersion, minServerVersion: "0.1.0");
+        WriteManifest(NewPluginFolder("LegacyOld"), minMacroGrid: null, sdkVersion: sdkVersion, minServerVersion: "0.1.0");
 
         await _manager.StartAsync(CancellationToken.None);
 
@@ -386,7 +413,7 @@ public sealed class PluginManagerTests : IAsyncLifetime
     private static void WriteJsPlugin(string dir, string id, string[] permissions, string script)
     {
         var list = string.Join(", ", permissions.Select(p => "\"" + p + "\""));
-        var manifest = "{ \"id\": \"" + id + "\", \"name\": \"Js\", \"version\": \"1.0.0\", \"macroGrid\": \"1.0.0\", "
+        var manifest = "{ \"id\": \"" + id + "\", \"name\": \"Js\", \"version\": \"1.0.0\", \"minMacroGrid\": \"1.0.0\", "
             + "\"entry\": \"index.js\", \"kind\": \"js\", \"permissions\": [" + list + "] }";
         File.WriteAllText(Path.Combine(dir, "plugin.json"), manifest);
         File.WriteAllText(Path.Combine(dir, "index.js"), script);
@@ -399,12 +426,13 @@ public sealed class PluginManagerTests : IAsyncLifetime
         Assert.True(condition(), "Condition was not met in time.");
     }
 
-    private static void WriteManifest(string dir, string? id = null, string? macroGrid = "1.0.0", string? sdkVersion = null, string? minServerVersion = null, string kind = "csharp", string entry = "Plugin.dll", string? icon = null)
+    private static void WriteManifest(string dir, string? id = null, string? minMacroGrid = "1.0.0", string? macroGrid = null, string? sdkVersion = null, string? minServerVersion = null, string kind = "csharp", string entry = "Plugin.dll", string? icon = null)
     {
         var iconLine = icon is null ? "" : $$"""
           ,"icon": "{{icon}}"
         """;
-        var compatibilityLines = (macroGrid is null ? "" : $"\"macroGrid\": \"{macroGrid}\",\n")
+        var compatibilityLines = (minMacroGrid is null ? "" : $"\"minMacroGrid\": \"{minMacroGrid}\",\n")
+            + (macroGrid is null ? "" : $"\"macroGrid\": \"{macroGrid}\",\n")
             + (sdkVersion is null ? "" : $"\"sdkVersion\": \"{sdkVersion}\",\n")
             + (minServerVersion is null ? "" : $"\"minServerVersion\": \"{minServerVersion}\",\n");
         var json = $$"""

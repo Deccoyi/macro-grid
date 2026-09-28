@@ -28,7 +28,7 @@ internal sealed class PluginLoadContext(string pluginId, string entryDllPath) : 
         // Hand out the host's own copy whatever version the plugin was built against. Returning null here would leave
         // the version check to the default context, and a single-file publish refuses a plugin built against an older
         // patch version of the SDK (0.3.0.0 requested, 0.3.1.0 present), and the same holds across major
-        // versions (0.4.0.0 requested, 1.0.0.0 present). Whether a plugin is compatible is decided by the macroGrid version in
+        // versions (0.4.0.0 requested, 1.0.0.0 present). Whether a plugin is compatible is decided by the minMacroGrid version in
         // its manifest (PluginCompatibility), not by the assembly version.
         if (assemblyName.Name == SharedAssembly.GetName().Name)
             return SharedAssembly;
