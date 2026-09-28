@@ -79,7 +79,7 @@ features:
 
 [Windows ve Android için indirin](/tr/download), ardından [Hızlı başlangıç](/tr/guide/) sayfasını izleyin. Takıldınız mı? [Sorun giderme](/tr/guide/troubleshooting) sayfasına bakın.
 
-::: warning Alfa, tamamen yapay zekâ tarafından yazıldı, kullanım riski size ait
+::: warning Beta, tamamen yapay zekâ tarafından yazıldı, kullanım riski size ait
 Bu projenin tüm kodu, tasarımı, dokümantasyonu ve görselleri, bu site dahil, bir yapay zekâ asistanı tarafından üretildi. Hiçbir şey bir insan tarafından satır satır gözden geçirilmedi veya güvenlik denetiminden geçmedi. Özellikler ve dosya biçimleri hâlâ değişebilir. Güvendiğiniz bir ev veya ofis ağı için tasarlanmıştır, internet için değil. Önce [Güvenlik](/tr/guide/security) sayfasını okuyun.
 :::
 

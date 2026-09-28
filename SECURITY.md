@@ -2,7 +2,7 @@
 
 ## What to expect from this software
 
-This software was created entirely by AI tools, is alpha-stage and has not been independently audited or security-reviewed (see the [README](README.md)). It is provided "as is", without warranty of any kind, and the authors and contributors accept no responsibility or liability for it, including for security problems and their consequences (see the [MIT license](LICENSE)). You use it entirely at your own risk. Security reports are welcome, but they create no obligation to fix and are not a promise of support or of a response time.
+This software was created entirely by AI tools, is beta-stage and has not been independently audited or security-reviewed (see the [README](README.md)). It is provided "as is", without warranty of any kind, and the authors and contributors accept no responsibility or liability for it, including for security problems and their consequences (see the [MIT license](LICENSE)). You use it entirely at your own risk. Security reports are welcome, but they create no obligation to fix and are not a promise of support or of a response time.
 
 ### Threat model: a trusted local network only
 
@@ -60,4 +60,4 @@ security advisory on this repository and under "Security" in the changelog.
 ## Supported versions
 
 There is no support period and no promise of fixes: Macro Grid is a hobby project maintained in spare time. If a fix is made, it only goes
-into a new release; older versions are not updated. Before the first release, fixes land on the `dev` branch. The project is in alpha, so expect changes.
+into a new release; older versions are not updated. Before the first release, fixes land on the `dev` branch. The project is in beta, so expect changes.

@@ -1,6 +1,6 @@
 # Getting help
 
-Macro Grid is alpha software made by one maintainer, so answers can take a few days. This page says where to go.
+Macro Grid is beta software made by one maintainer, so answers can take a few days. This page says where to go.
 
 | You want to | Go to |
 |---|---|

@@ -2,7 +2,7 @@
 
 Macro Grid, **güvendiğiniz bir ev ya da ofis ağı** için tasarlanmıştır. İnternete açık kullanım için sağlamlaştırılmamıştır.
 
-::: warning Alfa, tamamen yapay zekâ tarafından yazıldı, garanti yok
+::: warning Beta, tamamen yapay zekâ tarafından yazıldı, garanti yok
 Tüm kod, tasarım ve dokümantasyon bir yapay zekâ asistanı tarafından oluşturulmuştur; bir insan tarafından satır satır incelenmemiş ve güvenlik denetiminden geçirilmemiştir. Yazılım "olduğu gibi" sunulur; hiçbir garanti ya da sorumluluk yoktur. Yazılımı tamamen kendi sorumluluğunuzda kullanırsınız: hangi cihazları eşleştireceğiniz, hangi eklentileri kuracağınız ve hangi düğmelere basacağınız size aittir. Yükleyici ve uygulama, [kullanıcı sözleşmesini](https://github.com/Deccoyi/macro-grid/blob/main/installer/license-agreement.txt) kabul etmenizi ister.
 :::
 

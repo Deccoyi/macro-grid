@@ -79,7 +79,7 @@ features:
 
 [Download for Windows and Android](/download), then follow the [Quick start](/guide/). Stuck? See [Troubleshooting](/guide/troubleshooting).
 
-::: warning Alpha, AI-generated, at your own risk
+::: warning Beta, AI-generated, at your own risk
 All code, design, documentation and artwork of this project, including this site, were created by an AI assistant. Nothing has been reviewed line by line by a human or security-audited. Features and file formats can still change. It is meant for a home or office network you trust, not the internet. Read [Security](/guide/security) first.
 :::
 

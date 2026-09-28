@@ -25,7 +25,7 @@ Düzenleyici Türkçe (varsayılan) veya İngilizce. Telefon uygulaması ve tara
 Evet, JavaScript veya C# ile. Bkz. [eklenti dokümantasyonu](https://deccoyi.github.io/macro-grid-plugin/).
 
 ## Güvenli mi?
-Yapay zekâ tarafından yazılmış bir alfa yazılımıdır ve güvenilir bir ağ için tasarlanmıştır. [Güvenlik](/tr/guide/security) sayfasını okuyun.
+Yapay zekâ tarafından yazılmış bir beta yazılımıdır ve güvenilir bir ağ için tasarlanmıştır. [Güvenlik](/tr/guide/security) sayfasını okuyun.
 
 ## Hatayı nereye bildirebilirim?
 [GitHub Sorunlar (Issues)](https://github.com/Deccoyi/macro-grid/issues). `%AppData%\MacroGrid\logs\` içindeki günlükleri ekleyin.

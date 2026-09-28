@@ -2,7 +2,7 @@ import { defineLoader } from 'vitepress'
 
 export interface ServerRelease {
   tag: string
-  /** Tag without the "server-v" prefix and without the "-alpha" suffix. */
+  /** Tag without the "server-v" prefix and without the "-alpha" or "-beta" suffix. */
   version: string
   prerelease: boolean
   publishedAt: string
@@ -37,7 +37,7 @@ export default defineLoader({
         if (!exe) continue
         out.push({
           tag: r.tag_name,
-          version: r.tag_name.slice('server-v'.length).replace(/-alpha$/i, ''),
+          version: r.tag_name.slice('server-v'.length).replace(/-(alpha|beta)$/i, ''),
           prerelease: !!r.prerelease,
           publishedAt: r.published_at ?? r.created_at ?? '',
           notesUrl: r.html_url,

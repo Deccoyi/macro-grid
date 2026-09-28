@@ -1,7 +1,7 @@
 # Macro Grid
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Status: alpha](https://img.shields.io/badge/status-alpha-orange.svg)](docs/roadmap.md)
+[![Status: beta](https://img.shields.io/badge/status-beta-yellow.svg)](docs/roadmap.md)
 [![CI](https://github.com/Deccoyi/macro-grid/actions/workflows/ci.yml/badge.svg)](https://github.com/Deccoyi/macro-grid/actions/workflows/ci.yml)
 [![Platform: Windows](https://img.shields.io/badge/platform-Windows%2010%2F11-lightgrey.svg)](#requirements)
 
