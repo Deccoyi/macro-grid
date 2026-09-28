@@ -2,7 +2,7 @@
 
 Make your phone show a media-player deck whenever the player is in front, and go back to your normal deck afterwards. Background: [Auto-switching by app](/guide/auto-switch).
 
-1. Create a profile called `Media` (**New profile** in the header) with a few buttons: play/pause, next, previous (use **Shortcut** with the media keys or the player's own hotkeys).
+1. Create a profile called `Media` (the **New profile** button under the Hierarchy) with a few buttons: play/pause, next, previous (use **Shortcut** with the media keys or the player's own hotkeys).
 2. With `Media` selected, open **Auto-switch rules** and click **Pick from running apps…**. Start your player first so it is in the list, or type its executable name, for example `Player.exe`, and click **Add**.
 3. Open **Pairing** and switch on **Follow active window** for your phone.
 4. **Save**.

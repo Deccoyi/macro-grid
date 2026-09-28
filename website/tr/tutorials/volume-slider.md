@@ -4,8 +4,8 @@ Windows ana ses düzeyini ayarlayan ve ses başka bir yerden değiştiğinde onu
 
 **Gerekenler:** eşleşmiş bir cihaz (bkz. [Cihaz eşleştir](/tr/guide/pairing)).
 
-1. Düzenleyicide **Widget ekle**'ye tıklayın ve **Slider**'ı seçin. Geniş olacak şekilde yeniden boyutlandırın (tam bir satır iyi çalışır).
-2. Denetçi panelinde **Min**'i `0`, **Maks**'ı `100` ve **Adım**'ı `1` yapın. `Ses` gibi bir üst yazı verin.
+1. Düzenleyicide **Araç Kutusu**'nda **Slider**'a tıklayın. Geniş olacak şekilde yeniden boyutlandırın (tam bir satır iyi çalışır).
+2. Özellikler panelinde **Min**'i `0`, **Maks**'ı `100` ve **Adım**'ı `1` yapın. `Ses` gibi bir üst yazı verin.
 3. **Konumu gösteren değişken** altında `system.audio.master` seçin. Slider artık geçerli ses düzeyini gösterir ve değiştiğinde hareket eder.
 4. **Aksiyonlar** altında, **Değer değişti** olayında **+ Aksiyon ekle**'ye tıklayın ve **Ana ses seviyesi**'ni seçin. Slider'ın değerini uygular.
 5. **Kaydet**'e tıklayın.

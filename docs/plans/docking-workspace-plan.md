@@ -1,6 +1,6 @@
 # Docking workspace for the editor
 
-**Status:** planned, not started. **Repositories:** `macro-grid` only (`editor/` and `src/MacroGrid.Host`, `src/MacroGrid.Core`).
+**Status:** built in 1.2.0 (the docking workspace, tool windows, auto-hide rail, tabbed document area, saved layouts and the Error List). The Error List has no producer yet, see `../roadmap.md`. User guide: `website/guide/editor.md`. **Repositories:** `macro-grid` only (`editor/` and `src/MacroGrid.Host`, `src/MacroGrid.Core`).
 No change to the plugin SDK, the WebSocket protocol or the phone app.
 
 Related plans, built after this one: [editor-edit-commands-plan.md](editor-edit-commands-plan.md) (Edit menu, clipboard, undo/redo,
