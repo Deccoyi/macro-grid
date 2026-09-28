@@ -1,6 +1,6 @@
 # Actions and macros
 
-An action is something the PC does when a widget event fires. You add them in the **Actions** section of the inspector with **+ Add action**, which opens a searchable, categorized picker.
+An action is something the PC does when a widget event fires. You add them in the **Actions** section of the Properties panel with **+ Add action**, which opens a searchable, categorized picker.
 
 ## Built-in actions
 
