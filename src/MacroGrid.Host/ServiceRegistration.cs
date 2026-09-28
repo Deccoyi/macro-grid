@@ -33,6 +33,7 @@ internal static class ServiceRegistration
         // plugin's own secret are protected the same way, by one DpapiSecretProtector instance.
         services.AddSingleton<ISecretProtector, DpapiSecretProtector>();
         services.AddSingleton(new ProfileStore(dataDir));
+        services.AddSingleton(new ProfileTreeStore(dataDir));
         var preferencesStore = new PreferencesStore(dataDir);
         AppLanguage.Current = preferencesStore.Get().Language;
         preferencesStore.Changed += () => AppLanguage.Current = preferencesStore.Get().Language;

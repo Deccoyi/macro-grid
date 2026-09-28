@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { api } from "../api/client";
-import type { AppPreferences, PreviewProfileInfo } from "../api/types";
+import type { AppPreferences, DockLayoutProfile, PreviewProfileInfo } from "../api/types";
 
 export type Theme = "dark" | "light";
 export type Language = "tr" | "en";
@@ -16,6 +16,8 @@ const DEFAULTS: AppPreferences = {
   autostartMode: "tray",
   checkForUpdates: true,
   includePreReleases: true,
+  dockLayoutJson: "",
+  dockLayoutProfiles: [],
 };
 
 interface PreferencesContextValue {
@@ -40,6 +42,14 @@ interface PreferencesContextValue {
   setCheckForUpdates: (enabled: boolean) => void;
   includePreReleases: boolean;
   setIncludePreReleases: (enabled: boolean) => void;
+  /** True once the initial GET /api/preferences has resolved (or failed) — callers that must not act on
+   * still-default values (like restoring the saved dock layout) wait for this. */
+  loaded: boolean;
+  dockLayoutJson: string;
+  setDockLayoutJson: (json: string) => void;
+  dockLayoutProfiles: DockLayoutProfile[];
+  saveDockLayoutProfile: (name: string, layoutJson: string) => void;
+  deleteDockLayoutProfile: (id: string) => void;
 }
 
 const PreferencesContext = createContext<PreferencesContextValue | null>(null);
@@ -58,16 +68,19 @@ const CHANNEL_NAME = "macro-grid-preferences";
 export function PreferencesProvider({ children }: { children: ReactNode }) {
   const [prefs, setPrefs] = useState<AppPreferences>(DEFAULTS);
   const loaded = useRef(false);
+  const [loadedState, setLoadedState] = useState(false);
   const [savedLanguage, setSavedLanguage] = useState<Language>(DEFAULTS.language);
   const channel = useRef<BroadcastChannel | null>(null);
 
   const refetch = useCallback(() => {
     api.getPreferences().then((p) => {
       loaded.current = true;
+      setLoadedState(true);
       setPrefs(p);
       setSavedLanguage(p.language);
     }).catch(() => {
       loaded.current = true;
+      setLoadedState(true);
     });
   }, []);
 
@@ -150,6 +163,24 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
     [prefs, persist],
   );
 
+  const setDockLayoutJson = useCallback(
+    (dockLayoutJson: string) => persist({ ...prefs, dockLayoutJson }),
+    [prefs, persist],
+  );
+
+  const saveDockLayoutProfile = useCallback(
+    (name: string, layoutJson: string) => {
+      const profile: DockLayoutProfile = { id: `layout-${Date.now().toString(36)}`, name, layoutJson };
+      persist({ ...prefs, dockLayoutProfiles: [...prefs.dockLayoutProfiles, profile] });
+    },
+    [prefs, persist],
+  );
+
+  const deleteDockLayoutProfile = useCallback(
+    (id: string) => persist({ ...prefs, dockLayoutProfiles: prefs.dockLayoutProfiles.filter((p) => p.id !== id) }),
+    [prefs, persist],
+  );
+
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", prefs.theme);
   }, [prefs.theme]);
@@ -181,8 +212,18 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
       setCheckForUpdates,
       includePreReleases: prefs.includePreReleases,
       setIncludePreReleases,
+      loaded: loadedState,
+      dockLayoutJson: prefs.dockLayoutJson,
+      setDockLayoutJson,
+      dockLayoutProfiles: prefs.dockLayoutProfiles,
+      saveDockLayoutProfile,
+      deleteDockLayoutProfile,
     }),
-    [prefs, savedLanguage, setTheme, setLanguage, addPreviewProfile, removePreviewProfile, setInspectorSectionCollapsed, setDefaultProfileId, setLaunchMode, setAutostartMode, setCheckForUpdates, setIncludePreReleases],
+    [
+      prefs, savedLanguage, loadedState, setTheme, setLanguage, addPreviewProfile, removePreviewProfile,
+      setInspectorSectionCollapsed, setDefaultProfileId, setLaunchMode, setAutostartMode, setCheckForUpdates,
+      setIncludePreReleases, setDockLayoutJson, saveDockLayoutProfile, deleteDockLayoutProfile,
+    ],
   );
 
   return <PreferencesContext.Provider value={value}>{children}</PreferencesContext.Provider>;

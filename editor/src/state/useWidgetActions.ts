@@ -1,14 +1,14 @@
 import { useCallback } from "react";
 import type { ActionBinding, Widget, WidgetType } from "@macro/renderer";
 import { api } from "../api/client";
-import { findFreeCell } from "../grid/collision";
+import { findFreeCell, findFreeCellsForBatch } from "../grid/collision";
 import { useT } from "../i18n/I18nContext";
 import { tempId } from "./tempId";
 import type { ProfileDocument } from "./useProfileDocument";
 
 /** Widget-level edits on the current page: add, update, move/resize, action bindings, delete, duplicate, move/copy. */
 export function useWidgetActions({
-  profile, currentPage, selectedIds, selectedWidgets, mutate, mutatePage, setSelectedIds, setError,
+  profile, currentPage, selectedIds, selectedWidgets, mutate, mutatePage, markPageDirty, setSelectedIds, setError,
 }: ProfileDocument) {
   const { t } = useT();
 
@@ -108,6 +108,8 @@ export function useWidgetActions({
           }
           return draft;
         });
+        markPageDirty(targetPageId);
+        if (mode === "move") markPageDirty(currentPage.id);
       } else {
         const target = await api.getProfile(targetProfileId);
         const targetPage = target.pages.find((p) => p.id === targetPageId);
@@ -121,12 +123,31 @@ export function useWidgetActions({
       }
       setSelectedIds([]);
     },
-    [currentPage, profile, mutate, mutatePage, setSelectedIds],
+    [currentPage, profile, mutate, mutatePage, markPageDirty, setSelectedIds],
+  );
+
+  /** Ctrl+V of widgets copied with Ctrl+C (see clipboard.ts) — onto the current page, whichever page or
+   * profile that is. Reserves a free cell for every pasted widget before placing any of them (so two
+   * pasted widgets never land on each other) and refuses the whole paste, with a warning, if even one of
+   * them has nowhere to go — a partial paste would be more confusing than none. */
+  const pasteWidgets = useCallback(
+    (widgets: Widget[]) => {
+      if (!currentPage || widgets.length === 0) return;
+      const cells = findFreeCellsForBatch(widgets.map((w) => ({ w: w.w, h: w.h })), currentPage.widgets, currentPage.cols, currentPage.rows);
+      if (!cells) {
+        setError(t("state.noFreeCell"));
+        return;
+      }
+      const clones = widgets.map((w, i) => ({ ...structuredClone(w), id: tempId("widget"), x: cells[i]!.x, y: cells[i]!.y }));
+      mutatePage(currentPage.id, (p) => p.widgets.push(...clones));
+      setSelectedIds(clones.map((c) => c.id));
+    },
+    [currentPage, mutatePage, setError, setSelectedIds, t],
   );
 
   return {
     addWidget, updateWidget, setWidgetRect, setWidgetActions,
-    deleteWidget, deleteSelectedWidgets, duplicateSelectedWidgets, moveOrCopyWidgets,
+    deleteWidget, deleteSelectedWidgets, duplicateSelectedWidgets, moveOrCopyWidgets, pasteWidgets,
   };
 }
 
