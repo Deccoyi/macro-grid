@@ -64,8 +64,8 @@ on the maintainer's PC, and `examples/third-party-release.yml` in that repositor
 7. Tag `main` and push the tag: `git tag server-vX.Y.Z-beta` then `git push origin server-vX.Y.Z-beta` (the tag's version must equal `<Version>`; both workflows refuse it otherwise).
 8. The tag starts two workflows:
    - `Release` (`.github/workflows/release.yml`) runs the tests, stops if a shipped dependency has a known vulnerability
-     (`scripts/check-vulnerabilities.ps1`, the same check CI runs), runs `scripts/publish.ps1`, writes the SBOM files
-     (`scripts/sbom.ps1`, `MacroGrid-Server-<version>-*.cdx.json`, attached to the release), zips the folder, builds
+     (`scripts/check-vulnerabilities.ps1`, the same check CI runs), runs `scripts/publish.ps1`, writes the SBOM
+     (`scripts/sbom.ps1`, `MacroGrid-Server-<version>.cdx.json`, one file merged from the .NET, editor, deck and renderer parts, attached to the release), zips the folder, builds
      `MacroGrid-Setup-<version>.exe` with Inno Setup (on every tag; the updater downloads exactly this file name) and attaches both to a **draft**
      GitHub Release whose body is the changelog section from step 3. If the installer is missing from the draft, the app offers the release page
      instead of "Install now".
