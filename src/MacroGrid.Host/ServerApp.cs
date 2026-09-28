@@ -1,7 +1,9 @@
 using MacroGrid.Core.Devices;
 using MacroGrid.Core.Plugins;
 using MacroGrid.Core.Profiles;
+using MacroGrid.Core.Security;
 using MacroGrid.Core.Sessions;
+using MacroGrid.Windows.Security;
 using MacroGrid.Host.Ui;
 using MacroGrid.Host.Api;
 using MacroGrid.Host.Logging;
@@ -14,9 +16,17 @@ internal static class ServerApp
 {
     public const int Port = 9820;
 
+    /// <summary><c>wss://</c>/<c>https://</c>, next to the plain <see cref="Port"/>. A Kestrel listener is either plain or
+    /// TLS, not both, so a second port is the only way to add TLS without breaking clients that only speak plain.</summary>
+    public const int TlsPort = 9821;
+
     public static WebApplication Build(string[] args, IUiDialogService dialogs, IUiWindowService windows)
     {
         var dataDir = ProfileStore.DefaultDataDir;
+
+        // Needed before the DI container exists (Kestrel's HTTPS endpoint is configured below); the same
+        // instance is registered into the container afterwards instead of building a second one.
+        var certificates = new ServerCertificateProvider(dataDir, new DpapiSecretProtector());
 
         // A WinExe may be launched from any working directory (autostart, shortcut), so pin the content root.
         var builder = WebApplication.CreateBuilder(new WebApplicationOptions
@@ -25,13 +35,18 @@ internal static class ServerApp
             ContentRootPath = AppContext.BaseDirectory,
         });
 
-        builder.WebHost.ConfigureKestrel(k => k.ListenAnyIP(Port));
+        builder.WebHost.ConfigureKestrel(k =>
+        {
+            k.ListenAnyIP(Port);
+            k.ListenAnyIP(TlsPort, lo => lo.UseHttps(certificates.Certificate));
+        });
 
         builder.Logging.ClearProviders();
         builder.Logging.AddDebug();
         builder.Logging.AddProvider(new FileLoggerProvider(Path.Combine(dataDir, "logs")));
 
         builder.Services
+            .AddSingleton(certificates)
             .AddHostStores(dataDir)
             .AddBuiltInActions(dialogs, windows)
             .AddVariablesAndStatus()
