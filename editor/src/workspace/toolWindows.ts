@@ -7,7 +7,7 @@ import { PropertiesToolWindow } from "../panels/PropertiesToolWindow";
 import { ToolboxToolWindow } from "../panels/ToolboxToolWindow";
 
 /** One dockable tool window. Adding a new one is: a content component in panels/, one entry here,
- * two i18n keys — see docs/plans/docking-workspace-plan.md ("Adding a tool window"). Panels never know
+ * two i18n keys — see docs/design/docking-workspace.md ("Adding a tool window"). Panels never know
  * how they're docked; DockWorkspace alone decides where a panel is. */
 export interface ToolWindowDefinition {
   /** Stable and persisted: never rename one that has shipped. */

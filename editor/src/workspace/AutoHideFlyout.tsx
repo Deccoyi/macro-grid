@@ -4,7 +4,7 @@ import { useT } from "../i18n/I18nContext";
 import { getPanelNode } from "./PanelHost";
 import { toolWindowById } from "./toolWindows";
 
-/** The slide-out panel an auto-hide rail tab opens — docs/plans/docking-workspace-plan.md ("Pin and
+/** The slide-out panel an auto-hide rail tab opens — docs/design/docking-workspace.md ("Pin and
  * auto-hide"): sized as the panel was when docked, 1 px border-strong edge, no shadow, closes on Escape
  * or a click outside. Attaches the SAME portal node PanelHost created for this tool window (not a
  * remount), so its content's state survives moving in and out of auto-hide. */

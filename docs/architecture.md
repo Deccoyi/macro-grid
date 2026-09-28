@@ -161,7 +161,12 @@ A device can follow the foreground window on the PC: [design/auto-profile-switch
 
 Macro Grid is meant for a home or office network you trust. It is not hardened for the open internet.
 
-- **Nothing is encrypted.** Traffic is plain `ws://` and `http://` on the local network. The phone app allows cleartext for this reason.
+- **The connection can be encrypted.** On first start the server makes itself a self-signed certificate (`ServerCertificateProvider`,
+  ECDSA P-256, private key DPAPI-protected) and serves `wss://`/`https://` on a second port, 9821, next to the plain one, 9820 — both
+  stay open. The pairing QR carries the certificate's SHA-256 fingerprint (`fp`); a phone app that understands it pairs over
+  `wss://` from then on and pins that fingerprint, so no certificate authority is needed. A phone app that doesn't, and the browser
+  deck (which cannot pin a fingerprint at all), keep using plain `ws://`/`http://`. A preference to turn the plain ports off is
+  not built yet; see [roadmap.md](roadmap.md#next).
 - **The server listens on all network interfaces** on port 9820. Do not forward the port to the internet, and allow it in the firewall only for
   private networks (the installer does this).
 - **Pairing protects the WebSocket.** A device must present the PIN once, then a token. Tokens are stored in `devices.json` encrypted with Windows DPAPI for the current user (`ISecretProtector`, `DpapiSecretProtector`); a file from an older version is converted on load, and a token that cannot be decrypted (another user or PC) drops that device with a `Security:` warning.
@@ -174,12 +179,17 @@ Macro Grid is meant for a home or office network you trust. It is not hardened f
   never a PIN or a token. A block is logged once, not per attempt, so a flood cannot fill the log. The daily files are kept 14 days, capped at
   5 MB a day and 20 MB in total (`LogRetention`); the cap also bounds what a flood of connections can write.
 - **The editor API (`/api`) is only for this computer.** It can read the pairing PIN, install and approve plugins and change profiles, so the
-  server answers `403` to any `/api` request that does not come from the machine it runs on. The static editor and deck pages themselves are
-  served to the network but do nothing without the API and the WebSocket.
+  server answers `403` to any `/api` request that does not come from the machine it runs on (`LoopbackGuard`), and `403` to a request whose
+  `Origin` header is present and is not the editor's own (`OriginGuard`) — a page open in the person's regular browser also connects from this
+  PC, so the loopback check alone is not enough. A request with no `Origin` header (curl, a native app) is unaffected. The static editor and
+  deck pages themselves are served to the network but do nothing without the API and the WebSocket.
 - **Actions run as you.** A paired device can press keys, type text and start programs on the PC, so pair only devices you trust and revoke the
   ones you do not.
 - **C# plugins have full trust** and can do anything the server can. Install only ones you trust. JavaScript plugins are sandboxed and need
-  approved permissions.
+  approved permissions. A plugin can protect a secret value of its own (for example a password field) with `IPluginHost.Secrets`
+  (DPAPI-backed, same trust boundary as the device tokens); a plugin author has to opt in and call it, the host does not enforce it.
+- **Uninstalling can remove your data.** The uninstaller asks whether to also delete `%AppData%\MacroGrid` (profiles, paired devices, plugins,
+  logs); default is no, and it never asks on a silent uninstall.
 - **The server checks for updates on its own, once every few hours.** This is the one connection it makes without being asked, and it is on by
   default (Preferences, General, "Check for updates automatically"; off stops the schedule, "Check for updates" still works by hand). It reads
   the public releases list of the project on `api.github.com` (HTTPS, an ETag so an unchanged list costs nothing, a `User-Agent` with the app

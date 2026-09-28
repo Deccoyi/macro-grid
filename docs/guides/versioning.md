@@ -87,13 +87,14 @@ Before 1.0.0 a manifest carried `sdkVersion` (a caret range) and `minServerVersi
 
 The phone app and the browser deck talk to the server over a WebSocket (port 9820) with JSON messages. Compatibility works like this:
 
-- `hello` and `welcome` carry `clientVersion` and `serverVersion`. They are informational; nothing checks them yet.
+- `hello` and `welcome` carry `clientVersion` and `serverVersion`.
 - Optional features are negotiated. A client lists what it understands in `hello.capabilities` (`assets`, `layout.patch`, see
   `ClientCapabilities.cs`), and the server sends the older, plain form to a client that lists nothing. This is how a newer server keeps
   working with an older phone app and the browser deck. New optional features should be added the same way.
 - There is no `protocolVersion` number. Changing the meaning of an existing message or field is a breaking change (see above).
-- The phone app keeps its own number. Which Macro Grid it needs is meant to be recorded in its `package.json` (`macroGrid`) and checked when
-  `welcome` arrives; this is planned in [../plans/version-unification-plan.md](../plans/version-unification-plan.md).
+- The phone app keeps its own number. Which Macro Grid it needs is recorded in its `package.json` (`macroGrid`, `macro-grid-client`)
+  and checked when `welcome` arrives (`src/ws/connection.ts`): an older server than required shows "update the computer", a
+  different MAJOR shows "update the app".
 
 ## Releasing
 

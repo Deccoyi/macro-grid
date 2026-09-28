@@ -3,8 +3,8 @@
 **Status:** built in 1.2.0 (the docking workspace, tool windows, auto-hide rail, tabbed document area, saved layouts and the Error List). The Error List has no producer yet, see `../roadmap.md`. User guide: `website/guide/editor.md`. **Repositories:** `macro-grid` only (`editor/` and `src/MacroGrid.Host`, `src/MacroGrid.Core`).
 No change to the plugin SDK, the WebSocket protocol or the phone app.
 
-Related plans, built after this one: [editor-edit-commands-plan.md](editor-edit-commands-plan.md) (Edit menu, clipboard, undo/redo,
-keyboard shortcuts) and [hierarchy-tree-and-folders-plan.md](hierarchy-tree-and-folders-plan.md) (the Hierarchy panel's content).
+Related documents: [hierarchy-tree-and-folders.md](hierarchy-tree-and-folders.md) (the Hierarchy panel's content, built on this one) and
+[editor-edit-commands-plan.md](../plans/editor-edit-commands-plan.md) (Edit menu, clipboard, undo/redo, keyboard shortcuts — planned, not started).
 
 Visual reference: [docking-workspace-mockups/](docking-workspace-mockups/) holds three static HTML pages (open them in a browser):
 `default-layout.html`, `custom-layout.html` (tabbed group, auto-hide, floating panel) and `component-states.html` (header, tab, splitter,

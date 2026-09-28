@@ -1,6 +1,16 @@
 # Version unification plan (1.0.0 baseline)
 
-Status (2026-09-26): sections 1, 2 and 5 are done and released (Macro Grid and SDK 1.0.0 and 1.0.1, tags `server-v1.0.0-beta` and `server-v1.0.1-beta`, SDK on NuGet). Sections 3 (plugins) and 4 (phone app) are merged into `dev` of their repositories; their `dev` to `main` pull requests and the plugin and app releases are waiting for the owner. Deviation from section 3: the plugin index stays `formatVersion` 1 (a server before 1.0.0 refuses any other number) and carries `macroGrid` next to the legacy fields.
+Status (checked 2026-09-28): **done, all four sections released.** Macro Grid and the SDK are past the 1.0.0 baseline (now 1.2.1,
+tags `server-v1.0.0-beta` through `server-v1.2.1-beta`, SDK on NuGet). Every official plugin carries `macroGrid` and is released
+on `main` (`WebSocketBridge For OBS` 0.3.0 `macroGrid: 1.1.0`, SoundBoard 0.1.1, PLCIcons 0.1.3, HelloJs 0.1.1, all `macroGrid: 1.0.0`;
+tags `plugin-obs-v0.3.0`, `plugin-soundboard-v0.1.1`, `plugin-plc-icons-v0.1.3`, `plugin-hellojs-v0.1.1`). The phone app carries
+`"macroGrid": "1.0.0"` in `package.json`, released on `main` (tag `client-v0.3.0`). Deviation from section 3: the plugin index stays
+`formatVersion` 1 (a server before 1.0.0 refuses any other number) and carries `macroGrid` next to the legacy fields.
+
+**One loose end, not part of this plan's scope:** `macro-grid-plugin`'s `dev` branch still has the pre-rename, pre-0.3.0
+`macrogrid-index.json` entry for the OBS plugin (`main`'s is current — the store site builds from `main`, so nothing public is
+wrong). Worth a `main` → `dev` sync before the next plugin release, so `update-plugin-index.ps1` does not regenerate the index
+from a stale base.
 
 **Repositories:** `macro-grid` (server, SDK, loader, editor, central release docs), `macro-grid-plugin` (manifests, build check, release script, store site, docs), `macro-grid-client` (server-version check, docs). The release skill (`~/.claude/skills/release/SKILL.md`, outside the repositories) is updated too.
 

@@ -125,7 +125,7 @@ export interface Profile {
    * docs/design/auto-profile-switch.md. Ignored by the renderer itself. */
   appMatches?: AppMatch[];
   /** Editor-only: how this profile's pages are arranged into folders in the Hierarchy tree — see
-   * docs/plans/hierarchy-tree-and-folders-plan.md. `pages` stays the one place page data lives; this only
+   * docs/design/hierarchy-tree-and-folders.md. `pages` stays the one place page data lives; this only
    * arranges it. Empty/missing means no arrangement was ever saved (shows flat, in `pages` order).
    * Ignored by the renderer itself and by the phone client. */
   pageTree?: PageTreeNode[];

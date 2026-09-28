@@ -11,7 +11,19 @@ Where the project stands. The server and the SDK are at 1.0.0 and under active d
   assignment (press, long press, double tap), variable insertion, live preview, device list, plugin list, `.msprofile` export and import, preferences (language,
   theme, default profile, start with Windows and what a start does: tray only or open the editor window), automatic profile switching rules, settings windows
   that block the editor while open, a Help window with the disclaimer, the user agreement and all bundled license texts.
+- **Docking workspace and hierarchy tree:** dockable, tabbed, floating and auto-hide tool windows, page tabs, a remembered layout
+  ([design/docking-workspace.md](design/docking-workspace.md)); one tree for every profile and page, with page and profile folders,
+  drag-and-drop, copy/paste and lazily loaded profiles ([design/hierarchy-tree-and-folders.md](design/hierarchy-tree-and-folders.md)).
+  The Error List has no producer yet and plugin-provided tree entries (phase 6) are not started, see "Next" below.
 - **Pairing and devices:** PIN and QR pairing, per-device tokens, a device list with revoke, a profile per device.
+- **Encrypted connection:** the server makes its own certificate and serves `wss://`/`https://` on a second port next to the
+  plain one; the pairing QR carries its fingerprint, so the phone app pins it with no certificate authority needed. Server side
+  in Macro Grid 1.1.0/1.2.0, phone app side (a native WebSocket that checks the fingerprint) in `client-v0.3.0`. The browser
+  deck stays on the plain port, a browser cannot pin a fingerprint.
+- **Plugin secret storage:** `IPluginHost.Secrets` lets a plugin protect a value (DPAPI-backed), so a setting like a password
+  is not stored in plain text; the OBS plugin uses it for its own password.
+- **"Remove my data" on uninstall:** the installer offers to delete `%AppData%\MacroGrid` (profiles, paired devices, plugins,
+  logs), off by default, never asked on a silent uninstall.
 - **Automatic profile switching** by the active window, with a lock on the phone ([design/auto-profile-switch.md](design/auto-profile-switch.md)).
 - **Layout patches and cached assets:** an editor save sends only what changed, icons cross the wire once
   ([design/layout-patch-and-assets.md](design/layout-patch-and-assets.md)).
@@ -38,20 +50,12 @@ The order of the bigger pieces of work, and their plans, are in [plans/README.md
 - **Rename the plugin manifest's `macroGrid` field (priority, name not chosen):** it means "the oldest Macro Grid this plugin runs on", but the name alone
   does not say "minimum", which was not obvious on a first read. Wanted: a clearer name (`minMacroGrid`, `requiresMacroGrid`, or better), with the old
   name still read for at least one MAJOR so existing plugins keep working unchanged. Planned for the version after 1.0.x; no name decided yet.
-- **An encrypted connection:** the phone and the server talk over plain `ws://` and `http://` on the local network, so anyone on the same Wi-Fi
-  can read the traffic and take the pairing PIN or a device token, and then press the buttons of your profiles. Fine on a home network you trust,
-  a real gap on a shared one (cafe, school, office). Wanted: the server makes its own certificate and puts its fingerprint into the pairing QR
-  code, so the phone accepts only that certificate (no certificate authority needed). That covers listening in and impersonating the server. To
-  settle in its plan: the browser deck (a self-signed certificate makes browsers warn, so it may keep a plain option, switched off by default), the
-  phone app's setting that allows plain traffic, a token that never crosses the wire (a signed challenge instead), moving already paired devices
-  over, and keeping older phone apps working while both connections exist (announced as a capability). It needs a plan file first (`plans/`).
-- **Keyboard shortcuts and undo/redo in the editor:** today the editor has no shortcuts beyond Enter and Escape in windows and menus, no undo, and
-  duplicating or copying a widget goes through the right-click menu. Wanted: **Delete**, **Ctrl+C / Ctrl+X / Ctrl+V** and **Ctrl+D** on the selected
-  widgets, with paste working across pages and across profiles (a copy carries its actions and dynamic rules), and **Ctrl+Z / Ctrl+Y** to step back
-  and forward through every change the person makes: moving or resizing a widget, adding, deleting or pasting, renaming, dynamization rules, action
-  and event bindings, and any value in the properties panel (text fields, dropdowns, switches, modes, colors). All of them go on **one shared history
-  stack**, in the order they happened, so Ctrl+Z always undoes the latest change whatever kind it was and Ctrl+Y redoes it. Shortcuts must not fire while a text field has focus, apart from the field's own text undo. They
-  belong in the Edit menu with their key hints too. It needs a plan file before it is built (`plans/`).
+- **The "Allow unencrypted connections" preference:** now that the server and the phone app both support `wss://` (see "Done"
+  above), plain `ws://`/`http://` (port 9820) stay open unconditionally; a preference to turn them off is not built yet. Default
+  on for now (the browser deck cannot use `wss://` at all, and older paired phones have no TLS support), default off starting
+  the next MAJOR version once both are settled. See [plans/security-hardening-plan.md](plans/security-hardening-plan.md), part A.
+- **Keyboard shortcuts and undo/redo in the editor:** right-click Undo/Redo/Cut/Copy/Paste/Duplicate/Delete, an Edit menu, one shared undo/redo
+  history stack, standard Windows shortcuts. Has a plan: [plans/editor-edit-commands-plan.md](plans/editor-edit-commands-plan.md).
 - **A branded installer:** today the setup uses the plain modern wizard style with Inno Setup's default pictures and no icon of its own. Wanted: the
   Macro Grid logo and the product colors. What the setup tool can do natively: an icon for the setup file and the uninstaller (`SetupIconFile`, from
   `src/MacroGrid.Host/app.ico`), the large picture on the welcome and finished pages (`WizardImageFile`), the small logo in the corner of the
@@ -81,7 +85,7 @@ The order of the bigger pieces of work, and their plans, are in [plans/README.md
   catalog ever tracks them. Needs deciding what's worth adding to `macrogrid-index.json` (author-supplied vs. computed by the
   release workflow) versus what stays editor-only presentation, since every new field is something plugin authors have to
   fill in and the host has to validate and cap. It needs a plan file first (`plans/`).
-- **Plugins feeding the editor's Error List panel:** the docking workspace's Error List (`docs/plans/docking-workspace-plan.md`) is wired up but has
+- **Plugins feeding the editor's Error List panel:** the docking workspace's Error List (`docs/design/docking-workspace.md`) is wired up but has
   no producer yet — it only ever shows "no problems". The status bar used to be where a plugin's own errors/warnings surfaced (`StatusEntry.level`
   `Warning`/`Error`); the Error List should take over that role instead, since it's a proper list with filtering and severity counts rather than a
   single status-bar item. Needs an SDK addition (a way for a plugin to report a diagnostic, not just a status-bar entry) — planned for whenever the

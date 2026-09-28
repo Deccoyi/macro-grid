@@ -1,8 +1,8 @@
 # Editor icons
 
 The icon list for the editor's docking workspace, Hierarchy tree, Error List, Toolbox and edit menus
-([../plans/docking-workspace-plan.md](../plans/docking-workspace-plan.md), [../plans/editor-edit-commands-plan.md](../plans/editor-edit-commands-plan.md),
-[../plans/hierarchy-tree-and-folders-plan.md](../plans/hierarchy-tree-and-folders-plan.md)). The rules come from
+([../design/docking-workspace.md](../design/docking-workspace.md), [../plans/editor-edit-commands-plan.md](../plans/editor-edit-commands-plan.md),
+[../design/hierarchy-tree-and-folders.md](../design/hierarchy-tree-and-folders.md)). The rules come from
 [ui-guidelines.md](ui-guidelines.md) and [color-bible.md](color-bible.md); this file makes them concrete. The custom icons are drawn in
 [editor-icons-preview.html](editor-icons-preview.html) (open it in a browser) at every size and state, in both themes.
 

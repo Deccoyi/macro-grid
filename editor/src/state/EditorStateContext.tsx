@@ -6,7 +6,7 @@ export type EditorState = ReturnType<typeof useEditorState>;
 const EditorStateContext = createContext<EditorState | null>(null);
 
 /** Wraps `useEditorState()`'s result so tool windows can read it without App.tsx prop-drilling
- * them in — adding a tool window then never needs an App.tsx edit (docking-workspace-plan.md). */
+ * them in — adding a tool window then never needs an App.tsx edit (docking-workspace.md). */
 export function EditorStateProvider({ value, children }: { value: EditorState; children: ReactNode }) {
   return <EditorStateContext.Provider value={value}>{children}</EditorStateContext.Provider>;
 }

@@ -1,10 +1,10 @@
 # Editor edit commands: context menus, clipboard, undo/redo, shortcuts
 
-**Status:** planned, not started. Build after [docking-workspace-plan.md](docking-workspace-plan.md). **Repositories:** `macro-grid`
+**Status:** planned, not started. Build after [docking-workspace.md](../design/docking-workspace.md) (built in 1.2.0). **Repositories:** `macro-grid`
 only (`editor/`). No change to the plugin SDK, the WebSocket protocol, the phone app or the server.
 
-This is the plan for the roadmap's "editor keyboard shortcuts with undo/redo" item. The hierarchy tree plan
-([hierarchy-tree-and-folders-plan.md](hierarchy-tree-and-folders-plan.md)) builds on the command registry and the undo history defined
+This is the plan for the roadmap's "editor keyboard shortcuts with undo/redo" item. Phase 6 of the hierarchy tree
+([hierarchy-tree-and-folders.md](../design/hierarchy-tree-and-folders.md)) builds on the command registry and the undo history defined
 here.
 
 ## Goal

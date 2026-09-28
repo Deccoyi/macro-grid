@@ -12,8 +12,8 @@ import { useWorkspaceUi } from "./WorkspaceUiContext";
 /** The document area: page tabs — every page the user has opened from Hierarchy stays open as a tab
  * (default-layout.html) — plus the existing device preview and canvas, moved here from App.tsx
  * unchanged. Fixed in the layout: it can't be closed, floated, auto-hidden or tabbed with a tool window
- * (docking-workspace-plan.md "Document area"). Open tabs live in OpenPagesContext (a sibling, Toolbox,
- * needs to see whether any page tab is open too) — persisting them per profile (docking-workspace-plan.md
+ * (docking-workspace.md "Document area"). Open tabs live in OpenPagesContext (a sibling, Toolbox,
+ * needs to see whether any page tab is open too) — persisting them per profile (docking-workspace.md
  * phase 5, "openPageIds") waits for phase 2's layout file. */
 export function DocumentArea({ deviceSize }: { deviceSize: DeviceSize | null }) {
   const { t } = useT();

@@ -80,7 +80,7 @@ export const api = {
 
   deleteProfile: (id: string): Promise<void> => send("DELETE", `/api/profiles/${id}`),
 
-  /** The root profile tree (docs/plans/hierarchy-tree-and-folders-plan.md) — folders of profiles. The
+  /** The root profile tree (docs/design/hierarchy-tree-and-folders.md) — folders of profiles. The
    * server normalizes it against the current profile list on every GET. */
   getProfileTree: (): Promise<ProfileTreeNode[]> => get("/api/profiles/tree"),
 

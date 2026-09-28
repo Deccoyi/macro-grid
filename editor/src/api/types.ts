@@ -69,7 +69,7 @@ export interface ProfileSummary {
   name: string;
 }
 
-/** One node of the root profile tree — docs/plans/hierarchy-tree-and-folders-plan.md, mirrors
+/** One node of the root profile tree — docs/design/hierarchy-tree-and-folders.md, mirrors
  * MacroGrid.Core.Profiles.ProfileTreeNode. Same shape convention as the renderer's PageTreeNode: a "type"
  * discriminator instead of subtypes, a "profile" node only ever setting `id`. */
 export interface ProfileTreeNode {

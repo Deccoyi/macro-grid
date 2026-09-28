@@ -10,7 +10,7 @@ interface DiagnosticsApi {
 
 const DiagnosticsContext = createContext<DiagnosticsApi | null>(null);
 
-/** Error List's data, in memory only. No producer exists yet (docking-workspace-plan.md, "Error List"):
+/** Error List's data, in memory only. No producer exists yet (docking-workspace.md, "Error List"):
  * nothing calls report() today, so the panel always starts empty. Do not invent validation to fill it. */
 export function DiagnosticsProvider({ children }: { children: ReactNode }) {
   const [bySource, setBySource] = useState<Record<string, Diagnostic[]>>({});

@@ -50,7 +50,7 @@ function resolveDropLocation<N extends GenericTreeNode>(
 /** The Hierarchy tool window: a real tree — profiles (optionally in profile folders) at the root, each
  * profile's pages (optionally in page folders) underneath. The open profile's pages are always visible and
  * live (in-memory, dirty-until-Save); every other profile's pages are loaded on demand the first time it's
- * expanded (see docs/plans/hierarchy-tree-and-folders-plan.md — GET /api/profiles/{id}, cached for the
+ * expanded (see docs/design/hierarchy-tree-and-folders.md — GET /api/profiles/{id}, cached for the
  * session) so a large profile collection costs nothing until the user actually opens it. */
 export function HierarchyToolWindow() {
   const { t } = useT();

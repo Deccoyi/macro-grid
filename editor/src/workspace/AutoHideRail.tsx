@@ -2,7 +2,7 @@ import { useDiagnostics } from "../diagnostics/DiagnosticsContext";
 import { useT } from "../i18n/I18nContext";
 import { toolWindowById, type ToolWindowDefinition } from "./toolWindows";
 
-/** The collapsed edge tab strip for unpinned tool windows — docs/plans/docking-workspace-plan.md ("Pin
+/** The collapsed edge tab strip for unpinned tool windows — docs/design/docking-workspace.md ("Pin
  * and auto-hide"): 22 px, no space taken when empty, vertical text on the side rails. */
 export function AutoHideRail({
   edge,
