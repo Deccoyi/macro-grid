@@ -101,6 +101,7 @@ The order of the bigger pieces of work, and their plans, are in [plans/README.md
 - **The browser deck** does not announce the `assets` and `layout.patch` capabilities yet, so it receives full layouts with icons inline.
 - **The CSS editor** is a plain text box with sanitizer warnings, without syntax highlighting.
 - **Windows only.** The server depends on Windows APIs.
+- **The SoundBoard plugin is pinned to NAudio 2.2.1.** NAudio 3.0 changed `ISampleProvider.Read` from `(float[] buffer, int offset, int count)` to a single `Span<float>` parameter and marked `WasapiOut` obsolete, so `SoundBoard/src/SoundVoice.cs`'s custom `ISampleProvider` implementations no longer compile against it. Dependabot's bump to 3.1.0 was closed for this reason (checked 2026-09-28); upgrading needs `SoundVoice`/`LoopingSampleProvider` rewritten for the new interface (and likely a `WasapiOut` → `WasapiPlayer` move), not a version bump alone.
 
 ## Not planned
 
