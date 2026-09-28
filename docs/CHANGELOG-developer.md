@@ -4,6 +4,12 @@ This file follows the [Keep a Changelog](https://keepachangelog.com/) format. Fo
 
 ## [Unreleased]
 
+## [1.2.1] - 2026-09-28
+### Security
+- **Log lines no longer carry raw device/plugin identifiers:** `SecurityEvents.ForLog` strips `\r`/`\n` before a device id/name or plugin id reaches a security log line (`DeviceApi.cs`, `PluginManager.cs`), closing a log-forging finding (CodeQL `cs/log-forging`).
+- **The test deck's widget icon is scheme-checked:** `wwwroot/index.html` now only sets `img.src` for a widget icon when its URL scheme is `http:`, `https:` or `data:`, closing CodeQL's `js/xss` and `js/client-side-unvalidated-url-redirection` findings on that page.
+- **`SafeMarkdown`'s comment strip is no longer single-pass:** it now re-runs `<!-- ... -->` removal until the text stops changing, closing CodeQL's `js/incomplete-multi-character-sanitization` finding.
+
 ## [1.2.0] - 2026-09-28
 ### Added
 - **The server release carries one SBOM file:** `scripts/sbom.ps1` now merges the four parts (`dotnet`, `editor`, `deck`, `renderer`) into `MacroGrid-Server-<version>.cdx.json` (a package several parts share is listed once; CycloneDX 1.7) and `release.yml` attaches only that file. The part files stay in `artifacts/sbom/parts/`. Anything that read `MacroGrid-Server-<version>-<part>.cdx.json` from a release must read the single file instead; releases up to 1.1.0 keep the four files.

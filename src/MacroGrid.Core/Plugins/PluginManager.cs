@@ -213,7 +213,7 @@ public sealed partial class PluginManager(
                 return null;
 
             permissionStore.Grant(pluginId, pending);
-            logger.LogInformation(SecurityEvents.PluginPermissionsGranted, "Security: plugin {Id} was granted: {Permissions}", pluginId, string.Join(", ", pending));
+            logger.LogInformation(SecurityEvents.PluginPermissionsGranted, "Security: plugin {Id} was granted: {Permissions}", SecurityEvents.ForLog(pluginId), SecurityEvents.ForLog(string.Join(", ", pending)));
             lock (_stateLock) _entries.Remove(pluginId);
             return await LoadFolderCoreAsync(entry.Dir);
         }
@@ -250,7 +250,7 @@ public sealed partial class PluginManager(
             await UnloadCoreAsync(entry);
             lock (_stateLock) _entries.Remove(pluginId);
             permissionStore.Revoke(pluginId);
-            logger.LogInformation(SecurityEvents.PluginUninstalled, "Security: plugin {Id} uninstalled", pluginId);
+            logger.LogInformation(SecurityEvents.PluginUninstalled, "Security: plugin {Id} uninstalled", SecurityEvents.ForLog(pluginId));
 
             try
             {
@@ -259,7 +259,7 @@ public sealed partial class PluginManager(
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {
-                logger.LogWarning(ex, "Plugin folder of {Id} is still in use; it will be removed at the next start", pluginId);
+                logger.LogWarning(ex, "Plugin folder of {Id} is still in use; it will be removed at the next start", SecurityEvents.ForLog(pluginId));
                 File.WriteAllText(Path.Combine(entry.Dir, ".uninstall"), "");
                 return new PluginUninstallResult(true, true);
             }

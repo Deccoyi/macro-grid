@@ -3,8 +3,19 @@ import type { ReactNode } from "react";
 /** Renders the small Markdown subset release notes use (headings, bullet lists, bold, inline code, paragraphs) as React
  * elements. The text never becomes HTML: everything goes through React's escaping, links are shown as their text and
  * raw HTML shows up as plain text, so a release body from outside can never inject script or navigate the window. */
+/** Removes every `<!-- ... -->` comment, re-running the replace until none are left so a nested marker
+ * (e.g. `<!<!-- -->-->`) can't survive a single pass. */
+function stripHtmlComments(text: string): string {
+  let previous;
+  do {
+    previous = text;
+    text = text.replace(/<!--[\s\S]*?-->/g, "");
+  } while (text !== previous);
+  return text;
+}
+
 export function SafeMarkdown({ text }: { text: string }) {
-  const lines = text.replace(/<!--[\s\S]*?-->/g, "").replace(/\r\n?/g, "\n").split("\n");
+  const lines = stripHtmlComments(text).replace(/\r\n?/g, "\n").split("\n");
   const blocks: ReactNode[] = [];
   let paragraph: string[] = [];
   let items: string[] = [];
