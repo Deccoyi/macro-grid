@@ -176,7 +176,12 @@ export const en: Record<DictKey, string | ((...args: string[]) => string)> = {
   "panel.pin": "Pin",
   "panel.close": "Close",
   "panel.errorList": "Error List",
+  "panel.pluginsTree": "Plugins",
   "document.noOpenPage": "No open page",
+
+  "pluginsTree.loadError": "Could not load. Retry",
+  "pluginsTree.showMore": "Show more",
+  "pluginsTree.noSettings": "This item has no settings.",
 
   "errorList.filterPlaceholder": "Filter messages",
   "errorList.all": "All",

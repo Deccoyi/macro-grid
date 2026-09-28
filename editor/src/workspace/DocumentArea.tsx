@@ -9,6 +9,7 @@ import { EditorCanvas } from "../grid/EditorCanvas";
 import { useT } from "../i18n/I18nContext";
 import { ContextMenu, type ContextMenuEntry } from "../panels/ContextMenu";
 import { useEditorStateContext } from "../state/EditorStateContext";
+import { clearPluginTreeSelection } from "../state/pluginTreeSelectionStore";
 import { useOpenPages } from "./OpenPagesContext";
 import { useWorkspaceUi } from "./WorkspaceUiContext";
 
@@ -92,7 +93,7 @@ export function DocumentArea({ deviceSize }: { deviceSize: DeviceSize | null }) 
               <EditorCanvas
                 page={currentPage}
                 selectedIds={state.selectedIds}
-                onSelect={(ids) => { state.setSelectedIds(ids); if (ids.length > 0) clearProfileProperties(); }}
+                onSelect={(ids) => { state.setSelectedIds(ids); if (ids.length > 0) { clearProfileProperties(); clearPluginTreeSelection(); } }}
                 onToggleSelect={state.toggleSelected}
                 onRectChange={state.setWidgetRect}
                 onContextMenu={(x, y) => setWidgetMenu({ x, y })}

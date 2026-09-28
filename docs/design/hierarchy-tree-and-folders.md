@@ -1,11 +1,12 @@
 # Hierarchy tree: every profile and page, folders, drag-and-drop
 
-**Status:** built in 1.2.0 except phase 6 (plugin-provided tree entries, plugin SDK), which is not started. The tree, page and profile folders, drag-and-drop, copy and paste and lazy-loaded profiles are in. User guide: `website/guide/profiles.md`. Built on [docking-workspace.md](docking-workspace.md); phase 6 is planned to build on phases 1 and 2 of
-[editor-edit-commands.md](editor-edit-commands.md). **Repositories:** `macro-grid` (`editor/`, `src/MacroGrid.Core`,
-`src/MacroGrid.Host`, `packages/renderer`; phase 6 also `src/MacroGrid.Plugin.Abstractions`, the plugin SDK). Phase 6's first use
-(SoundBoard) is in `macro-grid-plugin`. The phone app (`macro-grid-client`) needs no change: the new fields are optional and it ignores
-them (verify with its build). **Phase 6 changes the plugin SDK** (additive, optional interface): it updates `../architecture.md` and
-follows `../guides/versioning.md` in the same change.
+**Status:** built in 1.2.0. The tree, page and profile folders, drag-and-drop, copy and paste and lazy-loaded profiles are in. User
+guide: `website/guide/profiles.md`. Built on [docking-workspace.md](docking-workspace.md). **Repositories:** `macro-grid` (`editor/`,
+`src/MacroGrid.Core`, `src/MacroGrid.Host`, `packages/renderer`). The phone app (`macro-grid-client`) needs no change: the new fields
+are optional and it ignores them (verify with its build).
+
+Plugin-provided tree entries are **not** a node inside this tree — the owner moved that to a standalone tool window, its own document:
+[plugins-tool-window.md](plugins-tool-window.md).
 
 ## Goal
 
@@ -200,100 +201,27 @@ Built from commands (edit-commands plan); Undo and Redo are at the top of every 
   cannot be undone, and "Delete folder and contents" is disabled when it would delete every profile.
 - Several folders selected: one question with the totals.
 
-## Plugins node
-
-The rule here is performance: the tree must never slow the editor's start or ask a plugin for anything the user has not opened. The
-host has a tight CPU and memory budget (it runs next to streaming software and games).
-
-### What is shown
-
-- The "Plugins" root lists the installed plugins (name, and the manifest icon if `hasIcon`), in the Plugins window's order. Plugins are
-  not draggable and have no edit commands.
-- **Plugins are not required to add anything to the tree.** A plugin only gets a chevron (expandable) when it declares that it provides
-  tree items (`PluginInfo.hasTreeItems`, phase 6). Others are a single row.
-- Double-click or Enter on a plugin row opens its existing settings window if it has one (`hasSettings`), otherwise the Plugins window on
-  that plugin.
-
-### Show / hide
-
-A **view menu in the Hierarchy header**: an icon button (`lucide-react` `EllipsisVertical`, with an `aria-label`; the header gets an
-optional actions slot from the docking plan's `DockGroupHeader`) opening a normal `ContextMenu` with checkable items:
-
-- Show Plugins (the whole section)
-- one item per installed plugin: show / hide that plugin's row
-- Expand all / Collapse all (profiles only; never expands plugin items)
-
-The choice is an editor view setting, so it is saved in the workspace layout file (`panelState.hierarchy.hiddenPlugins`,
-`showPlugins`), not in the plugin's own settings: plugin settings belong to the plugin, and one place to switch it is enough. A hidden
-plugin or section costs nothing: its rows are not built and nothing is requested for it. The same menu is the one place to add further
-view options later.
-
-### Loading
-
-- **Start:** the tree needs one request, `GET /api/profiles` (with summaries, above). The Plugins root starts **collapsed** and
-  `api.listPlugins()` is called the first time it is expanded. If the saved state has it expanded, the list is fetched after the first
-  paint of the tree, not before it.
-- **Plugin items are loaded lazily, one level at a time, when that node is expanded**, never earlier: `GET /api/plugins/{id}/tree-items?parent=<itemId>`
-  (no `parent` for the plugin's top level). While loading, the node shows one "Loading..." row in `--ms-text-secondary`; the rest of
-  the tree stays usable.
-- The server passes the call to the plugin with a 2 s timeout and a cancellation token; the editor cancels the request if the node is
-  collapsed before the answer comes. A timeout or error shows one "Could not load. Retry" row under the node, never a dialog.
-- At most 500 items per level; a provider that has more returns a continuation token and the tree shows a "Show more" row.
-- Loaded children are cached in memory for the session. Collapsing keeps the cache; the node's context menu has **Refresh**. A plugin can
-  also tell the host that a level changed (phase 6, `TreeItemsChanged(parentId)`); the editor reloads that level only if it is expanded,
-  otherwise it just drops the cache.
-- Nothing about plugin items is persisted except which nodes were expanded; on the next start expanded plugin nodes load after the
-  first paint, as above.
-
 ### Rendering
 
 The tree renders only the rows in view (fixed 22 px rows make windowing simple; write it in the tree, no new dependency) once it has
-more than about 200 visible rows, so a large profile collection or a plugin with many items does not slow scrolling or dragging.
-
-### Plugin items (phase 6, SDK)
-
-A new **optional** interface in `MacroGrid.Plugin.Abstractions`; a plugin that does not implement it is unaffected:
-
-```csharp
-public interface IPluginTreeProvider
-{
-    /// Children of parentId (null: the plugin's top level). Called only when the user expands that node.
-    Task<PluginTreePage> GetTreeItemsAsync(string? parentId, string? continuationToken, CancellationToken cancellationToken);
-
-    /// Raised when a level changed; the host refreshes it only if it is on screen.
-    event Action<string?>? TreeItemsChanged;
-}
-
-public sealed record PluginTreeItem(string Id, string Label, string? Icon, bool HasChildren, string? Tooltip);
-public sealed record PluginTreePage(IReadOnlyList<PluginTreeItem> Items, string? ContinuationToken);
-```
-
-- `Icon` is a `lucide-react` icon name, drawn in the chrome colour like every tree icon; unknown names fall back to a dot. Labels are
-  already localised by the plugin (the host passes the language as it does for other plugin text).
-- Items are not draggable and have no edit commands in this plan. Double-click opens the plugin's settings window with the item id, so a
-  plugin can jump to it; a plugin without a settings window gets nothing on double-click.
-- The JavaScript plugin host gets the same capability when its async host API exists (roadmap); until then only .NET plugins can
-  provide items.
-- First user: SoundBoard in `macro-grid-plugin` lists its sounds (flat, one level).
+more than about 200 visible rows, so a large profile collection does not slow scrolling or dragging.
 
 ## Phases
 
 1. **Data model.** `pageTree` in the renderer types and the C# model, `normalizePageTree`, `ProfileTreeStore`, the extended
    `GET /api/profiles`, tests for normalisation (old profiles without a tree, unknown ids, duplicates) in the existing .NET test project.
-2. **Read-only tree** with every profile, page folders and profile folders, the Plugins node (plugin rows only, lazily listed), the
-   header's view menu (show / hide), row windowing, selection, keyboard navigation, opening pages; profile settings moved to Properties;
-   `ProfilePagesPanel` removed.
+2. **Read-only tree** with every profile, page folders and profile folders, the header's view menu (show / hide), row windowing,
+   selection, keyboard navigation, opening pages; profile settings moved to Properties; `ProfilePagesPanel` removed.
 3. **Folder commands:** new, rename, delete (with the contents question), in-memory and server paths.
 4. **Drag-and-drop** inside one profile and for profiles/profile folders, with the drop indicator; tree cut/copy/paste (edit-commands
    plan phase 4) on the same `canDrop` and move function.
 5. **Transfers between profiles** (the endpoint, save-first question, "go to page" warning, reload).
-6. **Plugin tree items** (SDK): `IPluginTreeProvider`, `PluginInfo.hasTreeItems`, the `tree-items` route with timeout, cancellation and
-   paging, lazy loading and caching in the tree; then SoundBoard's sounds in `macro-grid-plugin` (a separate SoundBoard release, asked
-   for first like every plugin release). Independent of phases 3 to 5.
 
-Performance checks for phase 2 and 6: with 50 profiles of 20 pages each and every plugin shown, the editor's start time must not grow by
-more than the one `GET /api/profiles` request (measure before and after); expanding a plugin node makes exactly one request; a hidden
-plugin makes none (check the Host log or the network panel); scrolling a 1,000-row tree stays smooth.
+Plugin-provided tree items are not a phase of this plan — see [plugins-tool-window.md](plugins-tool-window.md), built as its own,
+standalone tool window instead of a node here.
+
+Performance checks for phase 2: with 50 profiles of 20 pages each, the editor's start time must not grow by more than the one
+`GET /api/profiles` request (measure before and after); scrolling a 1,000-row tree stays smooth.
 
 Each phase: `npm run typecheck` and `npm run build` in `editor/`, `dotnet build` and `dotnet test`, the phone app's build in
 `macro-grid-client` after phase 1, and a manual run. Manual checks at the end: drag three pages from two different folders into a third
@@ -304,12 +232,9 @@ folder; drag a page folder into another profile with Ctrl (copy); try to drop a 
 
 `CHANGELOG.md` `[Unreleased]`: New: profiles and pages can be put into folders and rearranged by drag-and-drop, also several at once and
 between profiles. `CHANGELOG-developer.md`: the profile JSON gains an optional `pageTree` field (editor-only, additive; the renderer and
-the phone app ignore it), and the new `/api/profiles/transfer` and `profile-tree.json`. Phase 6: the optional `IPluginTreeProvider`
-SDK interface (additive, no existing plugin needs a change).
+the phone app ignore it), and the new `/api/profiles/transfer` and `profile-tree.json`.
 
 ## Open questions
 
 1. Should the phone app's profile list follow the tree (folder order, or even show folders)? This plan keeps it as today (sorted by name).
    Following the order only would be a server-side change without a protocol change; showing folders would change the protocol.
-2. Should a plugin item be draggable onto the canvas later (for example drop a sound to create a button that plays it)? Not in this
-   plan; it would build on phase 6.

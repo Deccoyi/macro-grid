@@ -17,5 +17,8 @@ public enum PluginLoadStatus
 /// when the plugin registered an <see cref="MacroGrid.Plugin.Abstractions.IPluginSettingsPage"/>,
 /// which is what the editor's gear button checks before opening the settings window.
 /// <paramref name="HasIcon"/> is true when the manifest's optional <c>icon</c> path resolved to a valid
-/// file (see PluginManager.ResolveIconPath) — the editor then fetches it from <c>GET /api/plugins/{id}/icon</c>.</summary>
-public sealed record LoadedPlugin(string Id, string Name, string Version, PluginLoadStatus Status, string? Detail, bool HasSettings = false, IReadOnlyList<string>? PendingPermissions = null, bool HasIcon = false);
+/// file (see PluginManager.ResolveIconPath) — the editor then fetches it from <c>GET /api/plugins/{id}/icon</c>.
+/// <paramref name="HasTreeItems"/> is true when the running plugin implements the optional
+/// <see cref="MacroGrid.Plugin.Abstractions.IPluginTreeProvider"/>: only then does the editor's Plugins tool window
+/// give it a chevron and ask <c>GET /api/plugins/{id}/tree-items</c> for anything.</summary>
+public sealed record LoadedPlugin(string Id, string Name, string Version, PluginLoadStatus Status, string? Detail, bool HasSettings = false, IReadOnlyList<string>? PendingPermissions = null, bool HasIcon = false, bool HasTreeItems = false);

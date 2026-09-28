@@ -26,6 +26,7 @@ internal static class PluginApi
                 p.HasSettings,
                 p.PendingPermissions,
                 p.HasIcon,
+                p.HasTreeItems,
                 Trust = (origins.Get(p.Id)?.Trust ?? PluginTrust.Local).ToString(),
             }));
 
@@ -83,7 +84,7 @@ internal static class PluginApi
                 ? Results.Json(new { removed = result.Removed, pending = result.Pending })
                 : Results.NotFound());
 
-        return api.MapPluginSettingsApi();
+        return api.MapPluginSettingsApi().MapPluginTreeApi();
     }
 
     private static RouteGroupBuilder MapPluginSettingsApi(this RouteGroupBuilder api)
@@ -99,7 +100,7 @@ internal static class PluginApi
         api.MapGet("/plugins/{id}/settings", (string id, PluginManager plugins) =>
         {
             if (plugins.GetSettingsPage(id) is { } page)
-                return ApiResults.Json(RedactPasswords(page));
+                return ApiResults.Json(RedactPasswords(page.Fields, page.Load()));
 
             var dir = plugins.GetPluginDir(id);
             if (dir is null) return Results.NotFound();
@@ -113,7 +114,7 @@ internal static class PluginApi
             {
                 var (valid, values) = await ApiResults.ReadJsonAsync<JsonObject>(request);
                 if (!valid || values is null) return ApiResults.InvalidJson();
-                RestoreUnchangedPasswords(page, values);
+                RestoreUnchangedPasswords(page.Fields, values, page.Load);
                 page.Save(values);
                 return Results.NoContent();
             }
@@ -159,14 +160,13 @@ internal static class PluginApi
         return api;
     }
 
-    /// <summary>A copy of <paramref name="page"/>'s current values with every top-level
-    /// <see cref="SettingFieldKind.Password"/> field blanked out, so the editor never receives an existing
-    /// password back over the API — only what the person just typed. Fields nested in a
+    /// <summary><paramref name="values"/> (a form's current values, from a settings page or a plugin tree item) with
+    /// every top-level <see cref="SettingFieldKind.Password"/> field blanked out, so the editor never receives an
+    /// existing password back over the API — only what the person just typed. Fields nested in a
     /// <see cref="SettingFieldKind.List"/> row are not covered; no shipped plugin nests a password there yet.</summary>
-    private static JsonObject RedactPasswords(IPluginSettingsPage page)
+    internal static JsonObject RedactPasswords(IReadOnlyList<SettingField> fields, JsonObject values)
     {
-        var values = page.Load();
-        foreach (var field in page.Fields)
+        foreach (var field in fields)
             if (field.Kind == SettingFieldKind.Password && values.ContainsKey(field.Key))
                 values[field.Key] = "";
         return values;
@@ -174,16 +174,17 @@ internal static class PluginApi
 
     /// <summary>An empty <see cref="SettingFieldKind.Password"/> field means "leave as is" (the editor never
     /// shows the real value to blank it against, see <see cref="RedactPasswords"/>), so it is restored from the
-    /// page's own stored value before <c>Save</c> runs. A non-empty value is a real change and passes through.</summary>
-    private static void RestoreUnchangedPasswords(IPluginSettingsPage page, JsonObject values)
+    /// stored values (<paramref name="loadStored"/>) before the form is saved. A non-empty value is a real change
+    /// and passes through.</summary>
+    internal static void RestoreUnchangedPasswords(IReadOnlyList<SettingField> fields, JsonObject values, Func<JsonObject> loadStored)
     {
         List<SettingField>? passwordFields = null;
-        foreach (var field in page.Fields)
+        foreach (var field in fields)
             if (field.Kind == SettingFieldKind.Password && values[field.Key] is JsonValue v && v.GetValueKind() == JsonValueKind.String && v.GetValue<string>().Length == 0)
                 (passwordFields ??= []).Add(field);
         if (passwordFields is null) return;
 
-        var stored = page.Load();
+        var stored = loadStored();
         foreach (var field in passwordFields)
             values[field.Key] = stored[field.Key]?.DeepClone();
     }

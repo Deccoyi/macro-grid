@@ -80,6 +80,7 @@ No other colour. Warning and Info are told apart by shape, never by colour (ther
 | Toolbox | `Shapes` | |
 | Properties | `Wrench` | Not a slider icon, so it is not confused with the slider widget in the Toolbox. |
 | Error List | `ListX` | Not a severity icon, so it cannot be mistaken for one. |
+| Plugins (View menu, auto-hide tab) | `Blocks` | docs/design/plugins-tool-window.md. |
 | Dock guide targets | **five drawn glyphs**, [icons/](icons/) (below) | Drawn inside the drop-guide squares while a panel is dragged. |
 
 ### Error List and status bar
