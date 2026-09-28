@@ -146,7 +146,7 @@ export interface PluginCatalogEntryInfo {
    * when nothing in the catalog is compatible. */
   installableVersion: string | null;
   compatible: boolean;
-  /** Why the latest version cannot be installed here (for example "Needs Macro Grid 1.3.0 or newer, this is 1.2.4"); null when compatible. */
+  /** Why the latest version cannot be installed here (for example "Needs Macro Grid editor 1.3.0 or newer, this is 1.2.4"); null when compatible. */
   incompatibleReason: string | null;
   permissions: string[];
   installed: boolean;

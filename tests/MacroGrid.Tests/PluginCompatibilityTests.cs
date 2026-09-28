@@ -26,7 +26,7 @@ public sealed class PluginCompatibilityTests
         var result = PluginCompatibility.Check("1.2.4", "1.3.0", null);
 
         Assert.False(result.Compatible);
-        Assert.Equal("Needs Macro Grid 1.3.0 or newer, this is 1.2.4", result.Reason);
+        Assert.Equal("Needs Macro Grid editor 1.3.0 or newer, this is 1.2.4", result.Reason);
     }
 
     [Fact]
@@ -66,7 +66,7 @@ public sealed class PluginCompatibilityTests
         var result = PluginCompatibility.Check("1.0.0", null, sdkVersion);
 
         Assert.False(result.Compatible);
-        Assert.Contains("rebuilt for Macro Grid 1.0.0", result.Reason);
+        Assert.Contains("rebuilt for Macro Grid editor 1.0.0", result.Reason);
     }
 
     [Theory]

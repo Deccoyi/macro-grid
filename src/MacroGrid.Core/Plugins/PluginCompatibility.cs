@@ -42,7 +42,7 @@ public static partial class PluginCompatibility
 
         if (Sdk04Pattern().IsMatch(sdkVersion.Trim())) return LegacyBaseline;
 
-        reason = $"Built for an older SDK ({sdkVersion}); it must be rebuilt for Macro Grid {LegacyBaseline}";
+        reason = $"Built for an older SDK ({sdkVersion}); it must be rebuilt for Macro Grid editor {LegacyBaseline}";
         return null;
     }
 
@@ -54,7 +54,7 @@ public static partial class PluginCompatibility
 
         var differentMajor = SemVer.TryParse(macroGridVersion, out var server) && SemVer.TryParse(required, out var wanted) && server.Major != wanted.Major;
         return new(false, differentMajor
-            ? $"Built for Macro Grid {required}; this is {macroGridVersion}, so the plugin must be rebuilt"
-            : $"Needs Macro Grid {required} or newer, this is {macroGridVersion}");
+            ? $"Built for Macro Grid editor {required}; this is {macroGridVersion}, so the plugin must be rebuilt"
+            : $"Needs Macro Grid editor {required} or newer, this is {macroGridVersion}");
     }
 }
