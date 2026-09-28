@@ -4,8 +4,12 @@ New features and fixes in Macro Grid. For technical details, see [CHANGELOG-deve
 
 ## Unreleased
 ### New
+- **Choose to delete your data on uninstall:** Removing Macro Grid now asks whether to also delete your profiles, paired devices, plugins and logs. Say no to keep them for next time.
 - **Blocked other web pages from reaching Macro Grid:** A web page open in your regular browser could otherwise poke at the editor's internal connection. It cannot anymore.
 - **Plugin passwords stay hidden:** Reopening a plugin's settings (for example OBS's) no longer shows its saved password. Leave the field empty to keep it, or type a new one to change it.
+
+## 1.1.0 - 2026-09-28
+No user-visible changes in this version — an addition to the plugin SDK only (see CHANGELOG-developer.md).
 
 ## 1.0.1 - 2026-09-26
 ### Fixed
