@@ -70,6 +70,19 @@ internal static class ServerApp
             await next();
         });
 
+        // LoopbackGuard alone lets through any page open in the person's own browser, not just the editor —
+        // both connect from this same PC. A browser-sent Origin header that isn't the editor's own is refused.
+        app.Use(async (ctx, next) =>
+        {
+            if (ctx.Request.Path.StartsWithSegments("/api") && !OriginGuard.IsAllowed(ctx.Request.Headers.Origin.FirstOrDefault()))
+            {
+                ctx.Response.StatusCode = StatusCodes.Status403Forbidden;
+                await ctx.Response.WriteAsync("The editor API does not accept requests from this page.");
+                return;
+            }
+            await next();
+        });
+
         // Same disk-cache trap as the HTML files below, but for the editor's own REST calls: without
         // this, a GET right after a successful PUT/POST could return a stale cached body, making a
         // save look like it silently "sometimes doesn't work" when it actually did.
