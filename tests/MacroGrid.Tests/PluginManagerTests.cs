@@ -149,7 +149,7 @@ public sealed class PluginManagerTests : IAsyncLifetime
 
         var plugin = Assert.Single(_manager.Plugins);
         Assert.Equal(PluginLoadStatus.Incompatible, plugin.Status);
-        Assert.Contains("rebuilt for Macro Grid 1.0.0", plugin.Detail);
+        Assert.Contains("rebuilt for Macro Grid editor 1.0.0", plugin.Detail);
     }
 
     [Fact]
