@@ -74,7 +74,7 @@ on public Wi-Fi, installing untrusted plugins.
 | Product description and design | `README.md`, `docs/architecture.md`, `docs/design/` |
 | Security model and user information | `SECURITY.md`, `docs/architecture.md#security-model`, the website's security page |
 | Vulnerability handling and reporting | `SECURITY.md` (private vulnerability reporting on GitHub) |
-| Software bill of materials | Attached to each release (`MacroGrid-Server-<version>-*.cdx.json`), made by `scripts/sbom.ps1` |
+| Software bill of materials | Attached to each release (one file, `MacroGrid-Server-<version>.cdx.json`), made by `scripts/sbom.ps1` |
 | Vulnerability check | `scripts/check-vulnerabilities.ps1`, `.github/workflows/ci.yml`, `.github/workflows/release.yml` |
 | Tests | `tests/MacroGrid.Tests` (including `PairingServiceTests`, `DeviceStoreTests`, `LogRetentionTests`) |
 | Third-party components and licenses | `THIRD_PARTY_NOTICES.md`, `licenses/` |
