@@ -1,6 +1,6 @@
 # Aksiyonlar ve makrolar
 
-Aksiyon, bir widget olayı tetiklendiğinde bilgisayarın yaptığı iştir. Denetçinin **Aksiyonlar** bölümünde **+ Aksiyon ekle** ile eklersiniz. Bu, aranabilir ve kategorilere ayrılmış bir seçici açar.
+Aksiyon, bir widget olayı tetiklendiğinde bilgisayarın yaptığı iştir. Özellikler panelinin **Aksiyonlar** bölümünde **+ Aksiyon ekle** ile eklersiniz. Bu, aranabilir ve kategorilere ayrılmış bir seçici açar.
 
 ## Yerleşik aksiyonlar
 

@@ -4,8 +4,8 @@ Build a slider that sets the Windows master volume and follows it when the volum
 
 **You need:** a paired device (see [Pair a device](/guide/pairing)).
 
-1. In the editor click **Add widget** and choose **Slider**. Resize it so it is wide (a full row works well).
-2. In the inspector set **Min** to `0`, **Max** to `100` and **Step** to `1`. Give it a caption such as `Volume`.
+1. In the editor's **Toolbox**, click **Slider**. Resize it so it is wide (a full row works well).
+2. In the Properties panel set **Min** to `0`, **Max** to `100` and **Step** to `1`. Give it a caption such as `Volume`.
 3. Under **Variable driving its position** pick `system.audio.master`. The slider now shows the current volume and moves when it changes.
 4. Under **Actions**, on **Value changed**, click **+ Add action** and choose **Master volume**. It applies the slider's value.
 5. Click **Save**.
