@@ -4,6 +4,21 @@ This file follows the [Keep a Changelog](https://keepachangelog.com/) format. Fo
 
 ## [Unreleased]
 
+### Added
+- **`error`'s `pairing_required` now carries `retryAfterSeconds` and `reason`:** `retryAfterSeconds` (an integer, seconds to
+  wait) is set only when the address is blocked after too many wrong PINs; absent for wrong PIN, pairing closed, or
+  never-paired. `reason` is one of `"wrong_pin"`, `"locked_out"`, `"pairing_closed"`, `"not_paired"`, always set. Both let a
+  client show its own countdown and its own localized text instead of parsing or always showing the prose `message`, which
+  stays free-form (English, can change wording) and is only a fallback for a `reason` the client doesn't recognize.
+  `webclient` uses both now (`ConnectScreen`).
+- **The installer can delete `%AppData%\MacroGrid` on uninstall:** `installer/MacroGrid.iss` asks (default No) unless the
+  uninstall is silent, in which case it never asks and never deletes. See `docs/plans/security-hardening-plan.md`, part C.
+- **`/api` now checks the request's `Origin`:** `OriginGuard` refuses a browser request whose `Origin` header is present and
+  is not the editor's own (`http://localhost:9820`, the loopback IP forms, and the Vite dev server ports `5190`/`5192`).
+  `LoopbackGuard` alone let through any page open in the person's regular browser, since it also connects from this PC. A
+  request with no `Origin` header (curl, a native app) is unaffected. Tests: `OriginGuardTests`.
+- **`IPluginHost.Secrets` (`IPluginSecrets`):** a plugin can now protect a secret value (for example a password field in its own `settings.json`) with `host.Secrets.Protect(string)` / `.Unprotect(string)`, backed by the same `ISecretProtector` (DPAPI) the host already uses for device tokens. Optional: a plugin that does not call it keeps storing settings as before. `ISecretProtector` is now a shared DI singleton (`AddHostStores`) instead of being constructed separately for the device store. Tests: `PluginSecretsTests`.
+
 ### Changed
 - **Pairing is a pairing mode now (protocol behavior, same messages):** a `hello` with a `pin` is accepted only while the editor's Pairing window is open. The window keeps pairing open by polling `GET /api/pairing/qr` (or `/api/pairing/pin`) every 3 s; pairing closes 15 s after the last poll (`PairingService.Lease`) and a PIN still lasts at most 5 minutes. `POST /api/pairing/{qr|pin}/regenerate` opens pairing with a fresh PIN. A PIN is single-use: a successful pairing replaces it. Wrong PINs are limited: 5 from one address block that address for 30 s, doubling per round up to 15 minutes; 20 against one PIN from any address replace the PIN. A client still gets `error` with code `pairing_required` in every case (no new code, so older clients keep working); only the `message` text says which case it is. `PairingService` lost `CurrentPin`, `Verify` and `Regenerate` in favor of `Open`, `Keep` and `TryPair(pin, remoteAddress)`. Device tokens are now generated with `RandomNumberGenerator` (same 32-hex-character format) and compared in fixed time. Tests: `PairingServiceTests`.
 - **Releases are checked and carry an SBOM:** `scripts/check-vulnerabilities.ps1` fails on a known vulnerable .NET package (`dotnet list package --vulnerable --include-transitive`) or a production npm package (`npm audit --omit=dev --audit-level=moderate` in `editor/`, `webclient/`, `packages/renderer/`); CI runs it on every pull request (job `vulnerabilities`, plus `dependency-review` for dependencies a pull request adds) and `release.yml` before building. `scripts/sbom.ps1` writes CycloneDX files per part (`dotnet`, `editor`, `deck`, `renderer`), which `release.yml` attaches to the draft release. A fixed vulnerability goes under `### Security` in both changelogs.

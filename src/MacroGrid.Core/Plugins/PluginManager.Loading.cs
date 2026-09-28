@@ -116,7 +116,7 @@ public sealed partial class PluginManager
                 instance = (IPlugin)(Activator.CreateInstance(pluginType) ?? throw new InvalidOperationException("The plugin instance could not be created"));
             }
 
-            host = new PluginHostCollector(serverVersion, dir, manifest.Id, statusRegistry, logger);
+            host = new PluginHostCollector(serverVersion, dir, manifest.Id, statusRegistry, logger, secretProtector);
             instance.Initialize(host);
 
             // All-or-nothing: a clash on any action type fails the whole plugin instead of half-registering it.

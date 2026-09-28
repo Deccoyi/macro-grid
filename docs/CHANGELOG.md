@@ -9,6 +9,10 @@ New features and fixes in Macro Grid. For technical details, see [CHANGELOG-deve
 - **Security log:** Pairings, removed devices and plugin installs and permissions are now written to the log files. Log files are kept for 14 days and no longer pile up on the PC.
 - **Component lists:** Every release now comes with a list of the components it contains, and a release is only built when none of them has a known security problem.
 - **Clearer plugin warnings:** When a plugin asks to send web requests, the permission now says whether that is this computer, your local network or the internet. The warning for other authors' plugins now says they can connect to the internet and send data.
+- **Blocked other web pages from reaching Macro Grid:** A web page open in your regular browser could otherwise poke at the editor's internal connection. It cannot anymore.
+- **Plugin passwords stay hidden:** Reopening a plugin's settings (for example OBS's) no longer shows its saved password. Leave the field empty to keep it, or type a new one to change it.
+- **The browser deck tells you when a PIN is wrong:** Entering the wrong pairing PIN, or too many of them, used to look like nothing happened. It now shows why, with a live countdown when you have to wait before trying again.
+- **Choose to delete your data on uninstall:** Removing Macro Grid now asks whether to also delete your profiles, paired devices, plugins and logs. Say no to keep them for next time.
 
 ## 1.0.1 - 2026-09-26
 ### Fixed

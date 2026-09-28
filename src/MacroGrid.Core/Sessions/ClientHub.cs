@@ -217,7 +217,8 @@ public sealed class ClientHub(
             if (result.Outcome != PairingOutcome.Accepted)
             {
                 LogPairingFailure(result, session.RemoteAddress);
-                await session.SendAsync(MessageTypes.Error, new ErrorMessage("pairing_required", PairingMessage(result)), ct);
+                var retryAfterSeconds = result.Outcome == PairingOutcome.Blocked ? (int?)Math.Max(1, (int)Math.Ceiling(result.RetryAfter.TotalSeconds)) : null;
+                await session.SendAsync(MessageTypes.Error, new ErrorMessage("pairing_required", PairingMessage(result), retryAfterSeconds, PairingReason(result)), ct);
                 return;
             }
             device = devices.Pair(hello.DeviceId, deviceName);
@@ -269,6 +270,16 @@ public sealed class ClientHub(
         if (result.PinRenewed)
             logger.LogWarning(SecurityEvents.PinRenewed, "Security: pairing PIN replaced after {Count} wrong attempts", PairingService.FailuresBeforeNewPin);
     }
+
+    /// <summary>Stable, machine-readable pairing_required reason codes — see ErrorMessage.Reason. Keep in
+    /// lockstep with <see cref="PairingMessage"/>: same switch, same cases, just a code instead of prose.</summary>
+    private static string PairingReason(PairingResult result) => result.Outcome switch
+    {
+        PairingOutcome.Blocked => "locked_out",
+        PairingOutcome.Closed => "pairing_closed",
+        PairingOutcome.WrongPin => "wrong_pin",
+        _ => "not_paired",
+    };
 
     private static string PairingMessage(PairingResult result) => result.Outcome switch
     {

@@ -2,7 +2,9 @@ using MacroGrid.Core.Devices;
 using MacroGrid.Core.Diagnostics;
 using MacroGrid.Core.Plugins;
 using MacroGrid.Core.Profiles;
+using MacroGrid.Core.Security;
 using MacroGrid.Core.Sessions;
+using MacroGrid.Windows.Security;
 using MacroGrid.Host.Ui;
 using MacroGrid.Host.Api;
 using MacroGrid.Host.Logging;
@@ -15,9 +17,17 @@ internal static class ServerApp
 {
     public const int Port = 9820;
 
+    /// <summary><c>wss://</c>/<c>https://</c>, next to the plain <see cref="Port"/> — see
+    /// <c>docs/plans/security-hardening-plan.md</c>, part A.</summary>
+    public const int TlsPort = 9821;
+
     public static WebApplication Build(string[] args, IUiDialogService dialogs, IUiWindowService windows)
     {
         var dataDir = ProfileStore.DefaultDataDir;
+
+        // Needed before the DI container exists (Kestrel's HTTPS endpoint is configured below); the same
+        // instance is registered into the container afterwards instead of building a second one.
+        var certificates = new ServerCertificateProvider(dataDir, new DpapiSecretProtector());
 
         // A WinExe may be launched from any working directory (autostart, shortcut), so pin the content root.
         var builder = WebApplication.CreateBuilder(new WebApplicationOptions
@@ -26,13 +36,18 @@ internal static class ServerApp
             ContentRootPath = AppContext.BaseDirectory,
         });
 
-        builder.WebHost.ConfigureKestrel(k => k.ListenAnyIP(Port));
+        builder.WebHost.ConfigureKestrel(k =>
+        {
+            k.ListenAnyIP(Port);
+            k.ListenAnyIP(TlsPort, lo => lo.UseHttps(certificates.Certificate));
+        });
 
         builder.Logging.ClearProviders();
         builder.Logging.AddDebug();
         builder.Logging.AddProvider(new FileLoggerProvider(Path.Combine(dataDir, "logs")));
 
         builder.Services
+            .AddSingleton(certificates)
             .AddHostStores(dataDir)
             .AddBuiltInActions(dialogs, windows)
             .AddVariablesAndStatus()
@@ -73,6 +88,19 @@ internal static class ServerApp
             {
                 ctx.Response.StatusCode = StatusCodes.Status403Forbidden;
                 await ctx.Response.WriteAsync("The editor API is only available on this computer.");
+                return;
+            }
+            await next();
+        });
+
+        // LoopbackGuard alone lets through any page open in the person's own browser, not just the editor —
+        // both connect from this same PC. A browser-sent Origin header that isn't the editor's own is refused.
+        app.Use(async (ctx, next) =>
+        {
+            if (ctx.Request.Path.StartsWithSegments("/api") && !OriginGuard.IsAllowed(ctx.Request.Headers.Origin.FirstOrDefault()))
+            {
+                ctx.Response.StatusCode = StatusCodes.Status403Forbidden;
+                await ctx.Response.WriteAsync("The editor API does not accept requests from this page.");
                 return;
             }
             await next();

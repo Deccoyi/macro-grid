@@ -67,6 +67,14 @@ The order of the bigger pieces of work, and their plans, are in [plans/README.md
   hosts ignore it. Do it with the next manifest or SDK change, or earlier if it fits. Plugin packages and the Store catalog need the file rules
   (size limit, format check) and the release zip must include the image. See `plans/plugin-distribution-plan.md`, section 3c.
 - **An async host API for JavaScript plugins** (today scripts are synchronous, so `host.http` blocks the plugin's own thread).
+- **A richer Discover tab, closer to a store page.** Today `editor/src/windows/PluginsWindow.tsx`'s Discover tab is a plain
+  list: name, version, author, one line of description and an Install button (see `plans/plugin-distribution-plan.md`,
+  section 7). The catalog (`macrogrid-index.json`, `PluginCatalogEntryInfo`) does not carry much more than that today either.
+  Wanted: plugin cards with an icon (the logo/avatar field already planned above), and a detail view per plugin — a longer
+  description or README, screenshots, category/tags to browse by, and (later) install counts or a rating if the official
+  catalog ever tracks them. Needs deciding what's worth adding to `macrogrid-index.json` (author-supplied vs. computed by the
+  release workflow) versus what stays editor-only presentation, since every new field is something plugin authors have to
+  fill in and the host has to validate and cap. It needs a plan file first (`plans/`).
 
 ## Release status
 

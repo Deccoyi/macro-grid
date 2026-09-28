@@ -2,6 +2,7 @@ using System.Text.Json;
 using MacroGrid.Core.Actions;
 using MacroGrid.Core.Diagnostics;
 using MacroGrid.Core.Profiles;
+using MacroGrid.Core.Security;
 using MacroGrid.Core.Variables;
 using MacroGrid.Plugin.Abstractions;
 using Microsoft.Extensions.Hosting;
@@ -34,7 +35,8 @@ public sealed partial class PluginManager(
     PluginPermissionStore permissionStore,
     IInputService? input,
     ILogger<PluginManager> logger,
-    PluginLocalizer? localizer = null) : IHostedService
+    PluginLocalizer? localizer = null,
+    ISecretProtector? secretProtector = null) : IHostedService
 {
     private static readonly JsonSerializerOptions ManifestJson = new(JsonSerializerDefaults.Web);
     private static readonly TimeSpan ProviderStopTimeout = TimeSpan.FromSeconds(5);

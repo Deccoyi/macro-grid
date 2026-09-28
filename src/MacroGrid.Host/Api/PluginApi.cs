@@ -99,7 +99,7 @@ internal static class PluginApi
         api.MapGet("/plugins/{id}/settings", (string id, PluginManager plugins) =>
         {
             if (plugins.GetSettingsPage(id) is { } page)
-                return ApiResults.Json(page.Load());
+                return ApiResults.Json(RedactPasswords(page));
 
             var dir = plugins.GetPluginDir(id);
             if (dir is null) return Results.NotFound();
@@ -113,6 +113,7 @@ internal static class PluginApi
             {
                 var (valid, values) = await ApiResults.ReadJsonAsync<JsonObject>(request);
                 if (!valid || values is null) return ApiResults.InvalidJson();
+                RestoreUnchangedPasswords(page, values);
                 page.Save(values);
                 return Results.NoContent();
             }
@@ -156,6 +157,35 @@ internal static class PluginApi
         });
 
         return api;
+    }
+
+    /// <summary>A copy of <paramref name="page"/>'s current values with every top-level
+    /// <see cref="SettingFieldKind.Password"/> field blanked out, so the editor never receives an existing
+    /// password back over the API — only what the person just typed. Fields nested in a
+    /// <see cref="SettingFieldKind.List"/> row are not covered; no shipped plugin nests a password there yet.</summary>
+    private static JsonObject RedactPasswords(IPluginSettingsPage page)
+    {
+        var values = page.Load();
+        foreach (var field in page.Fields)
+            if (field.Kind == SettingFieldKind.Password && values.ContainsKey(field.Key))
+                values[field.Key] = "";
+        return values;
+    }
+
+    /// <summary>An empty <see cref="SettingFieldKind.Password"/> field means "leave as is" (the editor never
+    /// shows the real value to blank it against, see <see cref="RedactPasswords"/>), so it is restored from the
+    /// page's own stored value before <c>Save</c> runs. A non-empty value is a real change and passes through.</summary>
+    private static void RestoreUnchangedPasswords(IPluginSettingsPage page, JsonObject values)
+    {
+        List<SettingField>? passwordFields = null;
+        foreach (var field in page.Fields)
+            if (field.Kind == SettingFieldKind.Password && values[field.Key] is JsonValue v && v.GetValueKind() == JsonValueKind.String && v.GetValue<string>().Length == 0)
+                (passwordFields ??= []).Add(field);
+        if (passwordFields is null) return;
+
+        var stored = page.Load();
+        foreach (var field in passwordFields)
+            values[field.Key] = stored[field.Key]?.DeepClone();
     }
 
     private sealed record SettingsCommandRequest(string? Command, JsonObject? Values);

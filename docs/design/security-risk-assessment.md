@@ -8,7 +8,7 @@ project, no support period, no promise of fixes).
 (Regulation (EU) 2024/2847, recital 18). The project still follows the parts of its essential requirements (Annex I) that are
 cheap for a hobby project, and this file plays the role of the risk assessment a manufacturer would keep (Article 13(2), (3)).
 
-Last reviewed: 2026-09-26, server 1.0.1.
+Last reviewed: 2026-09-27, server 1.0.1.
 
 ## The product
 
@@ -50,6 +50,7 @@ on public Wi-Fi, installing untrusted plugins.
 | T10 | A compromised build pipeline | Every action pinned to a commit; default token read-only; NuGet trusted publishing (no stored key); the SDK publish job runs only on protected tags; plugin signing happens on the owner's PC. | Low to medium: an attacker with the owner's GitHub account. The account has 2FA. |
 | T11 | Logs fill the disk or leak secrets | Logs never contain a PIN or a token; 14 days, 5 MB a day, 20 MB in total (`LogRetention`); a pairing block is logged once. | Low. Logs contain local network addresses; they stay on the PC. |
 | T12 | Data left behind after uninstall | Uninstall keeps `%AppData%\MacroGrid` on purpose (profiles survive a reinstall). | Low (tokens are encrypted). A "remove my data" choice is planned. |
+| T13 | A web page open in the person's own browser calls the loopback `/api` (no Origin/Referer check, no CORS policy) | `OriginGuard` refuses a request whose `Origin` header is present and is not the editor's own (`../plans/security-hardening-plan.md`, part E). A request with no `Origin` header (curl, a native app) is unaffected. `GET /api/plugins/{id}/settings` also no longer echoes a stored password back (`PluginApi.RedactPasswords`), found while building part B. | Low. |
 
 ## Security properties (Annex I, part I) at a glance
 
