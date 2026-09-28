@@ -69,6 +69,16 @@ export interface ProfileSummary {
   name: string;
 }
 
+/** One node of the root profile tree — docs/plans/hierarchy-tree-and-folders-plan.md, mirrors
+ * MacroGrid.Core.Profiles.ProfileTreeNode. Same shape convention as the renderer's PageTreeNode: a "type"
+ * discriminator instead of subtypes, a "profile" node only ever setting `id`. */
+export interface ProfileTreeNode {
+  type: "profile" | "folder";
+  id: string;
+  name?: string;
+  children?: ProfileTreeNode[];
+}
+
 export type VariableSnapshot = Record<string, unknown>;
 
 /** Mirrors MacroGrid.Plugin.Abstractions.VariableType (sent as these strings). */
@@ -269,6 +279,15 @@ export interface PreviewProfileInfo {
   height: number;
 }
 
+/** One named docking-workspace arrangement saved from the View menu. `layoutJson` is the editor's own
+ * opaque envelope (dockview's serialized layout plus which tool windows are open/auto-hidden) — the
+ * server never looks inside it. */
+export interface DockLayoutProfile {
+  id: string;
+  name: string;
+  layoutJson: string;
+}
+
 /** Editor-wide preferences, persisted server-side, not in localStorage, so they survive a cleared browser
  * cache or a different WebView profile. */
 export interface AppPreferences {
@@ -287,6 +306,11 @@ export interface AppPreferences {
   checkForUpdates: boolean;
   /** Whether pre-releases (alpha versions) count as updates. */
   includePreReleases: boolean;
+  /** The docking workspace arrangement last left in — see DockLayoutProfile's `layoutJson`. Empty until
+   * the user changes the layout at least once. */
+  dockLayoutJson: string;
+  /** Named layout snapshots saved from the View menu. The built-in "Default" layout is not one of these. */
+  dockLayoutProfiles: DockLayoutProfile[];
 }
 
 /** GET /api/update: the running version and, when a newer release exists, what it brings. */

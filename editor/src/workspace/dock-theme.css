@@ -1,0 +1,79 @@
+/* Maps dockview-react's own CSS variables onto the editor chrome's --ms-* tokens (docs/ui/color-bible.md)
+ * and strips its defaults that read as a web-dashboard (shadows, radii, heavy borders) — see
+ * docs/ui/ui-guidelines.md and docs/plans/docking-workspace-plan.md ("Decisions already made").
+ *
+ * dockview-react always adds its own default theme class ("dockview-theme-abyss", a dark navy/indigo
+ * palette) to its OWN internal root element, a descendant of the wrapper this class is on — there is no
+ * prop to turn it off. That class redeclares both the raw abyss palette (--dv-color-abyss-*) AND every
+ * semantic --dv-* variable directly on itself. For an inherited custom property, a redeclaration on a
+ * descendant always wins over one set higher up the tree, no matter the source order — so every override
+ * below targets ".dv-theme-macro .dockview-theme-abyss" (not plain ".dv-theme-macro"), the same scope
+ * dockview's own theme uses, so ours is the one left standing. Do not move these back onto the wrapper
+ * class alone; that regressed to dockview's default dark-navy/violet palette bleeding through once already. */
+/* isolation: dockview's splitters carry z-index 99 and nothing inside dockview creates a stacking context,
+ * so without this they paint above the auto-hide flyout (a sibling overlay at z-index 5) as stray lines. */
+.dv-theme-macro {
+  height: 100%;
+  isolation: isolate;
+}
+
+.dv-theme-macro .dockview-theme-abyss {
+  --dv-color-abyss-dark: var(--ms-bg-canvas);
+  --dv-color-abyss: var(--ms-bg-surface);
+  --dv-color-abyss-light: var(--ms-bg-surface);
+  --dv-color-abyss-lighter: var(--ms-bg-surface-raised);
+  --dv-color-abyss-accent: var(--ms-accent);
+  --dv-color-abyss-primary-text: var(--ms-text-primary);
+  --dv-color-abyss-secondary-text: var(--ms-text-secondary);
+
+  --dv-group-view-background-color: var(--ms-bg-canvas);
+  --dv-tabs-and-actions-container-background-color: var(--ms-bg-surface);
+  --dv-tabs-and-actions-container-height: 28px;
+  --dv-tabs-and-actions-container-font-size: 12.5px;
+  --dv-activegroup-visiblepanel-tab-background-color: var(--ms-bg-canvas);
+  --dv-activegroup-hiddenpanel-tab-background-color: var(--ms-bg-surface);
+  --dv-inactivegroup-visiblepanel-tab-background-color: var(--ms-bg-surface);
+  --dv-inactivegroup-hiddenpanel-tab-background-color: var(--ms-bg-surface);
+  --dv-activegroup-visiblepanel-tab-color: var(--ms-text-primary);
+  --dv-activegroup-hiddenpanel-tab-color: var(--ms-text-secondary);
+  --dv-inactivegroup-visiblepanel-tab-color: var(--ms-text-secondary);
+  --dv-inactivegroup-hiddenpanel-tab-color: var(--ms-text-secondary);
+
+  --dv-separator-border: 1px solid var(--ms-border);
+  --dv-tab-divider-color: var(--ms-border);
+  --dv-sash-color: var(--ms-border);
+  --dv-active-sash-color: var(--ms-border-strong);
+  --dv-sash-border-radius: 0px;
+  --dv-paneview-active-outline-color: var(--ms-accent);
+
+  --dv-drag-over-background-color: var(--ms-accent-bg-muted);
+  --dv-drag-over-border-color: var(--ms-accent);
+  --dv-drag-over-border: 1px solid var(--ms-accent);
+  --dv-edge-dock-indicator-color: var(--ms-accent);
+  --dv-smart-guides-color: var(--ms-accent);
+  --dv-smart-guides-preview-color: var(--ms-accent-bg-muted);
+
+  --dv-icon-hover-background-color: var(--ms-bg-surface-raised);
+  --dv-tabs-container-scrollbar-color: var(--ms-border-strong);
+  --dv-scrollbar-background-color: transparent;
+
+  --dv-floating-box-shadow: none;
+  --dv-floating-border: 1px solid var(--ms-border-strong);
+  --dv-floating-group-border: 1px solid var(--ms-border-strong);
+  --dv-floating-titlebar-height: 28px;
+  --dv-floating-titlebar-background-color: var(--ms-bg-surface);
+  --dv-floating-titlebar-border-bottom: 1px solid var(--ms-border);
+
+  --dv-border-radius: 0px;
+  --dv-tab-border-radius: 0px;
+  --dv-dropdown-border-radius: 0px;
+  --dv-tab-margin: 0;
+  --dv-spacing-padding: 0px;
+  --dv-tab-font-size: inherit;
+  --dv-tab-close-icon-size: 12px;
+
+  --dv-context-menu-background-color: var(--ms-bg-surface-raised);
+  --dv-context-menu-color: var(--ms-text-primary);
+
+  color: var(--ms-text-primary);
+}

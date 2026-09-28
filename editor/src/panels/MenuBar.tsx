@@ -1,10 +1,13 @@
 import { useEffect, useRef, useState } from "react";
 import type { Profile } from "@macro/renderer";
 import { api } from "../api/client";
-import { alertAsync } from "../dialogs/dialogStore";
+import { alertAsync, confirmAsync, promptAsync } from "../dialogs/dialogStore";
+import { usePreferences } from "../preferences/PreferencesContext";
 import { useServerVersion } from "../state/useServerVersion";
 import { useT, type Language } from "../i18n/I18nContext";
-import { ContextMenu, type ContextMenuItem } from "./ContextMenu";
+import { TOOL_WINDOWS } from "../workspace/toolWindows";
+import { useWorkspace } from "../workspace/WorkspaceContext";
+import { ContextMenu, type ContextMenuEntry } from "./ContextMenu";
 
 interface MenuBarProps {
   profile: Profile | null;
@@ -15,8 +18,8 @@ interface MenuBarProps {
 // underlined in the label while Alt is held) — one map per language since the underlined letter has
 // to actually occur in that language's label.
 const MNEMONICS: Record<Language, Record<string, string>> = {
-  tr: { file: "D", settings: "A", plugins: "E", help: "Y" },
-  en: { file: "F", settings: "S", plugins: "P", help: "H" },
+  tr: { file: "D", view: "G", settings: "A", plugins: "E", help: "Y" },
+  en: { file: "F", view: "V", settings: "S", plugins: "P", help: "H" },
 };
 
 function mnemonicLabel(label: string, letter: string | undefined, show: boolean) {
@@ -41,6 +44,8 @@ function mnemonicLabel(label: string, letter: string | undefined, show: boolean)
 export function MenuBar({ profile, onImportProfile }: MenuBarProps) {
   const { t, lang } = useT();
   const serverVersion = useServerVersion();
+  const workspace = useWorkspace();
+  const prefs = usePreferences();
   const [openMenu, setOpenMenu] = useState<{ id: string; x: number; y: number } | null>(null);
   const [mnemonicsVisible, setMnemonicsVisible] = useState(false);
   const refs = useRef<Record<string, HTMLButtonElement | null>>({});
@@ -82,22 +87,64 @@ export function MenuBar({ profile, onImportProfile }: MenuBarProps) {
     }
   };
 
-  const fileItems: ContextMenuItem[] = [
+  const fileItems: ContextMenuEntry[] = [
     { label: t("menu.file.exportProfile"), onSelect: exportProfile, disabled: !profile },
     { label: t("menu.file.importProfile"), onSelect: importProfile },
   ];
-  const settingsItems: ContextMenuItem[] = [{ label: t("menu.settings.open"), onSelect: () => api.openToolWindow("preferences") }];
-  const pluginsItems: ContextMenuItem[] = [{ label: t("menu.plugins.manage"), onSelect: () => api.openToolWindow("plugins") }];
-  const helpItems: ContextMenuItem[] = [
-    { label: t("menu.help.version", serverVersion), disabled: true, onSelect: () => {} },
+
+  const saveCurrentLayout = async () => {
+    const name = await promptAsync(t("layoutProfiles.namePlaceholder"), "", { title: t("layoutProfiles.save") });
+    if (!name || !name.trim()) return;
+    const json = workspace.serializeLayout();
+    if (json) prefs.saveDockLayoutProfile(name.trim(), json);
+  };
+
+  // "Delete" is itself a submenu listing each deletable saved layout — Default never appears here, since
+  // it isn't one of prefs.dockLayoutProfiles at all (it's rebuilt from code, see defaultLayout.ts).
+  const deleteLayoutItems: ContextMenuEntry[] = prefs.dockLayoutProfiles.length === 0
+    ? [{ label: t("layoutProfiles.empty"), disabled: true }]
+    : prefs.dockLayoutProfiles.map((p) => ({
+      label: p.name,
+      danger: true,
+      onSelect: async () => {
+        if (await confirmAsync(t("layoutProfiles.deleteConfirm", p.name), { title: t("layoutProfiles.delete"), danger: true })) {
+          prefs.deleteDockLayoutProfile(p.id);
+        }
+      },
+    }));
+
+  const layoutsItems: ContextMenuEntry[] = [
+    { label: t("layoutProfiles.save"), onSelect: saveCurrentLayout },
+    { label: t("layoutProfiles.delete"), submenu: deleteLayoutItems },
+    { divider: true },
+    // Default always first and never deletable — clicking any of these switches the layout immediately,
+    // no confirmation window, matching how the tool-window toggles above it behave.
+    { label: t("layoutProfiles.default"), onSelect: () => workspace.resetToDefaultLayout() },
+    ...prefs.dockLayoutProfiles.map((p) => ({ label: p.name, onSelect: () => workspace.applyLayout(p.layoutJson) })),
+  ];
+
+  const viewItems: ContextMenuEntry[] = [
+    ...TOOL_WINDOWS.map((tw) => ({
+      label: t(tw.titleKey),
+      checked: workspace.isOpen(tw.id),
+      onSelect: () => workspace.toggleFromMenu(tw.id),
+    })),
+    { divider: true },
+    { label: t("menu.view.layouts"), submenu: layoutsItems },
+  ];
+  const settingsItems: ContextMenuEntry[] = [{ label: t("menu.settings.open"), onSelect: () => api.openToolWindow("preferences") }];
+  const pluginsItems: ContextMenuEntry[] = [{ label: t("menu.plugins.manage"), onSelect: () => api.openToolWindow("plugins") }];
+  const helpItems: ContextMenuEntry[] = [
+    { label: t("menu.help.version", serverVersion), disabled: true },
     { label: t("menu.help.checkForUpdates"), onSelect: () => api.openToolWindow("update", "check") },
     { label: t("menu.help.about"), onSelect: () => api.openToolWindow("help", "about") },
     { label: t("menu.help.agreement"), onSelect: () => api.openToolWindow("help", "agreement") },
     { label: t("menu.help.licenses"), onSelect: () => api.openToolWindow("help", "licenses") },
   ];
 
-  const menus: { id: string; label: string; items: ContextMenuItem[] }[] = [
+  const menus: { id: string; label: string; items: ContextMenuEntry[] }[] = [
     { id: "file", label: t("menu.file"), items: fileItems },
+    { id: "view", label: t("menu.view"), items: viewItems },
     { id: "settings", label: t("menu.settings"), items: settingsItems },
     { id: "plugins", label: t("menu.plugins"), items: pluginsItems },
     { id: "help", label: t("menu.help"), items: helpItems },

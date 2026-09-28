@@ -16,6 +16,13 @@ public sealed class Profile
     /// docs/design/auto-profile-switch.md. Empty means this profile never triggers an automatic switch.</summary>
     public List<AppMatch> AppMatches { get; set; } = [];
 
+    /// <summary>Editor-only: how this profile's pages are arranged into folders and ordered in the
+    /// Hierarchy tree — see PageTreeNode. Empty means no arrangement was ever saved (every page shows
+    /// flat, in `Pages` order); the editor treats that the same as a tree it needs to build from scratch,
+    /// so an old profile from before this field existed opens unchanged. Ignored by the renderer and the
+    /// phone client.</summary>
+    public List<PageTreeNode> PageTree { get; set; } = [];
+
     public Page? FindPage(string pageId) => Pages.FirstOrDefault(p => p.Id == pageId);
 
     public static string NewId() => Guid.NewGuid().ToString("N")[..12];

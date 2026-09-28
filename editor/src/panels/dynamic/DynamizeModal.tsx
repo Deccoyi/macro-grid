@@ -66,7 +66,10 @@ export function DynamizeModal({ propertyLabel, binding, variableCatalog, resultK
   const remove = () => { onSave(null); onClose(); };
 
   return (
-    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.5)", zIndex: 60, display: "flex", alignItems: "center", justifyContent: "center" }} {...backdrop}>
+    // Opened from a widget field inside PropertiesToolWindow — inside the docking workspace's isolated
+    // stacking context (see PickerShell's comment on this), so this has to outrank dockview's own splitter
+    // lines (z-index 99) there, not just the App-root dialogs it used to only need to beat.
+    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.5)", zIndex: 200, display: "flex", alignItems: "center", justifyContent: "center" }} {...backdrop}>
       <div
         onClick={(e) => e.stopPropagation()}
         style={{ width: 600, maxHeight: "82vh", background: "var(--ms-bg-surface)", border: "1px solid var(--ms-border-strong)", display: "flex", flexDirection: "column" }}

@@ -4,6 +4,7 @@ import { api } from "../api/client";
 import type { ProfileSummary } from "../api/types";
 import { choiceAsync, confirmAsync } from "../dialogs/dialogStore";
 import { useT } from "../i18n/I18nContext";
+import { normalizePageTree, reorderPagesByTree } from "./pageTree";
 
 /**
  * The profile being edited: the profile list, the in-memory copy of the open profile, the current page and
@@ -19,13 +20,30 @@ export function useProfileDocument() {
   const [dirty, setDirty] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Finer-grained than `dirty` (which just says "the whole document has unsaved changes"): which specific
+  // pages, and whether the profile itself (its name or auto-switch rules), changed since the last save —
+  // purely for the Hierarchy tree's "*" markers, `dirty` alone still gates the Save button and Ctrl+S.
+  const [dirtyPageIds, setDirtyPageIds] = useState<Set<string>>(new Set());
+  const [profileDirty, setProfileDirty] = useState(false);
 
-  /** Makes `full` the open profile: first page, no selection, nothing unsaved. */
+  const markPageDirty = useCallback((pageId: string) => {
+    setDirtyPageIds((prev) => (prev.has(pageId) ? prev : new Set(prev).add(pageId)));
+  }, []);
+  const markProfileDirty = useCallback(() => setProfileDirty(true), []);
+
+  /** Makes `full` the open profile: first page, no selection, nothing unsaved. Normalizes the page tree
+   * against the actual pages on the way in — an old profile saved before folders existed, or one whose
+   * tree drifted somehow, opens with a repaired flat/folder arrangement rather than carrying the drift
+   * forward. */
   const openProfile = useCallback((full: Profile) => {
-    setProfile(full);
-    setCurrentPageId(full.pages[0]?.id ?? null);
+    const pageTree = normalizePageTree(full.pageTree, full.pages);
+    const normalized: Profile = { ...full, pageTree, pages: reorderPagesByTree(full.pages, pageTree) };
+    setProfile(normalized);
+    setCurrentPageId(normalized.pages[0]?.id ?? null);
     setSelectedIds([]);
     setDirty(false);
+    setDirtyPageIds(new Set());
+    setProfileDirty(false);
   }, []);
 
   const loadProfileList = useCallback(async (selectId?: string) => {
@@ -82,9 +100,17 @@ export function useProfileDocument() {
     setSelectedIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
   }, []);
 
-  /** Applies `fn` to the in-memory profile and marks it dirty; the server is never touched until Save. */
+  /** Applies `fn` to the in-memory profile and marks it dirty; the server is never touched until Save.
+   * Re-normalizes the page tree against whatever `fn` left `pages` as (a page added, removed or pasted
+   * elsewhere in the state layer never has to touch `pageTree` itself — it's kept in sync here, once) and
+   * reorders `pages` to match, maintaining the plan's invariant on every single mutation. */
   const mutate = useCallback((fn: (draft: Profile) => Profile) => {
-    setProfile((prev) => (prev ? fn(structuredClone(prev)) : prev));
+    setProfile((prev) => {
+      if (!prev) return prev;
+      const draft = fn(structuredClone(prev));
+      const pageTree = normalizePageTree(draft.pageTree, draft.pages);
+      return { ...draft, pageTree, pages: reorderPagesByTree(draft.pages, pageTree) };
+    });
     setDirty(true);
   }, []);
 
@@ -95,8 +121,9 @@ export function useProfileDocument() {
         if (page) fn(page);
         return draft;
       });
+      markPageDirty(pageId);
     },
-    [mutate],
+    [mutate, markPageDirty],
   );
 
   const selectProfile = useCallback(
@@ -165,21 +192,28 @@ export function useProfileDocument() {
     [loadProfileList],
   );
 
+  /** Refreshes just the profile summary list (the Hierarchy tree's profile names/ids) without touching
+   * the open profile — unlike loadProfileList(), which opens one. Used after a profile is created or
+   * changed by something other than "open it" (pasting a profile or a profile folder). */
+  const refreshProfileList = useCallback(async () => {
+    setProfiles(await api.listProfiles());
+  }, []);
+
   const renameProfile = useCallback(
-    (name: string) => mutate((draft) => ({ ...draft, name })),
-    [mutate],
+    (name: string) => { mutate((draft) => ({ ...draft, name })); markProfileDirty(); },
+    [mutate, markProfileDirty],
   );
 
   /** Remembers which "Preview" preset this profile should open with — see Profile.PreviewDeviceId. */
   const setPreviewDevice = useCallback(
-    (id: string) => mutate((draft) => ({ ...draft, previewDeviceId: id === "free" ? undefined : id })),
-    [mutate],
+    (id: string) => { mutate((draft) => ({ ...draft, previewDeviceId: id === "free" ? undefined : id })); markProfileDirty(); },
+    [mutate, markProfileDirty],
   );
 
   /** Foreground-window auto-switch rules for this profile — see docs/design/auto-profile-switch.md. */
   const setAppMatches = useCallback(
-    (appMatches: AppMatch[]) => mutate((draft) => ({ ...draft, appMatches })),
-    [mutate],
+    (appMatches: AppMatch[]) => { mutate((draft) => ({ ...draft, appMatches })); markProfileDirty(); },
+    [mutate, markProfileDirty],
   );
 
   const save = useCallback(async () => {
@@ -189,6 +223,8 @@ export function useProfileDocument() {
     try {
       await api.saveProfile(profile);
       setDirty(false);
+      setDirtyPageIds(new Set());
+      setProfileDirty(false);
       setProfiles((prev) => prev.map((p) => (p.id === profile.id ? { ...p, name: profile.name } : p)));
     } catch (e) {
       setError(String(e));
@@ -206,6 +242,10 @@ export function useProfileDocument() {
     selectedWidgets,
     selectedIds,
     dirty,
+    dirtyPageIds,
+    profileDirty,
+    markPageDirty,
+    markProfileDirty,
     saving,
     error,
     setError,
@@ -218,6 +258,7 @@ export function useProfileDocument() {
     createProfile,
     importProfileFromJson,
     deleteProfile,
+    refreshProfileList,
     renameProfile,
     setPreviewDevice,
     setAppMatches,
