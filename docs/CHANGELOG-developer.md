@@ -3,6 +3,9 @@
 This file follows the [Keep a Changelog](https://keepachangelog.com/) format. For versioning rules, see [versioning.md](guides/versioning.md). The short, public changelog is [CHANGELOG.md](CHANGELOG.md).
 
 ## [Unreleased]
+### Added
+- **`/api` now checks the request's `Origin`:** `OriginGuard` refuses a browser request whose `Origin` header is present and is not the editor's own (`http://localhost:9820`, the loopback IP forms, and the Vite dev server ports `5190`/`5192`). `LoopbackGuard` alone let through any page open in the person's regular browser, since it also connects from this PC. A request with no `Origin` header (curl, a native app) is unaffected. Tests: `OriginGuardTests`.
+- **Plugin settings never send a saved password back:** `GET /api/plugins/{id}/settings` blanks every top-level `SettingFieldKind.Password` field of a plugin with a registered settings page; a `PUT` with an empty password field keeps the stored value (a non-empty value is a real change). Fields nested in a `List` row are not covered.
 
 ## [1.1.0] - 2026-09-28
 ### Changed
