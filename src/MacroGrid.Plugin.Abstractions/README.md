@@ -51,6 +51,13 @@ new VariableInfo("myplugin.state", "State", "{myplugin.state}", "My plugin") { V
 
 `Type` defaults to `Text`; `Unit` and `Values` are optional.
 
+## Security
+
+Report a vulnerability in the SDK privately, as described in the server's
+[SECURITY.md](https://github.com/Deccoyi/macro-grid/blob/main/SECURITY.md). The SDK has no third-party dependencies.
+The components of the server that loads your plugin are listed in the SBOM files attached to each
+[server release](https://github.com/Deccoyi/macro-grid/releases).
+
 ## Compatibility
 
 The SDK and the Macro Grid server share one version number: package `1.3.0` is the SDK of Macro Grid `1.3.0`, and `PluginSdk.Version` is that number.

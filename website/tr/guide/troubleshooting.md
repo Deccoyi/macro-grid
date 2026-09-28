@@ -10,7 +10,7 @@
 
 ## PIN reddediliyor
 
-PIN beş dakika sonra geçerliliğini yitirir. **Eşleştirme**'yi yeniden açın ya da **Yeni kod üret**'e tıklayın.
+PIN yalnızca **Eşleştirme** penceresi açıkken, en fazla beş dakika ve tek bir cihaz için geçerlidir. PIN'i girerken pencereyi açık tutun ya da **Yeni kod üret**'e tıklayın. Çok sayıda yanlış PIN'den sonra cihaz yeniden denemeden önce biraz beklemelidir (ilk seferde 30 saniye).
 
 ## Eşleştirme penceresinde QR kod görünmüyor
 

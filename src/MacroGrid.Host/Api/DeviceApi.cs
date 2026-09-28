@@ -1,4 +1,6 @@
 using MacroGrid.Core.Devices;
+using MacroGrid.Core.Diagnostics;
+using MacroGrid.Core.Security;
 using MacroGrid.Core.Sessions;
 using Microsoft.AspNetCore.Routing;
 
@@ -12,19 +14,27 @@ internal static class DeviceApi
 
     public static RouteGroupBuilder MapDeviceApi(this RouteGroupBuilder api)
     {
-        api.MapGet("/pairing/pin", (PairingService pairing) => new { pin = pairing.CurrentPin });
+        // Pairing is open only while the editor's Pairing window keeps asking for the code (PairingService.Keep):
+        // the window polls GET, and POST opens it with a fresh PIN. With the window closed no PIN is valid.
+        api.MapGet("/pairing/pin", (PairingService pairing) => new { pin = pairing.Keep().Pin });
 
-        api.MapPost("/pairing/pin/regenerate", (PairingService pairing) => new { pin = pairing.Regenerate() });
+        api.MapPost("/pairing/pin/regenerate", (PairingService pairing, ILoggerFactory loggers) => new { pin = OpenPairing(pairing, loggers).Pin });
 
-        api.MapGet("/pairing/qr", (PairingService pairing) => BuildPairingQr(pairing.CurrentPin, pairing.ExpiresAt));
+        api.MapGet("/pairing/qr", (PairingService pairing, ServerCertificateProvider certificates) => BuildPairingQr(pairing.Keep(), certificates));
 
-        api.MapPost("/pairing/qr/regenerate", (PairingService pairing) => BuildPairingQr(pairing.Regenerate(), pairing.ExpiresAt));
+        api.MapPost("/pairing/qr/regenerate", (PairingService pairing, ILoggerFactory loggers, ServerCertificateProvider certificates) =>
+            BuildPairingQr(OpenPairing(pairing, loggers), certificates));
 
         api.MapGet("/devices", (DeviceStore devices) =>
             devices.All.Select(d => new { d.Id, d.Name, d.PairedAt, d.LastSeenAt, d.AssignedProfileId, d.FollowActiveWindow, d.AutoSwitchLocked }));
 
-        api.MapDelete("/devices/{id}", (string id, DeviceStore devices) =>
-            devices.Revoke(id) ? Results.NoContent() : Results.NotFound());
+        api.MapDelete("/devices/{id}", (string id, DeviceStore devices, ILoggerFactory loggers) =>
+        {
+            var name = devices.All.FirstOrDefault(d => d.Id == id)?.Name;
+            if (!devices.Revoke(id)) return Results.NotFound();
+            SecurityLogger(loggers).LogInformation(SecurityEvents.DeviceRemoved, "Security: pairing of device {Name} ({Device}) removed", name ?? "?", id);
+            return Results.NoContent();
+        });
 
         api.MapPut("/devices/{id}/profile", async (string id, HttpRequest request, DeviceStore devices) =>
         {
@@ -53,19 +63,33 @@ internal static class DeviceApi
         return api;
     }
 
-    /// <summary>
-    /// The pairing QR's payload: a <c>macrogrid://pair</c> deep-link URI carrying the LAN host, port and
-    /// current PIN, so a client can decode it without agreeing on a bespoke delimited format. Uses the first
-    /// LAN address <see cref="NetworkInfo.GetLanAddresses"/> reports (gateway-having adapters first); if the
-    /// host has no LAN adapter up, <c>host</c> comes back empty and the editor should show a warning instead
-    /// of a QR code, since a QR with no reachable host is useless.
-    /// </summary>
-    private static object BuildPairingQr(string pin, DateTimeOffset expiresAt)
+    private static PairingCode OpenPairing(PairingService pairing, ILoggerFactory loggers)
     {
+        var code = pairing.Open();
+        SecurityLogger(loggers).LogInformation(SecurityEvents.PairingOpened, "Security: pairing opened with a new PIN, valid until {ExpiresAt:HH:mm:ss}", code.ExpiresAt.ToLocalTime());
+        return code;
+    }
+
+    private static ILogger SecurityLogger(ILoggerFactory loggers) => loggers.CreateLogger("MacroGrid.Security");
+
+    /// <summary>
+    /// The pairing QR's payload: a <c>macrogrid://pair</c> deep-link URI carrying the LAN host, the plain and
+    /// TLS ports, the current PIN and the server certificate's fingerprint (<c>fp</c>), so a client can decode
+    /// it without agreeing on a bespoke delimited format. A client that understands <c>fp</c> should connect
+    /// over <c>wss://host:tlsPort</c> and pin the certificate to that fingerprint instead of validating a
+    /// chain (there is no certificate authority); an older client that does not look for <c>fp</c> keeps using
+    /// <c>ws://host:port</c> unchanged, so this is additive, not a breaking change to the QR format. Uses the
+    /// first LAN address <see cref="NetworkInfo.GetLanAddresses"/> reports (gateway-having adapters first); if
+    /// the host has no LAN adapter up, <c>host</c> comes back empty and the editor should show a warning
+    /// instead of a QR code, since a QR with no reachable host is useless.
+    /// </summary>
+    private static object BuildPairingQr(PairingCode code, ServerCertificateProvider certificates)
+    {
+        var (pin, expiresAt) = code;
         var host = NetworkInfo.GetLanAddresses().FirstOrDefault()?.ToString() ?? "";
         var text = string.IsNullOrEmpty(host)
             ? ""
-            : $"macrogrid://pair?host={Uri.EscapeDataString(host)}&port={ServerApp.Port}&pin={pin}";
-        return new { text, host, port = ServerApp.Port, pin, expiresAt };
+            : $"macrogrid://pair?host={Uri.EscapeDataString(host)}&port={ServerApp.Port}&tlsPort={ServerApp.TlsPort}&pin={pin}&fp={certificates.Fingerprint}";
+        return new { text, host, port = ServerApp.Port, tlsPort = ServerApp.TlsPort, pin, expiresAt, fingerprint = certificates.Fingerprint };
     }
 }

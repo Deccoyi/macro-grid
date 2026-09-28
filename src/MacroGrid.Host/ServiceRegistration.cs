@@ -29,6 +29,9 @@ internal static class ServiceRegistration
     /// <summary>Stores and settings that everything else builds on.</summary>
     public static IServiceCollection AddHostStores(this IServiceCollection services, string dataDir)
     {
+        // Shared by the device store and the plugin host (IPluginSecrets) so a paired device's token and a
+        // plugin's own secret are protected the same way, by one DpapiSecretProtector instance.
+        services.AddSingleton<ISecretProtector, DpapiSecretProtector>();
         services.AddSingleton(new ProfileStore(dataDir));
         var preferencesStore = new PreferencesStore(dataDir);
         AppLanguage.Current = preferencesStore.Get().Language;
@@ -126,7 +129,7 @@ internal static class ServiceRegistration
     /// <summary>Paired devices, client sessions and everything that pushes state to them.</summary>
     public static IServiceCollection AddClientSessions(this IServiceCollection services, string dataDir)
     {
-        services.AddSingleton(new DeviceStore(dataDir));
+        services.AddSingleton(sp => new DeviceStore(dataDir, sp.GetRequiredService<ISecretProtector>()));
         services.AddSingleton<PairingService>();
 
         services.AddSingleton<SessionRegistry>();

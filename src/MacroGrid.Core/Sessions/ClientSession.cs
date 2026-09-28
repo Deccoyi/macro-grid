@@ -14,6 +14,9 @@ public sealed class ClientSession(WebSocket socket)
 
     public string Id { get; } = Guid.NewGuid().ToString("N")[..8];
 
+    /// <summary>The address the client connected from (for the pairing limit and the security log).</summary>
+    public string RemoteAddress { get; init; } = "?";
+
     public bool IsIdentified => DeviceId is not null;
     public string? DeviceId { get; internal set; }
     public string? DeviceName { get; internal set; }

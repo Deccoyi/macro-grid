@@ -1,4 +1,6 @@
 using MacroGrid.Core.Devices;
+using MacroGrid.Core.Security;
+using MacroGrid.Windows.Security;
 
 namespace MacroGrid.Tests;
 
@@ -81,5 +83,80 @@ public sealed class DeviceStoreTests : IDisposable
         var updated = store.FindByToken(device.Token)!;
         Assert.Equal("Phone (renamed)", updated.Name);
         Assert.True(updated.LastSeenAt > originalLastSeen);
+    }
+
+    /// <summary>Reversible and obviously not the plain token, so the tests can see what is on disk.</summary>
+    private sealed class TestProtector(string key = "k1") : ISecretProtector
+    {
+        public string Protect(string secret) => $"{key}:" + new string(secret.Reverse().ToArray());
+        public string? Unprotect(string protectedSecret) =>
+            protectedSecret.StartsWith($"{key}:", StringComparison.Ordinal) ? new string(protectedSecret[(key.Length + 1)..].Reverse().ToArray()) : null;
+    }
+
+    private string DevicesFile => Path.Combine(_dir, "devices.json");
+
+    [Fact]
+    public void With_a_protector_the_token_is_not_written_in_plain_text()
+    {
+        var device = new DeviceStore(_dir, new TestProtector()).Pair("device-1", "Phone");
+
+        var text = File.ReadAllText(DevicesFile);
+        Assert.DoesNotContain(device.Token, text);
+        Assert.Contains("protectedToken", text);
+        Assert.Equal("device-1", new DeviceStore(_dir, new TestProtector()).FindByToken(device.Token)!.Id);
+    }
+
+    [Fact]
+    public void A_plain_file_from_an_older_version_is_converted_on_load()
+    {
+        var device = new DeviceStore(_dir).Pair("device-1", "Phone");
+        Assert.Contains(device.Token, File.ReadAllText(DevicesFile));
+
+        var store = new DeviceStore(_dir, new TestProtector());
+
+        Assert.Equal("device-1", store.FindByToken(device.Token)!.Id);
+        Assert.DoesNotContain(device.Token, File.ReadAllText(DevicesFile));
+        Assert.Equal(0, store.UnreadableOnLoad);
+    }
+
+    [Fact]
+    public void A_token_that_cannot_be_decrypted_drops_only_that_device()
+    {
+        new DeviceStore(_dir, new TestProtector("other-pc")).Pair("device-1", "Phone");
+        var store = new DeviceStore(_dir, new TestProtector());
+        var kept = store.Pair("device-2", "Tablet");
+
+        var reloaded = new DeviceStore(_dir, new TestProtector());
+
+        Assert.Equal(1, store.UnreadableOnLoad);
+        Assert.Single(reloaded.All);
+        Assert.Equal("device-2", reloaded.FindByToken(kept.Token)!.Id);
+    }
+
+    [Fact]
+    public void Other_fields_survive_the_round_trip()
+    {
+        var store = new DeviceStore(_dir, new TestProtector());
+        store.Pair("device-1", "Phone");
+        store.AssignProfile("device-1", "profile-7");
+        store.SetFollowActiveWindow("device-1", true);
+
+        var device = new DeviceStore(_dir, new TestProtector()).All.Single();
+
+        Assert.Equal("profile-7", device.AssignedProfileId);
+        Assert.True(device.FollowActiveWindow);
+        Assert.Equal("Phone", device.Name);
+    }
+
+    [Fact]
+    public void Dpapi_round_trips_for_this_user_and_rejects_garbage()
+    {
+        var protector = new DpapiSecretProtector();
+        var blob = protector.Protect("secret-token");
+
+        Assert.NotEqual("secret-token", blob);
+        Assert.Equal("secret-token", protector.Unprotect(blob));
+        Assert.Null(protector.Unprotect("not base64!"));
+        Assert.Null(protector.Unprotect(Convert.ToBase64String(new byte[] { 1, 2, 3 })));
     }
 }

@@ -10,6 +10,9 @@ import { ToolWindowLayout } from "./ToolWindowLayout";
 
 type Category = "code" | "devices";
 
+/** Well under the server's 15-second pairing lease. */
+const PAIRING_POLL_MS = 3000;
+
 /** The whole page of the "Pairing" tool window (see ToolWindow.cs) — a real separate, non-modal OS
  * window using the same left-categories/right-content shell as Plugins/Preferences/Help, instead of the
  * old centered modal-over-a-dark-backdrop (see docs/ui/ui-guidelines.md: Device Manager-style screens get
@@ -31,6 +34,20 @@ export function PairingWindow() {
     refreshQr();
     refreshDevices();
     api.listProfiles().then(setProfiles).catch(() => {});
+  }, []);
+
+  // Pairing is open only while this window keeps asking for the code (see PairingService on the server):
+  // polling keeps it open and picks up a new PIN after one was used, expired or replaced after wrong tries.
+  // Closing the window stops the polling and pairing closes by itself a few seconds later.
+  useEffect(() => {
+    const timer = setInterval(() => {
+      api
+        .pairingQr()
+        .then((next) => setQr((prev) => (prev && prev.pin === next.pin && prev.text === next.text ? prev : next)))
+        .catch(() => {});
+      refreshDevices();
+    }, PAIRING_POLL_MS);
+    return () => clearInterval(timer);
   }, []);
 
   useEffect(() => {

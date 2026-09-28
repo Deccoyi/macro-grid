@@ -53,4 +53,13 @@ public sealed record WidgetStateMessage(
     double? Value = null,
     bool? Active = null,
     Dictionary<string, string>? Style = null);
-public sealed record ErrorMessage(string Code, string Message);
+/// <summary><paramref name="RetryAfterSeconds"/> is set only for <c>pairing_required</c> when the address is
+/// blocked after too many wrong PINs — a machine-readable seconds-to-wait a client can count down with, kept
+/// separate from <paramref name="Message"/> so the prose text can change (wording, translation) without
+/// breaking a client that reads this field instead of parsing the sentence for a number. <paramref name="Reason"/>
+/// is likewise set only for <c>pairing_required</c>: one of <c>"wrong_pin"</c>, <c>"locked_out"</c>,
+/// <c>"pairing_closed"</c>, <c>"not_paired"</c> — a stable code so a client can show its own localized text
+/// instead of <paramref name="Message"/>, which is always English prose. A client that doesn't recognize a
+/// <paramref name="Reason"/> (an older build against a newer server that adds a case) falls back to
+/// <paramref name="Message"/>.</summary>
+public sealed record ErrorMessage(string Code, string Message, int? RetryAfterSeconds = null, string? Reason = null);
