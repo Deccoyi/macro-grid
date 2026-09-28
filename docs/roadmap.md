@@ -65,12 +65,7 @@ The order of the bigger pieces of work, and their plans, are in [plans/README.md
   and `website/public/logo.png`. The automatic update shows few pages (see `design/agreement-acceptance.md`), so the logo appears mostly
   in its progress window. The exact picture sizes are checked against the Inno Setup version the release workflow installs. It needs a small
   plan file first (`plans/`).
-- **A much faster install and update (fewer files):** the editor bundle installs as about 6,000 tiny files (one per icon in `wwwroot\editor\assets`,
-  because the editor loads each icon on demand), and copying them one by one made a setup on a fast PC take over a minute; an update shows this
-  in its progress window, and antivirus scanning makes it slower on other PCs. An upgrade also leaves the previous version's hashed editor files behind (`wwwroot\editor\assets` collects several `index-*.js`), so the setup should clear the old `wwwroot` first (an `[InstallDelete]` entry) or, better, install far fewer files. Wanted: a setup of a few seconds. Ideas to weigh: bundle the
-  icons into a few chunks or one file (the editor still loads only what it draws), or ship the editor as one archive that the app unpacks or
-  serves from; the setup itself gets faster with fewer, larger files. Measure the file count and the setup time before and after. It needs a
-  small plan file first (`plans/`).
+- **A much faster install and update (fewer files):** see [plans/faster-install-plan.md](plans/faster-install-plan.md).
 - **The `plugin-html` widget:** a plugin ships its own HTML and JavaScript widget. It would run in a sandboxed iframe on the client and talk to the
   server only through `postMessage`. It needs the widget type in the renderers, a bridge in the client and a message route on the server. Today the
   `plugin-html` type draws a placeholder.
