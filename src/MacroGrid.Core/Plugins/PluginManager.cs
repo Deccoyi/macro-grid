@@ -60,6 +60,9 @@ public sealed partial class PluginManager(
         public IPlugin Instance { get; } = instance;
         public PluginHostCollector Host { get; } = host;
         public TrackingVariableStore VariableStore { get; } = variableStore;
+        /// <summary>The handler subscribed to the instance's <see cref="IPluginTreeProvider.TreeItemsChanged"/>, if
+        /// it implements that interface — kept so unloading can unsubscribe exactly it.</summary>
+        public Action<string?>? TreeChangedHandler { get; set; }
     }
 
     private readonly Lock _stateLock = new();
@@ -84,6 +87,15 @@ public sealed partial class PluginManager(
     }
 
     public IPluginSettingsPage? GetSettingsPage(string pluginId) => FindEntry(pluginId)?.Running?.Host.SettingsPage;
+
+    /// <summary>The running plugin's optional <see cref="IPluginTreeProvider"/> (its <see cref="IPlugin"/> class
+    /// implements it), or null — for a plugin that does not opt in, is not running, or is not installed.</summary>
+    public IPluginTreeProvider? GetTreeProvider(string pluginId) => FindEntry(pluginId)?.Running?.Instance as IPluginTreeProvider;
+
+    /// <summary>Every <see cref="IPluginTreeProvider.TreeItemsChanged"/> of every running plugin, plus a whole-plugin
+    /// entry whenever a plugin with tree items is loaded or unloaded; the editor polls it while its Plugins tool
+    /// window is on screen.</summary>
+    public PluginTreeChangeLog TreeChanges { get; } = new();
 
     public string? GetActionPluginId(string actionType)
     {
@@ -231,7 +243,7 @@ public sealed partial class PluginManager(
             if (entry?.Running is null) return;
 
             await UnloadCoreAsync(entry);
-            entry.Info = entry.Info with { Status = PluginLoadStatus.Error, Detail = reason, HasSettings = false };
+            entry.Info = entry.Info with { Status = PluginLoadStatus.Error, Detail = reason, HasSettings = false, HasTreeItems = false };
             logger.LogWarning("Plugin {Id} was switched off: {Reason}", pluginId, reason);
         }
         finally { _gate.Release(); }

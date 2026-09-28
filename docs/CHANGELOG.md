@@ -3,6 +3,8 @@
 New features and fixes in Macro Grid. For technical details, see [CHANGELOG-developer.md](CHANGELOG-developer.md).
 
 ## Unreleased
+### New
+- **A new Plugins panel:** installed plugins now have their own panel in the editor, next to Hierarchy. A plugin can list its own items there (for example a sound board's sounds), and selecting one shows its settings on the right, the same way a page or a profile does.
 ### Fixed
 - **Auto-switch settings surviving a re-pair:** If a device had to pair again (a lost token, or one that could not be decrypted after 1.2.0's encrypted pairings), "Follow active window" and its assigned profile were silently turned back off. They now carry over.
 

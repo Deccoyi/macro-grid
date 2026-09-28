@@ -150,7 +150,9 @@ warnings for what was removed.
 
 Plugins add actions, variables, settings pages, status items and icon packs. They can be C# (full trust, in an isolated assembly load context)
 or JavaScript (a Jint sandbox with approved permissions). They are installed, reloaded and removed while the server runs. The plugin SDK is
-`MacroGrid.Plugin.Abstractions`; the guide for writing plugins is `docs/plugin-authoring.md` in the plugin repository. How it is built:
+`MacroGrid.Plugin.Abstractions`; the guide for writing plugins is `docs/plugin-authoring.md` in the plugin repository. A .NET plugin can also
+optionally list its own items (sounds, scenes, saved presets, ...) as a lazily-loaded tree in the editor's Plugins tool window
+(`IPluginTreeProvider`, additive): [design/plugins-tool-window.md](design/plugins-tool-window.md). How it is built:
 [design/js-plugin-runtime.md](design/js-plugin-runtime.md) and [design/layout-patch-and-assets.md](design/layout-patch-and-assets.md) (plugin hot loading).
 
 ## Automatic profile switching

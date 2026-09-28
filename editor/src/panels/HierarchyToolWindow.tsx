@@ -7,6 +7,7 @@ import { choiceAsync, confirmAsync, promptAsync } from "../dialogs/dialogStore";
 import { useT } from "../i18n/I18nContext";
 import { useEditorStateContext } from "../state/EditorStateContext";
 import { normalizePageTree } from "../state/pageTree";
+import { clearPluginTreeSelection } from "../state/pluginTreeSelectionStore";
 import { useProfileTreeContext } from "../state/ProfileTreeContext";
 import { countContents, findNode, findParentFolderId, type GenericTreeNode, removeNode } from "../state/tree";
 import { useWorkspaceUi } from "../workspace/WorkspaceUiContext";
@@ -257,6 +258,7 @@ export function HierarchyToolWindow() {
             state.setCurrentPageId(page.id);
             state.setSelectedIds([]);
             clearProfileProperties();
+            clearPluginTreeSelection();
             setTreeSelection({ kind: "page", id: page.id, profileId: profile!.id, parentFolderId: findParentFolderId(profile!.pageTree ?? [], page.id) ?? null });
           }}
           onDoubleClick={() => startRename("page", page.id)}
@@ -353,6 +355,7 @@ export function HierarchyToolWindow() {
           onClick={() => {
             if (!isOpen) state.selectProfile(node.id);
             showProfileProperties(node.id);
+            clearPluginTreeSelection();
             setTreeSelection({ kind: "profile", id: node.id, parentFolderId: findParentFolderId(profileTree.tree, node.id) ?? null });
           }}
           onDoubleClick={() => { if (isOpen) startRename("profile", node.id); }}
@@ -425,6 +428,7 @@ export function HierarchyToolWindow() {
             state.setCurrentPageId(page.id);
             state.setSelectedIds([]);
             clearProfileProperties();
+            clearPluginTreeSelection();
           }}
         />
       );

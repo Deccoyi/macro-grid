@@ -176,7 +176,12 @@ export const tr = {
   "panel.pin": "Sabitle",
   "panel.close": "Kapat",
   "panel.errorList": "Hata Listesi",
+  "panel.pluginsTree": "Eklentiler",
   "document.noOpenPage": "Açık sayfa yok",
+
+  "pluginsTree.loadError": "Yüklenemedi. Yeniden dene",
+  "pluginsTree.showMore": "Daha fazla göster",
+  "pluginsTree.noSettings": "Bu öğenin ayarı yok.",
 
   "errorList.filterPlaceholder": "Mesajları filtrele",
   "errorList.all": "Tümü",
