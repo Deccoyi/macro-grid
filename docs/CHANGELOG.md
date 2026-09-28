@@ -3,6 +3,8 @@
 New features and fixes in Macro Grid. For technical details, see [CHANGELOG-developer.md](CHANGELOG-developer.md).
 
 ## Unreleased
+### New
+- **Choose to delete your data on uninstall:** Removing Macro Grid now asks whether to also delete your profiles, paired devices, plugins and logs. Say no to keep them for next time.
 
 ## 1.0.1 - 2026-09-26
 ### Fixed

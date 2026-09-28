@@ -93,8 +93,9 @@ Filename: "{app}\{#AppExe}"; Description: "Start {#AppName}"; Flags: nowait post
 ; person's normal token. A program started this way gets no arguments; the app knows it was updated from the version it ran last (StartupPolicy).
 Filename: "{win}\explorer.exe"; Parameters: """{app}\{#AppExe}"""; Description: "Start {#AppName}"; Flags: nowait postinstall runasoriginaluser; Check: IsUpdateRun
 
-; Profiles, paired devices, plugins and logs live in %AppData%\MacroGrid and are deliberately left in place
-; on uninstall, so a reinstall picks up where the user left off.
+; Profiles, paired devices, plugins and logs live in %AppData%\MacroGrid. Left in place by default on
+; uninstall, so a reinstall picks up where the user left off; the uninstaller asks whether to delete it
+; instead (see [Code] below, InitializeUninstall / CurUninstallStepChanged).
 
 [UninstallRun]
 ; A running server locks its files, and the uninstaller would leave folders behind. Close it first.
@@ -107,6 +108,36 @@ Filename: "{sys}\netsh.exe"; Parameters: "advfirewall firewall delete rule name=
 Type: filesandordirs; Name: "{app}"
 
 [Code]
+var
+  DeleteDataOnUninstall: Boolean;
+
+{ Asks whether to also delete %AppData%\MacroGrid (profiles, paired devices, plugins, logs) — default No, so
+  the common case (a reinstall or a temporary removal) keeps everything. Never asks on a silent uninstall
+  (UninstallSilent, e.g. driven by another install tool): a script that did not ask for a prompt must not get
+  one, and silently deleting user data without asking would be worse than always keeping it. This code only
+  runs in the uninstaller (unins000.exe), never during a Setup /UPDATE run, which does not invoke it at all. }
+function InitializeUninstall(): Boolean;
+begin
+  Result := True;
+  DeleteDataOnUninstall := False;
+  if UninstallSilent then
+    Exit;
+  (* The userappdata constant resolves for the account the uninstaller's process token belongs to. Under a
+     normal UAC prompt that is still the person who started the uninstall, just elevated; only "Run as a
+     different user" breaks that assumption, the same trap as the agreement hash above. The path is named in
+     the prompt so the person can see what they are agreeing to, rather than trying to detect the mismatch. *)
+  if MsgBox('Also delete your profiles, paired devices, plugins and logs (' + ExpandConstant('{userappdata}\MacroGrid') + ')?',
+     mbConfirmation, MB_YESNO or MB_DEFBUTTON2) = IDYES then
+    DeleteDataOnUninstall := True;
+end;
+
+{ Runs last, after files, the registry and [UninstallRun] (which stops the server first) are already gone. }
+procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);
+begin
+  if (CurUninstallStep = usPostUninstall) and DeleteDataOnUninstall then
+    DelTree(ExpandConstant('{userappdata}\MacroGrid'), True, True, True);
+end;
+
 { Close a running Macro Grid before files are replaced, so an upgrade does not stop on locked files or leave a half-installed folder. }
 function PrepareToInstall(var NeedsRestart: Boolean): String;
 var
