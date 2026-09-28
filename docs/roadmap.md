@@ -81,6 +81,11 @@ The order of the bigger pieces of work, and their plans, are in [plans/README.md
   catalog ever tracks them. Needs deciding what's worth adding to `macrogrid-index.json` (author-supplied vs. computed by the
   release workflow) versus what stays editor-only presentation, since every new field is something plugin authors have to
   fill in and the host has to validate and cap. It needs a plan file first (`plans/`).
+- **Plugins feeding the editor's Error List panel:** the docking workspace's Error List (`docs/plans/docking-workspace-plan.md`) is wired up but has
+  no producer yet — it only ever shows "no problems". The status bar used to be where a plugin's own errors/warnings surfaced (`StatusEntry.level`
+  `Warning`/`Error`); the Error List should take over that role instead, since it's a proper list with filtering and severity counts rather than a
+  single status-bar item. Needs an SDK addition (a way for a plugin to report a diagnostic, not just a status-bar entry) — planned for whenever the
+  SDK's next version bumps, not before.
 
 ## Release status
 

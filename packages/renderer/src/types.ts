@@ -124,6 +124,21 @@ export interface Profile {
   /** Editor-only: foreground-window rules that auto-switch an opted-in device to this profile — see
    * docs/design/auto-profile-switch.md. Ignored by the renderer itself. */
   appMatches?: AppMatch[];
+  /** Editor-only: how this profile's pages are arranged into folders in the Hierarchy tree — see
+   * docs/plans/hierarchy-tree-and-folders-plan.md. `pages` stays the one place page data lives; this only
+   * arranges it. Empty/missing means no arrangement was ever saved (shows flat, in `pages` order).
+   * Ignored by the renderer itself and by the phone client. */
+  pageTree?: PageTreeNode[];
+}
+
+/** One node of a profile's page tree. A "page" node only ever sets `id`; a "folder" node sets `id`, `name`
+ * and `children`. Kept as a single shape with a string discriminator (matching the server's PageTreeNode)
+ * rather than two TypeScript subtypes, so a folder-or-page test is just `node.type === "folder"`. */
+export interface PageTreeNode {
+  type: "page" | "folder";
+  id: string;
+  name?: string;
+  children?: PageTreeNode[];
 }
 
 /** One "switch to this profile when this app is in the foreground" rule (docs/design/auto-profile-switch.md). */

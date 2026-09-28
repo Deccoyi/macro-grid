@@ -18,6 +18,15 @@
   --ms-grid-gap: 10px;
 }
 
+/* An inline <svg> with only attribute width/height (as every lucide-react icon has) does not count as
+ * having a definite intrinsic size for flex-basis purposes in every engine — as a flex child on the main
+ * axis (a row container, most icon buttons) it can end up basis 0 and collapse to width 0 while its
+ * cross-axis size (height) renders fine, which is exactly as invisible as it sounds. Default every svg to
+ * flex-shrink: 0 so no icon needs this worked around one at a time. */
+svg {
+  flex-shrink: 0;
+}
+
 @keyframes ms-spin {
   to { transform: rotate(360deg); }
 }

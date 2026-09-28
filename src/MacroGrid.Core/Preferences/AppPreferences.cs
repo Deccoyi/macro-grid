@@ -10,6 +10,19 @@ public sealed class PreviewProfile
     public int Height { get; set; } = 844;
 }
 
+/// <summary>One named arrangement of the editor's docking workspace (Hierarchy/Toolbox/Properties/Error
+/// List/Document, sizes, splits, auto-hide state), saved from the View menu so the user can switch between
+/// a few layouts. The built-in "Default" layout is not one of these — it's rebuilt from code and always
+/// available, so it can't be listed, renamed or deleted here.</summary>
+public sealed class DockLayoutProfile
+{
+    public string Id { get; set; } = Guid.NewGuid().ToString("N")[..12];
+    public string Name { get; set; } = "";
+    /// <summary>Opaque to the server: the editor's own JSON envelope (dockview's serialized layout plus
+    /// which tool windows are open/auto-hidden), stored as a string rather than modeled here.</summary>
+    public string LayoutJson { get; set; } = "";
+}
+
 /// <summary>Editor-wide preferences: theme, language, user-defined preview sizes. Not tied to any one
 /// profile or browser: a fresh WebView profile or a cleared cache must not lose these, so they live with
 /// the rest of the user's data on the server instead of in localStorage.</summary>
@@ -45,4 +58,12 @@ public sealed class AppPreferences
     /// collapsed — only entries the user actually toggled are stored; a missing key falls back to that
     /// section's own hardcoded default (see Inspector.tsx's SECTION_DEFAULTS).</summary>
     public Dictionary<string, bool> CollapsedInspectorSections { get; set; } = [];
+
+    /// <summary>The docking workspace arrangement the user last left the editor in (see
+    /// <see cref="DockLayoutProfile.LayoutJson"/> for the format) — restored on the next launch instead of
+    /// always rebuilding the built-in default. Empty until the user changes the layout at least once.</summary>
+    public string DockLayoutJson { get; set; } = "";
+
+    /// <summary>Named layout snapshots saved from the View menu. See <see cref="DockLayoutProfile"/>.</summary>
+    public List<DockLayoutProfile> DockLayoutProfiles { get; set; } = [];
 }

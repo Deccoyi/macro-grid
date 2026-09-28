@@ -43,7 +43,14 @@ export function PickerShell({
   const { t } = useT();
   const backdrop = useBackdropClose(onClose);
   return (
-    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.5)", zIndex: 50, display: "flex", alignItems: "center", justifyContent: "center" }} {...backdrop}>
+    // Rendered inline from wherever a Properties field opens it (e.g. AppearanceFields inside
+    // PropertiesToolWindow) — that puts it INSIDE the docking workspace's own isolated stacking context
+    // (.dv-theme-macro's `isolation: isolate`, needed to keep dockview's splitter lines from painting over
+    // an auto-hide flyout). A `position: fixed` descendant still only escapes normal layout, not that
+    // ancestor's stacking context, so its z-index has to beat everything else INSIDE that context too —
+    // the splitters sit at 99 — not just the other dialogs, which happen to be mounted at the App root
+    // and never enter that context at all.
+    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.5)", zIndex: 200, display: "flex", alignItems: "center", justifyContent: "center" }} {...backdrop}>
       <div
         onClick={(e) => e.stopPropagation()}
         style={{

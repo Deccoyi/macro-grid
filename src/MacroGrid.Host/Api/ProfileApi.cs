@@ -18,6 +18,20 @@ internal static class ProfileApi
         api.MapGet("/profiles", (ProfileStore profiles) =>
             profiles.All.Select(p => new { p.Id, p.Name }));
 
+        // The root profile tree (docs/plans/hierarchy-tree-and-folders-plan.md) — folders of profiles.
+        // Normalized against the current profile list on every read, so a profile created or deleted
+        // through some other path (import, a plugin) still shows up correctly without its own tree edit.
+        api.MapGet("/profiles/tree", (ProfileStore profiles, ProfileTreeStore tree) =>
+            ApiResults.Json(tree.GetNormalized(profiles.All)));
+
+        api.MapPut("/profiles/tree", async (HttpRequest request, ProfileTreeStore tree) =>
+        {
+            var (valid, nodes) = await ApiResults.ReadJsonAsync<List<ProfileTreeNode>>(request);
+            if (!valid) return ApiResults.InvalidJson();
+            tree.Save(nodes ?? []);
+            return Results.NoContent();
+        });
+
         api.MapGet("/profiles/{id}", (string id, ProfileStore profiles) =>
             profiles.Get(id) is { } profile ? ApiResults.Json(profile) : Results.NotFound());
 
