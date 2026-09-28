@@ -2,14 +2,22 @@
 
 **Profil**, eksiksiz bir deck'tir. Bir ya da daha fazla **sayfa** içerir; her sayfa bir widget ızgarasıdır. Profilleri farklı durumlar için kullanın: "İş", "Yayın", "Medya".
 
+## Hiyerarşi
+
+**Hiyerarşi** paneli tüm profilleri ve sayfalarını tek bir ağaçta gösterir. Bir profili açıp kapatmak için yanındaki oka tıklayın. Henüz açılmamış bir profil, ilk açışınızda sayfalarını yükler. Bir sayfaya tıklarsanız sekme olarak açılır. Bir profile tıklarsanız ayarları **Özellikler**'de görünür.
+
+![Hiyerarşi: profiller, sayfalar ve klasörler tek ağaçta, klasör menüsüyle](/img/editor-hierarchy-menu.png)
+
+Panelin altındaki düğmelerle **yeni profil**, **sayfa** ve **yeni klasör** eklenir. Bir satıra sağ tıklayınca menüsü açılır (yeniden adlandır, sil, yeni sayfa ya da klasör). Yeniden adlandırmak için satıra çift tıklayın ya da seçip **F2**'ye basın.
+
 ## Profiller
 
-Üst çubukta geçiş yapmak için **Profil** seçicisini, **yeniden adlandırmak**, **yeni profil** oluşturmak ya da bir profili **silmek** için de yanındaki düğmeleri kullanın. Her profil kendi JSON dosyası olarak saklanır.
+Her profil kendi JSON dosyasında saklanır. Hiyerarşi'de bir profil seçtiğinizde **Özellikler**'de **İsim**, **otomatik geçiş kuralları** ve **Profili Sil** görünür. Son profili silemezsiniz.
 
-Bir cihazın açtığı profil şu sırayla belirlenir:
+Bir cihazın hangi profili açtığı:
 
-1. O cihaza [Eşleştirme](/tr/guide/pairing) bölümünde atadığınız profil, yoksa
-2. [Tercihler](/tr/guide/preferences)'teki **varsayılan profil**, o da yoksa
+1. [Eşleştirme](/tr/guide/pairing)'de o cihaza atadığınız profil, yoksa
+2. [Tercihler](/tr/guide/preferences)'teki **varsayılan profil**, yoksa
 3. ilk profil.
 
 Profil, bir düğmeyle (**Profil değiştir** aksiyonu), telefondaki çekmeceden ya da [uygulama kurallarıyla](/tr/guide/auto-switch) otomatik olarak da değiştirilebilir.
@@ -18,7 +26,23 @@ Profil, bir düğmeyle (**Profil değiştir** aksiyonu), telefondaki çekmeceden
 
 Bir profilin birçok sayfası olabilir. Telefonda aralarında geçmek için iki parmakla sola ya da sağa kaydırın. **Sayfa değiştir** aksiyonlu bir düğme de ekleyebilirsiniz (bir sayfaya git, sonraki, önceki ya da geri).
 
-Sayfalar panelinde sayfa ekleyebilir, yeniden adlandırabilir, çoğaltabilir, silebilir ve **bir sayfayı başka bir profile kopyalayabilirsiniz**. Seçili widget'ları da başka bir sayfaya ya da profile **taşıyabilir veya kopyalayabilirsiniz**.
+Sayfayı ağacın altındaki **Sayfa** düğmesiyle ya da profilin sağ tık menüsünden ekleyin. Sayfa satırındaki simgelerle **çoğaltın** ya da **silin**. Seçili widget'ları başka bir sayfaya ya da profile **taşıyabilir veya kopyalayabilirsiniz**.
+
+## Klasörler
+
+Klasörler uzun listeyi derli toplu tutar. İki türü vardır:
+
+- **Sayfa klasörleri** bir profilin içindedir ve sayfaları (ve başka klasörleri) tutar.
+- **Profil klasörleri** ağacın en üstündedir ve profilleri tutar.
+
+**Yeni Klasör** düğmesi ya da sağ tık menüsüyle oluşturun, sayfa gibi yeniden adlandırın. **Klasörü sil**, klasörün içindekilerle birlikte mi silineceğini, yoksa yalnızca klasörün kaldırılıp **içeriğin korunacağını** sorar.
+
+Klasörler yalnızca düzenleyici içindir. Bir cihaz, sayfalar ve profiller klasörde olsa da olmasa da aynısını görür.
+
+## Sürükle-bırak, kopyala ve yapıştır
+
+- **Sürükleyin:** bir sayfayı klasörün üzerine bırakınca içine girer, klasörden dışarı bırakınca geri çıkar. Profiller ve profil klasörleri için de aynısı geçerlidir.
+- **Kopyala ve yapıştır:** bir sayfaya, profile ya da klasöre tıklayıp **Ctrl+C**'ye basın, sonra konulacağı yere tıklayıp **Ctrl+V**'ye basın. Kopyalanan klasör içindekilerle birlikte gelir. Klasöre yapıştırırsanız kopya klasörün içine girer. Bir sayfayı başka bir profile yapıştırabilirsiniz, bir sayfayı yeniden kullanmanın en hızlı yolu budur.
 
 ## Dışa ve içe aktarma
 

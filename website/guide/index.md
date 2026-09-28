@@ -27,7 +27,7 @@ More: [Pair a device](/guide/pairing).
 
 ## 3. Make your first button
 
-1. Click **Add widget** and choose **Button**. It lands on a free cell of the grid.
+1. In the **Toolbox**, click **Button**. It lands on a free cell of the grid.
 2. Select it and set its **Text**, for example `CPU {system.cpu|0}%`. The `{...}` part is a live value.
 3. Under **Actions**, on **Press**, click **+ Add action** and pick **Shortcut**. Click the field and press your combination, for example `Ctrl+Shift+S`.
 4. Click **Save**. The phone updates right away. Press the button and the PC receives the shortcut.

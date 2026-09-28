@@ -27,7 +27,7 @@ Devamı: [Cihaz eşleştirme](/tr/guide/pairing).
 
 ## 3. İlk butonunuzu yapın
 
-1. **Widget ekle**'ye tıklayıp **Buton**'u seçin. Buton, ızgaranın boş bir hücresine yerleşir.
+1. **Araç Kutusu**'nda **Buton**'a tıklayın. Buton, ızgaranın boş bir hücresine yerleşir.
 2. Butonu seçin ve **Metin** alanını doldurun, örneğin `CPU {system.cpu|0}%`. `{...}` kısmı canlı bir değerdir.
 3. **Aksiyonlar** bölümünde **Basınca** olayı için **+ Aksiyon ekle**'ye tıklayıp **Kısayol**'u seçin. Alana tıklayın ve tuş kombinasyonuna basın, örneğin `Ctrl+Shift+S`.
 4. **Kaydet**'e tıklayın. Telefon hemen güncellenir. Butona basın, bilgisayar kısayolu alır.

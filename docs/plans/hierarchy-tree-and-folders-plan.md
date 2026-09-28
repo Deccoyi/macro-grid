@@ -1,6 +1,6 @@
 # Hierarchy tree: every profile and page, folders, drag-and-drop
 
-**Status:** planned, not started. Build after [docking-workspace-plan.md](docking-workspace-plan.md) and phases 1 and 2 of
+**Status:** built in 1.2.0 except phase 6 (plugin-provided tree entries, plugin SDK), which is not started. The tree, page and profile folders, drag-and-drop, copy and paste and lazy-loaded profiles are in. User guide: `website/guide/profiles.md`. Build after [docking-workspace-plan.md](docking-workspace-plan.md) and phases 1 and 2 of
 [editor-edit-commands-plan.md](editor-edit-commands-plan.md). **Repositories:** `macro-grid` (`editor/`, `src/MacroGrid.Core`,
 `src/MacroGrid.Host`, `packages/renderer`; phase 6 also `src/MacroGrid.Plugin.Abstractions`, the plugin SDK). Phase 6's first use
 (SoundBoard) is in `macro-grid-plugin`. The phone app (`macro-grid-client`) needs no change: the new fields are optional and it ignores
