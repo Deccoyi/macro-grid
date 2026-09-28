@@ -49,6 +49,8 @@ React and renderer dependencies as well.
 | react-dom | 18.3.1 | MIT | Meta Platforms, Inc. and affiliates (Facebook, Inc.) | https://reactjs.org/ | [licenses/react-dom](licenses/react-dom) |
 | scheduler (used by react-dom) | 0.23.2 | MIT | Meta Platforms, Inc. and affiliates (Facebook, Inc.) | https://reactjs.org/ | [licenses/scheduler](licenses/scheduler) |
 | lucide-react (editor icons; also portions from Feather) | 0.460.0 | ISC (portions MIT) | Lucide Contributors; Cole Bemis (Feather) | https://lucide.dev | [licenses/lucide-react](licenses/lucide-react) |
+| dockview-react (editor docking workspace) | 8.3.1 | MIT | mathuo | https://github.com/dockview/dockview | [licenses/dockview-react](licenses/dockview-react) |
+| dockview-core (used by dockview-react) | 8.3.1 | MIT | mathuo | https://github.com/dockview/dockview | [licenses/dockview-react](licenses/dockview-react) |
 | qrcode | 1.5.4 | MIT | Ryan Day | https://github.com/soldair/node-qrcode | [licenses/qrcode](licenses/qrcode) |
 | dijkstrajs (used by qrcode) | 1.0.3 | MIT | Wyatt Baldwin (adapted from Dijkstar) | https://github.com/tcort/dijkstrajs | [licenses/dijkstrajs](licenses/dijkstrajs) |
 | postcss | 8.5.28 | MIT | Andrey Sitnik | https://postcss.org/ | [licenses/postcss](licenses/postcss) |

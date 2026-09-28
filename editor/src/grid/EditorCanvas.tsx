@@ -1,7 +1,7 @@
 import { useCallback, useRef, useState } from "react";
 import { Grid, WidgetView, gridArea, type Page, type Widget } from "@macro/renderer";
 import { useT } from "../i18n/I18nContext";
-import { canPlace, clamp } from "./collision";
+import { canPlace, canPlaceExcluding, clamp, overlappingWidgets } from "./collision";
 import { evaluateWidgetDynamicStyle, evaluateWidgetDynamicText } from "./evaluateDynamic";
 
 interface EditorCanvasProps {
@@ -35,6 +35,10 @@ export function EditorCanvas({ page, selectedIds, onSelect, onToggleSelect, onRe
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [drag, setDrag] = useState<DragState | null>(null);
   const [previewRect, setPreviewRect] = useState<{ x: number; y: number; w: number; h: number } | null>(null);
+  // Set while dragging a widget onto exactly one other widget that it can cleanly trade places with (the
+  // grid may be completely full, so "just refuse the move" — the previous behavior — left no way to
+  // rearrange anything). Only ever set for mode "move"; resizing into occupied space still just refuses.
+  const [swapWithId, setSwapWithId] = useState<string | null>(null);
   const gap = `${page.gap ?? 10}px`;
 
   const beginDrag = useCallback(
@@ -54,6 +58,7 @@ export function EditorCanvas({ page, selectedIds, onSelect, onToggleSelect, onRe
         cellH: bounds.height / page.rows,
       });
       setPreviewRect({ x: widget.x, y: widget.y, w: widget.w, h: widget.h });
+      setSwapWithId(null);
     },
     [page.cols, page.rows],
   );
@@ -75,7 +80,30 @@ export function EditorCanvas({ page, selectedIds, onSelect, onToggleSelect, onRe
 
       if (canPlace(next, drag.widgetId, page.widgets, page.cols, page.rows)) {
         setPreviewRect(next);
+        setSwapWithId(null);
+        return;
       }
+
+      // The cell(s) `next` covers are occupied. A resize into occupied space still just refuses (growing
+      // a widget by pushing others around is a different, cascading-reflow feature); a plain move offers a
+      // straight swap when it's blocked by exactly one other widget and trading places doesn't in turn
+      // collide with anything else — the one case where "the grid is full" doesn't have to mean "you can't
+      // rearrange anything".
+      if (drag.mode === "move") {
+        const blockers = overlappingWidgets(next, drag.widgetId, page.widgets);
+        if (blockers.length === 1) {
+          const other = blockers[0]!;
+          const otherNewRect = { x: drag.startRect.x, y: drag.startRect.y, w: other.w, h: other.h };
+          if (canPlaceExcluding(otherNewRect, new Set([drag.widgetId, other.id]), page.widgets, page.cols, page.rows)) {
+            setPreviewRect(next);
+            setSwapWithId(other.id);
+            return;
+          }
+        }
+      }
+      // No valid move/resize/swap for this position — freeze the preview at wherever it last was, same
+      // as always (leaving `previewRect`/`swapWithId` untouched, rather than snapping back to startRect,
+      // keeps the ghost from jumping around while the pointer briefly crosses an invalid cell).
     },
     [drag, page.cols, page.rows, page.widgets],
   );
@@ -83,10 +111,17 @@ export function EditorCanvas({ page, selectedIds, onSelect, onToggleSelect, onRe
   const endDrag = useCallback(() => {
     // A plain click (no actual move/resize) still goes through pointerdown->pointerup here; only
     // commit — and mark the profile dirty — when the rect genuinely changed.
-    if (drag && previewRect && !sameRect(previewRect, drag.startRect)) onRectChange(drag.widgetId, previewRect);
+    if (drag && previewRect && !sameRect(previewRect, drag.startRect)) {
+      onRectChange(drag.widgetId, previewRect);
+      if (swapWithId) {
+        const other = page.widgets.find((w) => w.id === swapWithId);
+        if (other) onRectChange(swapWithId, { x: drag.startRect.x, y: drag.startRect.y, w: other.w, h: other.h });
+      }
+    }
     setDrag(null);
     setPreviewRect(null);
-  }, [drag, previewRect, onRectChange]);
+    setSwapWithId(null);
+  }, [drag, previewRect, swapWithId, page.widgets, onRectChange]);
 
   return (
     <div
@@ -102,6 +137,7 @@ export function EditorCanvas({ page, selectedIds, onSelect, onToggleSelect, onRe
         gap={gap}
         renderWidget={(widget) => {
           const isDraggingThis = drag?.widgetId === widget.id;
+          const isSwapTarget = swapWithId === widget.id;
           const rect = isDraggingThis && previewRect ? previewRect : widget;
           const isSelected = selectedIds.includes(widget.id);
           return (
@@ -111,7 +147,7 @@ export function EditorCanvas({ page, selectedIds, onSelect, onToggleSelect, onRe
                 liveText={renderPreviewText(evaluateWidgetDynamicText(widget, variables), variables)}
                 liveStyle={evaluateWidgetDynamicStyle(widget, variables)}
                 haptics={false}
-                style={{ pointerEvents: "none", opacity: isDraggingThis ? 0.55 : 1 }}
+                style={{ pointerEvents: "none", opacity: isDraggingThis || isSwapTarget ? 0.55 : 1 }}
               />
               <div
                 onPointerDown={(e) => {
@@ -177,6 +213,22 @@ export function EditorCanvas({ page, selectedIds, onSelect, onToggleSelect, onRe
               borderRadius: 4,
             }}
           />
+          {swapWithId && (() => {
+            const other = page.widgets.find((w) => w.id === swapWithId);
+            if (!other) return null;
+            // Where `other` will land — the dragged widget's original slot, at other's own size — so the
+            // swap reads as "these two trade places" rather than just "this one widget is moving".
+            return (
+              <div
+                style={{
+                  gridArea: gridArea({ x: drag.startRect.x, y: drag.startRect.y, w: other.w, h: other.h }),
+                  background: "var(--ms-accent-bg-muted)",
+                  border: "2px dashed var(--ms-accent)",
+                  borderRadius: 4,
+                }}
+              />
+            );
+          })()}
         </div>
       )}
     </div>

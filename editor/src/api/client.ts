@@ -18,6 +18,7 @@ import type {
   PluginInstallResult,
   PluginUninstallResult,
   ProfileSummary,
+  ProfileTreeNode,
   RunningWindowInfo,
   SettingField,
   StatusEntry,
@@ -78,6 +79,12 @@ export const api = {
   saveProfile: (profile: Profile): Promise<void> => send("PUT", `/api/profiles/${profile.id}`, profile),
 
   deleteProfile: (id: string): Promise<void> => send("DELETE", `/api/profiles/${id}`),
+
+  /** The root profile tree (docs/plans/hierarchy-tree-and-folders-plan.md) — folders of profiles. The
+   * server normalizes it against the current profile list on every GET. */
+  getProfileTree: (): Promise<ProfileTreeNode[]> => get("/api/profiles/tree"),
+
+  saveProfileTree: (nodes: ProfileTreeNode[]): Promise<void> => send("PUT", "/api/profiles/tree", nodes),
 
   listActions: (): Promise<ActionInfo[]> => get("/api/actions"),
 

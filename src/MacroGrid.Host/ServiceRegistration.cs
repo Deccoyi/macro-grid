@@ -27,6 +27,7 @@ internal static class ServiceRegistration
     public static IServiceCollection AddHostStores(this IServiceCollection services, string dataDir)
     {
         services.AddSingleton(new ProfileStore(dataDir));
+        services.AddSingleton(new ProfileTreeStore(dataDir));
         var preferencesStore = new PreferencesStore(dataDir);
         AppLanguage.Current = preferencesStore.Get().Language;
         preferencesStore.Changed += () => AppLanguage.Current = preferencesStore.Get().Language;

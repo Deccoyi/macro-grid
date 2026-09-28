@@ -73,6 +73,11 @@ The order of the bigger pieces of work, and their plans, are in [plans/README.md
 - **The `web` widget** (an embedded page such as a live chat): today it draws a placeholder. The idea is an iframe first and, for pages that refuse to be
   framed, a native WebView positioned over the grid cell by a small Android plugin.
 - **An async host API for JavaScript plugins** (today scripts are synchronous, so `host.http` blocks the plugin's own thread).
+- **Plugins feeding the editor's Error List panel:** the docking workspace's Error List (`docs/plans/docking-workspace-plan.md`) is wired up but has
+  no producer yet — it only ever shows "no problems". The status bar used to be where a plugin's own errors/warnings surfaced (`StatusEntry.level`
+  `Warning`/`Error`); the Error List should take over that role instead, since it's a proper list with filtering and severity counts rather than a
+  single status-bar item. Needs an SDK addition (a way for a plugin to report a diagnostic, not just a status-bar entry) — planned for whenever the
+  SDK's next version bumps, not before.
 
 ## Release status
 
