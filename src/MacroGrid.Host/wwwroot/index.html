@@ -113,12 +113,13 @@
   }
 
   // Icon URLs come from the paired profile; only allow schemes an <img> can safely load, so a crafted
-  // profile can't turn this into a redirect or an unexpected network request.
-  function isSafeIconUrl(url) {
-    try {
-      const scheme = new URL(url, location.href).protocol;
-      return scheme === 'http:' || scheme === 'https:' || scheme === 'data:';
-    } catch { return false; }
+  // profile can't turn this into a redirect or an unexpected network request. Returns the canonical,
+  // already-resolved href (never the original string) so nothing tainted reaches the sink.
+  function safeIconUrl(url) {
+    let parsed;
+    try { parsed = new URL(url, location.href); } catch { return null; }
+    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:' && parsed.protocol !== 'data:') return null;
+    return parsed.href;
   }
 
   function renderPage(pid) {
@@ -140,10 +141,11 @@
       if (s.radius != null) el.style.borderRadius = s.radius + 'px';
       if (s.borderWidth) el.style.border = `${s.borderWidth}px solid ${s.borderColor || '#fff'}`;
 
-      if (s.icon && isSafeIconUrl(s.icon)) {
+      const iconUrl = s.icon && safeIconUrl(s.icon);
+      if (iconUrl) {
         const img = document.createElement('img');
         img.className = 'icon';
-        img.src = s.icon;
+        img.src = iconUrl;
         img.alt = '';
         el.appendChild(img);
       }
