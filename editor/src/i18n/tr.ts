@@ -353,6 +353,11 @@ export const tr = {
   "schemaForm.addRow": "+ Ekle",
   "schemaForm.removeRow": "Kaldır",
   "schemaForm.running": "Çalışıyor…",
+  "schemaForm.expandAll": "Tümünü aç",
+  "schemaForm.collapseAll": "Tümünü kapat",
+  "schemaForm.collapseRow": "Kapat",
+  "schemaForm.expandRow": "Aç",
+  "schemaForm.untitledRow": (index: string) => `${index}. öğe`,
 
   // ---- CSS editor ----
   "css.label": "Özel CSS",

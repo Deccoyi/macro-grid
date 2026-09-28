@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
 import { api } from "../api/client";
 import type { SettingField } from "../api/types";
+import { handleLocalUndoRedo } from "../commands/shortcuts";
 import { useT } from "../i18n/I18nContext";
 import type { PluginTreeSelection } from "../state/pluginTreeSelectionStore";
+import { useUndoableValues } from "../state/useUndoableValues";
 import { SchemaForm } from "./actionForms/SchemaForm";
 
 /** Properties tool window content for whatever is selected in the Plugins tool window (see
@@ -13,7 +15,7 @@ import { SchemaForm } from "./actionForms/SchemaForm";
 export function PluginTreeItemProperties({ selection }: { selection: PluginTreeSelection }) {
   const { t } = useT();
   const [fields, setFields] = useState<SettingField[] | null>(null);
-  const [values, setValues] = useState<Record<string, unknown>>({});
+  const { values, set: setValues, reset: resetValues, undo, redo } = useUndoableValues({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -38,7 +40,7 @@ export function PluginTreeItemProperties({ selection }: { selection: PluginTreeS
       ? api.getPluginSettings(selection.pluginId)
       : api.getPluginTreeItemSettings(selection.pluginId, selection.itemId);
     Promise.all([schema, current])
-      .then(([f, v]) => { setFields(f); setValues(v); })
+      .then(([f, v]) => { setFields(f); resetValues(v); })
       .catch((err) => setError(err instanceof Error ? err.message : String(err)))
       .finally(() => setLoading(false));
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -59,7 +61,10 @@ export function PluginTreeItemProperties({ selection }: { selection: PluginTreeS
   };
 
   return (
-    <div style={{ height: "100%", display: "flex", flexDirection: "column", overflowY: "auto", padding: 12 }}>
+    <div
+      style={{ height: "100%", display: "flex", flexDirection: "column", overflowY: "auto", padding: 12 }}
+      onKeyDown={(e) => handleLocalUndoRedo(e, undo, redo)}
+    >
       <div style={{ fontSize: 12.5, fontWeight: 600, color: "var(--ms-text-primary)", marginBottom: 10 }}>{title}</div>
 
       {!hasSettings && (

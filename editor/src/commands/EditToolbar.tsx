@@ -35,11 +35,12 @@ function ToolbarButton({
   t: ReturnType<typeof useT>["t"];
 }) {
   const label = command ? (command.label ? command.label() : t(command.labelKey)) : fallbackLabel;
+  const shortcut = command?.shortcuts?.[0];
   const disabled = !command || !command.enabled();
   return (
     <button
       type="button"
-      title={label}
+      title={shortcut ? `${label} (${shortcut})` : label}
       aria-label={label}
       disabled={disabled}
       onClick={() => command?.run()}

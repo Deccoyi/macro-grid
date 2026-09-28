@@ -344,6 +344,11 @@ export const en: Record<DictKey, string | ((...args: string[]) => string)> = {
   "schemaForm.addRow": "+ Add",
   "schemaForm.removeRow": "Remove",
   "schemaForm.running": "Running…",
+  "schemaForm.expandAll": "Expand all",
+  "schemaForm.collapseAll": "Collapse all",
+  "schemaForm.collapseRow": "Collapse",
+  "schemaForm.expandRow": "Expand",
+  "schemaForm.untitledRow": (index: string) => `Item ${index}`,
 
   "css.label": "Custom CSS",
 

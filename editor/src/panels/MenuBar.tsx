@@ -93,12 +93,13 @@ export function MenuBar({ profile, onImportProfile, editCommands }: MenuBarProps
     }
   };
 
+  const findCommand = (id: string) => editCommands.find((c) => c.id === id)!;
   const fileItems: ContextMenuEntry[] = [
+    commandItem(findCommand("file.save"), t),
+    { divider: true },
     { label: t("menu.file.exportProfile"), onSelect: exportProfile, disabled: !profile },
     { label: t("menu.file.importProfile"), onSelect: importProfile },
   ];
-
-  const findCommand = (id: string) => editCommands.find((c) => c.id === id)!;
   const editItems: ContextMenuEntry[] = [
     commandItem(findCommand("edit.undo"), t),
     commandItem(findCommand("edit.redo"), t),
