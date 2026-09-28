@@ -3,6 +3,8 @@
 This file follows the [Keep a Changelog](https://keepachangelog.com/) format. For versioning rules, see [versioning.md](guides/versioning.md). The short, public changelog is [CHANGELOG.md](CHANGELOG.md).
 
 ## [Unreleased]
+
+## [1.2.0] - 2026-09-28
 ### Added
 - **The server release carries one SBOM file:** `scripts/sbom.ps1` now merges the four parts (`dotnet`, `editor`, `deck`, `renderer`) into `MacroGrid-Server-<version>.cdx.json` (a package several parts share is listed once; CycloneDX 1.7) and `release.yml` attaches only that file. The part files stay in `artifacts/sbom/parts/`. Anything that read `MacroGrid-Server-<version>-<part>.cdx.json` from a release must read the single file instead; releases up to 1.1.0 keep the four files.
 - **Compatibility messages say "Macro Grid editor":** `PluginCompatibility` now reads "Needs Macro Grid editor 1.3.0 or newer, this is 1.2.4" (and the same for "Built for Macro Grid editor ..." and "rebuilt for Macro Grid editor 1.0.0"), because the required version is the editor's, shared with the server. `docs/guides/versioning.md` gains the rule to always name what a version belongs to (Macro Grid editor, SDK, plugin). The manifest field stays `macroGrid`: servers before this change only read that name.

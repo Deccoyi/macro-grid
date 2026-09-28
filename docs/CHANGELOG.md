@@ -3,7 +3,13 @@
 New features and fixes in Macro Grid. For technical details, see [CHANGELOG-developer.md](CHANGELOG-developer.md).
 
 ## Unreleased
+
+## 1.2.0 - 2026-09-28
 ### New
+- **A new editor layout:** The editor is now a workspace you can arrange. Panels dock, tab, split and auto-hide, and pages open as tabs.
+- **One tree for profiles and pages:** The Hierarchy panel shows every profile and its pages in one tree. Open a profile to load its pages.
+- **Folders:** Group pages and profiles into folders, and drag them in and out to reorder.
+- **Copy and paste:** Copy pages, profiles or whole folders with Ctrl+C and Ctrl+V, including into another profile.
 - **Safer pairing:** A new device can only be paired while the Pairing window is open. Each code pairs one device, and a device that enters too many wrong codes has to wait before it can try again.
 - **Encrypted pairings:** The tokens of paired devices are now stored encrypted for your Windows account. Copying the data folder to another PC or account means pairing those devices again.
 - **Security log:** Pairings, removed devices and plugin installs and permissions are now written to the log files. Log files are kept for 14 days and no longer pile up on the PC.
