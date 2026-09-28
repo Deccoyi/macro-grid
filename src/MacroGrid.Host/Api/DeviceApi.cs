@@ -1,4 +1,5 @@
 using MacroGrid.Core.Devices;
+using MacroGrid.Core.Security;
 using MacroGrid.Core.Sessions;
 using Microsoft.AspNetCore.Routing;
 
@@ -16,9 +17,11 @@ internal static class DeviceApi
 
         api.MapPost("/pairing/pin/regenerate", (PairingService pairing) => new { pin = pairing.Regenerate() });
 
-        api.MapGet("/pairing/qr", (PairingService pairing) => BuildPairingQr(pairing.CurrentPin, pairing.ExpiresAt));
+        api.MapGet("/pairing/qr", (PairingService pairing, ServerCertificateProvider certificates) =>
+            BuildPairingQr(pairing.CurrentPin, pairing.ExpiresAt, certificates));
 
-        api.MapPost("/pairing/qr/regenerate", (PairingService pairing) => BuildPairingQr(pairing.Regenerate(), pairing.ExpiresAt));
+        api.MapPost("/pairing/qr/regenerate", (PairingService pairing, ServerCertificateProvider certificates) =>
+            BuildPairingQr(pairing.Regenerate(), pairing.ExpiresAt, certificates));
 
         api.MapGet("/devices", (DeviceStore devices) =>
             devices.All.Select(d => new { d.Id, d.Name, d.PairedAt, d.LastSeenAt, d.AssignedProfileId, d.FollowActiveWindow, d.AutoSwitchLocked }));
@@ -60,12 +63,15 @@ internal static class DeviceApi
     /// host has no LAN adapter up, <c>host</c> comes back empty and the editor should show a warning instead
     /// of a QR code, since a QR with no reachable host is useless.
     /// </summary>
-    private static object BuildPairingQr(string pin, DateTimeOffset expiresAt)
+    /// <remarks>The QR also carries <c>tlsPort</c> and <c>fp</c> (lowercase hex SHA-256 of the server certificate). A client
+    /// that understands <c>fp</c> connects over <c>wss://host:tlsPort</c> and pins that fingerprint; an older client
+    /// ignores both and keeps using <c>ws://host:port</c>, so this is additive.</remarks>
+    private static object BuildPairingQr(string pin, DateTimeOffset expiresAt, ServerCertificateProvider certificates)
     {
         var host = NetworkInfo.GetLanAddresses().FirstOrDefault()?.ToString() ?? "";
         var text = string.IsNullOrEmpty(host)
             ? ""
-            : $"macrogrid://pair?host={Uri.EscapeDataString(host)}&port={ServerApp.Port}&pin={pin}";
-        return new { text, host, port = ServerApp.Port, pin, expiresAt };
+            : $"macrogrid://pair?host={Uri.EscapeDataString(host)}&port={ServerApp.Port}&tlsPort={ServerApp.TlsPort}&pin={pin}&fp={certificates.Fingerprint}";
+        return new { text, host, port = ServerApp.Port, tlsPort = ServerApp.TlsPort, pin, expiresAt, fingerprint = certificates.Fingerprint };
     }
 }
