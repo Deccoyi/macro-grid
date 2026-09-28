@@ -3,8 +3,12 @@
 New features and fixes in Macro Grid. For technical details, see [CHANGELOG-developer.md](CHANGELOG-developer.md).
 
 ## Unreleased
+
+## 1.2.1 - 2026-09-28
 ### Fixed
 - **Auto-switch settings surviving a re-pair:** If a device had to pair again (a lost token, or one that could not be decrypted after 1.2.0's encrypted pairings), "Follow active window" and its assigned profile were silently turned back off. They now carry over.
+### Security
+- **Hardened logging and the browser deck's icon handling:** Closed findings from an automated code scan around what gets written to the log files and which icon links the browser deck will load. No known impact on anyone using Macro Grid.
 
 ## 1.2.0 - 2026-09-28
 ### New
