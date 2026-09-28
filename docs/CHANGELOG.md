@@ -14,6 +14,9 @@ New features and fixes in Macro Grid. For technical details, see [CHANGELOG-deve
 - **The browser deck tells you when a PIN is wrong:** Entering the wrong pairing PIN, or too many of them, used to look like nothing happened. It now shows why, with a live countdown when you have to wait before trying again.
 - **Choose to delete your data on uninstall:** Removing Macro Grid now asks whether to also delete your profiles, paired devices, plugins and logs. Say no to keep them for next time.
 
+## 1.1.0 - 2026-09-28
+No user-visible changes in this version — an addition to the plugin SDK only (see CHANGELOG-developer.md).
+
 ## 1.0.1 - 2026-09-26
 ### Fixed
 - **Start-up log:** Macro Grid now writes into its log what it finds in its data folder and what it loads from it, and whether it can write there. If something is missing after a start, the log says why.

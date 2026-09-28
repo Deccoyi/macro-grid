@@ -1,7 +1,7 @@
 # Issues and Discussions (all three repositories)
 
-Status: **local files written and checked, GitHub not changed yet** (2026-09-25). The owner approved the plan ("yap"); the open questions took the recommended answers (see the end). What is left are the steps that reach GitHub (labels, Discussions), each after the owner's OK, and the commit and push, which the owner does with the other pending work.
-**Repositories:** `macro-grid`, `macro-grid-client` and `macro-grid-plugin` (the same design in each; the plan lives here, like every plan). No code changes; only `.github/` files, a small script, `SUPPORT.md` and the contributing docs.
+Status: **done** (checked 2026-09-27). Labels, forms, the triage workflow and Discussions forms are committed in all three repositories; Discussions is on and the labels listed below exist on GitHub in all three (`has_discussions: true`, `gh api repos/Deccoyi/<repo>/labels`).
+**Repositories:** `macro-grid`, `macro-grid-client` and `macro-grid-plugin` (the same design in each). No code changes; only `.github/` files, a small script, `SUPPORT.md` and the contributing docs.
 
 Goal: make the Issues page as easy to use as a well-run project's: a form for every kind of report, a small set of clear labels, new issues sorted by area on their own, and a separate place (Discussions) for questions and ideas, so an issue always means "something to fix or build".
 

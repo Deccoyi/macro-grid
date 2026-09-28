@@ -17,8 +17,8 @@ internal static class ServerApp
 {
     public const int Port = 9820;
 
-    /// <summary><c>wss://</c>/<c>https://</c>, next to the plain <see cref="Port"/> — see
-    /// <c>docs/plans/security-hardening-plan.md</c>, part A.</summary>
+    /// <summary><c>wss://</c>/<c>https://</c>, next to the plain <see cref="Port"/>. A Kestrel listener is either plain or
+    /// TLS, not both, so a second port is the only way to add TLS without breaking clients that only speak plain.</summary>
     public const int TlsPort = 9821;
 
     public static WebApplication Build(string[] args, IUiDialogService dialogs, IUiWindowService windows)

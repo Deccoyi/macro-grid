@@ -30,6 +30,7 @@ Where things live. Public entry points (`README.md`, `CONTRIBUTING.md`, `SECURIT
 | [guides/triage.md](guides/triage.md) | How the maintainer handles a new issue, and answers to copy. |
 | [ui/ui-guidelines.md](ui/ui-guidelines.md) | UI rules for the editor and the phone deck. |
 | [ui/color-bible.md](ui/color-bible.md) | The color system ([live preview](ui/color-bible-preview.html)). |
+| [ui/editor-icons.md](ui/editor-icons.md) | Editor icons: format, sizes, colors by state, the full list, and the custom icons to draw ([preview](ui/editor-icons-preview.html)). |
 
 ## Working notes for AI agents
 

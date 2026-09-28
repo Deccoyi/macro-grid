@@ -4,9 +4,9 @@ Status: **approved by the owner** (2026-09-25), with the decisions under "Decisi
 **Repositories:** `macro-grid-client` (all code, the release workflow, its docs and website); `macro-grid` (this plan, and the phone-app and security pages of its website only).
 
 The Android app finds out on its own that a newer release exists on GitHub, shows the changes, and after one tap downloads the APK, verifies
-it and hands it to Android's installer. It follows the server's auto-update ([../design/auto-update.md](../design/auto-update.md)) wherever
+it and hands it to Android's installer. It follows the server's auto-update ([auto-update.md](auto-update.md)) wherever
 the platform allows: same feed rules, same version order, same Later / Skip / turn-off behavior, same "never pile up downloads" rule, same
-"ask as little as possible" rule ([../design/agreement-acceptance.md](../design/agreement-acceptance.md), "Keep it light").
+"ask as little as possible" rule ([agreement-acceptance.md](agreement-acceptance.md), "Keep it light").
 
 ## What exists today (checked 2026-09-25)
 

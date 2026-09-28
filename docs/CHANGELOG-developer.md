@@ -3,6 +3,24 @@
 This file follows the [Keep a Changelog](https://keepachangelog.com/) format. For versioning rules, see [versioning.md](guides/versioning.md). The short, public changelog is [CHANGELOG.md](CHANGELOG.md).
 
 ## [Unreleased]
+### Added
+- **`/api` now checks the request's `Origin`:** `OriginGuard` refuses a browser request whose `Origin` header is present and is not the editor's own (`http://localhost:9820`, the loopback IP forms, and the Vite dev server ports `5190`/`5192`). `LoopbackGuard` alone let through any page open in the person's regular browser, since it also connects from this PC. A request with no `Origin` header (curl, a native app) is unaffected. Tests: `OriginGuardTests`.
+- **Plugin settings never send a saved password back:** `GET /api/plugins/{id}/settings` blanks every top-level `SettingFieldKind.Password` field of a plugin with a registered settings page; a `PUT` with an empty password field keeps the stored value (a non-empty value is a real change). Fields nested in a `List` row are not covered.
+- **The server also listens for TLS on port 9821 (`wss://` / `https://`), next to plain 9820:** `ServerCertificateProvider` makes a self-signed ECDSA P-256 certificate (`CN=Macro Grid`, 10 years) on first start and keeps it in `%AppData%\MacroGrid\tls-cert.dat`, its private key protected with `ISecretProtector`. The pairing QR (`macrogrid://pair?...`) and the `/api/pairing/qr` response now carry `tlsPort` and `fp` (`fingerprint` in the JSON): the lowercase hex SHA-256 of the certificate, 64 characters. A client that understands `fp` should connect `wss://host:tlsPort` and pin that fingerprint (there is no certificate authority); one that doesn't keeps using `ws://host:port`, so the change is additive and no `hello` field says whether TLS is required — the presence of `fp` in the scanned QR is the signal. Port 9820 is unchanged. The browser deck stays on plain 9820 (a browser cannot pin a fingerprint). Tests: `ServerCertificateProviderTests`.
+
+## [1.1.0] - 2026-09-28
+### Changed
+- **The SDK NuGet package is no longer published on every server release.** `publish-sdk.yml` now diffs `src/MacroGrid.Plugin.Abstractions` against the previous `server-v*` tag and skips the NuGet publish when it is unchanged (most releases). A plugin author should reference the newest **published** SDK version, not necessarily the newest server version — see `docs/guides/versioning.md` and `docs/guides/release.md`.
+### Added
+- **The installer can delete `%AppData%\MacroGrid` on uninstall:** `installer/MacroGrid.iss` asks (default No) unless the uninstall is silent, in which case it never asks and never deletes. Only the uninstaller runs this code, so a Setup `/UPDATE` run is unaffected.
+- **A package-validation guardrail on the SDK:** `dotnet pack` now runs .NET's package validation against the published `1.0.0` baseline (`EnablePackageValidation`, `PackageValidationBaselineVersion` in the SDK csproj) every time it packs, so removing or incompatibly changing a public member fails the build before it can reach nuget.org. Tested: renaming `IPluginHost.ServerVersion` fails the pack with `CP0002`/`CP0006`.
+- **`LegacyPluginCompatibilityTests`:** a real plugin (`tests/MacroGrid.Tests.LegacyPlugin`), compiled against the actually-published SDK 0.4.0 NuGet package with a legacy manifest (`sdkVersion`, no `macroGrid`), is loaded on the current server and asserted `Loaded` — proving `PluginLoadContext` really hands an old plugin the server's newer SDK assembly, not just that the compatibility rule says it should.
+- **`IPluginHost.Secrets` (`IPluginSecrets`):** a plugin can now protect a secret value (for example a password field in its own
+  `settings.json`) with `host.Secrets.Protect(string)` / `.Unprotect(string)`, backed by a new `ISecretProtector` abstraction
+  (`MacroGrid.Core.Security`; `DpapiSecretProtector` on Windows — the current Windows user's DPAPI, same trust boundary as any
+  other DPAPI-protected value on the machine). Optional: a plugin that does not call it keeps storing settings as before, and
+  a test host with no `ISecretProtector` registered gets a clear `InvalidOperationException` instead of a value that looks
+  protected but is not. Additive; a MINOR bump. Tests: `PluginSecretsTests`.
 
 ### Added
 - **`error`'s `pairing_required` now carries `retryAfterSeconds` and `reason`:** `retryAfterSeconds` (an integer, seconds to

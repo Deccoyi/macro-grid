@@ -1,6 +1,6 @@
 # Roadmap
 
-Where the project stands. The project is before 1.0.0 and under active development. For how things work see [architecture.md](architecture.md).
+Where the project stands. The server and the SDK are at 1.0.0 and under active development. For how things work see [architecture.md](architecture.md).
 
 ## Done
 
@@ -22,12 +22,22 @@ Where the project stands. The project is before 1.0.0 and under active developme
 - **Packaging:** a single-file release build and a Windows installer with a user agreement, tested on a clean company PC (install, WebView2 setup, start with
   Windows, upgrade, uninstall; [release.md](guides/release.md)); a signed release build of the phone app; the plugin SDK is published on NuGet.
 - **Phone app** (its own repository): connection with saved servers and QR pairing, the profile drawer, page swipes, kiosk mode and orientation lock,
-  keep-awake, automatic reconnection and an offline layout cache.
+  keep-awake, automatic reconnection, an offline layout cache, and auto-update (checks GitHub, downloads and verifies a release-signed APK, hands it
+  to Android's installer; [design/phone-app-auto-update.md](design/phone-app-auto-update.md)).
+- **Plugin distribution:** a Discover tab in the editor's Plugins window — browse the official catalog, add a third-party multi-plugin source, install
+  a single plugin from a pasted repository link, badges (Official / Third-party / Local) and "update available"
+  ([design/plugin-distribution.md](design/plugin-distribution.md)).
+- **Plugin SDK 0.4.0:** file, list, button and notice setting fields, an action that learns when its button is released, a settings page that runs a
+  host command (used for a sound preview), and an optional plugin icon; first used by the official **SoundBoard** plugin
+  ([design/sdk-0.4.0-and-soundboard.md](design/sdk-0.4.0-and-soundboard.md)).
 
 ## Next
 
 The order of the bigger pieces of work, and their plans, are in [plans/README.md](plans/README.md). The items below have no plan file yet.
 
+- **Rename the plugin manifest's `macroGrid` field (priority, name not chosen):** it means "the oldest Macro Grid this plugin runs on", but the name alone
+  does not say "minimum", which was not obvious on a first read. Wanted: a clearer name (`minMacroGrid`, `requiresMacroGrid`, or better), with the old
+  name still read for at least one MAJOR so existing plugins keep working unchanged. Planned for the version after 1.0.x; no name decided yet.
 - **An encrypted connection:** the phone and the server talk over plain `ws://` and `http://` on the local network, so anyone on the same Wi-Fi
   can read the traffic and take the pairing PIN or a device token, and then press the buttons of your profiles. Fine on a home network you trust,
   a real gap on a shared one (cafe, school, office). Wanted: the server makes its own certificate and puts its fingerprint into the pairing QR
@@ -62,10 +72,6 @@ The order of the bigger pieces of work, and their plans, are in [plans/README.md
   `plugin-html` type draws a placeholder.
 - **The `web` widget** (an embedded page such as a live chat): today it draws a placeholder. The idea is an iframe first and, for pages that refuse to be
   framed, a native WebView positioned over the grid cell by a small Android plugin.
-- **A logo (avatar) for plugin packages:** a plugin can ship a small image (SVG or PNG, square) and name it in an optional manifest field, so the Store
-  (list and detail page) and the editor's Plugins window show it instead of the generic category glyph. It is an additive manifest field, so older
-  hosts ignore it. Do it with the next manifest or SDK change, or earlier if it fits. Plugin packages and the Store catalog need the file rules
-  (size limit, format check) and the release zip must include the image. See `plans/plugin-distribution-plan.md`, section 3c.
 - **An async host API for JavaScript plugins** (today scripts are synchronous, so `host.http` blocks the plugin's own thread).
 - **A richer Discover tab, closer to a store page.** Today `editor/src/windows/PluginsWindow.tsx`'s Discover tab is a plain
   list: name, version, author, one line of description and an Install button (see `plans/plugin-distribution-plan.md`,
