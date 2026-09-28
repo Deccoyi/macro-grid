@@ -15,6 +15,7 @@ import type {
   PluginLinkInstallResult,
   PluginSourcesResponse,
   PluginInfo,
+  PluginInstallBrowseResult,
   PluginInstallResult,
   PluginTreeChanges,
   PluginTreeItemsResult,
@@ -140,10 +141,13 @@ export const api = {
       return res.text();
     }),
 
-  /** Shows a native "choose a folder" dialog on the server's desktop, validates plugin.json there, copies it
-   * into the server's plugins/ folder and loads it right away (no restart). Installing over an existing id
-   * replaces that plugin. */
-  installPluginDialog: (): Promise<PluginInstallResult> => send("POST", "/api/plugins/install"),
+  /** Shows a native "choose a folder" dialog on the server's desktop and reads its plugin.json — nothing is
+   * installed yet, so the editor can warn about a native (C#) plugin's full trust first. */
+  browsePluginInstall: (): Promise<PluginInstallBrowseResult> => send("POST", "/api/plugins/install/browse"),
+
+  /** Copies the folder a previous browsePluginInstall() call found into the server's plugins/ folder and
+   * loads it right away (no restart). Installing over an existing id replaces that plugin. */
+  confirmPluginInstall: (path: string): Promise<PluginInstallResult> => send("POST", "/api/plugins/install/confirm", { path }),
 
   /** Unloads a plugin (its actions, variables and status items disappear immediately) and deletes its
    * folder under %AppData%. `pending` means a file was still in use and the folder goes at the next start. */

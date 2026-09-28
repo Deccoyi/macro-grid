@@ -102,6 +102,10 @@ export const tr = {
   "plugins.install.hint": "plugin.json içeren bir klasör seç. Kopyalanır ve hemen devreye girer; aynı kimlikli bir eklenti varsa yenisiyle değiştirilir.",
   "plugins.install.success": (name: string) => `${name} yüklendi.`,
   "plugins.install.failed": (name: string, detail: string) => `${name} kopyalandı ama yüklenemedi: ${detail}`,
+  "plugins.install.folder.failed": (detail: string) => `Bu klasör okunamadı: ${detail}`,
+  "plugins.install.nativeWarning.title": "Native eklenti",
+  "plugins.install.nativeWarning.warning": (name: string) =>
+    `"${name}" native (C#) bir eklenti. Bu bilgisayara tam erişimle çalışır — dosyalarınızı okuyabilir, program başlatabilir, internete bağlanıp veri gönderebilir — ve Macro Grid bunların hiçbirini sınırlayamaz ya da kontrol edemez. Sadece güvendiğin bir klasörden yükle.`,
   "plugins.reload": "Yeniden yükle",
   "plugins.approve": "İzin ver ve etkinleştir",
   "plugins.approve.intro": "Bu eklenti çalışmak için şu izinleri istiyor:",
@@ -214,6 +218,7 @@ export const tr = {
   "profile.autoSwitch.hint": "Bu uygulamalardan biri öne gelince, takip eden cihazlar bu profile geçer.",
   "profile.autoSwitch.remove": "Kuralı kaldır",
   "profile.autoSwitch.pickRunning": "Çalışan uygulamadan seç…",
+  "profile.autoSwitch.refresh": "Çalışan uygulamaları yeniden tara",
   "profile.autoSwitch.manualPlaceholder": "Uygulama adı (ör. Player.exe)",
   "profile.autoSwitch.add": "Ekle",
   "profile.properties.title": "Profil",

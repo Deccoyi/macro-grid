@@ -102,6 +102,10 @@ export const en: Record<DictKey, string | ((...args: string[]) => string)> = {
   "plugins.install.hint": "Pick a folder containing a plugin.json. It's copied into place and starts working right away; a plugin with the same id is replaced.",
   "plugins.install.success": (name: string) => `${name} installed.`,
   "plugins.install.failed": (name: string, detail: string) => `${name} was copied but could not be loaded: ${detail}`,
+  "plugins.install.folder.failed": (detail: string) => `Could not read that folder: ${detail}`,
+  "plugins.install.nativeWarning.title": "Native plugin",
+  "plugins.install.nativeWarning.warning": (name: string) =>
+    `"${name}" is a native (C#) plugin. It runs with full access to this computer — it can read your files, start programs, and connect to the internet and send data — and Macro Grid cannot limit or check any of it. Install it only from a folder you trust.`,
   "plugins.reload": "Reload",
   "plugins.approve": "Allow and enable",
   "plugins.approve.intro": "This plugin asks for these permissions to run:",
@@ -213,6 +217,7 @@ export const en: Record<DictKey, string | ((...args: string[]) => string)> = {
   "profile.autoSwitch.hint": "When one of these apps comes to the foreground, a following device switches to this profile.",
   "profile.autoSwitch.remove": "Remove rule",
   "profile.autoSwitch.pickRunning": "Pick from running apps…",
+  "profile.autoSwitch.refresh": "Rescan running apps",
   "profile.autoSwitch.manualPlaceholder": "App name (e.g. Player.exe)",
   "profile.autoSwitch.add": "Add",
   "profile.properties.title": "Profile",

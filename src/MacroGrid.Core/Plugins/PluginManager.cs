@@ -197,6 +197,10 @@ public sealed partial class PluginManager(
         finally { _gate.Release(); }
     }
 
+    /// <summary>Reads a folder's plugin.json without installing anything — for the editor to show what it's
+    /// about to install (in particular its <see cref="PluginManifest.Kind"/>) before the person confirms.</summary>
+    public static PluginManifest PeekManifest(string sourceDir) => ReadManifest(Path.Combine(sourceDir, "plugin.json"));
+
     /// <summary>Unloads a plugin and loads it again from its folder (picks up a replaced DLL or changed manifest).</summary>
     public async Task<LoadedPlugin?> ReloadAsync(string pluginId)
     {

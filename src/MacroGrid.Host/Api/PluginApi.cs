@@ -50,17 +50,33 @@ internal static class PluginApi
             return Results.File(path, contentType);
         });
 
-        api.MapPost("/plugins/install", async (IUiDialogService dialogs, PluginManager plugins) =>
+        // Browses for a folder and reads its plugin.json without installing anything yet — a native (C#)
+        // plugin has no permission gate at all (see docs/plans/security-hardening-plan.md, part D), so the
+        // editor shows a warning and asks to confirm before the second call actually installs it.
+        api.MapPost("/plugins/install/browse", async (IUiDialogService dialogs) =>
         {
             var sourceDir = await dialogs.BrowseForFolderAsync("Choose the plugin folder (must contain plugin.json)");
-            if (sourceDir is null) return Results.Json(new { installed = false, canceled = true });
+            if (sourceDir is null) return Results.Json(new { canceled = true });
 
             if (!File.Exists(Path.Combine(sourceDir, "plugin.json")))
                 return ApiResults.BadRequest($"No plugin.json in the selected folder: {sourceDir}");
 
             try
             {
-                var result = await plugins.InstallFromFolderAsync(sourceDir);
+                var manifest = PluginManager.PeekManifest(sourceDir);
+                return ApiResults.Json(new { canceled = false, path = sourceDir, id = manifest.Id, name = manifest.Name, kind = manifest.Kind.ToString() });
+            }
+            catch (Exception ex) when (ex is JsonException or InvalidOperationException)
+            {
+                return ApiResults.BadRequest(ex.Message);
+            }
+        });
+
+        api.MapPost("/plugins/install/confirm", async (PluginInstallConfirmRequest body, PluginManager plugins) =>
+        {
+            try
+            {
+                var result = await plugins.InstallFromFolderAsync(body.Path);
                 return ApiResults.Json(new { installed = true, id = result.Id, name = result.Name, status = result.Plugin.Status, detail = result.Plugin.Detail });
             }
             catch (Exception ex) when (ex is JsonException or NotSupportedException or InvalidOperationException or IOException or UnauthorizedAccessException)
@@ -190,4 +206,6 @@ internal static class PluginApi
     }
 
     private sealed record SettingsCommandRequest(string? Command, JsonObject? Values);
+
+    private sealed record PluginInstallConfirmRequest(string Path);
 }

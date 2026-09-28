@@ -174,6 +174,17 @@ export interface PluginInstallResult {
   detail?: string | null;
 }
 
+/** POST /api/plugins/install/browse — the folder is only read, not installed yet, so the editor can warn
+ * about a native (C#) plugin's full trust (see docs/plans/security-hardening-plan.md, part D) before the
+ * person confirms with POST /api/plugins/install/confirm. */
+export interface PluginInstallBrowseResult {
+  canceled: boolean;
+  path?: string;
+  id?: string;
+  name?: string;
+  kind?: string;
+}
+
 export interface PluginUninstallResult {
   removed: boolean;
   /** true if a file was still in use and the folder was instead marked for removal on the next server
