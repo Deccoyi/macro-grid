@@ -3,6 +3,11 @@ import type { Page, Profile, Widget } from "@macro/renderer";
 import { Copy, Smartphone, Trash2 } from "lucide-react";
 import { api } from "./api/client";
 import type { ProfileTreeNode } from "./api/types";
+import { CommandsProvider, useRegisterCommands } from "./commands/CommandsContext";
+import { commandItem } from "./commands/commandItem";
+import { ShortcutListener } from "./commands/ShortcutListener";
+import type { Command } from "./commands/types";
+import { EditToolbar } from "./commands/EditToolbar";
 import { confirmAsync } from "./dialogs/dialogStore";
 import { DialogHost } from "./dialogs/DialogHost";
 import { DiagnosticsProvider } from "./diagnostics/DiagnosticsContext";
@@ -11,7 +16,7 @@ import { useT } from "./i18n/I18nContext";
 import { useDocumentTitle } from "./i18n/useDocumentTitle";
 import type { DictKey } from "./i18n/tr";
 import { StatusBar } from "./components/StatusBar";
-import { ContextMenu, type ContextMenuItem } from "./panels/ContextMenu";
+import { ContextMenu, type ContextMenuEntry } from "./panels/ContextMenu";
 import { MenuBar } from "./panels/MenuBar";
 import { MoveCopyDialog } from "./panels/MoveCopyDialog";
 import { usePreferences } from "./preferences/PreferencesContext";
@@ -42,7 +47,9 @@ const BUILTIN_DEVICE_PRESETS: { id: string; key: DictKey; size: DeviceSize | nul
 export function App() {
   return (
     <ProfileTreeProvider>
-      <AppContent />
+      <CommandsProvider>
+        <AppContent />
+      </CommandsProvider>
     </ProfileTreeProvider>
   );
 }
@@ -137,85 +144,154 @@ function AppContent() {
     return { type: "folder", id: tempId("pfolder"), name: node.name, children };
   };
 
-  // Ctrl+S / Ctrl+C / Ctrl+V at window level, all skipped while a text field has focus so normal text
-  // editing (renaming something, a Properties field, a dialog) keeps its native copy/paste — only Ctrl+S
-  // has no competing native meaning to preserve, so it alone isn't gated on that.
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      if (!(e.ctrlKey || e.metaKey)) return;
-      const key = e.key.toLowerCase();
-
-      if (key === "s") {
-        e.preventDefault();
-        if (state.dirty && !state.saving) state.save();
-        return;
+  // Copy: priority is selected widgets on the canvas, then whichever Hierarchy row is the current
+  // selection (a page, a page folder, a profile or a profile folder), then the open page as a fallback
+  // so Copy still does something sensible with nothing explicitly selected in the tree.
+  const copySelection = () => {
+    if (state.selectedWidgets.length > 0) {
+      setClipboard({ kind: "widgets", widgets: structuredClone(state.selectedWidgets) });
+    } else if (treeSelection?.kind === "pageFolder" && profile) {
+      const folderNode = findNode(profile.pageTree ?? [], treeSelection.id);
+      if (folderNode) {
+        const pageIds = flattenLeafIds(folderNode.children ?? [], "page");
+        const pages = profile.pages.filter((p) => pageIds.includes(p.id));
+        setClipboard({ kind: "pageFolder", folder: structuredClone(folderNode), pages: structuredClone(pages) });
       }
+    } else if (treeSelection?.kind === "profileFolder") {
+      copyProfileFolder(treeSelection.id);
+    } else if (treeSelection?.kind === "profile") {
+      copyProfileLeaf(treeSelection.id);
+    } else if (treeSelection?.kind === "page" && profile) {
+      const page = profile.pages.find((p) => p.id === treeSelection.id);
+      if (page) setClipboard({ kind: "page", page: structuredClone(page) });
+    } else if (currentPage) {
+      setClipboard({ kind: "page", page: structuredClone(currentPage) });
+    }
+  };
 
-      if (key !== "c" && key !== "v") return;
-      const target = e.target as HTMLElement | null;
-      const isTextField = !!target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable);
-      if (isTextField) return;
+  const pasteClipboard = () => {
+    const entry = getClipboard();
+    if (!entry) return;
+    if (entry.kind === "widgets") {
+      state.pasteWidgets(entry.widgets);
+    } else if (entry.kind === "page") {
+      state.pastePage(entry.page, pageParentFolderId());
+    } else if (entry.kind === "pageFolder") {
+      state.pastePageFolder(entry.folder, entry.pages, pageParentFolderId());
+    } else if (entry.kind === "profile") {
+      const parentFolderId = profileParentFolderId();
+      api.createProfile().then(async (created) => {
+        const pages: Page[] = entry.profile.pages.map((p) => ({
+          ...structuredClone(p),
+          id: tempId("page"),
+          widgets: structuredClone(p.widgets).map((w: Widget) => ({ ...w, id: tempId("widget") })),
+        }));
+        await api.saveProfile({ ...structuredClone(entry.profile), id: created.id, pages });
+        await profileTree.insertPrebuiltNode({ type: "profile", id: created.id }, parentFolderId);
+        await state.refreshProfileList();
+      });
+    } else {
+      const parentFolderId = profileParentFolderId();
+      const profilesById = new Map(entry.profiles.map((p) => [p.id, p]));
+      cloneProfileTreeNode(entry.folder, profilesById).then(async (newNode) => {
+        await profileTree.insertPrebuiltNode(newNode, parentFolderId);
+        await state.refreshProfileList();
+      });
+    }
+  };
 
-      if (key === "c") {
-        // Priority: selected widgets on the canvas, then whichever Hierarchy row is the current
-        // selection (a page, a page folder, a profile or a profile folder), then the open page as a
-        // fallback so Ctrl+C still does something sensible with nothing explicitly selected in the tree.
-        if (state.selectedWidgets.length > 0) {
-          setClipboard({ kind: "widgets", widgets: structuredClone(state.selectedWidgets) });
-        } else if (treeSelection?.kind === "pageFolder" && profile) {
-          const folderNode = findNode(profile.pageTree ?? [], treeSelection.id);
-          if (folderNode) {
-            const pageIds = flattenLeafIds(folderNode.children ?? [], "page");
-            const pages = profile.pages.filter((p) => pageIds.includes(p.id));
-            setClipboard({ kind: "pageFolder", folder: structuredClone(folderNode), pages: structuredClone(pages) });
-          }
-        } else if (treeSelection?.kind === "profileFolder") {
-          copyProfileFolder(treeSelection.id);
-        } else if (treeSelection?.kind === "profile") {
-          copyProfileLeaf(treeSelection.id);
-        } else if (treeSelection?.kind === "page" && profile) {
-          const page = profile.pages.find((p) => p.id === treeSelection.id);
-          if (page) setClipboard({ kind: "page", page: structuredClone(page) });
-        } else if (currentPage) {
-          setClipboard({ kind: "page", page: structuredClone(currentPage) });
-        }
-        return;
-      }
+  const deleteSelection = async () => {
+    if (state.selectedWidgets.length > 0) {
+      state.deleteSelectedWidgets();
+    } else if (treeSelection?.kind === "page" && profile && profile.pages.length > 1) {
+      const page = profile.pages.find((p) => p.id === treeSelection.id);
+      if (page && (await confirmDeletePage(t, page.name))) state.deletePage(page.id);
+    }
+  };
 
-      // key === "v"
-      const entry = getClipboard();
-      if (!entry) return;
-      if (entry.kind === "widgets") {
-        state.pasteWidgets(entry.widgets);
-      } else if (entry.kind === "page") {
-        state.pastePage(entry.page, pageParentFolderId());
-      } else if (entry.kind === "pageFolder") {
-        state.pastePageFolder(entry.folder, entry.pages, pageParentFolderId());
-      } else if (entry.kind === "profile") {
-        const parentFolderId = profileParentFolderId();
-        api.createProfile().then(async (created) => {
-          const pages: Page[] = entry.profile.pages.map((p) => ({
-            ...structuredClone(p),
-            id: tempId("page"),
-            widgets: structuredClone(p.widgets).map((w: Widget) => ({ ...w, id: tempId("widget") })),
-          }));
-          await api.saveProfile({ ...structuredClone(entry.profile), id: created.id, pages });
-          await profileTree.insertPrebuiltNode({ type: "profile", id: created.id }, parentFolderId);
-          await state.refreshProfileList();
-        });
-      } else {
-        const parentFolderId = profileParentFolderId();
-        const profilesById = new Map(entry.profiles.map((p) => [p.id, p]));
-        cloneProfileTreeNode(entry.folder, profilesById).then(async (newNode) => {
-          await profileTree.insertPrebuiltNode(newNode, parentFolderId);
-          await state.refreshProfileList();
-        });
-      }
-    };
-    window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state, profile, currentPage, treeSelection, profileTree]);
+  const duplicateSelection = () => {
+    if (state.selectedWidgets.length > 0) state.duplicateSelectedWidgets();
+    else if (treeSelection?.kind === "page") state.duplicatePage(treeSelection.id);
+  };
+
+  // Every Edit command (docs/design/editor-edit-commands.md, "Command registry"): the Edit menu,
+  // ShortcutListener and every context menu item built with commandItem() all run these, so undo/redo,
+  // clipboard and delete behave identically no matter which of the three triggered them.
+  const editCommands: Command[] = [
+    {
+      id: "edit.undo",
+      labelKey: "edit.undo",
+      label: () => (state.undoLabel ? t("edit.undoLabel", t(state.undoLabel)) : t("edit.undo")),
+      shortcuts: ["Ctrl+Z", "Alt+Backspace"],
+      enabled: () => state.canUndo,
+      run: () => state.undo(),
+    },
+    {
+      id: "edit.redo",
+      labelKey: "edit.redo",
+      label: () => (state.redoLabel ? t("edit.redoLabel", t(state.redoLabel)) : t("edit.redo")),
+      shortcuts: ["Ctrl+Y", "Ctrl+Shift+Z"],
+      enabled: () => state.canRedo,
+      run: () => state.redo(),
+    },
+    {
+      id: "edit.cut",
+      labelKey: "edit.cut",
+      shortcuts: ["Ctrl+X", "Shift+Delete"],
+      enabled: () => state.selectedWidgets.length > 0,
+      run: () => state.cutSelectedWidgets(),
+    },
+    {
+      id: "edit.copy",
+      labelKey: "edit.copy",
+      shortcuts: ["Ctrl+C", "Ctrl+Insert"],
+      enabled: () => state.selectedWidgets.length > 0 || !!treeSelection || !!currentPage,
+      run: copySelection,
+    },
+    {
+      id: "edit.paste",
+      labelKey: "edit.paste",
+      shortcuts: ["Ctrl+V", "Shift+Insert"],
+      enabled: () => getClipboard() !== null,
+      run: pasteClipboard,
+    },
+    {
+      id: "edit.duplicate",
+      labelKey: "edit.duplicate",
+      shortcuts: ["Ctrl+D"],
+      enabled: () => state.selectedWidgets.length > 0 || treeSelection?.kind === "page",
+      run: duplicateSelection,
+    },
+    {
+      id: "edit.delete",
+      labelKey: "edit.delete",
+      shortcuts: ["Delete"],
+      enabled: () => state.selectedWidgets.length > 0 || (treeSelection?.kind === "page" && !!profile && profile.pages.length > 1),
+      run: deleteSelection,
+    },
+    {
+      id: "edit.selectAll",
+      labelKey: "edit.selectAll",
+      shortcuts: ["Ctrl+A"],
+      enabled: () => !!currentPage && currentPage.widgets.length > 0,
+      run: () => { if (currentPage) state.setSelectedIds(currentPage.widgets.map((w) => w.id)); },
+    },
+    {
+      id: "edit.clearSelection",
+      labelKey: "edit.selectAll", // never shown — no shortcut display, so its label is never read
+      shortcuts: ["Escape"],
+      enabled: () => state.selectedIds.length > 0,
+      run: () => state.setSelectedIds([]),
+    },
+    {
+      id: "file.save",
+      labelKey: "header.save",
+      shortcuts: ["Ctrl+S"],
+      enabled: () => state.dirty && !state.saving,
+      run: () => state.save(),
+    },
+  ];
+  useRegisterCommands(editCommands);
 
   if (!profile || !currentPage) {
     return <div style={{ padding: 20, color: "var(--ms-text-secondary)" }}>{t("app.loading")}</div>;
@@ -223,13 +299,16 @@ function AppContent() {
 
   return (
     <WorkspaceProvider>
+    <ShortcutListener />
     <div style={{ display: "grid", gridTemplateRows: "auto auto 1fr auto", height: "100%" }}>
       <MenuBar
         profile={profile}
         onImportProfile={(data: Profile) => state.importProfileFromJson(data)}
+        editCommands={editCommands}
       />
 
       <header style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 12px", borderBottom: "1px solid var(--ms-border)" }}>
+        <EditToolbar />
         <div style={{ flex: 1 }} />
 
         <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "var(--ms-text-secondary)" }}>
@@ -302,7 +381,7 @@ function AppContent() {
               x={pageMenu.x}
               y={pageMenu.y}
               onClose={() => setPageMenu(null)}
-              items={pageContextItems(t, pageMenu.pageId, profile.pages.length > 1, {
+              items={pageContextItems(t, editCommands, pageMenu.pageId, profile.pages.length > 1, {
                 onRename: (pageId) => setRenameTarget({ kind: "page", id: pageId }),
                 onDuplicate: state.duplicatePage,
                 onCopyToProfile: (pageId) => setCopyPageTarget(pageId),
@@ -360,6 +439,7 @@ async function confirmDeletePage(t: T, name: string): Promise<boolean> {
 
 function pageContextItems(
   t: T,
+  editCommands: Command[],
   pageId: string,
   canDelete: boolean,
   handlers: {
@@ -368,8 +448,20 @@ function pageContextItems(
     onCopyToProfile: (pageId: string) => void;
     onDelete: (pageId: string) => void;
   },
-): ContextMenuItem[] {
+): ContextMenuEntry[] {
+  // Undo/Redo/Cut/Copy/Paste come straight from the shared Edit commands (docs/design/editor-edit-commands.md,
+  // "Menus"); Duplicate and Delete stay bound to this specific row rather than the generic edit.duplicate /
+  // edit.delete commands, since those act on whatever the Hierarchy tree selection is, which a right-click
+  // does not necessarily change to the clicked row.
+  const cmd = (id: string) => commandItem(editCommands.find((c) => c.id === id)!, t);
   return [
+    cmd("edit.undo"),
+    cmd("edit.redo"),
+    { divider: true },
+    cmd("edit.cut"),
+    cmd("edit.copy"),
+    cmd("edit.paste"),
+    { divider: true },
     { label: t("ctx.page.rename"), onSelect: () => handlers.onRename(pageId) },
     { label: t("page.duplicate"), icon: <Copy size={13} />, onSelect: () => handlers.onDuplicate(pageId) },
     { label: t("page.copyToProfile"), onSelect: () => handlers.onCopyToProfile(pageId) },

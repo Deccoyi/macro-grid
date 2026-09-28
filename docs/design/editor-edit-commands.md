@@ -1,11 +1,12 @@
 # Editor edit commands: context menus, clipboard, undo/redo, shortcuts
 
-**Status:** planned, not started. Build after [docking-workspace.md](../design/docking-workspace.md) (built in 1.2.0). **Repositories:** `macro-grid`
-only (`editor/`). No change to the plugin SDK, the WebSocket protocol, the phone app or the server.
+**Status:** built. Right-click menus, the Edit menu, one shared snapshot-based undo/redo history, standard Windows shortcuts and a
+header toolbar (added on top of this plan at the owner's request) all shipped. Built on [docking-workspace.md](../design/docking-workspace.md)
+(built in 1.2.0). **Repositories:** `macro-grid` only (`editor/`). No change to the plugin SDK, the WebSocket protocol, the phone app
+or the server.
 
-This is the plan for the roadmap's "editor keyboard shortcuts with undo/redo" item. Phase 6 of the hierarchy tree
-([hierarchy-tree-and-folders.md](../design/hierarchy-tree-and-folders.md)) builds on the command registry and the undo history defined
-here.
+This was the plan for the roadmap's "editor keyboard shortcuts with undo/redo" item. The hierarchy tree's phase 6
+([plugins-tool-window.md](../design/plugins-tool-window.md)) shipped separately and does not depend on this one.
 
 ## Goal
 

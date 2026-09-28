@@ -3,6 +3,9 @@
 New features and fixes in Macro Grid. For technical details, see [CHANGELOG-developer.md](CHANGELOG-developer.md).
 
 ## Unreleased
+### New
+- **Undo, redo and the usual clipboard shortcuts in the editor:** Ctrl+Z/Ctrl+Y, Ctrl+X/C/V, Ctrl+D and Delete now work everywhere in
+  the editor, with an Edit menu, right-click menu entries and toolbar buttons for the same commands.
 ### Fixed
 - **Auto-switch settings surviving a re-pair:** If a device had to pair again (a lost token, or one that could not be decrypted after 1.2.0's encrypted pairings), "Follow active window" and its assigned profile were silently turned back off. They now carry over.
 

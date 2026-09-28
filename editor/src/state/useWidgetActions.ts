@@ -3,12 +3,15 @@ import type { ActionBinding, Widget, WidgetType } from "@macro/renderer";
 import { api } from "../api/client";
 import { findFreeCell, findFreeCellsForBatch } from "../grid/collision";
 import { useT } from "../i18n/I18nContext";
+import type { DictKey } from "../i18n/tr";
+import { setClipboard } from "./clipboard";
+import { showStatusNotice } from "./statusNotice";
 import { tempId } from "./tempId";
 import type { ProfileDocument } from "./useProfileDocument";
 
 /** Widget-level edits on the current page: add, update, move/resize, action bindings, delete, duplicate, move/copy. */
 export function useWidgetActions({
-  profile, currentPage, selectedIds, selectedWidgets, mutate, mutatePage, markPageDirty, setSelectedIds, setError,
+  profile, currentPage, selectedIds, selectedWidgets, mutate, mutatePage, setSelectedIds, setError,
 }: ProfileDocument) {
   const { t } = useT();
 
@@ -31,26 +34,26 @@ export function useWidgetActions({
         style: {},
         actions: {},
       };
-      mutatePage(currentPage.id, (p) => p.widgets.push(widget));
+      mutatePage(currentPage.id, (p) => p.widgets.push(widget), { label: "undo.addWidget" });
       setSelectedIds([widget.id]);
     },
     [currentPage, mutatePage, setError, setSelectedIds, t],
   );
 
   const updateWidget = useCallback(
-    (widgetId: string, fn: (widget: Widget) => void) => {
+    (widgetId: string, fn: (widget: Widget) => void, options?: { label?: DictKey; coalesceKey?: string }) => {
       if (!currentPage) return;
       mutatePage(currentPage.id, (p) => {
         const widget = p.widgets.find((w) => w.id === widgetId);
         if (widget) fn(widget);
-      });
+      }, { label: options?.label ?? "undo.editProperty", coalesceKey: options?.coalesceKey });
     },
     [currentPage, mutatePage],
   );
 
   const setWidgetRect = useCallback(
     (widgetId: string, rect: { x: number; y: number; w: number; h: number }) =>
-      updateWidget(widgetId, (w) => Object.assign(w, rect)),
+      updateWidget(widgetId, (w) => Object.assign(w, rect), { label: "undo.moveWidget", coalesceKey: `widget:rect:${widgetId}` }),
     [updateWidget],
   );
 
@@ -59,14 +62,14 @@ export function useWidgetActions({
       updateWidget(widgetId, (w) => {
         if (bindings.length === 0) delete (w.actions as Record<string, unknown>)[event];
         else (w.actions as Record<string, ActionBinding[]>)[event] = bindings;
-      }),
+      }, { label: "undo.widgetActions" }),
     [updateWidget],
   );
 
   const deleteWidget = useCallback(
     (widgetId: string) => {
       if (!currentPage) return;
-      mutatePage(currentPage.id, (p) => { p.widgets = p.widgets.filter((w) => w.id !== widgetId); });
+      mutatePage(currentPage.id, (p) => { p.widgets = p.widgets.filter((w) => w.id !== widgetId); }, { label: "undo.deleteWidget" });
       setSelectedIds((sel) => sel.filter((id) => id !== widgetId));
     },
     [currentPage, mutatePage, setSelectedIds],
@@ -74,7 +77,7 @@ export function useWidgetActions({
 
   const deleteSelectedWidgets = useCallback(() => {
     if (!currentPage || selectedIds.length === 0) return;
-    mutatePage(currentPage.id, (p) => { p.widgets = p.widgets.filter((w) => !selectedIds.includes(w.id)); });
+    mutatePage(currentPage.id, (p) => { p.widgets = p.widgets.filter((w) => !selectedIds.includes(w.id)); }, { label: "undo.deleteWidgets" });
     setSelectedIds([]);
   }, [currentPage, mutatePage, selectedIds, setSelectedIds]);
 
@@ -84,8 +87,17 @@ export function useWidgetActions({
       const cell = findFreeCell(w.w, w.h, currentPage.widgets, currentPage.cols, currentPage.rows);
       return { ...structuredClone(w), id: tempId("widget"), x: cell?.x ?? w.x, y: cell?.y ?? w.y };
     });
-    mutatePage(currentPage.id, (p) => p.widgets.push(...clones));
+    mutatePage(currentPage.id, (p) => p.widgets.push(...clones), { label: "undo.duplicateWidgets" });
     setSelectedIds(clones.map((c) => c.id));
+  }, [currentPage, mutatePage, selectedIds, selectedWidgets, setSelectedIds]);
+
+  /** Copies the current selection to the in-memory clipboard, then deletes it — one undo step (edit
+   * commands plan, "Clipboard": "Cut = copy, then delete"). */
+  const cutSelectedWidgets = useCallback(() => {
+    if (!currentPage || selectedIds.length === 0) return;
+    setClipboard({ kind: "widgets", widgets: structuredClone(selectedWidgets) });
+    mutatePage(currentPage.id, (p) => { p.widgets = p.widgets.filter((w) => !selectedIds.includes(w.id)); }, { label: "undo.cutWidgets" });
+    setSelectedIds([]);
   }, [currentPage, mutatePage, selectedIds, selectedWidgets, setSelectedIds]);
 
   /** Copies (or moves) the given widgets onto another page, in this profile or a different one. A
@@ -107,9 +119,8 @@ export function useWidgetActions({
             if (sourcePage) sourcePage.widgets = sourcePage.widgets.filter((w) => !widgetIds.includes(w.id));
           }
           return draft;
-        });
-        markPageDirty(targetPageId);
-        if (mode === "move") markPageDirty(currentPage.id);
+        }, { label: "undo.moveOrCopyWidgets" });
+        
       } else {
         const target = await api.getProfile(targetProfileId);
         const targetPage = target.pages.find((p) => p.id === targetPageId);
@@ -123,7 +134,7 @@ export function useWidgetActions({
       }
       setSelectedIds([]);
     },
-    [currentPage, profile, mutate, mutatePage, markPageDirty, setSelectedIds],
+    [currentPage, profile, mutate, mutatePage, setSelectedIds],
   );
 
   /** Ctrl+V of widgets copied with Ctrl+C (see clipboard.ts) — onto the current page, whichever page or
@@ -133,13 +144,23 @@ export function useWidgetActions({
   const pasteWidgets = useCallback(
     (widgets: Widget[]) => {
       if (!currentPage || widgets.length === 0) return;
-      const cells = findFreeCellsForBatch(widgets.map((w) => ({ w: w.w, h: w.h })), currentPage.widgets, currentPage.cols, currentPage.rows);
+      let toPlace = widgets;
+      let cells = findFreeCellsForBatch(toPlace.map((w) => ({ w: w.w, h: w.h })), currentPage.widgets, currentPage.cols, currentPage.rows);
+      // If not everything fits, place as many as will fit (smallest-first has the best chance) rather
+      // than refusing the whole paste, and say how many were left out (edit commands plan, "Clipboard").
       if (!cells) {
-        setError(t("state.noFreeCell"));
-        return;
+        for (let n = widgets.length - 1; n > 0 && !cells; n--) {
+          toPlace = widgets.slice(0, n);
+          cells = findFreeCellsForBatch(toPlace.map((w) => ({ w: w.w, h: w.h })), currentPage.widgets, currentPage.cols, currentPage.rows);
+        }
+        if (!cells) {
+          setError(t("state.noFreeCell"));
+          return;
+        }
+        showStatusNotice("undo.pastePartial", String(toPlace.length), String(widgets.length));
       }
-      const clones = widgets.map((w, i) => ({ ...structuredClone(w), id: tempId("widget"), x: cells[i]!.x, y: cells[i]!.y }));
-      mutatePage(currentPage.id, (p) => p.widgets.push(...clones));
+      const clones = toPlace.map((w, i) => ({ ...structuredClone(w), id: tempId("widget"), x: cells![i]!.x, y: cells![i]!.y }));
+      mutatePage(currentPage.id, (p) => p.widgets.push(...clones), { label: "undo.pasteWidgets" });
       setSelectedIds(clones.map((c) => c.id));
     },
     [currentPage, mutatePage, setError, setSelectedIds, t],
@@ -147,7 +168,7 @@ export function useWidgetActions({
 
   return {
     addWidget, updateWidget, setWidgetRect, setWidgetActions,
-    deleteWidget, deleteSelectedWidgets, duplicateSelectedWidgets, moveOrCopyWidgets, pasteWidgets,
+    deleteWidget, deleteSelectedWidgets, duplicateSelectedWidgets, cutSelectedWidgets, moveOrCopyWidgets, pasteWidgets,
   };
 }
 

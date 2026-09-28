@@ -1,50 +1,97 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type SetStateAction } from "react";
 import type { AppMatch, Page, Profile, Widget } from "@macro/renderer";
 import { api } from "../api/client";
 import type { ProfileSummary } from "../api/types";
 import { choiceAsync, confirmAsync } from "../dialogs/dialogStore";
 import { useT } from "../i18n/I18nContext";
+import type { DictKey } from "../i18n/tr";
+import {
+  createHistory, isDirty, markSaved, recordChange, redo as redoHistory, redoLabel as historyRedoLabel,
+  undo as undoHistory, undoLabel as historyUndoLabel, type History,
+} from "./history";
 import { normalizePageTree, reorderPagesByTree } from "./pageTree";
+import { showStatusNotice } from "./statusNotice";
+
+/** What one undo step restores: the profile, the page that was showing and the widget selection. */
+export interface DocumentSnapshot {
+  profile: Profile;
+  currentPageId: string | null;
+  selectedIds: string[];
+}
+
+/** Every change to the open profile names its undo step; changes that fire repeatedly (typing, dragging a
+ * slider, moving a widget) also pass a `coalesceKey`, so a burst of them becomes one step. */
+export interface MutateOptions {
+  label?: DictKey;
+  coalesceKey?: string;
+}
+
+const DEFAULT_LABEL: DictKey = "undo.edit";
 
 /**
  * The profile being edited: the profile list, the in-memory copy of the open profile, the current page and
- * selection, the dirty flag, and the profile-level operations (open, create, import, delete, rename, save).
- * Page and widget edits are built on top of `mutate` / `mutatePage` (see usePageActions / useWidgetActions).
+ * selection, the undo history, the dirty flag, and the profile-level operations (open, create, import,
+ * delete, rename, save). Page and widget edits are built on top of `mutate` / `mutatePage` (see
+ * usePageActions / useWidgetActions) — the one place the open profile changes, so the one place undo
+ * snapshots are taken (docs/design/editor-edit-commands.md, "Undo / redo").
  */
 export function useProfileDocument() {
   const { t } = useT();
   const [profiles, setProfiles] = useState<ProfileSummary[]>([]);
-  const [profile, setProfile] = useState<Profile | null>(null);
-  const [currentPageId, setCurrentPageId] = useState<string | null>(null);
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  const [dirty, setDirty] = useState(false);
+  const [profile, setProfileState] = useState<Profile | null>(null);
+  const [currentPageId, setCurrentPageIdState] = useState<string | null>(null);
+  const [selectedIds, setSelectedIdsState] = useState<string[]>([]);
+  const [history, setHistoryState] = useState<History<DocumentSnapshot>>(createHistory);
+  // The profile as last opened or saved: what the Hierarchy tree's "*" markers compare against.
+  const [savedProfile, setSavedProfile] = useState<Profile | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  // Finer-grained than `dirty` (which just says "the whole document has unsaved changes"): which specific
-  // pages, and whether the profile itself (its name or auto-switch rules), changed since the last save —
-  // purely for the Hierarchy tree's "*" markers, `dirty` alone still gates the Save button and Ctrl+S.
-  const [dirtyPageIds, setDirtyPageIds] = useState<Set<string>>(new Set());
-  const [profileDirty, setProfileDirty] = useState(false);
 
-  const markPageDirty = useCallback((pageId: string) => {
-    setDirtyPageIds((prev) => (prev.has(pageId) ? prev : new Set(prev).add(pageId)));
+  // Refs mirror the document state synchronously: two mutate() calls in one event (a drag that swaps two
+  // widgets) must each see the other's result, and each must snapshot exactly what was showing before it.
+  const profileRef = useRef<Profile | null>(null);
+  const currentPageIdRef = useRef<string | null>(null);
+  const selectedIdsRef = useRef<string[]>([]);
+  const historyRef = useRef<History<DocumentSnapshot>>(history);
+
+  const setProfile = useCallback((next: Profile | null) => {
+    profileRef.current = next;
+    setProfileState(next);
   }, []);
-  const markProfileDirty = useCallback(() => setProfileDirty(true), []);
 
-  /** Makes `full` the open profile: first page, no selection, nothing unsaved. Normalizes the page tree
-   * against the actual pages on the way in — an old profile saved before folders existed, or one whose
-   * tree drifted somehow, opens with a repaired flat/folder arrangement rather than carrying the drift
-   * forward. */
+  const setCurrentPageId = useCallback((value: SetStateAction<string | null>) => {
+    const next = typeof value === "function" ? value(currentPageIdRef.current) : value;
+    currentPageIdRef.current = next;
+    setCurrentPageIdState(next);
+  }, []);
+
+  const setSelectedIds = useCallback((value: SetStateAction<string[]>) => {
+    const next = typeof value === "function" ? value(selectedIdsRef.current) : value;
+    selectedIdsRef.current = next;
+    setSelectedIdsState(next);
+  }, []);
+
+  const setHistory = useCallback((next: History<DocumentSnapshot>) => {
+    historyRef.current = next;
+    setHistoryState(next);
+  }, []);
+
+  const dirty = isDirty(history);
+
+  /** Makes `full` the open profile: first page, no selection, nothing unsaved, no undo history (another
+   * profile opened, a reload from the server and an import all come through here). Normalizes the page
+   * tree against the actual pages on the way in — an old profile saved before folders existed, or one
+   * whose tree drifted somehow, opens with a repaired flat/folder arrangement rather than carrying the
+   * drift forward. */
   const openProfile = useCallback((full: Profile) => {
     const pageTree = normalizePageTree(full.pageTree, full.pages);
     const normalized: Profile = { ...full, pageTree, pages: reorderPagesByTree(full.pages, pageTree) };
     setProfile(normalized);
+    setSavedProfile(normalized);
     setCurrentPageId(normalized.pages[0]?.id ?? null);
     setSelectedIds([]);
-    setDirty(false);
-    setDirtyPageIds(new Set());
-    setProfileDirty(false);
-  }, []);
+    setHistory(createHistory());
+  }, [setProfile, setCurrentPageId, setSelectedIds, setHistory]);
 
   const loadProfileList = useCallback(async (selectId?: string) => {
     const list = await api.listProfiles();
@@ -60,7 +107,7 @@ export function useProfileDocument() {
     loadProfileList().catch((e) => setError(String(e)));
   }, [loadProfileList]);
 
-  // Kept in a ref (not just the `dirty` state) so the beforeunload listener below always reads the
+  // Kept in a ref (not just the `dirty` value) so the beforeunload listener below always reads the
   // current value without having to re-subscribe the listener on every dirty change.
   const dirtyRef = useRef(dirty);
   dirtyRef.current = dirty;
@@ -96,35 +143,99 @@ export function useProfileDocument() {
     [selectedWidgets],
   );
 
+  // Finer-grained than `dirty` (which just says "the document differs from what was saved"): which pages,
+  // and whether the profile's own settings (name, auto-switch rules, preview device), differ from the last
+  // opened or saved copy — purely for the Hierarchy tree's "*" markers. Derived by comparison rather than
+  // tracked per change, so undoing an edit clears its marker too.
+  const dirtyPageIds = useMemo<Set<string>>(() => {
+    const ids = new Set<string>();
+    if (!profile || !dirty) return ids;
+    const savedPages = new Map((savedProfile?.pages ?? []).map((p) => [p.id, p]));
+    for (const page of profile.pages) {
+      const saved = savedPages.get(page.id);
+      if (!saved || (saved !== page && JSON.stringify(saved) !== JSON.stringify(page))) ids.add(page.id);
+    }
+    return ids;
+  }, [profile, savedProfile, dirty]);
+
+  const profileDirty = useMemo(() => {
+    if (!profile || !savedProfile || !dirty) return false;
+    const settings = (p: Profile) => JSON.stringify({ name: p.name, appMatches: p.appMatches, previewDeviceId: p.previewDeviceId });
+    return settings(profile) !== settings(savedProfile);
+  }, [profile, savedProfile, dirty]);
+
   const toggleSelected = useCallback((id: string) => {
     setSelectedIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
-  }, []);
+  }, [setSelectedIds]);
 
-  /** Applies `fn` to the in-memory profile and marks it dirty; the server is never touched until Save.
-   * Re-normalizes the page tree against whatever `fn` left `pages` as (a page added, removed or pasted
-   * elsewhere in the state layer never has to touch `pageTree` itself — it's kept in sync here, once) and
-   * reorders `pages` to match, maintaining the plan's invariant on every single mutation. */
-  const mutate = useCallback((fn: (draft: Profile) => Profile) => {
-    setProfile((prev) => {
-      if (!prev) return prev;
-      const draft = fn(structuredClone(prev));
-      const pageTree = normalizePageTree(draft.pageTree, draft.pages);
-      return { ...draft, pageTree, pages: reorderPagesByTree(draft.pages, pageTree) };
-    });
-    setDirty(true);
-  }, []);
+  const snapshot = useCallback((p: Profile): DocumentSnapshot => ({
+    profile: p,
+    currentPageId: currentPageIdRef.current,
+    selectedIds: selectedIdsRef.current,
+  }), []);
+
+  /** Applies `fn` to the in-memory profile, records the previous state as an undo step and marks the
+   * document dirty; the server is never touched until Save. A change that leaves the profile exactly as it
+   * was (dropping an item onto its own place) records nothing. Re-normalizes the page tree against
+   * whatever `fn` left `pages` as (a page added, removed or pasted elsewhere in the state layer never has
+   * to touch `pageTree` itself — it's kept in sync here, once) and reorders `pages` to match. */
+  const mutate = useCallback((fn: (draft: Profile) => Profile, options: MutateOptions = {}) => {
+    const prev = profileRef.current;
+    if (!prev) return;
+    const draft = fn(structuredClone(prev));
+    const pageTree = normalizePageTree(draft.pageTree, draft.pages);
+    const next: Profile = { ...draft, pageTree, pages: reorderPagesByTree(draft.pages, pageTree) };
+    if (JSON.stringify(next) === JSON.stringify(prev)) return;
+    setHistory(recordChange(historyRef.current, snapshot(prev), options.label ?? DEFAULT_LABEL, {
+      coalesceKey: options.coalesceKey,
+      now: Date.now(),
+    }));
+    setProfile(next);
+  }, [setHistory, setProfile, snapshot]);
 
   const mutatePage = useCallback(
-    (pageId: string, fn: (page: Page) => void) => {
+    (pageId: string, fn: (page: Page) => void, options?: MutateOptions) => {
       mutate((draft) => {
         const page = draft.pages.find((p) => p.id === pageId);
         if (page) fn(page);
         return draft;
-      });
-      markPageDirty(pageId);
+      }, options);
     },
-    [mutate, markPageDirty],
+    [mutate],
   );
+
+  /** Shows a history snapshot: its profile, its page (the first page if that one no longer exists) and
+   * its selection, minus any widget that is not on that page any more. */
+  const restore = useCallback((s: DocumentSnapshot) => {
+    setProfile(s.profile);
+    const page = s.profile.pages.find((p) => p.id === s.currentPageId) ?? s.profile.pages[0] ?? null;
+    setCurrentPageId(page?.id ?? null);
+    const widgetIds = new Set(page?.widgets.map((w) => w.id) ?? []);
+    setSelectedIds(s.selectedIds.filter((id) => widgetIds.has(id)));
+  }, [setProfile, setCurrentPageId, setSelectedIds]);
+
+  const undo = useCallback(() => {
+    const current = profileRef.current;
+    if (!current) return;
+    const result = undoHistory(historyRef.current, snapshot(current));
+    if (!result) return;
+    setHistory(result.history);
+    restore(result.state);
+  }, [restore, setHistory, snapshot]);
+
+  const redo = useCallback(() => {
+    const current = profileRef.current;
+    if (!current) return;
+    const result = redoHistory(historyRef.current, snapshot(current));
+    if (!result) return;
+    setHistory(result.history);
+    restore(result.state);
+  }, [restore, setHistory, snapshot]);
+
+  const canUndo = history.past.length > 0;
+  const canRedo = history.future.length > 0;
+  const undoLabel = historyUndoLabel(history);
+  const redoLabel = historyRedoLabel(history);
 
   const selectProfile = useCallback(
     async (id: string) => {
@@ -139,6 +250,7 @@ export function useProfileDocument() {
     if (!(await confirmDiscardIfDirty())) return;
     const created = await api.createProfile();
     await loadProfileList(created.id);
+    showStatusNotice("undo.notUndoable");
   }, [confirmDiscardIfDirty, loadProfileList]);
 
   /** "File > Import Profile": normally creates a brand-new profile then overwrites it with the
@@ -188,6 +300,7 @@ export function useProfileDocument() {
     async (id: string) => {
       await api.deleteProfile(id);
       await loadProfileList();
+      showStatusNotice("undo.notUndoable");
     },
     [loadProfileList],
   );
@@ -200,38 +313,39 @@ export function useProfileDocument() {
   }, []);
 
   const renameProfile = useCallback(
-    (name: string) => { mutate((draft) => ({ ...draft, name })); markProfileDirty(); },
-    [mutate, markProfileDirty],
+    (name: string) => mutate((draft) => ({ ...draft, name }), { label: "undo.renameProfile" }),
+    [mutate],
   );
 
   /** Remembers which "Preview" preset this profile should open with — see Profile.PreviewDeviceId. */
   const setPreviewDevice = useCallback(
-    (id: string) => { mutate((draft) => ({ ...draft, previewDeviceId: id === "free" ? undefined : id })); markProfileDirty(); },
-    [mutate, markProfileDirty],
+    (id: string) => mutate((draft) => ({ ...draft, previewDeviceId: id === "free" ? undefined : id }), { label: "undo.previewDevice" }),
+    [mutate],
   );
 
   /** Foreground-window auto-switch rules for this profile — see docs/design/auto-profile-switch.md. */
   const setAppMatches = useCallback(
-    (appMatches: AppMatch[]) => { mutate((draft) => ({ ...draft, appMatches })); markProfileDirty(); },
-    [mutate, markProfileDirty],
+    (appMatches: AppMatch[]) => mutate((draft) => ({ ...draft, appMatches }), { label: "undo.appMatches", coalesceKey: "profile:appMatches" }),
+    [mutate],
   );
 
   const save = useCallback(async () => {
-    if (!profile) return;
+    const toSave = profileRef.current;
+    if (!toSave) return;
+    const savedId = historyRef.current.currentId;
     setSaving(true);
     setError(null);
     try {
-      await api.saveProfile(profile);
-      setDirty(false);
-      setDirtyPageIds(new Set());
-      setProfileDirty(false);
-      setProfiles((prev) => prev.map((p) => (p.id === profile.id ? { ...p, name: profile.name } : p)));
+      await api.saveProfile(toSave);
+      setHistory(markSaved(historyRef.current, savedId));
+      setSavedProfile(toSave);
+      setProfiles((prev) => prev.map((p) => (p.id === toSave.id ? { ...p, name: toSave.name } : p)));
     } catch (e) {
       setError(String(e));
     } finally {
       setSaving(false);
     }
-  }, [profile]);
+  }, [setHistory]);
 
   return {
     profiles,
@@ -244,8 +358,6 @@ export function useProfileDocument() {
     dirty,
     dirtyPageIds,
     profileDirty,
-    markPageDirty,
-    markProfileDirty,
     saving,
     error,
     setError,
@@ -254,6 +366,12 @@ export function useProfileDocument() {
     toggleSelected,
     mutate,
     mutatePage,
+    undo,
+    redo,
+    canUndo,
+    canRedo,
+    undoLabel,
+    redoLabel,
     selectProfile,
     createProfile,
     importProfileFromJson,
