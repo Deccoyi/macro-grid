@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ChevronDown, ChevronRight, Copy, Folder, FolderPlus, Pencil, Plus, Trash2 } from "lucide-react";
+import { ChevronDown, ChevronRight, Copy, Folder, FolderPlus, LayoutTemplate, LibraryBig, Pencil, Plus, Trash2 } from "lucide-react";
 import type { PageTreeNode } from "@macro/renderer";
 import type { ProfileTreeNode } from "../api/types";
 import { api } from "../api/client";
@@ -456,10 +456,10 @@ export function HierarchyToolWindow() {
       </div>
       <div style={{ padding: 8, borderTop: "1px solid var(--ms-border)", display: "flex", gap: 6 }}>
         <IconBtn label={t("profile.new")} onClick={async () => { await state.createProfile(); profileTree.refresh(); }}>
-          <Plus size={13} />
+          <LibraryBig size={13} />
         </IconBtn>
         <IconBtn label={t("page.add")} onClick={() => state.addPage()}>
-          <Plus size={13} />
+          <LayoutTemplate size={13} />
         </IconBtn>
         <IconBtn label={t("folder.new")} onClick={() => createPageSubfolder(null)}>
           <FolderPlus size={13} />
