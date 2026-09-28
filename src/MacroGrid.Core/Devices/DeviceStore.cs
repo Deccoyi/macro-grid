@@ -48,19 +48,30 @@ public sealed class DeviceStore
         lock (_lock) return _devices.Values.FirstOrDefault(d => CryptographicOperations.FixedTimeEquals(Encoding.UTF8.GetBytes(d.Token), sent));
     }
 
-    /// <summary>Issues a brand-new token for this device id, overwriting any previous pairing for it (a
-    /// re-pair — e.g. the app was reinstalled and lost its cached token — just replaces the old record).</summary>
+    /// <summary>Issues a brand-new token for this device id (a re-pair — e.g. the app was reinstalled, its
+    /// cached token was lost, or the protected token here could not be decrypted — needs a fresh one). Carries
+    /// over any settings from a previous pairing of the same device id (<c>AssignedProfileId</c>,
+    /// <c>FollowActiveWindow</c>, <c>AutoSwitchLocked</c>) instead of resetting them — a re-pair should not
+    /// silently turn off a device's auto-switch setup.</summary>
     public PairedDevice Pair(string deviceId, string deviceName)
     {
-        var device = new PairedDevice
+        PairedDevice device;
+        lock (_lock)
         {
-            Id = deviceId,
-            Name = deviceName,
-            Token = RandomNumberGenerator.GetHexString(32, lowercase: true),
-            PairedAt = DateTimeOffset.UtcNow,
-            LastSeenAt = DateTimeOffset.UtcNow,
-        };
-        lock (_lock) _devices[deviceId] = device;
+            _devices.TryGetValue(deviceId, out var previous);
+            device = new PairedDevice
+            {
+                Id = deviceId,
+                Name = deviceName,
+                Token = RandomNumberGenerator.GetHexString(32, lowercase: true),
+                PairedAt = DateTimeOffset.UtcNow,
+                LastSeenAt = DateTimeOffset.UtcNow,
+                AssignedProfileId = previous?.AssignedProfileId,
+                FollowActiveWindow = previous?.FollowActiveWindow ?? false,
+                AutoSwitchLocked = previous?.AutoSwitchLocked ?? false,
+            };
+            _devices[deviceId] = device;
+        }
         Save();
         return device;
     }

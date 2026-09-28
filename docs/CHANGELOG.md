@@ -3,6 +3,8 @@
 New features and fixes in Macro Grid. For technical details, see [CHANGELOG-developer.md](CHANGELOG-developer.md).
 
 ## Unreleased
+### Fixed
+- **Auto-switch settings surviving a re-pair:** If a device had to pair again (a lost token, or one that could not be decrypted after 1.2.0's encrypted pairings), "Follow active window" and its assigned profile were silently turned back off. They now carry over.
 
 ## 1.2.0 - 2026-09-28
 ### New

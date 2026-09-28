@@ -60,6 +60,22 @@ public sealed class DeviceStoreTests : IDisposable
     }
 
     [Fact]
+    public void Re_pairing_the_same_device_id_keeps_its_auto_switch_settings()
+    {
+        var store = new DeviceStore(_dir);
+        var device = store.Pair("device-1", "Telefon");
+        store.AssignProfile("device-1", "profile-1");
+        store.SetFollowActiveWindow("device-1", true);
+        store.SetAutoSwitchLocked("device-1", true);
+
+        var repaired = store.Pair("device-1", "Telefon");
+
+        Assert.Equal("profile-1", repaired.AssignedProfileId);
+        Assert.True(repaired.FollowActiveWindow);
+        Assert.True(repaired.AutoSwitchLocked);
+    }
+
+    [Fact]
     public void Revoke_removes_the_device()
     {
         var store = new DeviceStore(_dir);
