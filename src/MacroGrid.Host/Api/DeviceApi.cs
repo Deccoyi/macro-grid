@@ -32,7 +32,7 @@ internal static class DeviceApi
         {
             var name = devices.All.FirstOrDefault(d => d.Id == id)?.Name;
             if (!devices.Revoke(id)) return Results.NotFound();
-            SecurityLogger(loggers).LogInformation(SecurityEvents.DeviceRemoved, "Security: pairing of device {Name} ({Device}) removed", name ?? "?", id);
+            SecurityLogger(loggers).LogInformation(SecurityEvents.DeviceRemoved, "Security: pairing of device {Name} ({Device}) removed", SecurityEvents.ForLog(name ?? "?"), SecurityEvents.ForLog(id));
             return Results.NoContent();
         });
 
