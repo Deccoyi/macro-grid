@@ -10,13 +10,13 @@ const { lang } = useData()
 const isTr = computed(() => langOf(lang.value) === 'tr')
 const STR = {
   en: {
-    latest: 'Latest version', alpha: 'alpha', os: 'Windows 10 or 11', download: 'Download for Windows',
+    latest: 'Latest version', alpha: 'pre-release', os: 'Windows 10 or 11', download: 'Download for Windows',
     notes: 'Release notes', previous: 'Previous versions', dl: 'Download',
     olderBefore: 'Older versions are on the ', olderLink: 'GitHub Releases page', olderAfter: '.',
     none: 'Releases are not available right now', see: 'See GitHub Releases for the latest installer.', open: 'Open GitHub Releases',
   },
   tr: {
-    latest: 'Son sürüm', alpha: 'alfa', os: 'Windows 10 veya 11', download: 'Windows için indir',
+    latest: 'Son sürüm', alpha: 'ön sürüm', os: 'Windows 10 veya 11', download: 'Windows için indir',
     notes: 'Sürüm notları', previous: 'Önceki sürümler', dl: 'İndir',
     olderBefore: 'Eski sürümler ', olderLink: 'GitHub Sürümler sayfasında', olderAfter: '.',
     none: 'Sürümlere şu anda ulaşılamıyor', see: 'En güncel kurulum dosyası için GitHub Sürümler sayfasına bakın.', open: 'GitHub Sürümlerini aç',

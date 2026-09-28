@@ -18,6 +18,6 @@ No app? Any browser on your network can open the deck. See [Pair a device](/guid
 
 OBS control and icon packs are in the [plugin store](https://deccoyi.github.io/macro-grid-plugin/store/). See [Plugins](/guide/plugins).
 
-::: warning Alpha, AI-generated, at your own risk
+::: warning Beta, AI-generated, at your own risk
 Read [Security](/guide/security) before you install. Want to build it yourself? See [For developers](/developers/).
 :::

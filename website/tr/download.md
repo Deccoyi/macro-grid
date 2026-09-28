@@ -18,6 +18,6 @@ Uygulama yok mu? Ağınızdaki herhangi bir tarayıcı deck'i açabilir. Bkz. [C
 
 OBS kontrolü ve simge paketleri [Eklenti Mağazası](https://deccoyi.github.io/macro-grid-plugin/store/)'nda. Bkz. [Eklentiler](/tr/guide/plugins).
 
-::: warning Alfa, tamamen yapay zekâ tarafından yazıldı, kullanım riski size ait
+::: warning Beta, tamamen yapay zekâ tarafından yazıldı, kullanım riski size ait
 Kurmadan önce [Güvenlik](/tr/guide/security) sayfasını okuyun. Kendiniz derlemek mi istiyorsunuz? Bkz. [Geliştiriciler için](/tr/developers/).
 :::

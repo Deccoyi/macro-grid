@@ -5,7 +5,7 @@ body:
   - type: markdown
     attributes:
       value: |
-        Thanks for reporting. Macro Grid is in alpha, so bugs are expected. Please do not report security problems here; see SECURITY.md.
+        Thanks for reporting. Macro Grid is in beta, so bugs are still possible. Please do not report security problems here; see SECURITY.md.
         Problems with the Android app or a plugin belong in the `macro-grid-client` or `macro-grid-plugin` repository.
   - type: textarea
     id: what-happened

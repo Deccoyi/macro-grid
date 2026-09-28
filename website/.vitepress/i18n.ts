@@ -74,7 +74,7 @@ export function earlyLangScript(base: string): string {
 // to their component or in the content files.
 export const UI = {
   en: {
-    aiStrong: 'Alpha software, written entirely by AI.',
+    aiStrong: 'Beta software, written entirely by AI.',
     aiLong:
       'Nothing has been reviewed line by line by a human or security-audited. No warranty, no liability: you use it at your own risk.',
     aiMore: 'Read more',
@@ -87,10 +87,10 @@ export const UI = {
     langTitleToEn: 'Switch to English',
     footerSites: 'Macro Grid sites:',
     footerLicense:
-      'Released under the MIT License. Alpha software, written entirely by an AI assistant, provided as is without warranty.',
+      'Released under the MIT License. Beta software, written entirely by an AI assistant, provided as is without warranty.',
   },
   tr: {
-    aiStrong: 'Alfa yazılım, tamamen yapay zekâ tarafından yazıldı.',
+    aiStrong: 'Beta yazılım, tamamen yapay zekâ tarafından yazıldı.',
     aiLong:
       'Hiçbir satır bir insan tarafından tek tek incelenmedi, güvenlik denetiminden geçmedi. Garanti ve sorumluluk yoktur: kullanım riski size aittir.',
     aiMore: 'Devamı',
@@ -103,6 +103,6 @@ export const UI = {
     langTitleToEn: 'İngilizceye geç',
     footerSites: 'Macro Grid siteleri:',
     footerLicense:
-      'MIT Lisansı ile yayımlanmıştır. Alfa yazılım, tamamen bir yapay zekâ asistanı tarafından yazılmıştır, garanti verilmeden olduğu gibi sunulur.',
+      'MIT Lisansı ile yayımlanmıştır. Beta yazılım, tamamen bir yapay zekâ asistanı tarafından yazılmıştır, garanti verilmeden olduğu gibi sunulur.',
   },
 } as const

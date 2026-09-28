@@ -2,8 +2,8 @@
 
 Sıfırdan telefonunuzda çalışan bir butona, yaklaşık on dakikada.
 
-::: warning Alfa yazılım
-Macro Grid herkese açık alfa sürümündedir ve tamamen yapay zekâ tarafından yazıldı. Özellikler ve dosya biçimleri sürümler arasında değişebilir. Bir cihazı eşleştirmeden önce [Güvenlik](/tr/guide/security) sayfasını okuyun.
+::: warning Beta yazılım
+Macro Grid herkese açık beta sürümündedir ve tamamen yapay zekâ tarafından yazıldı. Özellikler ve dosya biçimleri sürümler arasında değişebilir. Bir cihazı eşleştirmeden önce [Güvenlik](/tr/guide/security) sayfasını okuyun.
 :::
 
 ## Neye ihtiyacınız var

@@ -2,8 +2,8 @@
 
 From nothing to a working button on your phone in about ten minutes.
 
-::: warning Alpha software
-Macro Grid is in public alpha and was written entirely by an AI assistant. Features and file formats can change between versions. Read [Security](/guide/security) before you pair a device.
+::: warning Beta software
+Macro Grid is in public beta and was written entirely by an AI assistant. Features and file formats can change between versions. Read [Security](/guide/security) before you pair a device.
 :::
 
 ## What you need

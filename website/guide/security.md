@@ -2,7 +2,7 @@
 
 Macro Grid is designed for a **home or office network you trust**. It is not hardened for the internet.
 
-::: warning Alpha, AI-generated, no warranty
+::: warning Beta, AI-generated, no warranty
 All code, design and documentation were created by an AI assistant and have not been reviewed line by line by a human or security-audited. The software is provided "as is" with no warranty or liability. You use it entirely at your own risk: which devices you pair, which plugins you install and which buttons you press. The installer and the app ask you to accept the [user agreement](https://github.com/Deccoyi/macro-grid/blob/main/installer/license-agreement.txt).
 :::
 

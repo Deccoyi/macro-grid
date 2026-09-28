@@ -25,7 +25,7 @@ The editor is in Turkish (default) or English. The phone app and browser deck ar
 Yes, in JavaScript or C#. See the [plugin documentation](https://deccoyi.github.io/macro-grid-plugin/).
 
 ## Is it safe?
-It is alpha software written by an AI, meant for a trusted network. Read [Security](/guide/security).
+It is beta software written by an AI, meant for a trusted network. Read [Security](/guide/security).
 
 ## Where do I report a bug?
 [GitHub Issues](https://github.com/Deccoyi/macro-grid/issues). Include the logs from `%AppData%\MacroGrid\logs\`.
