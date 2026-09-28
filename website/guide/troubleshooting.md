@@ -10,7 +10,7 @@
 
 ## The PIN is rejected
 
-The PIN expires after five minutes. Open **Pairing** again or click **Generate a new code**.
+The PIN works only while the **Pairing** window is open, for at most five minutes, and for one device. Keep the window open while you enter it, or click **Generate a new code**. After too many wrong PINs the device has to wait a little (30 seconds at first) before it can try again.
 
 ## Pairing window shows no QR code
 

@@ -7,6 +7,7 @@ anything changes. They are not user documentation and nothing here is a promise.
 |---|---|
 | [refactor-notes.md](refactor-notes.md) | Log of the `refactor/cleanup` branch: what was restructured, with no change in behavior. |
 | [dependabot-2026-09.md](dependabot-2026-09.md) | Review of the September 2026 dependency round, the follow-ups and what is left. |
+| [cra-security-hardening-handoff.md](cra-security-hardening-handoff.md) | Handoff for the `security/pairing-and-logging` branch (CRA-driven security hardening): where the Turkish report/plan files live, branch state across all three repos, decisions already made, what is verified vs. not, and next steps. |
 | [proposals/](proposals/) | Ideas that change behavior or policy. **Nothing in here is decided.** The owner accepts one (then it is done and the file is deleted or moved to `guides/` or `design/`) or rejects it (the file is deleted). |
 
 ## Where the instructions for agents live

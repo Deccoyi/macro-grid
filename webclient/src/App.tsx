@@ -5,7 +5,7 @@ import { ActionErrorToast } from "./components/ActionErrorToast";
 import { ConnectScreen } from "./components/ConnectScreen";
 import { TopBar } from "./components/TopBar";
 import { t } from "./i18n";
-import { ConnectionStatus, ProfileSummary, ServerConnection } from "./ws/connection";
+import { ConnectionStatus, PairingError, ProfileSummary, ServerConnection } from "./ws/connection";
 
 export function App() {
   const [status, setStatus] = useState<ConnectionStatus>("connecting");
@@ -15,6 +15,7 @@ export function App() {
   const [dragValues, setDragValues] = useState<Record<string, number>>({});
   const [profiles, setProfiles] = useState<ProfileSummary[]>([]);
   const [actionError, setActionError] = useState<string | null>(null);
+  const [pairingError, setPairingError] = useState<PairingError | null>(null);
   const connectionRef = useRef<ServerConnection | null>(null);
   const actionErrorTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -46,6 +47,7 @@ export function App() {
         setActionError(message);
         actionErrorTimer.current = setTimeout(() => setActionError(null), 4000);
       },
+      onPairingError: setPairingError,
     });
     connectionRef.current = connection;
     connection.connect();
@@ -55,7 +57,16 @@ export function App() {
   const page = profile?.pages.find((p) => p.id === pageId) ?? profile?.pages[0];
 
   if (!profile || !page || status === "pairing_required") {
-    return <ConnectScreen status={status} onSubmitPin={(pin) => connectionRef.current?.retryWithPin(pin)} />;
+    return (
+      <ConnectScreen
+        status={status}
+        error={pairingError}
+        onSubmitPin={(pin) => {
+          setPairingError(null);
+          connectionRef.current?.retryWithPin(pin);
+        }}
+      />
+    );
   }
 
   return (

@@ -6,7 +6,7 @@ A device must be paired once with a PIN. After that it keeps a token and reconne
 
 ![The Pairing window with the code, QR code and browser address (blurred)](/img/pairing.png)
 
-1. Open **Pairing** in the editor. You see a six-digit PIN and a QR code. They are valid for **five minutes**; a fresh one is generated each time the window opens, or click **Generate a new code**.
+1. Open **Pairing** in the editor. You see a six-digit PIN and a QR code. They work only **while this window is open**, for at most five minutes, and pair one device; then a new code is shown. A fresh one is also generated each time the window opens, or click **Generate a new code**.
 2. In the [phone app](/guide/phone-app), scan the QR code, or enter the server address and the PIN by hand.
 3. The device appears under **Paired devices**.
 

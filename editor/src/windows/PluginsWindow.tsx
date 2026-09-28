@@ -8,6 +8,7 @@ import { useT } from "../i18n/I18nContext";
 import { useDocumentTitle } from "../i18n/useDocumentTitle";
 import { SectionLabel } from "../panels/fields/controls";
 import { ToolWindowLayout } from "./ToolWindowLayout";
+import { httpTargetScope } from "./httpTarget";
 
 type Category = "installed" | "discover";
 
@@ -167,7 +168,10 @@ export function PluginsWindow() {
 
   const permissionText = (permission: string) => {
     if (permission === "variables" || permission === "actions" || permission === "input") return t(`plugins.permission.${permission}`);
-    if (permission.startsWith("http:")) return t("plugins.permission.http", permission.slice(5));
+    if (permission.startsWith("http:")) {
+      const target = permission.slice(5);
+      return t(`plugins.permission.http.${httpTargetScope(target)}`, target);
+    }
     return t("plugins.permission.unknown", permission);
   };
 

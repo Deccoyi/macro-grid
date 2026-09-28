@@ -27,6 +27,13 @@ interface WelcomeData {
 interface ErrorData {
   code: string;
   message: string;
+  /** Set only for "pairing_required" when blocked after too many wrong PINs — seconds to wait, for a real
+   * countdown instead of parsing the number out of `message`. */
+  retryAfterSeconds?: number | null;
+  /** Set only for "pairing_required": "wrong_pin" | "locked_out" | "pairing_closed" | "not_paired" — a stable
+   * code so the client can show its own localized text instead of `message`, which is always English prose.
+   * Unrecognized (an older client against a newer server) or absent: fall back to `message`. */
+  reason?: string | null;
 }
 
 export interface ProfileSummary {
@@ -48,6 +55,17 @@ interface ConnectionEvents {
   onProfiles: (profiles: ProfileSummary[]) => void;
   onPaired: (token: string) => void;
   onActionError: (message: string) => void;
+  /** A pairing attempt was refused — wrong PIN, blocked after too many wrong PINs, or pairing not open on
+   * the computer. `message` is the server's own text (see ClientHub.PairingMessage), already specific enough
+   * to show as-is; not called for the initial "not paired yet" state before any PIN was ever submitted.
+   * `retryAfterSeconds` is set only for the "blocked" case, for a real countdown. */
+  onPairingError: (error: PairingError) => void;
+}
+
+export interface PairingError {
+  message: string;
+  retryAfterSeconds: number | null;
+  reason: string | null;
 }
 
 const MAX_BACKOFF_MS = 10_000;
@@ -67,6 +85,10 @@ export class ServerConnection {
   private token: string | null = localStorage.getItem(TOKEN_KEY);
   /** See the Android client's ServerConnection for why this exists (React StrictMode double-mount). */
   private destroyed = false;
+  /** False until a PIN is actually submitted, so the very first automatic hello (sent with no PIN, before
+   * the person has done anything) never fires onPairingError — ConnectScreen's own hint already covers that
+   * case. Stays true afterward: every pairing_required from here on is a real wrong/blocked/closed attempt. */
+  private attemptedPin = false;
 
   constructor(
     private readonly deviceId: string,
@@ -92,6 +114,7 @@ export class ServerConnection {
   }
 
   retryWithPin(pin: string): void {
+    this.attemptedPin = true;
     this.sendHello(pin);
   }
 
@@ -172,8 +195,11 @@ export class ServerConnection {
         break;
       case "error": {
         const data = envelope.data as ErrorData;
-        if (data.code === "pairing_required") this.events.onStatusChange("pairing_required");
-        else if (data.code === "action_failed") this.events.onActionError(data.message);
+        if (data.code === "pairing_required") {
+          this.events.onStatusChange("pairing_required");
+          if (this.attemptedPin)
+            this.events.onPairingError({ message: data.message, retryAfterSeconds: data.retryAfterSeconds ?? null, reason: data.reason ?? null });
+        } else if (data.code === "action_failed") this.events.onActionError(data.message);
         break;
       }
       default:
