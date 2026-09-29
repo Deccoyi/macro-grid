@@ -11,7 +11,7 @@ public sealed partial class JsPlugin
           'use strict';
           const g = globalThis;
           const names = ['permissions', 'log', 'varSet', 'varGet', 'varRemove', 'varDescribe', 'registerAction',
-            'settingsPage', 'settingsGet', 'status', 'hotkey', 'type', 'http', 'timer', 'cancel'];
+            'settingsPage', 'settingsGet', 'status', 'hotkey', 'type', 'http', 'httpAsync', 'timer', 'cancel'];
           const n = {};
           for (const name of names) { n[name] = g['__' + name]; delete g['__' + name]; }
 
@@ -27,6 +27,19 @@ public sealed partial class JsPlugin
           };
           const request = (method, url, body, options) =>
             JSON.parse(n.http(method, String(url), body === undefined ? '' : JSON.stringify(body), JSON.stringify((options && options.headers) || {})));
+
+          const pending = Object.create(null);
+          let nextRequest = 1;
+          const requestAsync = (method, url, body, options) => new Promise((resolve, reject) => {
+            const id = nextRequest++;
+            pending[id] = { resolve, reject };
+            try {
+              n.httpAsync(id, method, String(url), body === undefined ? '' : JSON.stringify(body), JSON.stringify((options && options.headers) || {}));
+            } catch (e) {
+              delete pending[id];
+              reject(e);
+            }
+          });
 
           const host = {
             permissions: Object.freeze(JSON.parse(n.permissions())),
@@ -53,6 +66,8 @@ public sealed partial class JsPlugin
             http: Object.freeze({
               get: (url, options) => request('GET', url, undefined, options),
               post: (url, body, options) => request('POST', url, body, options),
+              getAsync: (url, options) => requestAsync('GET', url, undefined, options),
+              postAsync: (url, body, options) => requestAsync('POST', url, body, options),
             }),
             every: (ms, fn) => start(fn, ms, true),
             after: (ms, fn) => start(fn, ms, false),
@@ -64,6 +79,12 @@ public sealed partial class JsPlugin
             const run = actions[type];
             if (!run) throw new Error('Unknown action ' + type);
             run(JSON.parse(contextJson), JSON.parse(settingsJson));
+          };
+          g.__httpDone = function (id, ok, payload) {
+            const p = pending[id];
+            if (!p) return;
+            delete pending[id];
+            if (ok) p.resolve(JSON.parse(payload)); else p.reject(new Error(payload));
           };
           g.__fire = function (id) {
             const timer = timers[id];

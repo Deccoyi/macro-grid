@@ -4,6 +4,11 @@ This file follows the [Keep a Changelog](https://keepachangelog.com/) format. Fo
 
 ## [Unreleased]
 ### Added
+- **Async HTTP for JavaScript plugins (additive):** `host.http.getAsync(url, options)` and `host.http.postAsync(url, body, options)`
+  return a promise for `{ status, body }`, so an `async` action can `await` a request without blocking the plugin's thread (the
+  existing `host.http.get/post` are unchanged). Same permission, redirect, timeout and size rules as the blocking calls; at most 4
+  requests in flight per plugin (`JsPluginLimits.MaxPendingHttp`, a new record parameter). See `docs/design/js-plugin-runtime.md`.
+  Tests: `JsPluginTests`.
 - **`IPluginTreeProvider` (optional, additive):** a .NET plugin can now list its own items (sounds, scenes, saved presets, ...) as a
   lazily-loaded tree in the editor's new Plugins tool window, alongside a matching optional `IPluginTreeItemSettings` for an item's own
   schema-driven settings form. `LoadedPlugin`/`PluginInfo` gains `HasTreeItems`. New routes: `GET /api/plugins/tree-changes`,

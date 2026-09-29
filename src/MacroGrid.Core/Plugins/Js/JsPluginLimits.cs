@@ -10,6 +10,7 @@ public sealed record JsPluginLimits(
     int MaxStatements,
     int MaxRecursion,
     int MaxTimers,
+    int MaxPendingHttp,
     TimeSpan HttpTimeout,
     int MaxHttpResponseBytes,
     int MaxConsecutiveErrors)
@@ -20,6 +21,7 @@ public sealed record JsPluginLimits(
         MaxStatements: 2_000_000,
         MaxRecursion: 100,
         MaxTimers: 20,
+        MaxPendingHttp: 4,
         HttpTimeout: TimeSpan.FromSeconds(5),
         MaxHttpResponseBytes: 1024 * 1024,
         MaxConsecutiveErrors: 5);

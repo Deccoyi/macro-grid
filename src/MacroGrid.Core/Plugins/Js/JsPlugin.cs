@@ -52,6 +52,8 @@ public sealed partial class JsPlugin : IPlugin, IDisposable
     private JsSettingsPage? _settingsPage;
     private Thread? _thread;
     private int _pendingTimerJobs;
+    private int _pendingHttp;
+    private readonly CancellationTokenSource _disposeCts = new();
     private int _consecutiveErrors;
     private volatile bool _disposed;
     private bool _initialized;
@@ -130,7 +132,9 @@ public sealed partial class JsPlugin : IPlugin, IDisposable
             _timers.Clear();
         }
         _jobs.CompleteAdding();
+        _disposeCts.Cancel();
         _http.Dispose();
+        _disposeCts.Dispose();
         // The loop ends when it has drained; an engine call cannot be interrupted, but every call has a time limit.
     }
 
@@ -192,6 +196,7 @@ public sealed partial class JsPlugin : IPlugin, IDisposable
         engine.SetValue("__hotkey", new Action<string>(Hotkey));
         engine.SetValue("__type", new Action<string>(TypeText));
         engine.SetValue("__http", new Func<string, string, string, string, string>(Http));
+        engine.SetValue("__httpAsync", new Action<int, string, string, string, string>(HttpAsync));
         engine.SetValue("__timer", new Action<int, int, bool>(StartTimer));
         engine.SetValue("__cancel", new Action<int>(CancelTimer));
         return engine;
@@ -203,6 +208,9 @@ public sealed partial class JsPlugin : IPlugin, IDisposable
         try
         {
             _engine!.Invoke(function, args);
+            // Promise callbacks (an awaited async request, a .then) only run when the engine is asked to; without this a
+            // settled promise would sit unnoticed until the next unrelated call.
+            _engine.Advanced.ProcessTasks();
             if (_initialized) Interlocked.Exchange(ref _consecutiveErrors, 0);
         }
         catch (Exception ex)

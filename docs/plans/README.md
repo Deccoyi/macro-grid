@@ -17,7 +17,7 @@ Each plan exists once. If the same text exists in another repository or on the D
 
 | # | Work | Repositories | Plan | Why here |
 |---|---|---|---|---|
-| 0 | Roadmap "Next": a branded installer (logo and colors), the `plugin-html` widget, the `web` widget, an async host API for JavaScript plugins, an Error List producer, and the parts of a store-like Discover tab that need catalog fields (screenshots, tags, real icons) | `macro-grid`, `macro-grid-client` (the `web` widget) | [roadmap.md](../roadmap.md) | Larger, no user is blocked on them, no plan file yet for any of them. |
+| 0 | Roadmap "Next": a branded installer (logo and colors), the `plugin-html` widget, the `web` widget, an Error List producer, and the parts of a store-like Discover tab that need catalog fields (screenshots, tags, real icons) | `macro-grid`, `macro-grid-client` (the `web` widget) | [roadmap.md](../roadmap.md) | Larger, no user is blocked on them, no plan file yet for any of them. |
 
 Done and no longer listed: the plugin manifest field rename (`macroGrid` is now `minMacroGrid`, the old name still read), version unification — one version for the server and the SDK, a `macroGrid` field for every plugin and
 the phone app, one release guide, all four sections released (see [../done/version-unification.md](../done/version-unification.md)),

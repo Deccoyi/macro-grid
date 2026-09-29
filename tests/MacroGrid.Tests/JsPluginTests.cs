@@ -222,6 +222,115 @@ public sealed class JsPluginTests : IDisposable
         Assert.Null(page.Load()["stolen"]);
     }
 
+    /// <summary>A local server that answers every request with <c>hello</c> after <paramref name="delayMs"/> ms.</summary>
+    private static (HttpListener Listener, int Port) SlowServer(int delayMs)
+    {
+        var listener = new HttpListener();
+        var port = FreePort();
+        listener.Prefixes.Add($"http://localhost:{port}/");
+        listener.Start();
+        _ = Task.Run(async () =>
+        {
+            while (listener.IsListening)
+            {
+                HttpListenerContext context;
+                try { context = await listener.GetContextAsync(); }
+                catch (Exception) { return; }
+                _ = Task.Run(async () =>
+                {
+                    await Task.Delay(delayMs);
+                    try
+                    {
+                        await context.Response.OutputStream.WriteAsync("hello"u8.ToArray());
+                        context.Response.Close();
+                    }
+                    catch (Exception) { /* the client gave up */ }
+                });
+            }
+        });
+        return (listener, port);
+    }
+
+    [Fact]
+    public async Task Async_http_resolves_a_promise_with_the_response()
+    {
+        var (listener, port) = SlowServer(0);
+        using var _ = listener;
+
+        Start($"host.http.getAsync('http://localhost:{port}/x').then(r => host.variables.set('t.body', r.status + ':' + r.body));",
+            ["variables", $"http:localhost:{port}"]);
+
+        await WaitAsync(() => _variables.Get("t.body") is "200:hello");
+    }
+
+    [Fact]
+    public async Task An_async_action_can_await_a_request()
+    {
+        var (listener, port) = SlowServer(0);
+        using var _ = listener;
+        var (_, host) = Start(
+            $"host.registerAction({{ type: 't.fetch', name: 'F', run: async () => {{ const r = await host.http.postAsync('http://localhost:{port}/x', {{ a: 1 }}); host.variables.set('t.body', r.body); }} }});",
+            ["variables", "actions", $"http:localhost:{port}"]);
+
+        await Run(host, "t.fetch");
+
+        await WaitAsync(() => _variables.Get("t.body") is "hello");
+    }
+
+    [Fact]
+    public async Task A_slow_async_request_does_not_block_the_plugin()
+    {
+        var (listener, port) = SlowServer(1500);
+        using var _ = listener;
+        var (_, host) = Start(
+            $"host.http.getAsync('http://localhost:{port}/x').then(r => host.variables.set('t.done', r.body));\n"
+            + "host.registerAction({ type: 't.ping', name: 'P', run: () => host.variables.set('t.ping', 1) });",
+            ["variables", "actions", $"http:localhost:{port}"]);
+
+        var watch = System.Diagnostics.Stopwatch.StartNew();
+        await Run(host, "t.ping"); // queued behind a blocking call it would wait the full 1.5 s
+        watch.Stop();
+
+        Assert.True(watch.ElapsedMilliseconds < 1000, $"The action waited {watch.ElapsedMilliseconds} ms behind the request.");
+        Assert.Equal(1.0, _variables.Get("t.ping"));
+        Assert.Null(_variables.Get("t.done"));
+        await WaitAsync(() => _variables.Get("t.done") is "hello");
+    }
+
+    [Fact]
+    public async Task Async_http_is_refused_without_a_matching_permission()
+    {
+        Start("host.http.getAsync('http://localhost:9/x').catch(e => host.variables.set('t.err', e.message));");
+
+        await WaitAsync(() => _variables.Get("t.err") is string);
+        Assert.Contains("http:localhost:9", (string)_variables.Get("t.err")!);
+    }
+
+    [Fact]
+    public async Task A_failed_async_request_rejects_the_promise()
+    {
+        var port = FreePort(); // nothing listens here
+        Start($"host.http.getAsync('http://localhost:{port}/x').catch(e => host.variables.set('t.err', e.message));",
+            ["variables", $"http:localhost:{port}"]);
+
+        await WaitAsync(() => _variables.Get("t.err") is string);
+        Assert.StartsWith("The request failed", (string)_variables.Get("t.err")!);
+    }
+
+    [Fact]
+    public async Task Only_a_few_async_requests_may_be_in_flight_at_once()
+    {
+        var (listener, port) = SlowServer(1000);
+        using var _ = listener;
+        var url = $"http://localhost:{port}/x";
+
+        Start($"for (let i = 0; i < 5; i++) host.http.getAsync('{url}').catch(e => host.variables.set('t.err', e.message));",
+            ["variables", $"http:localhost:{port}"]);
+
+        await WaitAsync(() => _variables.Get("t.err") is string);
+        Assert.Contains("at most 4", (string)_variables.Get("t.err")!);
+    }
+
     private static int FreePort()
     {
         var socket = new System.Net.Sockets.TcpListener(IPAddress.Loopback, 0);

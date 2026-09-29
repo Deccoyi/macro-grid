@@ -68,7 +68,6 @@ The order of the bigger pieces of work, and their plans, are in [plans/README.md
   `plugin-html` type draws a placeholder.
 - **The `web` widget** (an embedded page such as a live chat): today it draws a placeholder. The idea is an iframe first and, for pages that refuse to be
   framed, a native WebView positioned over the grid cell by a small Android plugin.
-- **An async host API for JavaScript plugins** (today scripts are synchronous, so `host.http` blocks the plugin's own thread).
 - **The rest of a store-like Discover tab.** Discover now shows a card grid and a per-plugin detail view (description, author,
   homepage, declared permissions, install/update) built from what the catalog already carries, in a wider Plugins window. Still
   open, and each needs a catalog field first: a real plugin icon (cards show the plugin's initial on a stable color for now),
