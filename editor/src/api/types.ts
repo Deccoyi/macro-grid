@@ -222,6 +222,21 @@ export interface PluginCatalogEntryInfo {
   trust: string | null;
 }
 
+/** One line of the Error List that the server reports (GET /api/problems): the same message from the same source is one line with a count. */
+export interface ServerProblem {
+  id: string;
+  /** A plugin id. */
+  source: string;
+  /** The plugin's display name. */
+  sourceName: string;
+  severity: "error" | "warning" | "info";
+  code: string;
+  message: string;
+  count: number;
+  firstAt: string;
+  lastAt: string;
+}
+
 export interface PluginCatalogResponse {
   source: string;
   name: string;

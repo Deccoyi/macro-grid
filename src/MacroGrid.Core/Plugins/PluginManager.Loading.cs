@@ -74,6 +74,10 @@ public sealed partial class PluginManager
         LoadedPlugin Fail(PluginLoadStatus status, string detail, IReadOnlyList<string>? pending = null)
         {
             var info = new LoadedPlugin(manifest.Id, manifest.Name, manifest.Version, status, detail, false, pending);
+            // Needs approval is not a fault: the Plugins window already asks for it.
+            if (status != PluginLoadStatus.NeedsApproval)
+                problems?.Report(manifest.Id, manifest.Name, status == PluginLoadStatus.Incompatible ? ProblemSeverity.Warning : ProblemSeverity.Error,
+                    status switch { PluginLoadStatus.NotAllowed => ProblemCodes.NotAllowed, PluginLoadStatus.Incompatible => ProblemCodes.Incompatible, _ => ProblemCodes.LoadFailed }, detail);
             lock (_stateLock)
             {
                 // A second folder with the same id must not replace the first one's entry.
@@ -133,7 +137,7 @@ public sealed partial class PluginManager
             if (manifest.Kind == PluginKind.Js)
             {
                 instance = new JsPlugin(manifest, entryPath, new JsPermissions(declared), variableStore, input, logger,
-                    reason => _ = Task.Run(() => DisableAsync(manifest.Id, reason)), windows: windowSource);
+                    reason => _ = Task.Run(() => DisableAsync(manifest.Id, reason)), windows: windowSource, problems: problems);
             }
             else
             {
@@ -162,6 +166,7 @@ public sealed partial class PluginManager
             }
 
             localizer?.Register(manifest.Id, dir, manifest.DefaultLanguage);
+            problems?.Resolve(manifest.Id, ProblemCodes.NotAllowed, ProblemCodes.LoadFailed, ProblemCodes.Incompatible, ProblemCodes.SwitchedOff);
             var treeProvider = instance as IPluginTreeProvider;
             var info = new LoadedPlugin(manifest.Id, manifest.Name, manifest.Version, PluginLoadStatus.Loaded, null,
                 host.SettingsPage is not null, HasIcon: ResolveIconPath(dir, manifest) is not null, HasTreeItems: treeProvider is not null,

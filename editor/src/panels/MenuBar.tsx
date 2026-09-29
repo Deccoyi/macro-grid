@@ -9,6 +9,7 @@ import { clearWebUrls, collectWebSites } from "../state/webUrls";
 import { WebImportConsent } from "../windows/WebImportConsent";
 import { useServerVersion } from "../state/useServerVersion";
 import { useT, type Language } from "../i18n/I18nContext";
+import { usePluginUpdateCount } from "../state/pluginUpdates";
 import { TOOL_WINDOWS } from "../workspace/toolWindows";
 import { useWorkspace } from "../workspace/WorkspaceContext";
 import { ContextMenu, type ContextMenuEntry } from "./ContextMenu";
@@ -52,6 +53,7 @@ function mnemonicLabel(label: string, letter: string | undefined, show: boolean)
 export function MenuBar({ profile, onImportProfile, editCommands }: MenuBarProps) {
   const { t, lang } = useT();
   const serverVersion = useServerVersion();
+  const pluginUpdates = usePluginUpdateCount();
   const workspace = useWorkspace();
   const prefs = usePreferences();
   const [openMenu, setOpenMenu] = useState<{ id: string; x: number; y: number } | null>(null);
@@ -223,6 +225,7 @@ export function MenuBar({ profile, onImportProfile, editCommands }: MenuBarProps
           onMouseEnter={() => { if (openMenu && openMenu.id !== m.id) open(m.id); }}
         >
           {mnemonicLabel(m.label, mnemonics[m.id], mnemonicsVisible)}
+          {m.id === "plugins" && pluginUpdates > 0 && <span className="menu-bar-dot" title={t("status.pluginUpdates", String(pluginUpdates))} />}
         </button>
       ))}
 

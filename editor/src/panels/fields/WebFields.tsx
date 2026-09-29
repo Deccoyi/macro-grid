@@ -42,6 +42,14 @@ export function WebFields({ widget, onChange }: FieldGroupProps) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
       {isWeb && (
+        <div
+          role="note"
+          style={{ padding: "8px 10px", fontSize: 11.5, lineHeight: 1.4, color: "var(--ms-text-primary)", background: "var(--ms-accent-bg-muted)", borderLeft: "3px solid var(--ms-warning, #facc15)", borderRadius: 4 }}
+        >
+          <strong>{t("fields.web.experimentalTitle")}</strong> {t("fields.web.experimentalText")}
+        </div>
+      )}
+      {isWeb && (
         <label className="field">
           {t("fields.web.name")}
           <input
