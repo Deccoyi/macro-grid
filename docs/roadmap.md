@@ -37,7 +37,7 @@ Where the project stands. The server and the SDK are at 1.0.0 and under active d
   Windows, upgrade, uninstall; [release.md](guides/release.md)); a signed release build of the phone app; the plugin SDK is published on NuGet.
 - **Phone app** (its own repository): connection with saved servers and QR pairing, the profile drawer, page swipes, kiosk mode and orientation lock,
   keep-awake, automatic reconnection, an offline layout cache, and auto-update (checks GitHub, downloads and verifies a release-signed APK, hands it
-  to Android's installer; [design/phone-app-auto-update.md](design/phone-app-auto-update.md)).
+  to Android's installer).
 - **Plugin distribution:** a Discover tab in the editor's Plugins window — browse the official catalog, add a third-party multi-plugin source, install
   a single plugin from a pasted repository link, badges (Official / Third-party / Local) and "update available"
   ([design/plugin-distribution.md](design/plugin-distribution.md)).
@@ -53,8 +53,8 @@ The order of the bigger pieces of work, and their plans, are in [plans/README.md
   above), plain `ws://`/`http://` (port 9820) stay open unconditionally; a preference to turn them off is not built yet. Default
   on for now (the browser deck cannot use `wss://` at all, and older paired phones have no TLS support), default off starting
   the next MAJOR version once both are settled. See [plans/security-hardening-plan.md](plans/security-hardening-plan.md), part A.
-- **A branded installer:** done, see [done/branded-installer-plan.md](done/branded-installer-plan.md).
-- **A much faster install and update (fewer files):** done, see [done/faster-install-plan.md](done/faster-install-plan.md).
+- **A branded installer:** done.
+- **A much faster install and update (fewer files):** done.
 - **The `plugin-html` widget:** a plugin ships its own HTML and JavaScript widget. It would run in a sandboxed iframe on the client and talk to the
   server only through `postMessage`. It needs the widget type in the renderers, a bridge in the client and a message route on the server. Today the
   `plugin-html` type draws a placeholder.

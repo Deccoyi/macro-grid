@@ -156,7 +156,7 @@ says "Copy 3 pages" and shows a small `Plus`.
 "Below" an expanded container means before its first child, as in file managers. Horizontal position left of an item's indent while
 at the bottom of the last child of a folder means "below the folder" at the parent level (so the user can drag an item out of a folder).
 
-**How it looks** (all colours from the colour bible; `component-states.html` in the docking mockups has the drop-guide language):
+**How it looks** (all colours from the colour bible):
 
 - **Above / below:** a 2 px `--ms-accent` line across the row, starting at the indent of the level the items will land on, with a 6 px
   hollow circle at its left end. The start position shows the level, so above/below inside a folder and above/below the folder itself

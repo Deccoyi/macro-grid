@@ -87,6 +87,8 @@ Thumbs.db
 *.bak
 
 # ============================================================
-# Finished plans (kept locally, not published)
+# Maintainer and agent working notes (kept locally, not published)
 # ============================================================
 docs/done/
+docs/agents/
+docs/releases/
