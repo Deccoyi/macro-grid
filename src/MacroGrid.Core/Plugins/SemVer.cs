@@ -48,7 +48,7 @@ public static partial class SemVer
     public static bool IsThreePartVersion(string? version) =>
         version is not null && ThreePartPattern().IsMatch(version);
 
-    /// <summary>The rule a plugin's <c>macroGrid</c> field follows: <paramref name="required"/> is the oldest Macro Grid the
+    /// <summary>The rule a plugin's <c>minMacroGrid</c> field follows: <paramref name="required"/> is the oldest Macro Grid the
     /// plugin runs on, and it runs on every later version of the same MAJOR. So "1.3.0" runs on 1.3.0 up to (excluding)
     /// 2.0.0. A label such as "-beta" on <paramref name="actual"/> is ignored.</summary>
     public static bool SatisfiesPlatform(string actual, string required)

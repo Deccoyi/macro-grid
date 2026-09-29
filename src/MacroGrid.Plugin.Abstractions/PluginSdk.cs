@@ -6,7 +6,7 @@ namespace MacroGrid.Plugin.Abstractions;
 /// The version of the Plugin SDK, which is also the version of Macro Grid: the server and the SDK carry one number
 /// (docs/guides/versioning.md). It is read from this assembly, whose version is set once, by <c>&lt;Version&gt;</c> in the
 /// repository's Directory.Build.props, so there is no second place to keep in step. A plugin declares the oldest
-/// Macro Grid it runs on in its manifest's <c>macroGrid</c> field.
+/// Macro Grid it runs on in its manifest's <c>minMacroGrid</c> field.
 /// </summary>
 public static class PluginSdk
 {

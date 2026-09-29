@@ -27,13 +27,19 @@ public sealed record PluginManifest
     /// <summary>The oldest Macro Grid this plugin runs on, as MAJOR.MINOR.PATCH ("1.3.0"). It runs on every later version of the same
     /// MAJOR. Macro Grid and the Plugin SDK share one version number, so this is also the SDK the plugin was built against.
     /// Required for a new plugin; a manifest without it is read through the legacy fields below.</summary>
+    public string? MinMacroGrid { get; init; }
+
+    /// <summary>Legacy: the earlier name of <see cref="MinMacroGrid"/>, same meaning and format (Macro Grid up to 1.2.x reads only
+    /// this name). Read only when <see cref="MinMacroGrid"/> is absent; kept for at least one MAJOR so plugins that ship it keep
+    /// loading.</summary>
     public string? MacroGrid { get; init; }
 
     /// <summary>Legacy (before Macro Grid 1.0.0): npm-style caret range against the SDK version, e.g. "^0.4.0". Read only when
-    /// <see cref="MacroGrid"/> is absent; "^0.4.x" counts as macroGrid 1.0.0, older ranges are incompatible.</summary>
+    /// <see cref="MinMacroGrid"/> and <see cref="MacroGrid"/> are absent; "^0.4.x" counts as minMacroGrid 1.0.0, older ranges
+    /// are incompatible.</summary>
     public string? SdkVersion { get; init; }
 
-    /// <summary>Legacy (before Macro Grid 1.0.0): minimum server version. Ignored; <see cref="MacroGrid"/> replaces it.</summary>
+    /// <summary>Legacy (before Macro Grid 1.0.0): minimum server version. Ignored; <see cref="MinMacroGrid"/> replaces it.</summary>
     public string? MinServerVersion { get; init; }
 
     /// <summary>Entry assembly file name for a csharp plugin (e.g. "Demo.Plugin.dll"). Entry script for js (not yet supported by the loader).</summary>

@@ -67,7 +67,7 @@ public sealed class PluginCatalogInstaller(
 
         Require(string.Equals(manifest.Id, entry.Id, StringComparison.Ordinal), "id");
         Require(string.Equals(manifest.Version, version.Version, StringComparison.Ordinal), "version");
-        Require(string.Equals(manifest.MacroGrid, version.MacroGrid, StringComparison.Ordinal), "macroGrid");
+        Require(string.Equals(PluginCompatibility.Declared(manifest.MinMacroGrid, manifest.MacroGrid), PluginCompatibility.Declared(version.MinMacroGrid, version.MacroGrid), StringComparison.Ordinal), "minMacroGrid");
         Require(string.Equals(manifest.SdkVersion, version.SdkVersion, StringComparison.Ordinal), "sdkVersion");
         Require(string.Equals(manifest.MinServerVersion, version.MinServerVersion, StringComparison.Ordinal), "minServerVersion");
         Require(string.Equals(manifest.Kind.ToString(), entry.Kind, StringComparison.OrdinalIgnoreCase), "kind");

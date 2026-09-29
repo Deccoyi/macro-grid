@@ -59,6 +59,7 @@ public sealed class PluginCatalogClient(HttpClient http)
             GetString(root, "homepage"),
             GetRequiredString(root, "kind", "plugin.json"),
             GetRequiredString(root, "version", "plugin.json"),
+            GetString(root, "minMacroGrid"),
             GetString(root, "macroGrid"),
             GetString(root, "sdkVersion"),
             GetString(root, "minServerVersion"),
@@ -136,7 +137,8 @@ public sealed class PluginCatalogClient(HttpClient http)
         {
             var root = document.RootElement;
             var formatVersion = root.TryGetProperty("formatVersion", out var fv) && fv.TryGetInt32(out var f) ? f : 0;
-            // 1: entries carry sdkVersion + minServerVersion. 2: entries carry macroGrid (and may still carry the two for older servers).
+            // 1: entries carry sdkVersion + minServerVersion. 2: entries carry minMacroGrid, or macroGrid (its earlier name), and may still
+            // carry the two legacy fields for older servers. minMacroGrid is additive inside format 2, so older servers keep reading the index.
             if (formatVersion is not (1 or 2))
                 throw new PluginCatalogException(PluginCatalogException.Invalid, $"Unsupported index format version: {formatVersion}.");
 
@@ -192,6 +194,7 @@ public sealed class PluginCatalogClient(HttpClient http)
 
         return new PluginCatalogVersion(
             version,
+            GetString(element, "minMacroGrid"),
             GetString(element, "macroGrid"),
             GetString(element, "sdkVersion"),
             GetString(element, "minServerVersion"),
