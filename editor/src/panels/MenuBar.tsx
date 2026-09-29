@@ -5,7 +5,8 @@ import { commandItem } from "../commands/commandItem";
 import type { Command } from "../commands/types";
 import { alertAsync, choiceAsync, confirmAsync, promptAsync } from "../dialogs/dialogStore";
 import { usePreferences } from "../preferences/PreferencesContext";
-import { clearWebUrls, collectWebHosts } from "../state/webUrls";
+import { clearWebUrls, collectWebSites } from "../state/webUrls";
+import { WebImportConsent } from "../windows/WebImportConsent";
 import { useServerVersion } from "../state/useServerVersion";
 import { useT, type Language } from "../i18n/I18nContext";
 import { TOOL_WINDOWS } from "../workspace/toolWindows";
@@ -85,12 +86,12 @@ export function MenuBar({ profile, onImportProfile, editCommands }: MenuBarProps
     if (!result.profile) return;
 
     // A profile from someone else can point a phone at any site the moment it is used: name the sites and ask once.
-    const hosts = collectWebHosts(result.profile);
-    if (hosts.length > 0) {
-      const choice = await choiceAsync(t("profile.importWeb", hosts.join(", ")), [
-        { value: "keep", label: t("profile.importWebKeep") },
-        { value: "clear", label: t("profile.importWebClear"), primary: true },
-      ], { title: t("profile.importWebTitle") });
+    const sites = collectWebSites(result.profile);
+    if (sites.length > 0) {
+      const choice = await choiceAsync("", [
+        { value: "clear", label: t("profile.importWebClear") },
+        { value: "keep", label: t("profile.importWebKeep"), primary: true },
+      ], { title: t("profile.importWebTitle"), content: <WebImportConsent sites={sites} /> });
       if (choice === null) return;
       if (choice === "clear") clearWebUrls(result.profile);
     }

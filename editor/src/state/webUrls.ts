@@ -17,6 +17,16 @@ function eachWebUrl(profile: Profile, visit: (url: string, clear: () => void) =>
   }
 }
 
+/** Like `collectWebHosts`, with whether each site is reached over an encrypted connection (a host reached both ways counts as not encrypted). */
+export function collectWebSites(profile: Profile): { host: string; secure: boolean }[] {
+  const sites = new Map<string, boolean>();
+  eachWebUrl(profile, (url) => {
+    const host = webUrlHost(url) || "?";
+    sites.set(host, (sites.get(host) ?? true) && /^https:/i.test(url));
+  });
+  return [...sites].map(([host, secure]) => ({ host, secure }));
+}
+
 /** The host names (never the path or query, which may hold a secret) of the addresses in a profile, without duplicates. */
 export function collectWebHosts(profile: Profile): string[] {
   const hosts = new Set<string>();

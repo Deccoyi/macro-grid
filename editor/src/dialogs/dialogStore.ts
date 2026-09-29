@@ -38,6 +38,8 @@ interface ChoiceRequest {
   message: string;
   title?: string;
   options: ChoiceOption[];
+  /** Rich body shown instead of `message`, like confirmRichAsync's. */
+  content?: ReactNode;
   resolve: (value: string | null) => void;
 }
 
@@ -78,9 +80,9 @@ export function alertAsync(message: string, opts?: { title?: string }): Promise<
 
 /** A modal with several caller-defined buttons (plus Cancel) — e.g. "Rename / Overwrite" on an import
  * name clash. Resolves the chosen option's value, or null on cancel. */
-export function choiceAsync(message: string, options: ChoiceOption[], opts?: { title?: string }): Promise<string | null> {
+export function choiceAsync(message: string, options: ChoiceOption[], opts?: { title?: string; content?: ReactNode }): Promise<string | null> {
   return new Promise((resolve) => {
-    listener?.({ kind: "choice", message, title: opts?.title, options, resolve });
+    listener?.({ kind: "choice", message, title: opts?.title, options, content: opts?.content, resolve });
   });
 }
 
