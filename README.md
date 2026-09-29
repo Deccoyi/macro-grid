@@ -68,6 +68,12 @@ Get the latest Windows installer (`MacroGrid-Setup-<version>.exe`) from the [dow
 previous versions, or from the [GitHub Releases](https://github.com/Deccoyi/macro-grid/releases) page, and run it. You can also build from source (below). The installer is not
 code-signed yet, so Windows SmartScreen may warn on first run. How releases are made: [docs/guides/release.md](docs/guides/release.md).
 
+**Antivirus warnings.** Because the installer and the app are not code-signed and every release is a new, rarely downloaded file, an antivirus can flag it as
+a generic detection (for example "IDP.Generic" in Norton) or block it as "new, few users". That is a reputation guess, not a finding of malware. To check the file
+you downloaded, compare its SHA-256 with the `sha256:` value GitHub shows next to it on the release page. If your antivirus blocks it, report it to the
+vendor as a false positive; do not switch your protection off. The app also sends key presses when a plugin asks for them, and it can start with Windows,
+which some behavior-based scanners react to.
+
 ## Getting started
 
 1. Install and start the server (see above; or build it from source, below). It appears as a tray icon; the menu opens the editor.
