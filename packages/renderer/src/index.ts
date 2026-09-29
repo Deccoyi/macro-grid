@@ -5,6 +5,8 @@ export { ButtonContent, type ButtonContentProps } from "./widgets/ButtonContent"
 export { ImageContent, type ImageContentProps } from "./widgets/ImageContent";
 export { SliderContent, type SliderContentProps } from "./widgets/SliderContent";
 export { KnobContent, type KnobContentProps } from "./widgets/KnobContent";
+export { WebContent, WEB_SANDBOX, type WebContentProps, type WebTexts } from "./widgets/WebContent";
+export { isSafeWebUrl, webUrlHost, MAX_WEB_URL_LENGTH } from "./widgets/webUrl";
 export { PlaceholderContent, type PlaceholderContentProps } from "./widgets/PlaceholderContent";
 export { ShadowHost, type ShadowHostProps } from "./style/ShadowHost";
 export { sanitizeWidgetCss, type SanitizeResult } from "./style/sanitizeCss";

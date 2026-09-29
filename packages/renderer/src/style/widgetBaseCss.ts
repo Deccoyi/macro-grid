@@ -68,6 +68,7 @@ const SHARED_CONTENT_CSS = `
 .ms-knob-needle { stroke: currentColor; stroke-width: 6; stroke-linecap: round; }
 .ms-image-img { max-width: 100%; max-height: 100%; object-fit: contain; flex: 1; min-height: 0; }
 .ms-placeholder { opacity: .6; font-style: italic; }
+.ms-web { display: block; width: 100%; height: 100%; border: 0; background: #fff; }
 `;
 
 function verticalAlignToFlex(vAlign: WidgetStyle["vAlign"]): string {

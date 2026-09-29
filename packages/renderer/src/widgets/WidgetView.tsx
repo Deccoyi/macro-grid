@@ -9,6 +9,7 @@ import { ImageContent } from "./ImageContent";
 import { KnobContent } from "./KnobContent";
 import { PlaceholderContent } from "./PlaceholderContent";
 import { SliderContent } from "./SliderContent";
+import { WebContent, type WebTexts } from "./WebContent";
 
 export interface WidgetViewProps {
   widget: Widget;
@@ -20,6 +21,18 @@ export interface WidgetViewProps {
   liveValue?: number;
   /** Resolved dynamic-style overrides (background/foreground/borderColor) from widget.state; merged on top of widget.style. */
   liveStyle?: Partial<Pick<WidgetStyle, "background" | "foreground" | "borderColor" | "icon">> & { animation?: string };
+  /** A `web` widget only: the address this device shows instead of the widget's own (set by a button; from widget.state). Empty or absent means the widget's own. */
+  webUrl?: string;
+  /** A `web` widget only: a higher number than before loads the page again. */
+  webReload?: number;
+  /** A `web` widget only: false in the editor, so the widget can still be selected and dragged over the page. Default true. */
+  webInteractive?: boolean;
+  /** A `web` widget only: false draws the host name instead of the page (not the shown page of the grid, app in the background). Default true. */
+  webLive?: boolean;
+  /** A `web` widget only: host names to refuse besides the built-in rule, for example the server's own address. */
+  webBlockedHosts?: readonly string[];
+  /** A `web` widget only: replaces the English words of the placeholder. */
+  webTexts?: Partial<WebTexts>;
   onPress?: () => void;
   onRelease?: () => void;
   onLongPress?: () => void;
@@ -42,6 +55,12 @@ export function WidgetView({
   liveActive,
   liveValue,
   liveStyle,
+  webUrl,
+  webReload,
+  webInteractive,
+  webLive,
+  webBlockedHosts,
+  webTexts,
   onPress,
   onRelease,
   onLongPress,
@@ -71,12 +90,24 @@ export function WidgetView({
       customCss={customCss}
       active={liveActive}
       className={className}
-      style={{ touchAction: interactive ? "none" : "auto", cursor: interactive ? "pointer" : "default", ...style }}
+      // A web page scrolls and zooms inside its own frame: the widget's press handling must not claim its touches.
+      style={{ touchAction: interactive && widget.type !== "web" ? "none" : "auto", cursor: interactive ? "pointer" : "default", ...style }}
       onPointerDown={interactive ? gesture.onPointerDown : undefined}
       onPointerUp={interactive ? gesture.onPointerUp : undefined}
       onPointerCancel={interactive ? gesture.onPointerCancel : undefined}
     >
-      {renderContent(widget, text, effectiveStyle, liveValue, onValueChange, onValueCommit)}
+      {widget.type === "web" ? (
+        <WebContent
+          url={webUrl ? webUrl : typeof widget.props?.url === "string" ? widget.props.url : undefined}
+          reload={webReload}
+          interactive={webInteractive}
+          live={webLive}
+          blockedHosts={webBlockedHosts}
+          texts={webTexts}
+        />
+      ) : (
+        renderContent(widget, text, effectiveStyle, liveValue, onValueChange, onValueCommit)
+      )}
     </ShadowHost>
   );
 }
@@ -96,8 +127,6 @@ function renderContent(
       return <SliderContent text={text} value={liveValue} props={widget.props} onChange={onValueChange} onCommit={onValueCommit} />;
     case "knob":
       return <KnobContent text={text} value={liveValue} props={widget.props} onChange={onValueChange} onCommit={onValueCommit} />;
-    case "web":
-      return <PlaceholderContent label={text || "Web"} />;
     case "plugin-html":
       return <PlaceholderContent label={text || "Plugin"} />;
     case "button":

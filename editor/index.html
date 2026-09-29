@@ -2,6 +2,8 @@
 <html lang="tr">
 <head>
   <meta charset="utf-8" />
+  <!-- A web widget frames only http and https pages; a javascript:, data: or blob: document can never be put in a frame. -->
+  <meta http-equiv="Content-Security-Policy" content="frame-src http: https:" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link rel="icon" href="/favicon.ico" sizes="any" />
   <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png" />

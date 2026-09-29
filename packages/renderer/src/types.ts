@@ -76,6 +76,8 @@ export interface ActionBinding {
 export interface Widget {
   id: string;
   type: WidgetType;
+  /** Optional name, only used to pick this widget in an action (the target of "Change web page"); unique in a profile. */
+  name?: string;
   x: number;
   y: number;
   w: number;
@@ -155,4 +157,8 @@ export interface WidgetState {
   active?: boolean;
   /** From a dynamized property (see DynamicBinding server-side): property name to resolved value ("animation" is one of WidgetAnimation, "icon" is an image URL or an empty string for no icon, the rest are CSS colors). */
   style?: Partial<Record<"background" | "foreground" | "borderColor" | "animation" | "icon", string>>;
+  /** A `web` widget: the address this device shows instead of the profile's (set by a button); an empty string goes back to the profile's. */
+  url?: string;
+  /** A `web` widget: a higher number than before loads the page again. */
+  reload?: number;
 }

@@ -9,9 +9,9 @@ const SCOPE_COLOR: Record<HttpTargetScope, string> = {
   internet: "var(--ms-danger)",
 };
 
-const tint = (color: string, percent = 16) => `color-mix(in srgb, ${color} ${percent}%, transparent)`;
+export const tint = (color: string, percent = 16) => `color-mix(in srgb, ${color} ${percent}%, transparent)`;
 
-function Row({ icon, children, chip }: { icon: ReactNode; children: ReactNode; chip?: { text: string; color: string } }) {
+export function Row({ icon, children, chip }: { icon: ReactNode; children: ReactNode; chip?: { text: string; color: string } }) {
   return (
     <li style={{ display: "flex", alignItems: "center", gap: 10, padding: "7px 0", listStyle: "none" }}>
       <span style={{
