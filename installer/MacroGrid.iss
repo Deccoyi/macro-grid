@@ -38,6 +38,11 @@ ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
 PrivilegesRequired=admin
 WizardStyle=modern
+; Branding: the icon of the setup and uninstaller files, and the pictures on the wizard pages (large: welcome and finished;
+; small: the corner of the other pages). Several sizes of each, so high-DPI screens get a sharp one (docs/plans/branded-installer-plan.md).
+SetupIconFile=..\src\MacroGrid.Host\app.ico
+WizardImageFile=assets\wizard-large-164x314.bmp,assets\wizard-large-246x459.bmp,assets\wizard-large-328x628.bmp
+WizardSmallImageFile=assets\wizard-small-55x55.bmp,assets\wizard-small-83x80.bmp,assets\wizard-small-110x106.bmp
 ; The person has to accept this text (no warranty, limitation of liability, MIT license) before anything is installed.
 LicenseFile=license-agreement.txt
 ; Close a running server before replacing its files.

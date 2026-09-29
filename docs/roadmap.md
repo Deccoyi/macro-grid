@@ -53,15 +53,7 @@ The order of the bigger pieces of work, and their plans, are in [plans/README.md
   above), plain `ws://`/`http://` (port 9820) stay open unconditionally; a preference to turn them off is not built yet. Default
   on for now (the browser deck cannot use `wss://` at all, and older paired phones have no TLS support), default off starting
   the next MAJOR version once both are settled. See [plans/security-hardening-plan.md](plans/security-hardening-plan.md), part A.
-- **A branded installer:** today the setup uses the plain modern wizard style with Inno Setup's default pictures and no icon of its own. Wanted: the
-  Macro Grid logo and the product colors. What the setup tool can do natively: an icon for the setup file and the uninstaller (`SetupIconFile`, from
-  `src/MacroGrid.Host/app.ico`), the large picture on the welcome and finished pages (`WizardImageFile`), the small logo in the corner of the
-  other pages (`WizardSmallImageFile`, several sizes for high-DPI screens), the color behind the large picture, and the texts on each page. What it
-  cannot do natively: restyle the buttons, fonts and page background in our accent color; that needs a third-party skin library, which is not
-  worth its size, its licence and the antivirus false alarms it can bring. So the plan is the native part, drawn from `docs/ui/color-bible.md`
-  and `website/public/logo.png`. The automatic update shows few pages (see `design/agreement-acceptance.md`), so the logo appears mostly
-  in its progress window. The exact picture sizes are checked against the Inno Setup version the release workflow installs. It needs a small
-  plan file first (`plans/`).
+- **A branded installer:** done, see [done/branded-installer-plan.md](done/branded-installer-plan.md).
 - **A much faster install and update (fewer files):** done, see [done/faster-install-plan.md](done/faster-install-plan.md).
 - **The `plugin-html` widget:** a plugin ships its own HTML and JavaScript widget. It would run in a sandboxed iframe on the client and talk to the
   server only through `postMessage`. It needs the widget type in the renderers, a bridge in the client and a message route on the server. Today the
