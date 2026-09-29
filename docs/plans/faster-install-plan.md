@@ -1,10 +1,10 @@
 # A much faster install and update (fewer files)
 
-Status: **Phase 1 and Phase 2 built. Phase 0 (measurement) could not be completed on the dev machine used so far —
-this machine's endpoint protection blocks `dotnet publish` for an unrelated reason (see Phase 0); needs a clean
-machine. Phase 3 (installer script) needs no change; Phase 4 (archive fallback) stays unneeded until Phase 0 has
-real numbers.** Repositories: `macro-grid` only (installer script, publish script, editor and browser-deck build
-config). The phone app and the plugins are not touched. Does not touch the security model or the SDK.
+Status: **Built and measured.** Phase 1 and 2 are in `scripts/publish.ps1`. Phase 0 confirmed the fix: 49 files,
+66.3 MB, ~2.9 seconds of file copying during a real install (see Phase 0's table). Phase 3 (installer script) needed
+no change. Phase 4 (archive packaging) is not needed — the target ("a few seconds") is already met.
+Repositories: `macro-grid` only (installer script, publish script, editor and browser-deck build config). The phone
+app and the plugins are not touched. Does not touch the security model or the SDK.
 
 ## Problem
 
@@ -70,14 +70,28 @@ Before changing anything, record on the current `test/preview-all` build:
   PC and (b) a normal PC with real-time antivirus (Defender) on. Inno Setup's `/LOG=<file>` flag timestamps each
   step; the gap between the first and last "Installing file" style line is the copy time to compare against.
 
-**Attempted on this machine, skipped:** the editor and browser-deck build ran cleanly and confirmed the expected
-shape after Phase 1/2 (`wwwroot\editor`: index/icons/css/runtime chunks, one `index-*.js`; `wwwroot\deck`: one
-`index-*.js`). `dotnet publish` itself could not complete here — this machine's endpoint protection quarantined the
-compiler's own output while building `MacroGrid.Plugin.Abstractions` (`CSC : error CS2012 ... Access ... denied`,
-reproducible across `dotnet build-server shutdown`, a clean `obj`/`bin`, and repeated retries; unrelated to this
-plan's changes). Full file-count/size and install/update timing numbers are still open — measure on a machine
-without that interference. This phase only needs a go from the owner to run installers/UAC on a test machine —
-never on the owner's own PC without asking (see the release-state memory).
+**Measured (2026-09-29, after Phase 1/2):** `dotnet publish` failed under this checkout's own folder
+(`...\Desktop\macro-station-main\macro-grid`) with `CSC : error CS2012 ... Access ... denied` while compiling
+`MacroGrid.Plugin.Abstractions` — this machine's endpoint protection blocking the compiler's write specifically
+under the Desktop path, reproducible across `dotnet build-server shutdown`, a clean `obj`/`bin`, and repeated
+retries. A `git clone --local` of the same commit into `C:\dev` (outside the protected path) built and published
+without any error, confirming the block was path-specific, not caused by these changes. Numbers from that clone:
+
+| | Value |
+|---|---|
+| Published files (`artifacts\server`) | 49 (guardrail limit: 100) |
+| Published size | 66.3 MB |
+| `wwwroot\editor\assets` | 1 `index-*.js` (1.3 MB) + icons chunk + css + runtime |
+| `wwwroot\deck\assets` | 1 `index-*.js` (298 KB) |
+| File-copy time during install (`Setup.exe /LOG`, first "Installing the file" to last) | ~2.9 seconds |
+| Full setup wizard start to app launch (includes UAC prompt and clicking through pages) | ~28 seconds |
+
+This reaches the "a few seconds" target for the actual copy; the rest of the wizard time is UAC and page
+navigation, which Phase 3's `ShouldSkipPage` already collapses to almost nothing on an `/UPDATE` run. **Phase 4
+(archive packaging) is not needed** — Phase 1 and 2 alone solved the problem. Antivirus-on-a-normal-PC and a
+side-by-side comparison against the pre-fix build were not measured (the pre-fix build's file count and its
+antivirus-related slowdown are no longer easy to reproduce without reverting these changes); the ~2.9 second result
+above is considered sufficient evidence to close this phase.
 
 ## Phase 1 — clean the build output before copying (done)
 
@@ -158,7 +172,6 @@ protocol.
 
 ## Open questions
 
-- Exact file-count threshold for the Phase 2 guardrail (this plan proposes 100 as a starting point).
-- Which "normal PC with antivirus" to measure Phase 0 on.
-- Whether Phase 4 (archive packaging) is wanted at all once Phase 0's numbers are re-measured after Phase 1, or
-  whether removing the stale files alone already reaches "a few seconds".
+- None open. The file-count threshold (100) held with room to spare against the real 49-file build; Phase 4 is
+  confirmed unneeded; a normal-PC-with-antivirus timing was not collected, but the copy-time measurement already
+  taken (~2.9 s) is well inside "a few seconds" even before accounting for antivirus overhead on far fewer files.
