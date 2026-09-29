@@ -2,6 +2,7 @@ using MacroGrid.Host.Ui;
 using MacroGrid.Core;
 using MacroGrid.Core.Actions;
 using MacroGrid.Core.Devices;
+using MacroGrid.Core.Diagnostics;
 using MacroGrid.Core.Plugins;
 using MacroGrid.Core.Plugins.Distribution;
 using MacroGrid.Core.Preferences;
@@ -101,8 +102,9 @@ internal static class ServiceRegistration
             sp.GetRequiredService<VariableStore>(), new PluginPermissionStore(dataDir),
             sp.GetRequiredService<IInputService>(), sp.GetRequiredService<ILogger<PluginManager>>(),
             sp.GetRequiredService<PluginLocalizer>(), sp.GetRequiredService<ISecretProtector>(),
-            windowSource: sp.GetRequiredService<IActiveWindowSource>()));
+            windowSource: sp.GetRequiredService<IActiveWindowSource>(), problems: sp.GetRequiredService<ProblemList>()));
         services.AddHostedService(sp => sp.GetRequiredService<PluginManager>());
+        services.AddSingleton<ProblemList>();
         services.AddSingleton<PluginInstallSelection>();
         return services;
     }

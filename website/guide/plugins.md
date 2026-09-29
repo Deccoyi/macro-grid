@@ -18,6 +18,10 @@ Use **Reload** after changing a plugin, the gear button for its **Settings**, an
 Only the **official C# plugins** run: a C# plugin has full access, like the server itself, so Macro Grid loads one only when it carries a valid official signature, checked every time it loads. Plugins by other authors are **JavaScript plugins**, which are sandboxed and can only do what you approve. Macro Grid does not review them: install only ones you trust.
 :::
 
+::: warning Install plugins only from sources you trust
+Macro Grid limits what a JavaScript plugin can do: you approve its permissions, keyboard input works only while you press one of its buttons, and some targets are refused. These limits only make abuse harder; they **cannot prevent it completely**. Install third-party plugins only from sources you trust, read the permissions before you allow them, and be extra careful with a plugin that can press keys and type (`input`) or send web requests to the internet.
+:::
+
 ## Official plugins
 
 ### OBS {#obs}

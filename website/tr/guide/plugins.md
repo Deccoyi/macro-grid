@@ -15,7 +15,11 @@ Kendi eklentinizi yazmak, manifest, SDK'lar ve eğitimlerin tümü **[eklenti do
 Bir eklentiyi değiştirdikten sonra **Yeniden yükle**'yi, **Ayarlar** için dişli düğmesini, silmek için de **Kaldır**'ı kullanın. Eklentiler `%AppData%\MacroGrid\plugins\<id>\` altında durur.
 
 ::: danger Güven
-Bir **C# eklentisi** sunucunun içinde, sunucunun kendisi gibi tam erişimle çalışır. Yalnızca kaynağına güvendiğiniz C# eklentilerini kurun. **JavaScript eklentileri** korumalı alanda çalışır ve yalnızca sizin onayladığınız şeyleri yapabilir.
+Yalnızca **resmî C# eklentileri** çalışır: C# eklentisi sunucunun kendisi gibi tam erişime sahiptir; bu yüzden Macro Grid onu yalnızca geçerli bir resmî imza taşıyorsa ve her yüklemede kontrol ederek yükler. Başka yazarların eklentileri **JavaScript eklentileridir**; korumalı alanda çalışırlar ve yalnızca sizin onayladığınız şeyleri yapabilirler. Macro Grid bunları incelemez: yalnızca güvendiklerinizi kurun.
+:::
+
+::: warning Eklentileri yalnızca güvendiğiniz kaynaklardan kurun
+Macro Grid, bir JavaScript eklentisinin yapabileceklerini sınırlar: izinlerini siz onaylarsınız, klavye girdisi yalnızca butonlarından birine bastığınız sırada çalışır ve bazı hedefler reddedilir. Bu sınırlar kötüye kullanımı yalnızca zorlaştırır; **tamamen engelleyemez**. Üçüncü taraf eklentileri yalnızca güvendiğiniz kaynaklardan kurun, izinleri onaylamadan önce okuyun ve tuşlara basabilen ve yazı yazabilen (`input`) ya da internete web isteği gönderen bir eklentide özellikle dikkatli olun.
 :::
 
 ## Resmi eklentiler

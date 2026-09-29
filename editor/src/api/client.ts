@@ -1,5 +1,6 @@
 import type { Profile } from "@macro/renderer";
 import type {
+  ServerProblem,
   ActionInfo,
   AppPreferences,
   ExportProfileResult,
@@ -215,6 +216,10 @@ export const api = {
 
   /** Discover tab: browses a source's plugins (today, only `"official"`) — fetched fresh every time the tab
    * opens or is refreshed, never in the background. */
+  fetchProblems: (): Promise<{ version: number; problems: ServerProblem[] }> => get("/api/problems"),
+  clearProblems: (source?: string): Promise<void> =>
+    send("POST", source ? `/api/problems/clear?source=${encodeURIComponent(source)}` : "/api/problems/clear"),
+
   fetchPluginCatalog: (source: string): Promise<PluginCatalogResponse> =>
     get(`/api/plugin-catalog?source=${encodeURIComponent(source)}`),
 

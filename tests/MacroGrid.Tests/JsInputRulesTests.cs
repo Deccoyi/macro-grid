@@ -1,5 +1,6 @@
 using System.Net;
 using System.Text.Json.Nodes;
+using MacroGrid.Core.Diagnostics;
 using MacroGrid.Core.Plugins;
 using MacroGrid.Core.Plugins.Js;
 using MacroGrid.Core.Sessions;
@@ -20,6 +21,7 @@ public sealed class JsInputRulesTests : IDisposable
     private readonly RecordingInput _input = new();
     private readonly FakeWindows _windows = new(new ForegroundWindow("notepad.exe", "Untitled", "Notepad"));
     private readonly CapturingLogger _log = new();
+    private readonly ProblemList _problems = new();
     private bool _elevated;
 
     public JsInputRulesTests() => Directory.CreateDirectory(_dir);
@@ -65,7 +67,7 @@ public sealed class JsInputRulesTests : IDisposable
         File.WriteAllText(path, script);
         var manifest = new PluginManifest { Id = "t", Name = "T", Version = "1.0.0", MinMacroGrid = "1.0.0", Entry = "index.js", Kind = PluginKind.Js };
         var plugin = new JsPlugin(manifest, path, new JsPermissions(permissions ?? ["variables", "actions", "input"]),
-            _variables, _input, _log, _faults.Add, limits ?? Roomy, _windows, () => _elevated);
+            _variables, _input, _log, _faults.Add, limits ?? Roomy, _windows, () => _elevated, _problems);
         _plugins.Add(plugin);
         var host = new PluginHostCollector("0.1.0", _dir, "t", new PluginStatusRegistry(), _log);
         plugin.Initialize(host);
@@ -85,6 +87,47 @@ public sealed class JsInputRulesTests : IDisposable
     {
         for (var i = 0; i < 200 && !condition(); i++) await Task.Delay(25);
         Assert.True(condition(), "The condition was not met in time.");
+    }
+
+    // ---- the Error List ----
+
+    [Fact]
+    public async Task A_refused_key_press_is_listed_once_with_the_reason_and_a_count()
+    {
+        _windows.Foreground = new ForegroundWindow("cmd.exe", "title", "ConsoleWindowClass");
+        var (_, host) = StartAction("host.input.type('x');");
+
+        for (var i = 0; i < 3; i++) await Press(host);
+
+        var problem = Assert.Single(_problems.Snapshot());
+        Assert.Equal("t", problem.Source);
+        Assert.Equal("T", problem.SourceName);
+        Assert.Equal(ProblemCodes.InputRefused, problem.Code);
+        Assert.Equal(3, problem.Count);
+        Assert.Contains("terminal", problem.Message);
+    }
+
+    [Fact]
+    public async Task A_refusal_the_script_does_not_catch_is_not_listed_twice()
+    {
+        _windows.Foreground = new ForegroundWindow("cmd.exe", "title", "ConsoleWindowClass");
+        var (_, host) = Start("host.registerAction({ type: 't.go', name: 'Go', run: () => { host.input.type('x'); } });");
+
+        try { await Press(host); } catch (Exception) { /* the failed action is expected */ }
+
+        Assert.Equal(ProblemCodes.InputRefused, Assert.Single(_problems.Snapshot()).Code);
+    }
+
+    [Fact]
+    public async Task A_blocked_command_is_listed_as_an_error()
+    {
+        var (_, host) = StartAction("host.input.type('powershell -enc AAAA');");
+
+        await Press(host);
+
+        var problem = Assert.Single(_problems.Snapshot(), p => p.Code == ProblemCodes.InputBlocked);
+        Assert.Equal(ProblemSeverity.Error, problem.Severity);
+        Assert.DoesNotContain("powershell", problem.Message);
     }
 
     // ---- only while handling a press ----

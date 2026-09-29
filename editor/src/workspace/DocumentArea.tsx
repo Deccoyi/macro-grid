@@ -88,7 +88,12 @@ export function DocumentArea({ deviceSize }: { deviceSize: DeviceSize | null }) 
             {t("document.noOpenPage")}
           </div>
         ) : (
-          <div style={{ width: "100%", height: "100%", border: "1px solid var(--ms-border)", borderRadius: 4, background: "var(--ms-bg-surface)" }}>
+          <div
+            style={{ width: "100%", height: "100%", border: "1px solid var(--ms-border)", borderRadius: 4, background: "var(--ms-bg-surface)" }}
+            // Any click on the canvas makes the canvas the active object again. Doing it here rather than in onSelect covers a click on a
+            // widget that is already selected (onSelect is not called for it) and a click on the empty page.
+            onPointerDownCapture={() => { clearProfileProperties(); clearPluginTreeSelection(); }}
+          >
             <DevicePreviewFrame size={deviceSize}>
               <EditorCanvas
                 page={currentPage}

@@ -41,6 +41,9 @@ public sealed partial class JsPlugin : IPlugin, IDisposable
     private readonly IVariableStore _variables;
     private readonly IInputService? _input;
     private readonly ILogger _logger;
+    private readonly ProblemList? _problems;
+    // The last message a refused key press put on the problem list; a script that does not catch it fails the whole call with the same text, which must not be listed twice.
+    private volatile string? _lastReported;
     private readonly Action<string> _onFaulted;
     private readonly JsPluginLimits _limits;
     private readonly IActiveWindowSource? _windows;
@@ -81,8 +84,10 @@ public sealed partial class JsPlugin : IPlugin, IDisposable
         Action<string> onFaulted,
         JsPluginLimits? limits = null,
         IActiveWindowSource? windows = null,
-        Func<bool>? isElevated = null)
+        Func<bool>? isElevated = null,
+        ProblemList? problems = null)
     {
+        _problems = problems;
         _windows = windows;
         _isElevated = isElevated ?? JsInputPolicy.ServerIsElevated;
         _manifest = manifest;
@@ -247,6 +252,8 @@ public sealed partial class JsPlugin : IPlugin, IDisposable
         {
             var message = Describe(ex);
             _logger.LogWarning("[{PluginId}] {Function} failed: {Error}", _manifest.Id, function, message);
+            var repeated = _lastReported is { } last && message.Contains(last, StringComparison.Ordinal);
+            if (!repeated) _problems?.Report(_manifest.Id, _manifest.Name, ProblemSeverity.Error, ProblemCodes.CallFailed, $"{function} failed: {message}");
             if (_initialized && Interlocked.Increment(ref _consecutiveErrors) >= _limits.MaxConsecutiveErrors)
                 _onFaulted($"Switched off after {_limits.MaxConsecutiveErrors} failures in a row. Last error: {message}");
             throw new InvalidOperationException(message, ex);
