@@ -10,6 +10,12 @@ New features and fixes in Macro Grid. For technical details, see [CHANGELOG-deve
 - **A plugin's own settings window also supports Ctrl+Z/Ctrl+Y**, and a long list inside it (a sound board's sounds, for example) now
   collapses each row to its name, with "Expand all"/"Collapse all" buttons, so it takes far less room.
 - **File menu gets a Save entry**, next to the existing Save button and its Ctrl+S shortcut.
+- **A clear warning before installing a native plugin from a folder:** these plugins run with full access to the computer, so you
+  are told to install them only from a folder you trust. A plugin that asks for permissions now shows them before it is installed,
+  not after, and starts right away once you agree.
+- **A store-like Discover tab:** search, filters, and plugin cards with a Get button. Clicking a card opens a page with its
+  description, author, version, homepage and what it asks for. The Plugins window is bigger to fit.
+- **A refresh button next to "Pick from running apps":** a program opened after the profile was selected now shows up.
 ### Fixed
 - **Auto-switch settings surviving a re-pair:** If a device had to pair again (a lost token, or one that could not be decrypted after 1.2.0's encrypted pairings), "Follow active window" and its assigned profile were silently turned back off. They now carry over.
 

@@ -65,21 +65,19 @@ The order of the bigger pieces of work, and their plans, are in [plans/README.md
   and `website/public/logo.png`. The automatic update shows few pages (see `design/agreement-acceptance.md`), so the logo appears mostly
   in its progress window. The exact picture sizes are checked against the Inno Setup version the release workflow installs. It needs a small
   plan file first (`plans/`).
-- **A much faster install and update (fewer files):** see [plans/faster-install-plan.md](plans/faster-install-plan.md).
+- **A much faster install and update (fewer files):** done, see [done/faster-install-plan.md](done/faster-install-plan.md).
 - **The `plugin-html` widget:** a plugin ships its own HTML and JavaScript widget. It would run in a sandboxed iframe on the client and talk to the
   server only through `postMessage`. It needs the widget type in the renderers, a bridge in the client and a message route on the server. Today the
   `plugin-html` type draws a placeholder.
 - **The `web` widget** (an embedded page such as a live chat): today it draws a placeholder. The idea is an iframe first and, for pages that refuse to be
   framed, a native WebView positioned over the grid cell by a small Android plugin.
 - **An async host API for JavaScript plugins** (today scripts are synchronous, so `host.http` blocks the plugin's own thread).
-- **A richer Discover tab, closer to a store page.** Today `editor/src/windows/PluginsWindow.tsx`'s Discover tab is a plain
-  list: name, version, author, one line of description and an Install button (see `plans/plugin-distribution-plan.md`,
-  section 7). The catalog (`macrogrid-index.json`, `PluginCatalogEntryInfo`) does not carry much more than that today either.
-  Wanted: plugin cards with an icon (the logo/avatar field already planned above), and a detail view per plugin — a longer
-  description or README, screenshots, category/tags to browse by, and (later) install counts or a rating if the official
-  catalog ever tracks them. Needs deciding what's worth adding to `macrogrid-index.json` (author-supplied vs. computed by the
-  release workflow) versus what stays editor-only presentation, since every new field is something plugin authors have to
-  fill in and the host has to validate and cap. It needs a plan file first (`plans/`).
+- **The rest of a store-like Discover tab.** Discover now shows a card grid and a per-plugin detail view (description, author,
+  homepage, declared permissions, install/update) built from what the catalog already carries, in a wider Plugins window. Still
+  open, and each needs a catalog field first: a real plugin icon (cards show the plugin's initial on a stable color for now),
+  screenshots, category/tags to browse by, and (later) install counts or a rating. Needs deciding what's worth adding to
+  `macrogrid-index.json` (author-supplied vs. computed by the release workflow) versus what stays editor-only presentation,
+  since every new field is something plugin authors have to fill in and the host has to validate and cap. It needs a plan file first (`plans/`).
 - **Plugins feeding the editor's Error List panel:** the docking workspace's Error List (`docs/design/docking-workspace.md`) is wired up but has
   no producer yet — it only ever shows "no problems". The status bar used to be where a plugin's own errors/warnings surfaced (`StatusEntry.level`
   `Warning`/`Error`); the Error List should take over that role instead, since it's a proper list with filtering and severity counts rather than a

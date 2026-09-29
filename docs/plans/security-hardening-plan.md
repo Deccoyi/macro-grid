@@ -1,8 +1,10 @@
 # Security hardening plan
 
-Status (checked 2026-09-28): **parts A, B, C and E are released** (server 1.1.0/1.2.0, plugin repo `main` — OBS 0.3.0 uses
-part B, phone app `client-v0.3.0` has part A's certificate pinning). **Only part D is open, waiting for the owner's decision.**
-Repositories: `macro-grid` (all parts), `macro-grid-client` (part A), `macro-grid-plugin` (parts B and D). Touches the security
+Status (checked 2026-09-29): **all parts released** (server 1.1.0/1.2.0, plugin repo `main` — OBS 0.3.0 uses part B, phone
+app `client-v0.3.0` has part A's certificate pinning). What was part D (a native C# plugin's install-time warning) is done
+too — see "Native plugins" below; it was never a permission mechanism to design, just a warning screen, and closing it
+does not need a decision.
+Repositories: `macro-grid` (all parts), `macro-grid-client` (part A), `macro-grid-plugin` (part B). Touches the security
 model: update `../architecture.md` and `../design/security-risk-assessment.md` with each part.
 
 The risk assessment (`../design/security-risk-assessment.md`) lists what is left after the pairing limits, the security log,
@@ -94,31 +96,24 @@ machine: built with `scripts\publish.ps1` + `installer\build-installer.ps1` (Inn
 - Not tested: uninstalling from a second Windows account than the one that installed it, or on a genuinely clean PC/VM (only
   this dev machine, which already had real paired devices and an OBS password — both confirmed gone after a "Yes" uninstall).
 
-## D. Plugin approval only covers JS plugins (found while manually testing the pairing branch)
+## Native plugins have no permission gate, by design (was part D)
 
-Manual testing of `security/pairing-and-logging` found two gaps in the plugin permission/host-disclosure work that the parts
-above do not cover:
+A native (C#) plugin's manifest has no `permissions` field at all — `PluginManager.Loading.cs`'s approval gate only runs
+`if (manifest.Kind == PluginKind.Js)`. This is not a gap to close: a JS plugin's permissions are enforced by its sandbox,
+but a native plugin runs in-process with full trust, so a declared permission on it could only ever be a label the plugin
+chooses to be honest about, not something the host can check or stop — not worth building for a false sense of security.
 
-- **Native (C#) plugins skip approval entirely.** `PluginManager.Loading.cs` only runs the permission-approval gate
-  (`NeedsApproval`, `PendingPermissions`, and the host-scope text the editor's Manage Plugins window shows for a pending
-  permission) `if (manifest.Kind == PluginKind.Js)`. A `kind: "csharp"` plugin's manifest has no `permissions` field at all, so
-  it loads and runs immediately, and the editor never shows the user which host it talks to. This includes the three official
-  plugins that ship today (OBS, PLCIcons, SoundBoard) — installing OBS and checking Manage Plugins shows no permission entry
-  and no host at all, confirmed by testing.
-- **Approval happens after install, not before.** Tested with the `HelloJs` example (a JS plugin): "Allow and Enable" only
-  appears once the plugin is already installed and sitting in a `NeedsApproval` state. There is no confirmation step at the
-  point the user clicks Install. A confirmation before or during install would match user expectation better than installing
-  first and asking after, even though the plugin cannot run until approved either way.
+Status (checked 2026-09-29): **done, released.** Instead of a permission mechanism, installing a native plugin from a
+folder (there is no "official source" to exempt for a local folder, unlike Discover/link installs) shows a clear,
+danger-styled warning first: it runs with full access to this computer and Macro Grid cannot check or limit it, so only
+install one from a folder you trust. See `PluginApi.cs`'s `/plugins/install/browse` + `/plugins/install/confirm` and
+`PluginsWindow.tsx`'s `install()`.
 
-Neither is fixed yet; waiting for the owner's decision.
-
-- A declared-permission mechanism for native plugins (their manifest has no `permissions` field to extend) was considered and
-  set aside: a JS plugin's permissions are enforced by the sandbox, but a native plugin runs in-process with full trust, so its
-  declared permissions could only ever be a label the plugin chooses to be honest about, not something the host can check or
-  stop. Not worth building for a false sense of security. If this changes later, it stays advisory-only and is disclosed as
-  such.
-- The install-then-approve ordering still needs a decision: move the approval step earlier in the install flow, or leave it as
-  is.
+JS plugin approval used to happen after install (the plugin sat in a `NeedsApproval` state; "Allow and Enable" only
+appeared once already installed, with no confirmation at the point of clicking Install). Moved before install instead:
+the editor shows the declared permissions and asks to confirm as part of the browse/inspect step, before the install call
+runs; on success it approves right away so there is no separate second "Enable" click. Applies to all three install paths
+(folder, catalog, pasted link).
 
 ## E. No Origin check on the loopback API (threat T13, found while building part B)
 

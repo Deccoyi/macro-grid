@@ -200,12 +200,20 @@ Saved sources live in `%AppData%\MacroGrid\plugin-sources.json`.
 
 ## 7. UI (`PluginsWindow.tsx`)
 
-- **Discover tab:** source selector (Official + saved sources), "Add source…" and
-  "Install from link…" buttons, loading state, offline message, plugin cards (name,
-  author, version, description, compatibility, Install / Update / Installed).
-- **Third-party confirmation dialog:** repo URL, author, version and the risk:
-  - C# plugins: "runs with full access to your computer";
-  - JS plugins: the list of requested permissions.
+- **Discover tab:** source selector (Official + saved sources), "Add source..." and
+  "Install from link..." buttons, loading state, offline message. Laid out like an app store: a search box
+  (name, author, description) and filter chips with counts (All, Not installed, Installed, Updates,
+  JavaScript, Native), then a card grid (avatar, kind, author, short description, a Get / Update pill).
+  The chips are derived from install state and plugin kind because the catalog has no category field yet.
+  Clicking a card opens a detail page: header with a large Get / Update button, an info strip (version,
+  type, source, access), About, the requested permissions and the homepage link. The catalog carries no
+  icon, so the avatar is the plugin's initial on a color picked from its id.
+- **Consent before install, not after:** a JS plugin's requested permissions are shown and confirmed
+  before the install call (folder, catalog and pasted link alike) and the plugin is approved right away
+  once installed, so there is no second "Enable" click. Discover from a third-party source keeps its
+  stronger warning on top. A native (C#) plugin has no permission gate by design (it runs in-process with
+  full trust), so installing one from a folder always shows a full-access warning first; Discover and link
+  installs from the official source skip it.
 - **Installed tab:** Official / Third-party / Local badges and "Update available".
   The update flag is only computed after Discover data has been fetched.
 - All strings go through `en.ts` and `tr.ts`.
