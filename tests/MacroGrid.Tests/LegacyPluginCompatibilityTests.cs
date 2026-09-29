@@ -45,7 +45,7 @@ public sealed class LegacyPluginCompatibilityTests : IAsyncLifetime
         await _providerHost.StartAsync(CancellationToken.None);
         _manager = new PluginManager(Path.Combine(_root, "plugins"), PluginSdk.Version, new PluginStatusRegistry(),
             new ActionDispatcher([], NullLogger<ActionDispatcher>.Instance), new VariableCatalog([]), _providerHost,
-            new VariableStore(), new PluginPermissionStore(_root), null, NullLogger<PluginManager>.Instance);
+            new VariableStore(), new PluginPermissionStore(_root), null, NullLogger<PluginManager>.Instance, trustVerifier: TestPluginSigning.Lenient);
     }
 
     public async Task DisposeAsync()

@@ -36,6 +36,14 @@ jobs:
             echo "::error::Do not write the version in code; set <Version> in Directory.Build.props."; exit 1
           fi
           if grep -n '<Version>' src/*/*.csproj; then echo "::error::Do not set <Version> in a project; use Directory.Build.props."; exit 1; fi
+      - name: Check that released builds are Release builds
+        shell: bash
+        run: |
+          # MACROGRID_UNSIGNED_PLUGINS (unsigned C# plugins load) is defined only in Debug. Nothing that ships may build Debug.
+          if grep -nEi 'debug|(-c|--configuration)[ =]+[^R ]' .github/workflows/release.yml; then
+            echo "::error::release.yml must build the Release configuration only."; exit 1
+          fi
+          grep -qE '\$Configuration\s*=\s*"Release"' scripts/publish.ps1 || { echo "::error::scripts/publish.ps1 must default to Release."; exit 1; }
       - name: Restore
         run: dotnet restore
       - name: Build

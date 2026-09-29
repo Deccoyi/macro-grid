@@ -64,7 +64,10 @@ internal static class PluginCatalogApi
                     source,
                     name = index.Name,
                     official = isOfficial,
-                    plugins = index.Plugins.Select(entry => DescribeEntry(entry, plugins, origins)),
+                    // Only the official source may ship C# plugins; a third-party source's C# entries are not offered.
+                    plugins = index.Plugins
+                        .Where(entry => isOfficial || !string.Equals(entry.Kind, "csharp", StringComparison.OrdinalIgnoreCase))
+                        .Select(entry => DescribeEntry(entry, plugins, origins)),
                 });
             }
             catch (PluginCatalogException ex)
@@ -112,6 +115,8 @@ internal static class PluginCatalogApi
                     return ApiResults.Json(new { isMultiPlugin = true, owner, repo });
 
                 var manifest = await client.FetchSinglePluginManifestAsync(owner, repo, cancellationToken);
+                if (string.Equals(manifest.Kind, "csharp", StringComparison.OrdinalIgnoreCase))
+                    return ApiResults.Json(new { error = "Only official C# plugins can be installed.", code = PluginDownloadException.Refused });
                 var compatibility = PluginCompatibility.Check(ClientHub.ServerVersion, manifest.MinMacroGrid, manifest.MacroGrid, manifest.SdkVersion);
                 return ApiResults.Json(new
                 {
@@ -148,6 +153,8 @@ internal static class PluginCatalogApi
             try
             {
                 var manifest = await client.FetchSinglePluginManifestAsync(owner, repo, cancellationToken);
+                if (string.Equals(manifest.Kind, "csharp", StringComparison.OrdinalIgnoreCase))
+                    return ApiResults.Json(new { installed = false, error = "Only official C# plugins can be installed.", code = PluginDownloadException.Refused });
                 var zipUrl = PluginSourceUrls.SinglePluginPackageUrl(owner, repo, manifest.Id, manifest.Version);
                 var sha256 = await downloader.FetchTextAssetAsync(PluginSourceUrls.SinglePluginPackageUrl(owner, repo, manifest.Id, manifest.Version, ".sha256"), cancellationToken);
 

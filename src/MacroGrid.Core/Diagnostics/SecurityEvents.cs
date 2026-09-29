@@ -23,6 +23,7 @@ public static class SecurityEvents
     public static readonly EventId PluginInstalled = new(1101, nameof(PluginInstalled));
     public static readonly EventId PluginPermissionsGranted = new(1102, nameof(PluginPermissionsGranted));
     public static readonly EventId PluginUninstalled = new(1103, nameof(PluginUninstalled));
+    public static readonly EventId PluginNotAllowed = new(1104, nameof(PluginNotAllowed));
 
     /// <summary>Strips line breaks from a value before it goes into a security log line, so a device name or
     /// plugin id chosen by an attacker cannot forge a second log entry.</summary>

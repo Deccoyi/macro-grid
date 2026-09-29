@@ -18,6 +18,7 @@ const STATUS_COLOR: Record<PluginInfo["status"], string> = {
   Incompatible: "var(--ms-warning, #facc15)",
   Error: "var(--ms-danger)",
   NeedsApproval: "var(--ms-warning, #facc15)",
+  NotAllowed: "var(--ms-danger)",
 };
 
 // The catalog carries no icon of its own yet (docs/roadmap.md, "A richer Discover tab" — deciding what's
@@ -352,19 +353,10 @@ export function PluginsWindow() {
       const browsed = await api.browsePluginInstall();
       if (browsed.canceled || !browsed.path) return;
 
-      // A native (C#) plugin has no permission gate at all — it runs with full trust in-process, and
-      // Macro Grid cannot check or limit what it does (docs/plans/security-hardening-plan.md). A folder
-      // install has no "official source" to skip the warning for, unlike Discover/link installs.
+      // The server has already refused a C# plugin that is not officially signed (browsePluginInstall throws), so
+      // only a JavaScript plugin or a signed copy of an official plugin gets here.
       const name = browsed.name ?? browsed.id ?? "";
-      if (browsed.kind === "csharp") {
-        const proceed = await confirmRichAsync({
-          title: t("plugins.install.nativeWarning.title"),
-          content: <InstallConsent name={name} kind="csharp" />,
-          confirmLabel: t("consent.installAnyway"),
-          danger: true,
-        });
-        if (!proceed) return;
-      } else if (browsed.kind === "js" && (browsed.permissions?.length ?? 0) > 0) {
+      if (browsed.kind === "js" && (browsed.permissions?.length ?? 0) > 0) {
         const proceed = await confirmRichAsync({
           title: t("plugins.install.jsPermissions.title"),
           content: <InstallConsent name={name} kind="js" permissions={browsed.permissions} />,

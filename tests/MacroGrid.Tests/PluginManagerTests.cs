@@ -31,7 +31,7 @@ public sealed class PluginManagerTests : IAsyncLifetime
     {
         _providerHost = new VariableProviderHost([], _variables, NullLogger<VariableProviderHost>.Instance);
         await _providerHost.StartAsync(CancellationToken.None);
-        _manager = new PluginManager(_pluginsDir, "1.0.0", _status, _dispatcher, _catalog, _providerHost, _variables, new PluginPermissionStore(_root), null, NullLogger<PluginManager>.Instance);
+        _manager = new PluginManager(_pluginsDir, "1.0.0", _status, _dispatcher, _catalog, _providerHost, _variables, new PluginPermissionStore(_root), null, NullLogger<PluginManager>.Instance, trustVerifier: TestPluginSigning.Lenient);
     }
 
     public async Task DisposeAsync()
@@ -65,7 +65,7 @@ public sealed class PluginManagerTests : IAsyncLifetime
     [Fact]
     public async Task Start_on_a_missing_folder_lists_nothing()
     {
-        var manager = new PluginManager(Path.Combine(_root, "does-not-exist"), "1.0.0", _status, _dispatcher, _catalog, _providerHost, _variables, new PluginPermissionStore(_root), null, NullLogger<PluginManager>.Instance);
+        var manager = new PluginManager(Path.Combine(_root, "does-not-exist"), "1.0.0", _status, _dispatcher, _catalog, _providerHost, _variables, new PluginPermissionStore(_root), null, NullLogger<PluginManager>.Instance, trustVerifier: TestPluginSigning.Lenient);
 
         await manager.StartAsync(CancellationToken.None);
 
