@@ -35,6 +35,7 @@ export function WidgetPalette({ onAdd, disabled }: WidgetPaletteProps) {
             <button
               key={item.type}
               onClick={() => onAdd(item.type)}
+              title={item.type === "web" ? t("fields.web.experimentalText") : undefined}
               disabled={disabled}
               style={{
                 height: 52,
@@ -55,6 +56,7 @@ export function WidgetPalette({ onAdd, disabled }: WidgetPaletteProps) {
             >
               <Icon size={16} strokeWidth={1.75} />
               <span style={{ fontSize: 10.5 }}>{t(item.key)}</span>
+              {item.type === "web" && <span style={{ fontSize: 8.5, marginTop: -3, textTransform: "uppercase", letterSpacing: ".04em", color: "var(--ms-accent)" }}>{t("widget.experimental")}</span>}
             </button>
           );
         })}

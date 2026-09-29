@@ -18,7 +18,14 @@ export interface Diagnostic {
   severity: DiagnosticSeverity;
   /** e.g. "E102"; each producer documents its own codes. */
   code: string;
-  messageKey: DictKey;
+  /** Text the editor produces itself (translated). Either this or `message`. */
+  messageKey?: DictKey;
   messageArgs?: string[];
+  /** Text a producer outside the editor already wrote (the server's problems), shown as it is. */
+  message?: string;
+  /** Display name of the source (a plugin's name); the editor's own checks leave it out. */
+  sourceName?: string;
+  /** How many times this same message happened; shown as "x5" when more than one. */
+  count?: number;
   target?: DiagnosticTarget;
 }

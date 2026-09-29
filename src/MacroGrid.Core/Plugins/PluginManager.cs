@@ -40,7 +40,8 @@ public sealed partial class PluginManager(
     PluginLocalizer? localizer = null,
     ISecretProtector? secretProtector = null,
     PluginTrustVerifier? trustVerifier = null,
-    IActiveWindowSource? windowSource = null) : IHostedService
+    IActiveWindowSource? windowSource = null,
+    ProblemList? problems = null) : IHostedService
 {
     private static readonly JsonSerializerOptions ManifestJson = new(JsonSerializerDefaults.Web);
     private readonly PluginTrustVerifier _trust = trustVerifier ?? PluginTrustVerifier.Official;
@@ -272,6 +273,7 @@ public sealed partial class PluginManager(
             await UnloadCoreAsync(entry);
             entry.Info = entry.Info with { Status = PluginLoadStatus.Error, Detail = reason, HasSettings = false, HasTreeItems = false };
             logger.LogWarning("Plugin {Id} was switched off: {Reason}", pluginId, reason);
+            problems?.Report(pluginId, entry.Info.Name, ProblemSeverity.Error, ProblemCodes.SwitchedOff, reason);
         }
         finally { _gate.Release(); }
     }

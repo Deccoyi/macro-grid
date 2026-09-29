@@ -116,6 +116,7 @@ export const tr = {
   "plugins.badge.thirdParty": "Üçüncü taraf",
   "plugins.badge.local": "Yerel",
   "plugins.updateAvailable": "Güncelleme var",
+  "status.pluginUpdates": (n: string) => `${n} eklenti için güncelleme gerekli`,
   "plugins.keyboardUses": (count: string) => count === "1" ? "Bugün klavyeyi bir kez kullandı" : `Bugün klavyeyi ${count} kez kullandı`,
   "plugins.refresh": "Yenile",
   "plugins.none": "Yüklü eklenti yok.",
@@ -230,6 +231,8 @@ export const tr = {
   "errorList.col.severity": "Önem",
   "errorList.col.code": "Kod",
   "errorList.col.description": "Açıklama",
+  "errorList.col.source": "Kaynak",
+  "errorList.source.editor": "Editör",
   "errorList.col.screen": "Dosya / Ekran",
   "errorList.col.location": "Konum",
   "errorList.severity.error": "Hata",
@@ -490,6 +493,9 @@ export const tr = {
   "fields.text.iconColorHint": "Bu ikon eski bir sürümde eklenmiş, rengini değiştirmek için yeniden seçin",
 
   // ---- Web fields ----
+  "widget.experimental": "Deneysel",
+  "fields.web.experimentalTitle": "Deneysel.",
+  "fields.web.experimentalText": "Sayfa uygulamanın içinde çalışır; ağır bir sayfa deck'i yavaşlatabilir veya kilitleyebilir. Az sayıda web widget'ı ve hafif sayfalar kullanın.",
   "fields.web.url": "Sayfa URL'si",
   "fields.web.urlPlaceholder": "https://example.com/chat?parent=...",
   "fields.web.note": "Bu widget türü henüz kullanılamıyor.",

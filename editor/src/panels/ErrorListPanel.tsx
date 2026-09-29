@@ -3,12 +3,12 @@ import { CircleAlert, Eraser, Info, Search, TriangleAlert } from "lucide-react";
 import { useDiagnostics } from "../diagnostics/DiagnosticsContext";
 import type { Diagnostic, DiagnosticSeverity } from "../diagnostics/types";
 import { useT } from "../i18n/I18nContext";
-const COLUMNS = "90px 70px 1fr 160px 110px";
+const COLUMNS = "90px 70px 1fr 150px 130px 100px";
 type Filter = "all" | DiagnosticSeverity;
 
 /** The Error List tool window — docs/design/docking-workspace.md ("Error List"). A table, filter row
- * and severity counts over real (currently always empty) DiagnosticsContext data; no producer reports
- * anything yet, so this only ever shows real zero counts and the empty state, never invented rows.
+ * and severity counts over DiagnosticsContext data. The server's problems (a plugin's refused key press, a plugin that did not load) come
+ * in with a source and a count; the editor's own checks have no producer yet, so nothing is invented here.
  * Double-click-to-navigate is not built yet: it needs the document area's multi-tab open-page list
  * (phase 5), which doesn't exist, so there is nowhere to navigate TO yet. */
 export function ErrorListPanel() {
@@ -28,7 +28,7 @@ export function ErrorListPanel() {
     return diagnostics.filter((d) => {
       if (filter !== "all" && d.severity !== filter) return false;
       if (!q) return true;
-      const text = `${d.code} ${d.messageKey} ${d.target?.pageId ?? ""} ${d.target?.field ?? ""}`.toLowerCase();
+      const text = `${d.code} ${d.message ?? d.messageKey ?? ""} ${d.sourceName ?? d.source} ${d.target?.pageId ?? ""} ${d.target?.field ?? ""}`.toLowerCase();
       return text.includes(q);
     });
   }, [diagnostics, filter, query]);
@@ -63,6 +63,7 @@ export function ErrorListPanel() {
         <span>{t("errorList.col.severity")}</span>
         <span>{t("errorList.col.code")}</span>
         <span>{t("errorList.col.description")}</span>
+        <span>{t("errorList.col.source")}</span>
         <span>{t("errorList.col.screen")}</span>
         <span>{t("errorList.col.location")}</span>
       </div>
@@ -82,12 +83,17 @@ function Row({ d }: { d: Diagnostic }) {
   const { t } = useT();
   const Icon = d.severity === "error" ? CircleAlert : d.severity === "warning" ? TriangleAlert : Info;
   const color = d.severity === "error" ? "var(--ms-danger)" : "var(--ms-text-secondary)";
+  const text = d.message ?? (d.messageKey ? t(d.messageKey, ...(d.messageArgs ?? [])) : "");
   const label = d.severity === "error" ? t("errorList.severity.error") : d.severity === "warning" ? t("errorList.severity.warning") : t("errorList.severity.info");
   return (
     <div style={{ display: "grid", gridTemplateColumns: COLUMNS, height: 24, alignItems: "center", padding: "0 10px", fontSize: 12, borderBottom: "1px solid var(--ms-bg-canvas)" }}>
       <span style={{ display: "flex", alignItems: "center", gap: 6, color }}><Icon size={12} strokeWidth={2.25} />{label}</span>
       <span style={{ color: "var(--ms-text-secondary)", fontFamily: "Consolas, monospace" }}>{d.code}</span>
-      <span style={{ color: "var(--ms-text-primary)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{t(d.messageKey, ...(d.messageArgs ?? []))}</span>
+      <span style={{ color: "var(--ms-text-primary)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={text}>
+        {text}
+        {(d.count ?? 1) > 1 && <span style={{ marginLeft: 8, color: "var(--ms-text-secondary)", fontFamily: "Consolas, monospace" }}>×{d.count}</span>}
+      </span>
+      <span style={{ color: "var(--ms-text-secondary)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{d.sourceName ?? t("errorList.source.editor")}</span>
       <span style={{ color: "var(--ms-text-secondary)" }}>{d.target?.pageId ?? "—"}</span>
       <span style={{ color: "var(--ms-text-secondary)", fontFamily: "Consolas, monospace" }}>{d.target?.field ?? "—"}</span>
     </div>

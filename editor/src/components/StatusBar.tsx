@@ -5,6 +5,7 @@ import { api } from "../api/client";
 import type { StatusEntry, StatusLevel } from "../api/types";
 import { useT } from "../i18n/I18nContext";
 import { useStatusNotice } from "../state/statusNotice";
+import { usePluginUpdateCount } from "../state/pluginUpdates";
 
 const LEVEL_COLOR: Record<StatusLevel, string> = {
   Idle: "var(--ms-text-disabled)",
@@ -57,6 +58,7 @@ function StatusChip({ entry, onClick }: { entry: StatusEntry; onClick?: () => vo
 export function StatusBar({ items }: { items: StatusEntry[] }) {
   const { t } = useT();
   const notice = useStatusNotice();
+  const pluginUpdates = usePluginUpdateCount();
   const core = items.filter((i) => i.pluginId === "core");
   const plugins = items.filter((i) => i.pluginId !== "core");
 
@@ -71,6 +73,12 @@ export function StatusBar({ items }: { items: StatusEntry[] }) {
         {core.map((entry) => (
           <StatusChip key={entry.id} entry={entry} onClick={entry.id === "update" ? () => api.openToolWindow("update") : undefined} />
         ))}
+        {pluginUpdates > 0 && (
+          <StatusChip
+            entry={{ id: "plugin-updates", pluginId: "core", text: t("status.pluginUpdates", String(pluginUpdates)), level: "Warning", updatedAt: "" }}
+            onClick={() => api.openToolWindow("plugins")}
+          />
+        )}
       </div>
       {notice && (
         <div style={{ fontSize: 11.5, color: "var(--ms-text-secondary)", padding: "0 8px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>

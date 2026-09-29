@@ -105,7 +105,27 @@ public sealed partial class JsPlugin
         return press;
     }
 
-    private void Hotkey(string combo)
+    /// <summary>Runs one keyboard call. A refusal is put on the problem list (with the reason, counted when it repeats) so the person can
+    /// see why a button did nothing, then thrown to the script as before.</summary>
+    private void GuardInput(string what, Action call)
+    {
+        try { call(); }
+        catch (JsHostException ex)
+        {
+            if (!_inputBlocked)
+            {
+                _lastReported = ex.Message;
+                _problems?.Report(_manifest.Id, _manifest.Name, ProblemSeverity.Warning, ProblemCodes.InputRefused, $"{what}: {ex.Message}");
+            }
+            throw;
+        }
+    }
+
+    private void Hotkey(string combo) => GuardInput("Key combination refused", () => HotkeyCore(combo));
+
+    private void TypeText(string text) => GuardInput("Typing refused", () => TypeTextCore(text));
+
+    private void HotkeyCore(string combo)
     {
         var press = RequireInput();
         if (!HotkeyParser.TryParse(combo, out var parsed, out var error))
@@ -120,7 +140,7 @@ public sealed partial class JsPlugin
         _input!.SendKeyCombo(parsed);
     }
 
-    private void TypeText(string text)
+    private void TypeTextCore(string text)
     {
         var press = RequireInput();
         if (text.Length > JsInputPolicy.MaxCharsPerTypeCall)
@@ -134,6 +154,8 @@ public sealed partial class JsPlugin
             _inputBlocked = true;
             _logger.LogWarning(SecurityEvents.PluginInputBlocked, "Security: plugin {Id} tried to type a blocked command (rule {Rule})",
                 SecurityEvents.ForLog(_manifest.Id), rule);
+            _lastReported = "This text is not allowed.";
+            _problems?.Report(_manifest.Id, _manifest.Name, ProblemSeverity.Error, ProblemCodes.InputBlocked, "Typing refused: it tried to type a blocked command, so the plugin was switched off.");
             _onFaulted("Switched off: it tried to type a blocked command.");
             throw new JsHostException("This text is not allowed.");
         }

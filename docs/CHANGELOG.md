@@ -3,6 +3,18 @@
 New features and fixes in Macro Grid. For technical details, see [CHANGELOG-developer.md](CHANGELOG-developer.md).
 
 ## Unreleased
+### New
+- **Plugin updates are shown:** when installed plugins have an update, the status bar says how many need one and the Plugins menu shows a dot. Click the status bar entry to open the Plugins window.
+
+- **The Error List shows why a plugin does not work:** a refused key press (and the reason), a plugin that did not load, was switched off or failed now appear there, with a Source column. The same message is one line with a count (x5), not five lines. "Clear" empties the list.
+
+### Changed
+- **Web widget is marked experimental:** the Toolbox tile and the widget's properties say that a heavy page can slow down or freeze the deck on the phone, so use few web widgets and light pages.
+
+### Fixed
+- **Properties panel follows what you click:** after opening a plugin in the Plugins panel, clicking a button on the page now shows the button's properties right away, without going through the Hierarchy first.
+- **Collapsing a section:** a section in the properties panel no longer opens again on its own the first time you collapse it, or closes again the first time you open it.
+- **Deck in a phone browser:** the deck opened over plain http on your network works again (it stopped at start on some phones).
 
 ## 1.3.0 - 2026-09-29
 ### New
