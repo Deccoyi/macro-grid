@@ -18,7 +18,7 @@ export function PreferencesWindow() {
   const {
     theme, setTheme, previewProfiles, addPreviewProfile, removePreviewProfile, defaultProfileId, setDefaultProfileId,
     launchMode, setLaunchMode, autostartMode, setAutostartMode,
-    checkForUpdates, setCheckForUpdates, includePreReleases, setIncludePreReleases,
+    checkForUpdates, setCheckForUpdates, includePreReleases, setIncludePreReleases, dismissedNotices, dismissNotice,
   } = usePreferences();
   const [category, setCategory] = useState<Category>("general");
   const [name, setName] = useState("");
@@ -89,6 +89,9 @@ export function PreferencesWindow() {
             <input type="checkbox" checked={includePreReleases} onChange={(e) => setIncludePreReleases(e.target.checked)} />
             {t("preferences.updates.prerelease")}
           </label>
+          {Object.keys(dismissedNotices).length > 0 && (
+            <button type="button" onClick={() => dismissNotice()} style={{ alignSelf: "flex-start" }}>{t("preferences.notices.reset")}</button>
+          )}
         </div>
       )}
 

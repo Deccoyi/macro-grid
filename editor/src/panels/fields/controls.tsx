@@ -1,5 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
+import { X } from "lucide-react";
 import { useT } from "../../i18n/I18nContext";
 import { usePreferences } from "../../preferences/PreferencesContext";
 
@@ -8,6 +9,35 @@ const SWATCHES = [
   "#374151", "#475569", "#b91c1c", "#c2410c", "#b45309", "#84761f", "#15803d", "#0f766e",
   "#0e7490", "#1d4ed8", "#4338ca", "#6d28d9", "#a21caf", "#be185d", "#78350f", "#111827",
 ];
+
+/** A hint box the person can close for good. `id` is stored in the preferences (server side), so it stays closed on every window and
+ * after a restart; the Preferences window can show all closed boxes again. Only for hints: a warning about the current input must not use it. */
+export function DismissibleNote({ id, accent = "var(--ms-accent)", children }: { id: string; accent?: string; children: ReactNode }) {
+  const { t } = useT();
+  const { dismissedNotices, dismissNotice } = usePreferences();
+  if (dismissedNotices[id]) return null;
+  return (
+    <div
+      role="note"
+      style={{
+        position: "relative", display: "flex", flexDirection: "column", gap: 4, padding: "8px 26px 8px 10px", fontSize: 11.5, lineHeight: 1.4,
+        color: "var(--ms-text-primary)", background: "var(--ms-accent-bg-muted)", borderLeft: `3px solid ${accent}`, borderRadius: 4,
+      }}
+    >
+      {children}
+      <button
+        type="button"
+        className="ghost"
+        onClick={() => dismissNotice(id)}
+        title={t("notice.dismiss")}
+        aria-label={t("notice.dismiss")}
+        style={{ position: "absolute", top: 4, right: 4, width: 18, height: 18, padding: 0, display: "flex", alignItems: "center", justifyContent: "center", border: "none", background: "transparent", color: "var(--ms-text-secondary)", cursor: "pointer" }}
+      >
+        <X size={12} />
+      </button>
+    </div>
+  );
+}
 
 /** Small caps label above a group of fields — the only "section" affordance in the properties panel
  * (see docs/ui/ui-guidelines.md: no card-per-section, a thin divider + label is enough). */

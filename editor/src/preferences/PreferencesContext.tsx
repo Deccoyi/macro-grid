@@ -11,6 +11,7 @@ const DEFAULTS: AppPreferences = {
   language: navigator.language.toLowerCase().startsWith("tr") ? "tr" : "en",
   previewProfiles: [],
   collapsedInspectorSections: {},
+  dismissedNotices: {},
   defaultProfileId: null,
   launchMode: "window",
   autostartMode: "tray",
@@ -32,6 +33,9 @@ interface PreferencesContextValue {
   removePreviewProfile: (id: string) => void;
   collapsedInspectorSections: Record<string, boolean>;
   setInspectorSectionCollapsed: (id: string, collapsed: boolean) => void;
+  dismissedNotices: Record<string, boolean>;
+  /** Closes one note for good ("do not show again"); `undefined` for the id shows every closed note again. */
+  dismissNotice: (id?: string) => void;
   defaultProfileId: string | null;
   setDefaultProfileId: (id: string | null) => void;
   launchMode: AppPreferences["launchMode"];
@@ -147,6 +151,11 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
     [prefs, persist],
   );
 
+  const dismissNotice = useCallback(
+    (id?: string) => persist({ ...prefs, dismissedNotices: id === undefined ? {} : { ...prefs.dismissedNotices, [id]: true } }),
+    [prefs, persist],
+  );
+
   const setDefaultProfileId = useCallback(
     (defaultProfileId: string | null) => persist({ ...prefs, defaultProfileId }),
     [prefs, persist],
@@ -211,6 +220,8 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
       removePreviewProfile,
       collapsedInspectorSections: prefs.collapsedInspectorSections,
       setInspectorSectionCollapsed,
+      dismissedNotices: prefs.dismissedNotices,
+      dismissNotice,
       defaultProfileId: prefs.defaultProfileId,
       setDefaultProfileId,
       launchMode: prefs.launchMode,
@@ -230,7 +241,7 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
     }),
     [
       prefs, savedLanguage, loadedState, setTheme, setLanguage, addPreviewProfile, removePreviewProfile,
-      setInspectorSectionCollapsed, setDefaultProfileId, setLaunchMode, setAutostartMode, setCheckForUpdates,
+      setInspectorSectionCollapsed, dismissNotice, setDefaultProfileId, setLaunchMode, setAutostartMode, setCheckForUpdates,
       setIncludePreReleases, setDockLayoutJson, saveDockLayoutProfile, deleteDockLayoutProfile,
     ],
   );

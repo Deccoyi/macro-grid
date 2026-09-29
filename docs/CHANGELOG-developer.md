@@ -3,6 +3,8 @@
 This file follows the [Keep a Changelog](https://keepachangelog.com/) format. For versioning rules, see [versioning.md](guides/versioning.md). The short, public changelog is [CHANGELOG.md](CHANGELOG.md).
 
 ## [Unreleased]
+### Added
+- **`dismissedNotices` in the app preferences:** `Dictionary<string, bool>` (`AppPreferences.DismissedNotices`, `GET/PUT /api/preferences`), the ids of editor hints closed with "do not show again" (`web.warning`, `web.experimental`). An older `preferences.json` without it loads as empty. Additive.
 
 ## [1.3.1] - 2026-09-29
 ### Added

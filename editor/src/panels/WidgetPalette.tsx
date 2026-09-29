@@ -1,4 +1,4 @@
-import { CircleGauge, Globe, Image as ImageIcon, RectangleHorizontal, SlidersHorizontal, ToggleRight, Type, type LucideIcon } from "lucide-react";
+import { CircleGauge, FlaskConical, Globe, Image as ImageIcon, RectangleHorizontal, SlidersHorizontal, ToggleRight, Type, type LucideIcon } from "lucide-react";
 import type { WidgetType } from "@macro/renderer";
 import { useT } from "../i18n/I18nContext";
 import type { DictKey } from "../i18n/tr";
@@ -39,6 +39,7 @@ export function WidgetPalette({ onAdd, disabled }: WidgetPaletteProps) {
               disabled={disabled}
               style={{
                 height: 52,
+                position: "relative",
                 display: "flex",
                 flexDirection: "column",
                 alignItems: "center",
@@ -56,7 +57,9 @@ export function WidgetPalette({ onAdd, disabled }: WidgetPaletteProps) {
             >
               <Icon size={16} strokeWidth={1.75} />
               <span style={{ fontSize: 10.5 }}>{t(item.key)}</span>
-              {item.type === "web" && <span style={{ fontSize: 8.5, marginTop: -3, textTransform: "uppercase", letterSpacing: ".04em", color: "var(--ms-accent)" }}>{t("widget.experimental")}</span>}
+              {item.type === "web" && (
+                <FlaskConical size={11} strokeWidth={2} color="var(--ms-warning, #facc15)" aria-label={t("fields.web.experimentalTitle")} style={{ position: "absolute", top: 4, right: 4 }} />
+              )}
             </button>
           );
         })}
