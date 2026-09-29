@@ -15,6 +15,10 @@ public sealed class Widget
     public int W { get; set; } = 1;
     public int H { get; set; } = 1;
 
+    /// <summary>Optional name, only used to pick this widget in an action (for example the target of <c>core.web</c>). Not required to be unique
+    /// (a copied widget keeps it; the editor tells two apart by their page). Actions store the widget's <see cref="Id"/>, so renaming never breaks them.</summary>
+    public string? Name { get; set; }
+
     /// <summary>Display text; may contain variable templates such as "Live: {demo.stream.duration}".</summary>
     public string? Text { get; set; }
 

@@ -18,6 +18,12 @@ New features and fixes in Macro Grid. For technical details, see [CHANGELOG-deve
 - **A store-like Discover tab:** search, filters, and plugin cards with a Get button. Clicking a card opens a page with its
   description, author, version, homepage and what it asks for. The Plugins window is bigger to fit.
 - **A refresh button next to "Pick from running apps":** a program opened after the profile was selected now shows up.
+- **The web widget shows real pages:** put the link of a live chat or an alerts panel in a cell and the phone shows it. Pages cannot open
+  windows, download files or use the phone's camera or location, and a warning reminds you to use only sites you trust.
+- **A "Change web page" button action:** give a web widget a name, then a button can show another site in it, go back to the first one or reload it, on
+  the phone that pressed the button.
+- **Sites in an imported profile are listed first:** when a profile you import opens web pages, you see which sites and choose whether to keep them.
+- **Safer connections:** the editor's address and the phone connection now refuse requests that come from a web page pretending to be this computer.
 ### Fixed
 - **Auto-switch settings surviving a re-pair:** If a device had to pair again (a lost token, or one that could not be decrypted after 1.2.0's encrypted pairings), "Follow active window" and its assigned profile were silently turned back off. They now carry over.
 

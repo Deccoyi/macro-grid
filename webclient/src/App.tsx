@@ -93,6 +93,8 @@ export function App() {
                 liveActive={state?.active}
                 liveValue={dragValues[widget.id] ?? state?.value}
                 liveStyle={state?.style}
+                webUrl={state?.url}
+                webReload={state?.reload}
                 onPress={() => connectionRef.current?.send("widget.down", { pageId: page.id, widgetId: widget.id })}
                 onRelease={() => connectionRef.current?.send("widget.up", { pageId: page.id, widgetId: widget.id })}
                 onLongPress={() => connectionRef.current?.send("widget.longPress", { pageId: page.id, widgetId: widget.id })}

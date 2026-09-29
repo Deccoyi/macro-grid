@@ -73,6 +73,14 @@ internal static class ServerApp
             if (!http.WebSockets.IsWebSocketRequest)
                 return Results.BadRequest("A WebSocket request is expected.");
 
+            // Only a browser sends Origin: refuse one that is neither the browser deck nor the phone app (a page inside a web widget, say).
+            if (!WebSocketOriginGuard.IsAllowed(http.Request.Headers.Origin.FirstOrDefault(), http.Request.Host.Value))
+            {
+                http.RequestServices.GetRequiredService<ILoggerFactory>().CreateLogger("MacroGrid.Security").LogWarning(SecurityEvents.ForeignSocketOrigin,
+                    "Security: a socket connection from a page with a foreign origin was refused");
+                return Results.StatusCode(StatusCodes.Status403Forbidden);
+            }
+
             using var socket = await http.WebSockets.AcceptWebSocketAsync();
             var remote = http.Connection.RemoteIpAddress?.ToString() ?? "?";
             await hub.HandleAsync(socket, remote, http.RequestAborted);
@@ -88,6 +96,21 @@ internal static class ServerApp
             {
                 ctx.Response.StatusCode = StatusCodes.Status403Forbidden;
                 await ctx.Response.WriteAsync("The editor API is only available on this computer.");
+                return;
+            }
+            await next();
+        });
+
+        // DNS rebinding: a page whose own name was pointed at 127.0.0.1 is same-origin in the browser and sends no Origin on a GET, so
+        // the check below cannot see it; its Host header still names the page's own site.
+        app.Use(async (ctx, next) =>
+        {
+            if (ctx.Request.Path.StartsWithSegments("/api") && !HostGuard.IsAllowed(ctx.Request.Host.Value))
+            {
+                app.Services.GetRequiredService<ILoggerFactory>().CreateLogger("MacroGrid.Security").LogWarning(SecurityEvents.ForeignApiHost,
+                    "Security: an editor API request with a foreign Host header was refused");
+                ctx.Response.StatusCode = StatusCodes.Status403Forbidden;
+                await ctx.Response.WriteAsync("The editor API does not accept requests for this address.");
                 return;
             }
             await next();

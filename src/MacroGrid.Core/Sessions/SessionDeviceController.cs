@@ -43,6 +43,7 @@ public sealed class SessionDeviceController(ClientSession session, ProfileStore 
         session.ProfileId = profileId;
         session.PageId = page.Id;
         session.PageHistory.Clear();
+        widgetState.ForgetWebViews(session);
         session.SentTexts.Clear();
         session.SentStyles.Clear();
         session.SentValues.Clear();

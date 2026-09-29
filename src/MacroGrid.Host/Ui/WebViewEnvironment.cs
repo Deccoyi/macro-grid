@@ -14,6 +14,21 @@ namespace MacroGrid.Host.Ui;
 /// </summary>
 internal static class WebViewEnvironment
 {
+    /// <summary>The second lock for a <c>web</c> widget in the editor's canvas, which shows an untrusted page next to the editor API. The iframe's
+    /// <c>sandbox</c> is the first lock; this makes the window itself refuse what a page could still reach if that ever failed: a new window,
+    /// a download, a link that starts another program, a permission prompt (camera, location, ...) and script dialogs. The editor itself uses none of
+    /// these (it has its own dialogs, and file and open actions go through the server), so nothing is allowed by origin.</summary>
+    private static void LockDown(CoreWebView2 web)
+    {
+        web.NewWindowRequested += (_, e) => e.Handled = true;
+        web.DownloadStarting += (_, e) => { e.Cancel = true; e.Handled = true; };
+        web.PermissionRequested += (_, e) => e.State = CoreWebView2PermissionState.Deny;
+        web.LaunchingExternalUriScheme += (_, e) => e.Cancel = true;
+        web.Settings.AreDefaultScriptDialogsEnabled = false;
+        web.Settings.IsGeneralAutofillEnabled = false;
+        web.Settings.IsPasswordAutosaveEnabled = false;
+    }
+
     private static string[] CandidateFolders() =>
     [
         Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "MacroGrid", "WebView2"),
@@ -59,6 +74,7 @@ internal static class WebViewEnvironment
                     if (!host.IsDisposed) host.Close();
                 };
                 view.CoreWebView2.ContextMenuRequested += (_, e) => ShowLocalizedContextMenu(view, e);
+                LockDown(view.CoreWebView2);
                 view.CoreWebView2.Navigate(url);
                 _workingFolder = folder;
                 return;

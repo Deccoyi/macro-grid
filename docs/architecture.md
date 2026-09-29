@@ -77,8 +77,10 @@ Every frame is `{ "type": "...", "data": { ... } }` in camelCase JSON (`Envelope
   announces `assets` in `hello.capabilities` gets large `data:` values (icons, images) as `asset:<hash>` references and fetches each one once
   with `asset.get`; a client that announces `layout.patch` gets an editor save as a `layout.patch` with only the changed widgets. A client that
   announces neither gets the full layout with everything inline. Details: [design/layout-patch-and-assets.md](design/layout-patch-and-assets.md).
-- **Live state.** `widget.state { widgetId, text?, value?, active?, style? }` pushes a rendered text, a slider position, a toggle state or
-  dynamic style values. It is batched at 100 ms (at most about 10 updates a second) and only sent when the value for that client changed.
+- **Live state.** `widget.state { widgetId, text?, value?, active?, style?, url?, reload? }` pushes a rendered text, a slider position, a toggle state or
+  dynamic style values. `url` and `reload` are for a `web` widget only: `url` is the address this device shows instead of the profile's (set by a
+  `core.web` button; an empty string goes back to the profile's), `reload` is a counter, a higher number means "load the page again". Old clients
+  ignore both. It is batched at 100 ms (at most about 10 updates a second) and only sent when the value for that client changed.
 - **Actions run in order** per device, off the receive loop, so a slow action never delays reading the next message.
 - **Navigation.** Page and profile changes belong to one device: `core.page` and `core.profile` actions and the phone's own swipes affect only
   the phone that triggered them, through its `SessionDeviceController`.
@@ -96,6 +98,7 @@ Built-in actions and plugin actions implement the same interface, `IActionHandle
 | `core.openUrl` | Opens a URL in the default browser. |
 | `core.page` | Goes to a page, the next or previous page (wrapping around), or back. |
 | `core.profile` | Switches the device to a profile. |
+| `core.web` | Shows another address in a `web` widget, goes back to its own, or reloads it, on the device that pressed the button only (`set`, `reset`, `reload`). The address follows the same rule as the widget's own. Not written to the profile, forgotten on a profile switch, a profile save or a server restart. |
 | `core.delay` | Waits (up to 60 seconds); use it between actions of a sequence. |
 | `core.setVolume`, `core.setMute`, `core.toggleMute` | Master volume and mute (Windows core audio). |
 
@@ -184,7 +187,17 @@ Macro Grid is meant for a home or office network you trust. It is not hardened f
   server answers `403` to any `/api` request that does not come from the machine it runs on (`LoopbackGuard`), and `403` to a request whose
   `Origin` header is present and is not the editor's own (`OriginGuard`) — a page open in the person's regular browser also connects from this
   PC, so the loopback check alone is not enough. A request with no `Origin` header (curl, a native app) is unaffected. The static editor and
-  deck pages themselves are served to the network but do nothing without the API and the WebSocket.
+  deck pages themselves are served to the network but do nothing without the API and the WebSocket. A page that uses DNS rebinding sends no
+  `Origin` on a `GET`, so `/api` also answers `403` unless the `Host` header is a loopback name with one of the server's ports (`HostGuard`).
+  `/ws` refuses a browser `Origin` that is neither the server's own origin (the browser deck) nor the phone app's (`WebSocketOriginGuard`); a
+  request without `Origin` (a native client) is unaffected. Both refusals are logged as security events.
+- **The `web` widget shows untrusted pages, so it is locked in two places.** The iframe has a `sandbox` without popups, downloads, top navigation,
+  dialogs, orientation or pointer lock, an empty `allow` (no camera, location, clipboard, ...) and `no-referrer`. An address must be `http` or `https`,
+  without a user name or password, and never this computer or the app's own origin in any loopback form (`WebUrlRule` on the server, `isSafeWebUrl`
+  in every renderer); a profile that is saved or imported has a refused address cleared, and the editor asks once, on import, whether to keep the
+  sites a profile opens. The editor window itself refuses new windows, downloads, other programs' links, permission prompts and script dialogs
+  (`WebViewEnvironment.LockDown`), and the app pages carry a `frame-src http: https:` policy. Only host names are ever logged, never the full address (it
+  may hold a secret token). See [plans/web-widget-plan.md](plans/web-widget-plan.md).
 - **Actions run as you.** A paired device can press keys, type text and start programs on the PC, so pair only devices you trust and revoke the
   ones you do not.
 - **C# plugins have full trust** and can do anything the server can. Install only ones you trust. JavaScript plugins are sandboxed and need
