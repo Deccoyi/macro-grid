@@ -4,6 +4,8 @@ New features and fixes in Macro Grid. For technical details, see [CHANGELOG-deve
 
 ## Unreleased
 ### New
+- **The setup wizard now looks like Macro Grid:** the Macro Grid logo and colors on the welcome and finished pages, a small logo in the corner
+  of the other pages, and the Macro Grid icon on the setup and uninstall files.
 - **Undo, redo and the usual clipboard shortcuts in the editor:** Ctrl+Z/Ctrl+Y, Ctrl+X/C/V, Ctrl+D and Delete now work everywhere in
   the editor, with an Edit menu, right-click menu entries and toolbar buttons for the same commands.
 - **A new Plugins panel:** installed plugins now have their own panel in the editor, next to Hierarchy. A plugin can list its own items there (for example a sound board's sounds), and selecting one shows its settings on the right, the same way a page or a profile does.
