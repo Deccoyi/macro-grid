@@ -112,7 +112,9 @@ public sealed class PluginTrustVerifier
             foreach (var (path, sha256) in files)
             {
                 var full = Path.GetFullPath(Path.Combine(rootFull, path));
-                if (!full.StartsWith(rootFull + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase) || !File.Exists(full))
+                if (!full.StartsWith(rootFull + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase))
+                    return PluginTrustResult.Refused(MismatchReason);
+                if (!File.Exists(full))
                     return PluginTrustResult.Refused(MismatchReason);
                 if (!string.Equals(Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(full))), sha256, StringComparison.OrdinalIgnoreCase))
                     return PluginTrustResult.Refused(MismatchReason);
