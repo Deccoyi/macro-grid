@@ -234,6 +234,18 @@ public sealed class PluginManagerTests : IAsyncLifetime
     }
 
     [Fact]
+    public void PeekManifest_reads_the_manifest_without_installing_anything()
+    {
+        var source = NewStubSource();
+
+        var manifest = PluginManager.PeekManifest(source);
+
+        Assert.Equal("stub", manifest.Id);
+        Assert.Equal(PluginKind.Csharp, manifest.Kind);
+        Assert.Empty(_manager.Plugins); // nothing was actually installed
+    }
+
+    [Fact]
     public async Task Install_loads_the_plugin_immediately_without_a_restart()
     {
         await _manager.StartAsync(CancellationToken.None);

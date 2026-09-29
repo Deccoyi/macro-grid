@@ -183,6 +183,7 @@ export interface PluginInstallBrowseResult {
   id?: string;
   name?: string;
   kind?: string;
+  permissions?: string[];
 }
 
 export interface PluginUninstallResult {
