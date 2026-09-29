@@ -77,8 +77,10 @@ Every frame is `{ "type": "...", "data": { ... } }` in camelCase JSON (`Envelope
   announces `assets` in `hello.capabilities` gets large `data:` values (icons, images) as `asset:<hash>` references and fetches each one once
   with `asset.get`; a client that announces `layout.patch` gets an editor save as a `layout.patch` with only the changed widgets. A client that
   announces neither gets the full layout with everything inline. Details: [design/layout-patch-and-assets.md](design/layout-patch-and-assets.md).
-- **Live state.** `widget.state { widgetId, text?, value?, active?, style? }` pushes a rendered text, a slider position, a toggle state or
-  dynamic style values. It is batched at 100 ms (at most about 10 updates a second) and only sent when the value for that client changed.
+- **Live state.** `widget.state { widgetId, text?, value?, active?, style?, url?, reload? }` pushes a rendered text, a slider position, a toggle state or
+  dynamic style values. `url` and `reload` are for a `web` widget only: `url` is the address this device shows instead of the profile's (set by a
+  `core.web` button; an empty string goes back to the profile's), `reload` is a counter, a higher number means "load the page again". Old clients
+  ignore both. It is batched at 100 ms (at most about 10 updates a second) and only sent when the value for that client changed.
 - **Actions run in order** per device, off the receive loop, so a slow action never delays reading the next message.
 - **Navigation.** Page and profile changes belong to one device: `core.page` and `core.profile` actions and the phone's own swipes affect only
   the phone that triggered them, through its `SessionDeviceController`.
@@ -96,6 +98,7 @@ Built-in actions and plugin actions implement the same interface, `IActionHandle
 | `core.openUrl` | Opens a URL in the default browser. |
 | `core.page` | Goes to a page, the next or previous page (wrapping around), or back. |
 | `core.profile` | Switches the device to a profile. |
+| `core.web` | Shows another address in a `web` widget, goes back to its own, or reloads it, on the device that pressed the button only (`set`, `reset`, `reload`). The address follows the same rule as the widget's own. Not written to the profile, forgotten on a profile switch, a profile save or a server restart. |
 | `core.delay` | Waits (up to 60 seconds); use it between actions of a sequence. |
 | `core.setVolume`, `core.setMute`, `core.toggleMute` | Master volume and mute (Windows core audio). |
 
@@ -148,9 +151,12 @@ warnings for what was removed.
 
 ## Plugins
 
-Plugins add actions, variables, settings pages, status items and icon packs. They can be C# (full trust, in an isolated assembly load context)
-or JavaScript (a Jint sandbox with approved permissions). They are installed, reloaded and removed while the server runs. The plugin SDK is
-`MacroGrid.Plugin.Abstractions`; the guide for writing plugins is `docs/plugin-authoring.md` in the plugin repository. How it is built:
+Plugins add actions, variables, settings pages, status items and icon packs. They can be C# (full trust, in an isolated assembly load context, and
+only the official, signed plugins: `PluginTrustVerifier` checks the signature every time one loads) or JavaScript (a Jint sandbox with approved permissions;
+the only kind other authors can write). They are installed, reloaded and removed while the server runs. The plugin SDK is
+`MacroGrid.Plugin.Abstractions`; the guide for writing plugins is `docs/plugin-authoring.md` in the plugin repository. A .NET plugin can also
+optionally list its own items (sounds, scenes, saved presets, ...) as a lazily-loaded tree in the editor's Plugins tool window
+(`IPluginTreeProvider`, additive): [design/plugins-tool-window.md](design/plugins-tool-window.md). How it is built:
 [design/js-plugin-runtime.md](design/js-plugin-runtime.md) and [design/layout-patch-and-assets.md](design/layout-patch-and-assets.md) (plugin hot loading).
 
 ## Automatic profile switching
@@ -161,7 +167,12 @@ A device can follow the foreground window on the PC: [design/auto-profile-switch
 
 Macro Grid is meant for a home or office network you trust. It is not hardened for the open internet.
 
-- **Nothing is encrypted.** Traffic is plain `ws://` and `http://` on the local network. The phone app allows cleartext for this reason.
+- **The connection can be encrypted.** On first start the server makes itself a self-signed certificate (`ServerCertificateProvider`,
+  ECDSA P-256, private key DPAPI-protected) and serves `wss://`/`https://` on a second port, 9821, next to the plain one, 9820 — both
+  stay open. The pairing QR carries the certificate's SHA-256 fingerprint (`fp`); a phone app that understands it pairs over
+  `wss://` from then on and pins that fingerprint, so no certificate authority is needed. A phone app that doesn't, and the browser
+  deck (which cannot pin a fingerprint at all), keep using plain `ws://`/`http://`. A preference to turn the plain ports off is
+  not built yet; see [roadmap.md](roadmap.md#next).
 - **The server listens on all network interfaces** on port 9820. Do not forward the port to the internet, and allow it in the firewall only for
   private networks (the installer does this).
 - **Pairing protects the WebSocket.** A device must present the PIN once, then a token. Tokens are stored in `devices.json` encrypted with Windows DPAPI for the current user (`ISecretProtector`, `DpapiSecretProtector`); a file from an older version is converted on load, and a token that cannot be decrypted (another user or PC) drops that device with a `Security:` warning.
@@ -174,12 +185,35 @@ Macro Grid is meant for a home or office network you trust. It is not hardened f
   never a PIN or a token. A block is logged once, not per attempt, so a flood cannot fill the log. The daily files are kept 14 days, capped at
   5 MB a day and 20 MB in total (`LogRetention`); the cap also bounds what a flood of connections can write.
 - **The editor API (`/api`) is only for this computer.** It can read the pairing PIN, install and approve plugins and change profiles, so the
-  server answers `403` to any `/api` request that does not come from the machine it runs on. The static editor and deck pages themselves are
-  served to the network but do nothing without the API and the WebSocket.
+  server answers `403` to any `/api` request that does not come from the machine it runs on (`LoopbackGuard`), and `403` to a request whose
+  `Origin` header is present and is not the editor's own (`OriginGuard`) — a page open in the person's regular browser also connects from this
+  PC, so the loopback check alone is not enough. A request with no `Origin` header (curl, a native app) is unaffected. The static editor and
+  deck pages themselves are served to the network but do nothing without the API and the WebSocket. A page that uses DNS rebinding sends no
+  `Origin` on a `GET`, so `/api` also answers `403` unless the `Host` header is a loopback name with one of the server's ports (`HostGuard`).
+  `/ws` refuses a browser `Origin` that is neither the server's own origin (the browser deck) nor the phone app's (`WebSocketOriginGuard`); a
+  request without `Origin` (a native client) is unaffected. Both refusals are logged as security events.
+- **The `web` widget shows untrusted pages, so it is locked in two places.** The iframe has a `sandbox` without popups, downloads, top navigation,
+  dialogs, orientation or pointer lock, an empty `allow` (no camera, location, clipboard, ...) and `no-referrer`. An address must be `http` or `https`,
+  without a user name or password, and never this computer or the app's own origin in any loopback form (`WebUrlRule` on the server, `isSafeWebUrl`
+  in every renderer); a profile that is saved or imported has a refused address cleared, and the editor asks once, on import, whether to keep the
+  sites a profile opens. The editor window itself refuses new windows, downloads, other programs' links, permission prompts and script dialogs
+  (`WebViewEnvironment.LockDown`), and the app pages carry a `frame-src http: https:` policy. Only host names are ever logged, never the full address (it
+  may hold a secret token). See [plans/web-widget-plan.md](plans/web-widget-plan.md).
 - **Actions run as you.** A paired device can press keys, type text and start programs on the PC, so pair only devices you trust and revoke the
   ones you do not.
-- **C# plugins have full trust** and can do anything the server can. Install only ones you trust. JavaScript plugins are sandboxed and need
-  approved permissions.
+- **Only official, signed C# plugins load**, checked at every load: the plugin folder must carry `signature.json` and `signature.sig` made with
+  the official plugin key (the private key stays on the maintainer's PC), every file must still match, and no unlisted file may be loadable or
+  executable. A plugin that fails is not loaded (status *Not allowed*). A C# plugin has full trust, so this is what keeps other authors' code out of the
+  server process; a build made from source in the Debug configuration (`MACROGRID_UNSIGNED_PLUGINS`) is the only exception, and no setting, switch or
+  environment variable turns it on in a released build. Plugins by other authors are JavaScript and are sandboxed and need approved permissions. The
+  `input` permission (pressing keys and typing) works only while a device button press is being handled, for at most 5 seconds, with at most 200
+  characters and 10 key combinations per press, never with the Windows key, never into a terminal, a script host, a system tool or a Macro Grid window,
+  never when the server runs as administrator, and text that looks like a harmful command switches the plugin off. An approved plugin with `input` can
+  still type up to 200 characters into an ordinary program when a button is pressed: the person's approval is the real decision. A plugin can protect a
+  secret value of its own (for example a password field) with `IPluginHost.Secrets` (DPAPI-backed, same trust boundary as the device tokens) in an official
+  C# plugin; a plugin author has to opt in and call it, the host does not enforce it. A JavaScript plugin's saved settings are capped at 64 KB.
+- **Uninstalling can remove your data.** The uninstaller asks whether to also delete `%AppData%\MacroGrid` (profiles, paired devices, plugins,
+  logs); default is no, and it never asks on a silent uninstall.
 - **The server checks for updates on its own, once every few hours.** This is the one connection it makes without being asked, and it is on by
   default (Preferences, General, "Check for updates automatically"; off stops the schedule, "Check for updates" still works by hand). It reads
   the public releases list of the project on `api.github.com` (HTTPS, an ETag so an unchanged list costs nothing, a `User-Agent` with the app

@@ -17,7 +17,7 @@ Last reviewed: 2026-09-27, server 1.0.1.
   WebSocket for decks.
 - **Editor**: the server's own window, talking to the loopback-only `/api`.
 - **Decks**: the Android app (`macro-grid-client`) and any browser on the network at `/deck/`.
-- **Plugins**: C# plugins (full trust, in-process) and JavaScript plugins (sandboxed, with declared permissions), from the
+- **Plugins**: official C# plugins (full trust, in-process, only with a valid official signature) and JavaScript plugins (sandboxed, with declared permissions), from the
   official repository, another author's repository or a folder.
 - **Update channels**: the server and the app check GitHub releases; plugins install from GitHub releases.
 
@@ -38,18 +38,18 @@ on public Wi-Fi, installing untrusted plugins.
 
 | # | Threat | Measures | Remaining risk |
 |---|---|---|---|
-| T1 | Someone on the network pairs a device by guessing the PIN | PIN valid only while the Pairing window is open (15 s lease), at most 5 min, single-use; 5 wrong PINs block an address (30 s, doubling to 15 min); 20 wrong PINs replace the PIN; fixed-time comparison (`PairingService`). Pairing events are logged. | Low. An attacker who can see the traffic can read a PIN (T2). |
-| T2 | Someone on the network reads or changes traffic (PIN, token, key presses) | None: traffic is plain `ws://` / `http://`. Documented in `SECURITY.md` and the user guide: trusted networks only, firewall rule for private networks only. | **High on an untrusted network.** Planned: `docs/plans/transport-encryption-plan.md`. |
+| T1 | Someone on the network pairs a device by guessing the PIN | PIN valid only while the Pairing window is open (15 s lease), at most 5 min, single-use; 5 wrong PINs block an address (30 s, doubling to 15 min); 20 wrong PINs replace the PIN; fixed-time comparison (`PairingService`). Pairing events are logged. | Low. An attacker who can see the traffic can still read a PIN over a plain connection (T2). |
+| T2 | Someone on the network reads or changes traffic (PIN, token, key presses) | The server serves `wss://`/`https://` on a second port (9821) with a self-made certificate; the pairing QR carries its fingerprint and a phone app that understands it pins that fingerprint and connects over TLS from then on (`../plans/security-hardening-plan.md`, part A). Plain `ws://`/`http://` (9820) stays open too, for the browser deck (cannot pin a fingerprint) and older phone apps; documented in `SECURITY.md` and the user guide. | Medium, down from High: a client that hasn't upgraded, or the browser deck, still uses plain traffic. A preference to turn plain traffic off is not built yet; planned default-off starting the next MAJOR version. |
 | T3 | Someone on the network uses the editor API (read the PIN, install or approve plugins) | `/api` answers only the loopback address (`LoopbackGuard`). | Low. |
 | T4 | A copy of the data folder (backup, other account) reveals device tokens | Tokens encrypted with DPAPI for the Windows user (`DpapiSecretProtector`); a copy on another account or PC is useless. | Medium against malware running as the same user (DPAPI cannot help there). |
-| T5 | Plugin settings reveal passwords of other software | None yet: each plugin writes its own `settings.json` in plain text. | Medium. Planned: a secret-storage helper in the plugin SDK (needs an SDK release). |
-| T6 | A malicious or careless plugin | Third-party plugins are marked and need a confirmation that says what they can do (internet, files, programs); JS plugins run in a sandbox with time, memory and statement limits and only the permissions the user approves; official plugins are signed (ECDSA P-256) with a key kept off GitHub. | **High for C# plugins by others**: full trust, cannot be limited. The user decides. |
+| T5 | Plugin settings reveal passwords of other software | `IPluginHost.Secrets` (DPAPI-backed) lets a plugin protect a value of its own (`../plans/security-hardening-plan.md`, part B); the OBS plugin uses it for its password. Opt-in per plugin: a plugin author has to call it. | Medium, down from Medium-with-nothing-built: a plugin that doesn't opt in still writes plain text. The generic `SettingFieldKind.Password` host-managed storage (so plugins don't have to call it themselves) is not built yet. |
+| T6 | A malicious or careless plugin | Third-party plugins are marked and need a confirmation that says what they can do (internet, files, programs); JS plugins run in a sandbox with time, memory and statement limits and only the permissions the user approves; official plugins are signed (ECDSA P-256) with a key kept off GitHub, and a C# plugin loads only with that signature, checked at every load; a JS plugin's `input` permission works only during a button press, with small limits and never into terminals, system tools or Macro Grid. | Low for C# (only the maintainer's signed plugins run). Medium for JavaScript plugins with `input`: an approved plugin can still type up to 200 characters into an ordinary program when a button is pressed, so the user's approval is the real decision. |
 | T7 | A tampered server installer or update | HTTPS to an allow-list of GitHub hosts, redirects checked, size and SHA-256 compared with what GitHub reports, administrator prompt (`docs/design/auto-update.md`). Release tags are protected; releases are drafts until the owner publishes them. | Medium: the installer is not code-signed, so a compromised GitHub account could ship a matching file and digest. |
 | T8 | A tampered phone app update | SHA-256 against GitHub, and Android installs only an APK signed with the same key, which is kept on the owner's PC. | Low. |
 | T9 | A vulnerable third-party component | CI and the release workflows stop on a known vulnerable .NET or production npm package; Dependabot security updates and monthly version updates; `dependency-review` on pull requests; an SBOM per release. | Low to medium: unknown vulnerabilities; the Android (Gradle) libraries are not in the client SBOM yet. |
-| T10 | A compromised build pipeline | Every action pinned to a commit; default token read-only; NuGet trusted publishing (no stored key); the SDK publish job runs only on protected tags; plugin signing happens on the owner's PC. | Low to medium: an attacker with the owner's GitHub account. The account has 2FA. |
+| T10 | A compromised build pipeline | Every action pinned to a commit; default token read-only; no package is published from CI any more (the SDK left NuGet); plugin signing happens on the owner's PC. | Low to medium: an attacker with the owner's GitHub account. The account has 2FA. |
 | T11 | Logs fill the disk or leak secrets | Logs never contain a PIN or a token; 14 days, 5 MB a day, 20 MB in total (`LogRetention`); a pairing block is logged once. | Low. Logs contain local network addresses; they stay on the PC. |
-| T12 | Data left behind after uninstall | Uninstall keeps `%AppData%\MacroGrid` on purpose (profiles survive a reinstall). | Low (tokens are encrypted). A "remove my data" choice is planned. |
+| T12 | Data left behind after uninstall | The uninstaller asks whether to also delete `%AppData%\MacroGrid` (profiles, paired devices, plugins, logs); default no, never asked on a silent uninstall (`../plans/security-hardening-plan.md`, part C). | Low (tokens are encrypted, and removal is now a choice at uninstall). |
 | T13 | A web page open in the person's own browser calls the loopback `/api` (no Origin/Referer check, no CORS policy) | `OriginGuard` refuses a request whose `Origin` header is present and is not the editor's own (`../plans/security-hardening-plan.md`, part E). A request with no `Origin` header (curl, a native app) is unaffected. `GET /api/plugins/{id}/settings` also no longer echoes a stored password back (`PluginApi.RedactPasswords`), found while building part B. | Low. |
 
 ## Security properties (Annex I, part I) at a glance
@@ -60,12 +60,12 @@ on public Wi-Fi, installing untrusted plugins.
 | Secure by default | Pairing required; editor API loopback-only; firewall rule private networks only; update check on, installation only on request. |
 | Security updates | Automatic check, user-confirmed install, can be switched off. |
 | Protection from unauthorised access | Pairing (T1), loopback API (T3). |
-| Confidentiality at rest | Device tokens encrypted (T4); plugin secrets not yet (T5). |
-| Confidentiality and integrity in transit | **Missing on the local network (T2).** Update downloads use HTTPS and digests. |
+| Confidentiality at rest | Device tokens encrypted (T4); plugin secrets protected for plugins that opt in (T5). |
+| Confidentiality and integrity in transit | Available on the local network for clients that support it, not yet the default (T2). Update downloads use HTTPS and digests. |
 | Data minimisation | No telemetry, no account. Only the update check leaves the network, with the program name and version. |
 | Limit attack surface | One port; editor API local only; plugins opt-in. The server listens on all interfaces (needed for decks). |
 | Security event logging | Yes (T11). |
-| Secure data removal | Partly (T12). |
+| Secure data removal | Yes, opt-in at uninstall (T12). |
 
 ## Technical file (where things are)
 

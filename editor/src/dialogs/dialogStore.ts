@@ -1,8 +1,13 @@
+import type { ReactNode } from "react";
+
 interface ConfirmRequest {
   kind: "confirm";
   message: string;
   title?: string;
   danger?: boolean;
+  /** Rich body shown instead of `message` (see confirmRichAsync). */
+  content?: ReactNode;
+  confirmLabel?: string;
   resolve: (value: boolean) => void;
 }
 
@@ -33,6 +38,8 @@ interface ChoiceRequest {
   message: string;
   title?: string;
   options: ChoiceOption[];
+  /** Rich body shown instead of `message`, like confirmRichAsync's. */
+  content?: ReactNode;
   resolve: (value: string | null) => void;
 }
 
@@ -73,8 +80,16 @@ export function alertAsync(message: string, opts?: { title?: string }): Promise<
 
 /** A modal with several caller-defined buttons (plus Cancel) — e.g. "Rename / Overwrite" on an import
  * name clash. Resolves the chosen option's value, or null on cancel. */
-export function choiceAsync(message: string, options: ChoiceOption[], opts?: { title?: string }): Promise<string | null> {
+export function choiceAsync(message: string, options: ChoiceOption[], opts?: { title?: string; content?: ReactNode }): Promise<string | null> {
   return new Promise((resolve) => {
-    listener?.({ kind: "choice", message, title: opts?.title, options, resolve });
+    listener?.({ kind: "choice", message, title: opts?.title, options, content: opts?.content, resolve });
+  });
+}
+
+/** A confirm modal with a formatted body (icons, lists, callouts) and its own confirm button text, for the
+ * cases where a plain sentence is not enough — e.g. what a plugin is about to be allowed to do. */
+export function confirmRichAsync(opts: { title: string; content: ReactNode; confirmLabel?: string; danger?: boolean }): Promise<boolean> {
+  return new Promise((resolve) => {
+    listener?.({ kind: "confirm", message: "", title: opts.title, content: opts.content, confirmLabel: opts.confirmLabel, danger: opts.danger, resolve });
   });
 }

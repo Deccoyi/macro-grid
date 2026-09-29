@@ -7,22 +7,24 @@ import { findNode, flattenLeafIds, insertNode, isSelfOrDescendant, removeNode } 
 import type { ProfileDocument } from "./useProfileDocument";
 
 /** Page-level edits of the open profile: add, rename, delete, grid settings and duplication. */
-export function usePageActions({ profile, currentPageId, mutate, mutatePage, markPageDirty, setCurrentPageId, setSelectedIds }: ProfileDocument) {
+export function usePageActions({ profile, currentPageId, mutate, mutatePage, setCurrentPageId, setSelectedIds }: ProfileDocument) {
   const { t } = useT();
 
   const addPage = useCallback(() => {
     const page: Page = { id: tempId("page"), name: t("state.defaultPageName", String((profile?.pages.length ?? 0) + 1)), cols: 4, rows: 3, gap: 10, widgets: [] };
-    mutate((draft) => ({ ...draft, pages: [...draft.pages, page] }));
-    markPageDirty(page.id);
+    mutate((draft) => ({ ...draft, pages: [...draft.pages, page] }), { label: "undo.addPage" });
     setCurrentPageId(page.id);
-  }, [mutate, markPageDirty, profile, setCurrentPageId, t]);
+  }, [mutate, profile, setCurrentPageId, t]);
 
-  const renamePage = useCallback((pageId: string, name: string) => mutatePage(pageId, (p) => { p.name = name; }), [mutatePage]);
+  const renamePage = useCallback(
+    (pageId: string, name: string) => mutatePage(pageId, (p) => { p.name = name; }, { label: "undo.renamePage", coalesceKey: `page:rename:${pageId}` }),
+    [mutatePage],
+  );
 
   const deletePage = useCallback(
     (pageId: string) => {
       if (!profile || profile.pages.length <= 1) return;
-      mutate((draft) => ({ ...draft, pages: draft.pages.filter((p) => p.id !== pageId) }));
+      mutate((draft) => ({ ...draft, pages: draft.pages.filter((p) => p.id !== pageId) }), { label: "undo.deletePage" });
       if (currentPageId === pageId) {
         const remaining = profile.pages.filter((p) => p.id !== pageId);
         setCurrentPageId(remaining[0]?.id ?? null);
@@ -32,22 +34,25 @@ export function usePageActions({ profile, currentPageId, mutate, mutatePage, mar
   );
 
   const setPageGrid = useCallback(
-    (pageId: string, cols: number, rows: number) => mutatePage(pageId, (p) => { p.cols = cols; p.rows = rows; }),
+    (pageId: string, cols: number, rows: number) =>
+      mutatePage(pageId, (p) => { p.cols = cols; p.rows = rows; }, { label: "undo.pageGrid", coalesceKey: `page:grid:${pageId}` }),
     [mutatePage],
   );
 
   const setPageGap = useCallback(
-    (pageId: string, gap: number) => mutatePage(pageId, (p) => { p.gap = gap; }),
+    (pageId: string, gap: number) => mutatePage(pageId, (p) => { p.gap = gap; }, { label: "undo.pageGap", coalesceKey: `page:gap:${pageId}` }),
     [mutatePage],
   );
 
   const setPagePadding = useCallback(
-    (pageId: string, padding: number) => mutatePage(pageId, (p) => { p.padding = padding; }),
+    (pageId: string, padding: number) =>
+      mutatePage(pageId, (p) => { p.padding = padding; }, { label: "undo.pagePadding", coalesceKey: `page:padding:${pageId}` }),
     [mutatePage],
   );
 
   const setPageAlignment = useCallback(
-    (pageId: string, alignment: "start" | "center" | "end") => mutatePage(pageId, (p) => { p.alignment = alignment; }),
+    (pageId: string, alignment: "start" | "center" | "end") =>
+      mutatePage(pageId, (p) => { p.alignment = alignment; }, { label: "undo.pageAlignment" }),
     [mutatePage],
   );
 
@@ -61,12 +66,11 @@ export function usePageActions({ profile, currentPageId, mutate, mutatePage, mar
         name: `${source.name} ${t("state.duplicateSuffix")}`,
         widgets: structuredClone(source.widgets).map((w) => ({ ...w, id: tempId("widget") })),
       };
-      mutate((draft) => ({ ...draft, pages: [...draft.pages, clone] }));
-      markPageDirty(clone.id);
+      mutate((draft) => ({ ...draft, pages: [...draft.pages, clone] }), { label: "undo.duplicatePage" });
       setCurrentPageId(clone.id);
       setSelectedIds([]);
     },
-    [mutate, markPageDirty, profile, setCurrentPageId, setSelectedIds, t],
+    [mutate, profile, setCurrentPageId, setSelectedIds, t],
   );
 
   /** Deep-clones the page (and a fresh id for every one of its widgets) into another profile, fetched
@@ -83,15 +87,14 @@ export function usePageActions({ profile, currentPageId, mutate, mutatePage, mar
         widgets: structuredClone(source.widgets).map((w) => ({ ...w, id: tempId("widget") })),
       };
       if (targetProfileId === profile?.id) {
-        mutate((draft) => ({ ...draft, pages: [...draft.pages, clone] }));
-        markPageDirty(clone.id);
+        mutate((draft) => ({ ...draft, pages: [...draft.pages, clone] }), { label: "undo.duplicatePage" });
         setCurrentPageId(clone.id);
         setSelectedIds([]);
       } else {
         await api.saveProfile({ ...target, pages: [...target.pages, clone] });
       }
     },
-    [mutate, markPageDirty, profile, setCurrentPageId, setSelectedIds],
+    [mutate, profile, setCurrentPageId, setSelectedIds],
   );
 
   /** Ctrl+V of a page copied with Ctrl+C (see clipboard.ts) — into whichever profile is currently open,
@@ -112,12 +115,11 @@ export function usePageActions({ profile, currentPageId, mutate, mutatePage, mar
         ...draft,
         pages: [...draft.pages, clone],
         pageTree: insertNode(draft.pageTree ?? [], { type: "page", id: clone.id }, parentFolderId, Number.MAX_SAFE_INTEGER),
-      }));
-      markPageDirty(clone.id);
+      }), { label: "undo.pastePage" });
       setCurrentPageId(clone.id);
       setSelectedIds([]);
     },
-    [mutate, markPageDirty, profile, setCurrentPageId, setSelectedIds, t],
+    [mutate, profile, setCurrentPageId, setSelectedIds, t],
   );
 
   /** New page folder in the open profile's tree — `mutate` re-normalizes on every change, so this only
@@ -125,7 +127,7 @@ export function usePageActions({ profile, currentPageId, mutate, mutatePage, mar
   const createPageFolder = useCallback(
     (parentFolderId: string | null, name: string) => {
       const folder: PageTreeNode = { type: "folder", id: tempId("pgfolder"), name, children: [] };
-      mutate((draft) => ({ ...draft, pageTree: insertNode(draft.pageTree ?? [], folder, parentFolderId, Number.MAX_SAFE_INTEGER) }));
+      mutate((draft) => ({ ...draft, pageTree: insertNode(draft.pageTree ?? [], folder, parentFolderId, Number.MAX_SAFE_INTEGER) }), { label: "undo.createPageFolder" });
     },
     [mutate],
   );
@@ -136,7 +138,7 @@ export function usePageActions({ profile, currentPageId, mutate, mutatePage, mar
         const rename = (nodes: PageTreeNode[]): PageTreeNode[] =>
           nodes.map((n) => (n.id === id ? { ...n, name } : n.children ? { ...n, children: rename(n.children) } : n));
         return { ...draft, pageTree: rename(draft.pageTree ?? []) };
-      });
+      }, { label: "undo.renamePageFolder", coalesceKey: `pageFolder:rename:${id}` });
     },
     [mutate],
   );
@@ -163,7 +165,7 @@ export function usePageActions({ profile, currentPageId, mutate, mutatePage, mar
         }
         const removedPageIds = new Set(flattenLeafIds(draftTarget?.children ?? [], "page"));
         return { ...draft, pageTree: without, pages: draft.pages.filter((p) => !removedPageIds.has(p.id)) };
-      });
+      }, { label: "undo.deletePageFolder" });
       if (!keepContents) {
         const removedPageIds = new Set(flattenLeafIds(target.children ?? [], "page"));
         if (currentPageId && removedPageIds.has(currentPageId)) {
@@ -186,7 +188,7 @@ export function usePageActions({ profile, currentPageId, mutate, mutatePage, mar
         const { tree: without, removed } = removeNode(tree, id);
         if (!removed) return draft;
         return { ...draft, pageTree: insertNode(without, removed, targetFolderId, index) };
-      });
+      }, { label: "undo.movePageTreeNode" });
     },
     [mutate],
   );
@@ -220,7 +222,7 @@ export function usePageActions({ profile, currentPageId, mutate, mutatePage, mar
         ...draft,
         pages: [...draft.pages, ...newPages],
         pageTree: insertNode(draft.pageTree ?? [], node, parentFolderId, Number.MAX_SAFE_INTEGER),
-      }));
+      }), { label: "undo.pastePageFolder" });
     },
     [profile, mutate],
   );

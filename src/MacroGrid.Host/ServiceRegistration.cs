@@ -54,6 +54,8 @@ internal static class ServiceRegistration
         services.AddActionHandler<TypeTextAction>();
         services.AddActionHandler<PageAction>();
         services.AddActionHandler<ProfileAction>();
+        services.AddSingleton<WebViewState>();
+        services.AddActionHandler<WebAction>();
         services.AddActionHandler<OpenAction>();
         services.AddActionHandler<OpenUrlAction>();
         services.AddActionHandler<DelayAction>();
@@ -98,8 +100,10 @@ internal static class ServiceRegistration
             sp.GetRequiredService<VariableCatalog>(), sp.GetRequiredService<VariableProviderHost>(),
             sp.GetRequiredService<VariableStore>(), new PluginPermissionStore(dataDir),
             sp.GetRequiredService<IInputService>(), sp.GetRequiredService<ILogger<PluginManager>>(),
-            sp.GetRequiredService<PluginLocalizer>(), sp.GetRequiredService<ISecretProtector>()));
+            sp.GetRequiredService<PluginLocalizer>(), sp.GetRequiredService<ISecretProtector>(),
+            windowSource: sp.GetRequiredService<IActiveWindowSource>()));
         services.AddHostedService(sp => sp.GetRequiredService<PluginManager>());
+        services.AddSingleton<PluginInstallSelection>();
         return services;
     }
 

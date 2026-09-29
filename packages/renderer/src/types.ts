@@ -76,6 +76,8 @@ export interface ActionBinding {
 export interface Widget {
   id: string;
   type: WidgetType;
+  /** Optional name, only used to pick this widget in an action (the target of "Change web page"); unique in a profile. */
+  name?: string;
   x: number;
   y: number;
   w: number;
@@ -125,7 +127,7 @@ export interface Profile {
    * docs/design/auto-profile-switch.md. Ignored by the renderer itself. */
   appMatches?: AppMatch[];
   /** Editor-only: how this profile's pages are arranged into folders in the Hierarchy tree — see
-   * docs/plans/hierarchy-tree-and-folders-plan.md. `pages` stays the one place page data lives; this only
+   * docs/design/hierarchy-tree-and-folders.md. `pages` stays the one place page data lives; this only
    * arranges it. Empty/missing means no arrangement was ever saved (shows flat, in `pages` order).
    * Ignored by the renderer itself and by the phone client. */
   pageTree?: PageTreeNode[];
@@ -155,4 +157,8 @@ export interface WidgetState {
   active?: boolean;
   /** From a dynamized property (see DynamicBinding server-side): property name to resolved value ("animation" is one of WidgetAnimation, "icon" is an image URL or an empty string for no icon, the rest are CSS colors). */
   style?: Partial<Record<"background" | "foreground" | "borderColor" | "animation" | "icon", string>>;
+  /** A `web` widget: the address this device shows instead of the profile's (set by a button); an empty string goes back to the profile's. */
+  url?: string;
+  /** A `web` widget: a higher number than before loads the page again. */
+  reload?: number;
 }

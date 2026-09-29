@@ -12,7 +12,7 @@ function removeSelfHealedIds(tree: ProfileTreeNode[], node: ProfileTreeNode): Pr
   return next;
 }
 
-/** The root profile tree (docs/plans/hierarchy-tree-and-folders-plan.md) — every mutation saves to the
+/** The root profile tree (docs/design/hierarchy-tree-and-folders.md) — every mutation saves to the
  * server at once (there's no "dirty" concept here the way an open profile's pages have; profiles aren't
  * loaded together, so there's nothing to batch into one Save). */
 export function useProfileTree() {

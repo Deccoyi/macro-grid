@@ -47,7 +47,7 @@ const WorkspaceContext = createContext<WorkspaceApi | null>(null);
 /** Owns the dockview instance's open/closed/auto-hidden bookkeeping above both MenuBar (the View menu)
  * and DockWorkspace (the actual dockview tree) — they're siblings under App.tsx, so this can't live
  * inside DockWorkspace itself the way earlier phases had it; the View menu needs to read and drive the
- * same state a sibling component owns. See docs/plans/docking-workspace-plan.md, the useWorkspace() this
+ * same state a sibling component owns. See docs/design/docking-workspace.md, the useWorkspace() this
  * was always meant to be. */
 export function WorkspaceProvider({ children }: { children: ReactNode }) {
   const { t } = useT();

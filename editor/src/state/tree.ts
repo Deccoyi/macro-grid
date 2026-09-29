@@ -1,5 +1,5 @@
 /** Generic operations shared by the page tree (inside one profile) and the root profile tree — see
- * docs/plans/hierarchy-tree-and-folders-plan.md. Both PageTreeNode and ProfileTreeNode share this exact
+ * docs/design/hierarchy-tree-and-folders.md. Both PageTreeNode and ProfileTreeNode share this exact
  * shape (a "folder" node has `children`, a leaf node — "page" or "profile" — never does), so one set of
  * pure functions serves both instead of duplicating tree-walking logic per kind. */
 export interface GenericTreeNode {

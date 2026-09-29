@@ -6,6 +6,7 @@ using MacroGrid.Core.Model;
 using MacroGrid.Core.Plugins;
 using MacroGrid.Core.Profiles;
 using MacroGrid.Core.Sessions;
+using MacroGrid.Core.Web;
 using MacroGrid.Core.Widgets;
 
 namespace MacroGrid.Host.Api;
@@ -42,7 +43,7 @@ internal static class ProfileApi
             return ApiResults.Json(profile);
         });
 
-        api.MapPut("/profiles/{id}", async (string id, HttpRequest request, ProfileStore profiles, WidgetStateService widgetState) =>
+        api.MapPut("/profiles/{id}", async (string id, HttpRequest request, ProfileStore profiles, WidgetStateService widgetState, ILoggerFactory loggers) =>
         {
             var (valid, profile) = await ApiResults.ReadJsonAsync<Profile>(request);
             if (!valid)
@@ -54,6 +55,7 @@ internal static class ProfileApi
             if (!ProfileValidator.Validate(profile, out var error))
                 return ApiResults.BadRequest(error);
 
+            WebUrlRule.Sanitize(profile, loggers.CreateLogger("MacroGrid.Security"));
             profiles.Save(profile);
             await widgetState.BroadcastProfileAsync(profile);
             return Results.NoContent();

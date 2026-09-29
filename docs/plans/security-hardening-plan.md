@@ -1,8 +1,12 @@
 # Security hardening plan
 
-Status: **planned, not started; waiting for the owner's decision.** Repositories: `macro-grid` (all parts), `macro-grid-client`
-(part A), `macro-grid-plugin` (parts B and D). Touches the security model: update `../architecture.md` and
-`../design/security-risk-assessment.md` with each part.
+Status (checked 2026-09-29): **all parts released** (server 1.1.0/1.2.0, plugin repo `main` — OBS 0.3.0 uses part B, phone
+app `client-v0.3.0` has part A's certificate pinning). What was part D (a native C# plugin's install-time warning) is done
+too — see "Native plugins" below; it was never a permission mechanism to design, just a warning screen, and closing it
+does not need a decision. (2026-09-29: that folder warning was replaced by the rule that only official, signed C# plugins load at all; see
+`../design/plugin-distribution.md`, section 10, and `../architecture.md`.)
+Repositories: `macro-grid` (all parts), `macro-grid-client` (part A), `macro-grid-plugin` (part B). Touches the security
+model: update `../architecture.md` and `../design/security-risk-assessment.md` with each part.
 
 The risk assessment (`../design/security-risk-assessment.md`) lists what is left after the pairing limits, the security log,
 the encrypted device tokens, the vulnerability checks and the SBOM. These are the three larger items. None is promised; this is
@@ -10,8 +14,8 @@ a hobby project.
 
 ## A. Encrypted connection on the local network (threat T2)
 
-Status: **server side done, on this branch, not released.** Option 1 below is what's built. Client side (macro-grid-client) is
-in progress by a separate session, against the wire shape decided here.
+Status (checked 2026-09-28): **released, both sides.** Option 1 below is what's built: server side shipped in Macro Grid 1.1.0/1.2.0,
+client side (certificate pinning) shipped in the phone app `client-v0.3.0`.
 
 Today PINs, tokens and key presses cross the network in plain `ws://` and `http://`.
 
@@ -28,7 +32,7 @@ Today PINs, tokens and key presses cross the network in plain `ws://` and `http:
   "required" — the presence of `fp` in the scanned QR is the whole signal: a client that understands it pairs over
   `wss://host:tlsPort` from then on, one that doesn't keeps using `ws://host:port` like today.
 - Phone app: the WebView's own WebSocket cannot pin a certificate, so the connection moves to a small native WebSocket (Capacitor
-  plugin) that checks the fingerprint. This is most of the work; in progress.
+  plugin, `PinnedSocketPlugin.java`) that checks the fingerprint. Shipped in `client-v0.3.0`.
 - Browser deck: a self-made certificate makes the browser warn once, and a browser cannot pin a fingerprint at all the way the
   phone app does — `http://.../deck/` on plain 9820 stays the only supported way to reach it. Not revisited by the decision
   below: the deck was never a candidate for "encrypted by default," only the phone app pairing/data connection was.
@@ -69,22 +73,19 @@ open: the "Allow unencrypted connections" preference itself (currently no-op, bo
 
 Plugins write their own `settings.json`, so a password field (for example the OBS plugin's) is stored in plain text.
 
-Status: **`macro-grid` side done, on this branch, not released.** `IPluginHost.Secrets` (`IPluginSecrets`, `Protect(string)` /
-`Unprotect(string)`) is added, backed by the same `ISecretProtector` (DPAPI) the device store uses — now a shared DI singleton
-(`AddHostStores`) instead of being constructed twice. Additive; tests in `PluginSecretsTests`. See `CHANGELOG-developer.md`
-under `[Unreleased]`.
+Status (checked 2026-09-28): **`macro-grid` side and the OBS plugin are released.** `IPluginHost.Secrets` (`IPluginSecrets`,
+`Protect(string)` / `Unprotect(string)`) shipped in server/SDK 1.1.0, backed by the same `ISecretProtector` (DPAPI) the device
+store uses — a shared DI singleton (`AddHostStores`) instead of being constructed twice. Tests in `PluginSecretsTests`. The SDK
+1.1.0 NuGet release happened, and `WebSocketBridge For OBS` 0.3.0 (`macroGrid: 1.1.0`) stores its password through it, converting
+an existing plain value on first load — released on `macro-grid-plugin`'s `main`.
 
 Still open:
 - Settings pages: let `SettingFieldKind.Password` values be stored protected by the host when the plugin opts in, so plugins do
-  not have to handle it themselves.
-- Needs an SDK release on NuGet before anything can build against it (the owner tags it; `../guides/release.md`) — this is a
-  MINOR bump (`1.x`) of the one server/SDK version, additive per `versioning.md`.
-- Plugins (`macro-grid-plugin`): OBS stores its password through it and converts an existing plain value on first load; raise
-  `macroGrid` in its `plugin.json` to the SDK version that has it. Blocked on the SDK release above.
+  not have to handle it themselves the way OBS does today.
 
 ## C. Remove my data on uninstall (threat T12)
 
-Status: **done, on this branch, not released.** `installer/MacroGrid.iss` asks at uninstall: "Also delete your profiles,
+Status (checked 2026-09-28): **done, released.** `installer/MacroGrid.iss` asks at uninstall: "Also delete your profiles,
 paired devices, plugins and logs (`%AppData%\MacroGrid`)?", default No (`MB_DEFBUTTON2`). Never asks on a silent uninstall
 (`UninstallSilent`); the code only runs in the uninstaller, so a Setup `/UPDATE` run never touches it. Tested by hand on this
 machine: built with `scripts\publish.ps1` + `installer\build-installer.ps1` (Inno Setup 6), installed, uninstalled with No
@@ -96,35 +97,28 @@ machine: built with `scripts\publish.ps1` + `installer\build-installer.ps1` (Inn
 - Not tested: uninstalling from a second Windows account than the one that installed it, or on a genuinely clean PC/VM (only
   this dev machine, which already had real paired devices and an OBS password — both confirmed gone after a "Yes" uninstall).
 
-## D. Plugin approval only covers JS plugins (found while manually testing the pairing branch)
+## Native plugins have no permission gate, by design (was part D)
 
-Manual testing of `security/pairing-and-logging` found two gaps in the plugin permission/host-disclosure work that the parts
-above do not cover:
+A native (C#) plugin's manifest has no `permissions` field at all — `PluginManager.Loading.cs`'s approval gate only runs
+`if (manifest.Kind == PluginKind.Js)`. This is not a gap to close: a JS plugin's permissions are enforced by its sandbox,
+but a native plugin runs in-process with full trust, so a declared permission on it could only ever be a label the plugin
+chooses to be honest about, not something the host can check or stop — not worth building for a false sense of security.
 
-- **Native (C#) plugins skip approval entirely.** `PluginManager.Loading.cs` only runs the permission-approval gate
-  (`NeedsApproval`, `PendingPermissions`, and the host-scope text the editor's Manage Plugins window shows for a pending
-  permission) `if (manifest.Kind == PluginKind.Js)`. A `kind: "csharp"` plugin's manifest has no `permissions` field at all, so
-  it loads and runs immediately, and the editor never shows the user which host it talks to. This includes the three official
-  plugins that ship today (OBS, PLCIcons, SoundBoard) — installing OBS and checking Manage Plugins shows no permission entry
-  and no host at all, confirmed by testing.
-- **Approval happens after install, not before.** Tested with the `HelloJs` example (a JS plugin): "Allow and Enable" only
-  appears once the plugin is already installed and sitting in a `NeedsApproval` state. There is no confirmation step at the
-  point the user clicks Install. A confirmation before or during install would match user expectation better than installing
-  first and asking after, even though the plugin cannot run until approved either way.
+Status (checked 2026-09-29): **done, released.** Instead of a permission mechanism, installing a native plugin from a
+folder (there is no "official source" to exempt for a local folder, unlike Discover/link installs) shows a clear,
+danger-styled warning first: it runs with full access to this computer and Macro Grid cannot check or limit it, so only
+install one from a folder you trust. See `PluginApi.cs`'s `/plugins/install/browse` + `/plugins/install/confirm` and
+`PluginsWindow.tsx`'s `install()`.
 
-Neither is fixed yet; waiting for the owner's decision.
-
-- A declared-permission mechanism for native plugins (their manifest has no `permissions` field to extend) was considered and
-  set aside: a JS plugin's permissions are enforced by the sandbox, but a native plugin runs in-process with full trust, so its
-  declared permissions could only ever be a label the plugin chooses to be honest about, not something the host can check or
-  stop. Not worth building for a false sense of security. If this changes later, it stays advisory-only and is disclosed as
-  such.
-- The install-then-approve ordering still needs a decision: move the approval step earlier in the install flow, or leave it as
-  is.
+JS plugin approval used to happen after install (the plugin sat in a `NeedsApproval` state; "Allow and Enable" only
+appeared once already installed, with no confirmation at the point of clicking Install). Moved before install instead:
+the editor shows the declared permissions and asks to confirm as part of the browse/inspect step, before the install call
+runs; on success it approves right away so there is no separate second "Enable" click. Applies to all three install paths
+(folder, catalog, pasted link).
 
 ## E. No Origin check on the loopback API (threat T13, found while building part B)
 
-Status: **done, on this branch, not released.** `OriginGuard.IsAllowed` (`MacroGrid.Core.Devices`) refuses an `/api` request
+Status (checked 2026-09-28): **done, released** (server 1.1.0). `OriginGuard.IsAllowed` (`MacroGrid.Core.Devices`) refuses an `/api` request
 whose `Origin` header is present and is not one of the editor's own origins (`http://localhost:9820`, `http://127.0.0.1:9820`,
 `http://[::1]:9820`, and the Vite dev servers that proxy to it, `:5190` and `:5192`); a request with no `Origin` header at all
 (curl, a native app) is unaffected, since only a browser sends it. Wired into `ServerApp.cs` right after `LoopbackGuard`, same

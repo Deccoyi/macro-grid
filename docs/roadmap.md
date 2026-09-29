@@ -11,7 +11,21 @@ Where the project stands. The server and the SDK are at 1.0.0 and under active d
   assignment (press, long press, double tap), variable insertion, live preview, device list, plugin list, `.msprofile` export and import, preferences (language,
   theme, default profile, start with Windows and what a start does: tray only or open the editor window), automatic profile switching rules, settings windows
   that block the editor while open, a Help window with the disclaimer, the user agreement and all bundled license texts.
+- **Docking workspace and hierarchy tree:** dockable, tabbed, floating and auto-hide tool windows, page tabs, a remembered layout
+  ([design/docking-workspace.md](design/docking-workspace.md)); one tree for every profile and page, with page and profile folders,
+  drag-and-drop, copy/paste and lazily loaded profiles ([design/hierarchy-tree-and-folders.md](design/hierarchy-tree-and-folders.md)).
+  The Error List has no producer yet and plugin-provided tree entries (phase 6) are not started, see "Next" below.
+- **Editor edit commands:** right-click Undo/Redo/Cut/Copy/Paste/Duplicate/Delete/Select All, an Edit menu, one shared undo/redo
+  history stack, standard Windows shortcuts, and a header toolbar ([design/editor-edit-commands.md](design/editor-edit-commands.md)).
 - **Pairing and devices:** PIN and QR pairing, per-device tokens, a device list with revoke, a profile per device.
+- **Encrypted connection:** the server makes its own certificate and serves `wss://`/`https://` on a second port next to the
+  plain one; the pairing QR carries its fingerprint, so the phone app pins it with no certificate authority needed. Server side
+  in Macro Grid 1.1.0/1.2.0, phone app side (a native WebSocket that checks the fingerprint) in `client-v0.3.0`. The browser
+  deck stays on the plain port, a browser cannot pin a fingerprint.
+- **Plugin secret storage:** `IPluginHost.Secrets` lets a plugin protect a value (DPAPI-backed), so a setting like a password
+  is not stored in plain text; the OBS plugin uses it for its own password.
+- **"Remove my data" on uninstall:** the installer offers to delete `%AppData%\MacroGrid` (profiles, paired devices, plugins,
+  logs), off by default, never asked on a silent uninstall.
 - **Automatic profile switching** by the active window, with a lock on the phone ([design/auto-profile-switch.md](design/auto-profile-switch.md)).
 - **Layout patches and cached assets:** an editor save sends only what changed, icons cross the wire once
   ([design/layout-patch-and-assets.md](design/layout-patch-and-assets.md)).
@@ -20,10 +34,10 @@ Where the project stands. The server and the SDK are at 1.0.0 and under active d
   Official plugins live in the plugin repository: OBS, an icon pack and a JavaScript example.
 - **Browser deck** served by the server at `/deck/`.
 - **Packaging:** a single-file release build and a Windows installer with a user agreement, tested on a clean company PC (install, WebView2 setup, start with
-  Windows, upgrade, uninstall; [release.md](guides/release.md)); a signed release build of the phone app; the plugin SDK is published on NuGet.
+  Windows, upgrade, uninstall; [release.md](guides/release.md)); a signed release build of the phone app. (The plugin SDK was published on NuGet up to 1.2.0 and is not any more; see [guides/release.md](guides/release.md).)
 - **Phone app** (its own repository): connection with saved servers and QR pairing, the profile drawer, page swipes, kiosk mode and orientation lock,
   keep-awake, automatic reconnection, an offline layout cache, and auto-update (checks GitHub, downloads and verifies a release-signed APK, hands it
-  to Android's installer; [design/phone-app-auto-update.md](design/phone-app-auto-update.md)).
+  to Android's installer).
 - **Plugin distribution:** a Discover tab in the editor's Plugins window — browse the official catalog, add a third-party multi-plugin source, install
   a single plugin from a pasted repository link, badges (Official / Third-party / Local) and "update available"
   ([design/plugin-distribution.md](design/plugin-distribution.md)).
@@ -35,53 +49,24 @@ Where the project stands. The server and the SDK are at 1.0.0 and under active d
 
 The order of the bigger pieces of work, and their plans, are in [plans/README.md](plans/README.md). The items below have no plan file yet.
 
-- **Rename the plugin manifest's `macroGrid` field (priority, name not chosen):** it means "the oldest Macro Grid this plugin runs on", but the name alone
-  does not say "minimum", which was not obvious on a first read. Wanted: a clearer name (`minMacroGrid`, `requiresMacroGrid`, or better), with the old
-  name still read for at least one MAJOR so existing plugins keep working unchanged. Planned for the version after 1.0.x; no name decided yet.
-- **An encrypted connection:** the phone and the server talk over plain `ws://` and `http://` on the local network, so anyone on the same Wi-Fi
-  can read the traffic and take the pairing PIN or a device token, and then press the buttons of your profiles. Fine on a home network you trust,
-  a real gap on a shared one (cafe, school, office). Wanted: the server makes its own certificate and puts its fingerprint into the pairing QR
-  code, so the phone accepts only that certificate (no certificate authority needed). That covers listening in and impersonating the server. To
-  settle in its plan: the browser deck (a self-signed certificate makes browsers warn, so it may keep a plain option, switched off by default), the
-  phone app's setting that allows plain traffic, a token that never crosses the wire (a signed challenge instead), moving already paired devices
-  over, and keeping older phone apps working while both connections exist (announced as a capability). It needs a plan file first (`plans/`).
-- **Keyboard shortcuts and undo/redo in the editor:** today the editor has no shortcuts beyond Enter and Escape in windows and menus, no undo, and
-  duplicating or copying a widget goes through the right-click menu. Wanted: **Delete**, **Ctrl+C / Ctrl+X / Ctrl+V** and **Ctrl+D** on the selected
-  widgets, with paste working across pages and across profiles (a copy carries its actions and dynamic rules), and **Ctrl+Z / Ctrl+Y** to step back
-  and forward through every change the person makes: moving or resizing a widget, adding, deleting or pasting, renaming, dynamization rules, action
-  and event bindings, and any value in the properties panel (text fields, dropdowns, switches, modes, colors). All of them go on **one shared history
-  stack**, in the order they happened, so Ctrl+Z always undoes the latest change whatever kind it was and Ctrl+Y redoes it. Shortcuts must not fire while a text field has focus, apart from the field's own text undo. They
-  belong in the Edit menu with their key hints too. It needs a plan file before it is built (`plans/`).
-- **A branded installer:** today the setup uses the plain modern wizard style with Inno Setup's default pictures and no icon of its own. Wanted: the
-  Macro Grid logo and the product colors. What the setup tool can do natively: an icon for the setup file and the uninstaller (`SetupIconFile`, from
-  `src/MacroGrid.Host/app.ico`), the large picture on the welcome and finished pages (`WizardImageFile`), the small logo in the corner of the
-  other pages (`WizardSmallImageFile`, several sizes for high-DPI screens), the color behind the large picture, and the texts on each page. What it
-  cannot do natively: restyle the buttons, fonts and page background in our accent color; that needs a third-party skin library, which is not
-  worth its size, its licence and the antivirus false alarms it can bring. So the plan is the native part, drawn from `docs/ui/color-bible.md`
-  and `website/public/logo.png`. The automatic update shows few pages (see `design/agreement-acceptance.md`), so the logo appears mostly
-  in its progress window. The exact picture sizes are checked against the Inno Setup version the release workflow installs. It needs a small
-  plan file first (`plans/`).
-- **A much faster install and update (fewer files):** the editor bundle installs as about 6,000 tiny files (one per icon in `wwwroot\editor\assets`,
-  because the editor loads each icon on demand), and copying them one by one made a setup on a fast PC take over a minute; an update shows this
-  in its progress window, and antivirus scanning makes it slower on other PCs. An upgrade also leaves the previous version's hashed editor files behind (`wwwroot\editor\assets` collects several `index-*.js`), so the setup should clear the old `wwwroot` first (an `[InstallDelete]` entry) or, better, install far fewer files. Wanted: a setup of a few seconds. Ideas to weigh: bundle the
-  icons into a few chunks or one file (the editor still loads only what it draws), or ship the editor as one archive that the app unpacks or
-  serves from; the setup itself gets faster with fewer, larger files. Measure the file count and the setup time before and after. It needs a
-  small plan file first (`plans/`).
+- **The "Allow unencrypted connections" preference:** now that the server and the phone app both support `wss://` (see "Done"
+  above), plain `ws://`/`http://` (port 9820) stay open unconditionally; a preference to turn them off is not built yet. Default
+  on for now (the browser deck cannot use `wss://` at all, and older paired phones have no TLS support), default off starting
+  the next MAJOR version once both are settled. See [plans/security-hardening-plan.md](plans/security-hardening-plan.md), part A.
+- **A branded installer:** done.
+- **A much faster install and update (fewer files):** done.
 - **The `plugin-html` widget:** a plugin ships its own HTML and JavaScript widget. It would run in a sandboxed iframe on the client and talk to the
   server only through `postMessage`. It needs the widget type in the renderers, a bridge in the client and a message route on the server. Today the
   `plugin-html` type draws a placeholder.
-- **The `web` widget** (an embedded page such as a live chat): today it draws a placeholder. The idea is an iframe first and, for pages that refuse to be
-  framed, a native WebView positioned over the grid cell by a small Android plugin.
-- **An async host API for JavaScript plugins** (today scripts are synchronous, so `host.http` blocks the plugin's own thread).
-- **A richer Discover tab, closer to a store page.** Today `editor/src/windows/PluginsWindow.tsx`'s Discover tab is a plain
-  list: name, version, author, one line of description and an Install button (see `plans/plugin-distribution-plan.md`,
-  section 7). The catalog (`macrogrid-index.json`, `PluginCatalogEntryInfo`) does not carry much more than that today either.
-  Wanted: plugin cards with an icon (the logo/avatar field already planned above), and a detail view per plugin — a longer
-  description or README, screenshots, category/tags to browse by, and (later) install counts or a rating if the official
-  catalog ever tracks them. Needs deciding what's worth adding to `macrogrid-index.json` (author-supplied vs. computed by the
-  release workflow) versus what stays editor-only presentation, since every new field is something plugin authors have to
-  fill in and the host has to validate and cap. It needs a plan file first (`plans/`).
-- **Plugins feeding the editor's Error List panel:** the docking workspace's Error List (`docs/plans/docking-workspace-plan.md`) is wired up but has
+- **The `web` widget** (an embedded page such as a live chat, or an alerts panel): an iframe with popups, downloads and device features blocked, plus a
+  "Change web page" button action. See [plans/web-widget-plan.md](plans/web-widget-plan.md).
+- **The rest of a store-like Discover tab.** Discover now shows a card grid and a per-plugin detail view (description, author,
+  homepage, declared permissions, install/update) built from what the catalog already carries, in a wider Plugins window. Still
+  open, and each needs a catalog field first: a real plugin icon (cards show the plugin's initial on a stable color for now),
+  screenshots, category/tags to browse by, and (later) install counts or a rating. Needs deciding what's worth adding to
+  `macrogrid-index.json` (author-supplied vs. computed by the release workflow) versus what stays editor-only presentation,
+  since every new field is something plugin authors have to fill in and the host has to validate and cap. It needs a plan file first (`plans/`).
+- **Plugins feeding the editor's Error List panel:** the docking workspace's Error List (`docs/design/docking-workspace.md`) is wired up but has
   no producer yet — it only ever shows "no problems". The status bar used to be where a plugin's own errors/warnings surfaced (`StatusEntry.level`
   `Warning`/`Error`); the Error List should take over that role instead, since it's a proper list with filtering and severity counts rather than a
   single status-bar item. Needs an SDK addition (a way for a plugin to report a diagnostic, not just a status-bar entry) — planned for whenever the
@@ -101,6 +86,7 @@ The order of the bigger pieces of work, and their plans, are in [plans/README.md
 - **The browser deck** does not announce the `assets` and `layout.patch` capabilities yet, so it receives full layouts with icons inline.
 - **The CSS editor** is a plain text box with sanitizer warnings, without syntax highlighting.
 - **Windows only.** The server depends on Windows APIs.
+- **The SoundBoard plugin is pinned to NAudio 2.2.1.** NAudio 3.0 changed `ISampleProvider.Read` from `(float[] buffer, int offset, int count)` to a single `Span<float>` parameter and marked `WasapiOut` obsolete, so `SoundBoard/src/SoundVoice.cs`'s custom `ISampleProvider` implementations no longer compile against it. Dependabot's bump to 3.1.0 was closed for this reason (checked 2026-09-28); upgrading needs `SoundVoice`/`LoopingSampleProvider` rewritten for the new interface (and likely a `WasapiOut` → `WasapiPlayer` move), not a version bump alone.
 
 ## Not planned
 

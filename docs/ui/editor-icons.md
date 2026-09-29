@@ -1,8 +1,8 @@
 # Editor icons
 
 The icon list for the editor's docking workspace, Hierarchy tree, Error List, Toolbox and edit menus
-([../plans/docking-workspace-plan.md](../plans/docking-workspace-plan.md), [../plans/editor-edit-commands-plan.md](../plans/editor-edit-commands-plan.md),
-[../plans/hierarchy-tree-and-folders-plan.md](../plans/hierarchy-tree-and-folders-plan.md)). The rules come from
+([../design/docking-workspace.md](../design/docking-workspace.md), [../design/editor-edit-commands.md](../design/editor-edit-commands.md),
+[../design/hierarchy-tree-and-folders.md](../design/hierarchy-tree-and-folders.md)). The rules come from
 [ui-guidelines.md](ui-guidelines.md) and [color-bible.md](color-bible.md); this file makes them concrete. The custom icons are drawn in
 [editor-icons-preview.html](editor-icons-preview.html) (open it in a browser) at every size and state, in both themes.
 
@@ -80,6 +80,7 @@ No other colour. Warning and Info are told apart by shape, never by colour (ther
 | Toolbox | `Shapes` | |
 | Properties | `Wrench` | Not a slider icon, so it is not confused with the slider widget in the Toolbox. |
 | Error List | `ListX` | Not a severity icon, so it cannot be mistaken for one. |
+| Plugins (View menu, auto-hide tab) | `Blocks` | docs/design/plugins-tool-window.md. |
 | Dock guide targets | **five drawn glyphs**, [icons/](icons/) (below) | Drawn inside the drop-guide squares while a panel is dragged. |
 
 ### Error List and status bar
@@ -93,7 +94,11 @@ No other colour. Warning and Info are told apart by shape, never by colour (ther
 | Clear | `Eraser` | default |
 | Sort direction in the column header | `ChevronUp` / `ChevronDown` | 10 px, only on the sorted column |
 
-### Edit commands (context menus and the Edit menu)
+### Edit commands (context menus, the Edit menu, and the header toolbar)
+
+Every one of these is also a click-without-a-menu icon button in the header toolbar (`EditToolbar`, next to the Save button — the docking
+workspace has no toolbar row of its own yet, see [docking-workspace.md](../design/docking-workspace.md)), at 16 px in a 26 px button, the
+same icon as its context-menu and Edit-menu row.
 
 | Command | Icon |
 |---|---|

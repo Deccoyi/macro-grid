@@ -1,8 +1,10 @@
 using System.Text.Json;
 using MacroGrid.Core.Actions;
 using MacroGrid.Core.Diagnostics;
+using MacroGrid.Core.Plugins.Js;
 using MacroGrid.Core.Profiles;
 using MacroGrid.Core.Security;
+using MacroGrid.Core.Sessions;
 using MacroGrid.Core.Variables;
 using MacroGrid.Plugin.Abstractions;
 using Microsoft.Extensions.Hosting;
@@ -36,9 +38,12 @@ public sealed partial class PluginManager(
     IInputService? input,
     ILogger<PluginManager> logger,
     PluginLocalizer? localizer = null,
-    ISecretProtector? secretProtector = null) : IHostedService
+    ISecretProtector? secretProtector = null,
+    PluginTrustVerifier? trustVerifier = null,
+    IActiveWindowSource? windowSource = null) : IHostedService
 {
     private static readonly JsonSerializerOptions ManifestJson = new(JsonSerializerDefaults.Web);
+    private readonly PluginTrustVerifier _trust = trustVerifier ?? PluginTrustVerifier.Official;
     private static readonly TimeSpan ProviderStopTimeout = TimeSpan.FromSeconds(5);
 
     /// <summary>One plugin folder: its list entry, and (only while it is running) the live instance.</summary>
@@ -60,6 +65,9 @@ public sealed partial class PluginManager(
         public IPlugin Instance { get; } = instance;
         public PluginHostCollector Host { get; } = host;
         public TrackingVariableStore VariableStore { get; } = variableStore;
+        /// <summary>The handler subscribed to the instance's <see cref="IPluginTreeProvider.TreeItemsChanged"/>, if
+        /// it implements that interface — kept so unloading can unsubscribe exactly it.</summary>
+        public Action<string?>? TreeChangedHandler { get; set; }
     }
 
     private readonly Lock _stateLock = new();
@@ -69,7 +77,11 @@ public sealed partial class PluginManager(
 
     public IReadOnlyList<LoadedPlugin> Plugins
     {
-        get { lock (_stateLock) return [.. _entries.Values.Select(e => e.Info), .. _unrecognized]; }
+        get
+        {
+            lock (_stateLock)
+                return [.. _entries.Values.Select(e => e.Running?.Instance is JsPlugin js ? e.Info with { KeyboardUsesToday = js.KeyboardUsesToday } : e.Info), .. _unrecognized];
+        }
     }
 
     public IReadOnlyList<IIconPackSource> IconPacks
@@ -84,6 +96,15 @@ public sealed partial class PluginManager(
     }
 
     public IPluginSettingsPage? GetSettingsPage(string pluginId) => FindEntry(pluginId)?.Running?.Host.SettingsPage;
+
+    /// <summary>The running plugin's optional <see cref="IPluginTreeProvider"/> (its <see cref="IPlugin"/> class
+    /// implements it), or null — for a plugin that does not opt in, is not running, or is not installed.</summary>
+    public IPluginTreeProvider? GetTreeProvider(string pluginId) => FindEntry(pluginId)?.Running?.Instance as IPluginTreeProvider;
+
+    /// <summary>Every <see cref="IPluginTreeProvider.TreeItemsChanged"/> of every running plugin, plus a whole-plugin
+    /// entry whenever a plugin with tree items is loaded or unloaded; the editor polls it while its Plugins tool
+    /// window is on screen.</summary>
+    public PluginTreeChangeLog TreeChanges { get; } = new();
 
     public string? GetActionPluginId(string actionType)
     {
@@ -161,6 +182,8 @@ public sealed partial class PluginManager(
         var manifest = ReadManifest(Path.Combine(sourceDir, "plugin.json"));
         if (!IsSafeSegment(manifest.Id))
             throw new InvalidOperationException($"'{manifest.Id}' is not a valid plugin id.");
+        if (CheckInstallTrust(sourceDir, manifest) is { } refusal)
+            throw new InvalidOperationException(refusal);
 
         await _gate.WaitAsync();
         try
@@ -184,6 +207,22 @@ public sealed partial class PluginManager(
         }
         finally { _gate.Release(); }
     }
+
+    /// <summary>Null when the folder may be installed: a JavaScript plugin, or a C# plugin that passes the trust check
+    /// (a copy of an official plugin still works). Otherwise the reason it is refused.</summary>
+    public string? CheckInstallTrust(string sourceDir, PluginManifest? manifest = null)
+    {
+        manifest ??= ReadManifest(Path.Combine(sourceDir, "plugin.json"));
+        if (manifest.Kind != PluginKind.Csharp) return null;
+        var result = _trust.Verify(sourceDir, manifest);
+        if (result.Allowed) return null;
+        logger.LogWarning(SecurityEvents.PluginNotAllowed, "Security: C# plugin {Id} was refused at install", SecurityEvents.ForLog(manifest.Id));
+        return "Only official C# plugins can be installed.";
+    }
+
+    /// <summary>Reads a folder's plugin.json without installing anything — for the editor to show what it's
+    /// about to install (in particular its <see cref="PluginManifest.Kind"/>) before the person confirms.</summary>
+    public static PluginManifest PeekManifest(string sourceDir) => ReadManifest(Path.Combine(sourceDir, "plugin.json"));
 
     /// <summary>Unloads a plugin and loads it again from its folder (picks up a replaced DLL or changed manifest).</summary>
     public async Task<LoadedPlugin?> ReloadAsync(string pluginId)
@@ -231,7 +270,7 @@ public sealed partial class PluginManager(
             if (entry?.Running is null) return;
 
             await UnloadCoreAsync(entry);
-            entry.Info = entry.Info with { Status = PluginLoadStatus.Error, Detail = reason, HasSettings = false };
+            entry.Info = entry.Info with { Status = PluginLoadStatus.Error, Detail = reason, HasSettings = false, HasTreeItems = false };
             logger.LogWarning("Plugin {Id} was switched off: {Reason}", pluginId, reason);
         }
         finally { _gate.Release(); }

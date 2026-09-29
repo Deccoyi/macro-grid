@@ -1,8 +1,12 @@
 import { useEffect, useRef, useState } from "react";
 import type { Profile } from "@macro/renderer";
 import { api } from "../api/client";
-import { alertAsync, confirmAsync, promptAsync } from "../dialogs/dialogStore";
+import { commandItem } from "../commands/commandItem";
+import type { Command } from "../commands/types";
+import { alertAsync, choiceAsync, confirmAsync, promptAsync } from "../dialogs/dialogStore";
 import { usePreferences } from "../preferences/PreferencesContext";
+import { clearWebUrls, collectWebSites } from "../state/webUrls";
+import { WebImportConsent } from "../windows/WebImportConsent";
 import { useServerVersion } from "../state/useServerVersion";
 import { useT, type Language } from "../i18n/I18nContext";
 import { TOOL_WINDOWS } from "../workspace/toolWindows";
@@ -12,14 +16,18 @@ import { ContextMenu, type ContextMenuEntry } from "./ContextMenu";
 interface MenuBarProps {
   profile: Profile | null;
   onImportProfile: (data: Profile) => Promise<void>;
+  /** The Edit commands (undo/redo/cut/copy/paste/duplicate/delete/select all) — built once in App.tsx
+   * alongside their shortcuts, and turned into menu rows here with commandItem() so the Edit menu, the
+   * shortcuts and every context menu item all run the exact same code. */
+  editCommands: Command[];
 }
 
 // Access-key letters (Windows mnemonic convention: Alt+letter opens the menu, and the letter is
 // underlined in the label while Alt is held) — one map per language since the underlined letter has
 // to actually occur in that language's label.
 const MNEMONICS: Record<Language, Record<string, string>> = {
-  tr: { file: "D", view: "G", settings: "A", plugins: "E", help: "Y" },
-  en: { file: "F", view: "V", settings: "S", plugins: "P", help: "H" },
+  tr: { file: "D", edit: "Z", view: "G", settings: "A", plugins: "E", help: "Y" },
+  en: { file: "F", edit: "E", view: "V", settings: "S", plugins: "P", help: "H" },
 };
 
 function mnemonicLabel(label: string, letter: string | undefined, show: boolean) {
@@ -41,7 +49,7 @@ function mnemonicLabel(label: string, letter: string | undefined, show: boolean)
  * holding Alt reveals mnemonic underlines (Alt+letter opens that menu directly). Settings/Plugins open
  * as real separate OS windows (ToolWindow.cs) rather than in-page modals; only File's import/export use
  * native Open/Save dialogs on the server's desktop instead of browser download/upload. */
-export function MenuBar({ profile, onImportProfile }: MenuBarProps) {
+export function MenuBar({ profile, onImportProfile, editCommands }: MenuBarProps) {
   const { t, lang } = useT();
   const serverVersion = useServerVersion();
   const workspace = useWorkspace();
@@ -77,6 +85,17 @@ export function MenuBar({ profile, onImportProfile }: MenuBarProps) {
     }
     if (!result.profile) return;
 
+    // A profile from someone else can point a phone at any site the moment it is used: name the sites and ask once.
+    const sites = collectWebSites(result.profile);
+    if (sites.length > 0) {
+      const choice = await choiceAsync("", [
+        { value: "clear", label: t("profile.importWebClear") },
+        { value: "keep", label: t("profile.importWebKeep"), primary: true },
+      ], { title: t("profile.importWebTitle"), content: <WebImportConsent sites={sites} /> });
+      if (choice === null) return;
+      if (choice === "clear") clearWebUrls(result.profile);
+    }
+
     await onImportProfile(result.profile);
 
     const missing = result.missingPlugins?.map((p) => p.name) ?? [];
@@ -87,9 +106,24 @@ export function MenuBar({ profile, onImportProfile }: MenuBarProps) {
     }
   };
 
+  const findCommand = (id: string) => editCommands.find((c) => c.id === id)!;
   const fileItems: ContextMenuEntry[] = [
+    commandItem(findCommand("file.save"), t),
+    { divider: true },
     { label: t("menu.file.exportProfile"), onSelect: exportProfile, disabled: !profile },
     { label: t("menu.file.importProfile"), onSelect: importProfile },
+  ];
+  const editItems: ContextMenuEntry[] = [
+    commandItem(findCommand("edit.undo"), t),
+    commandItem(findCommand("edit.redo"), t),
+    { divider: true },
+    commandItem(findCommand("edit.cut"), t),
+    commandItem(findCommand("edit.copy"), t),
+    commandItem(findCommand("edit.paste"), t),
+    commandItem(findCommand("edit.duplicate"), t),
+    commandItem(findCommand("edit.delete"), t),
+    { divider: true },
+    commandItem(findCommand("edit.selectAll"), t),
   ];
 
   const saveCurrentLayout = async () => {
@@ -144,6 +178,7 @@ export function MenuBar({ profile, onImportProfile }: MenuBarProps) {
 
   const menus: { id: string; label: string; items: ContextMenuEntry[] }[] = [
     { id: "file", label: t("menu.file"), items: fileItems },
+    { id: "edit", label: t("menu.edit"), items: editItems },
     { id: "view", label: t("menu.view"), items: viewItems },
     { id: "settings", label: t("menu.settings"), items: settingsItems },
     { id: "plugins", label: t("menu.plugins"), items: pluginsItems },

@@ -4,15 +4,40 @@ using MacroGrid.Plugin.Abstractions;
 namespace MacroGrid.Tests.StubPlugin;
 
 /// <summary>Loaded by PluginLoaderTests from a compiled plugin.json + DLL pair, to exercise the SDK 0.3.0
-/// schema-driven registrations end to end (a real assembly load, not a mock).</summary>
-public sealed class StubPlugin : IPlugin
+/// schema-driven registrations end to end (a real assembly load, not a mock). It also opts in to the optional
+/// tree items (<see cref="IPluginTreeProvider"/> with <see cref="IPluginTreeItemSettings"/>): a "sounds" folder
+/// with two items that have their own settings; saving an item's name raises <see cref="TreeItemsChanged"/>.</summary>
+public sealed class StubPlugin : IPlugin, IPluginTreeProvider, IPluginTreeItemSettings
 {
+    private readonly Dictionary<string, string> _soundNames = new() { ["s1"] = "Applause", ["s2"] = "Drum roll" };
+
+    public event Action<string?>? TreeItemsChanged;
+
     public void Initialize(IPluginHost host)
     {
         host.RegisterAction(new StubAction());
         host.RegisterVariableProvider(new StubProvider());
         host.RegisterSettingsPage(new StubSettingsPage());
         host.CreateStatusItem("stub").Update("stub ready", StatusLevel.Ok);
+    }
+
+    public Task<PluginTreePage> GetTreeItemsAsync(string? parentId, string? continuationToken, CancellationToken cancellationToken) =>
+        Task.FromResult(parentId switch
+        {
+            null => new PluginTreePage([new PluginTreeItem("sounds", "Sounds", "folder", HasChildren: true)]),
+            "sounds" => new PluginTreePage([.. _soundNames.Select(kv => new PluginTreeItem(kv.Key, kv.Value, "music", HasSettings: true))]),
+            _ => new PluginTreePage([]),
+        });
+
+    public IReadOnlyList<SettingField> GetItemFields(string itemId) =>
+        _soundNames.ContainsKey(itemId) ? [new SettingField("name", "Name", SettingFieldKind.Text)] : throw new KeyNotFoundException($"No item '{itemId}'.");
+
+    public JsonObject LoadItem(string itemId) => new() { ["name"] = _soundNames[itemId] };
+
+    public void SaveItem(string itemId, JsonObject values)
+    {
+        _soundNames[itemId] = values["name"]?.GetValue<string>() ?? _soundNames[itemId];
+        TreeItemsChanged?.Invoke("sounds");
     }
 }
 

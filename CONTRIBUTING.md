@@ -11,8 +11,11 @@ Thanks for your interest. This repository is the server and editor; the phone ap
 
 ## This is a hobby project
 
-Macro Grid is maintained in spare time. Issues and pull requests are welcome, but replies and reviews can take a while, and there is no
-promise that a request will be accepted or a pull request merged. Please be patient, and don't expect support on a schedule.
+Macro Grid is maintained in spare time. Issues are welcome, but replies can take a while, and there is no promise that a request will be
+accepted. Please be patient, and don't expect support on a schedule.
+
+**Pull requests from outside the project are generally not accepted**, because this code runs on people's computers and the official plugins are
+signed as trusted. Please open an issue instead; a small fix may be accepted after it was discussed in an issue first.
 
 ## Getting set up
 
@@ -31,7 +34,7 @@ dotnet test
 ## Before you start
 
 - For anything bigger than a small fix, open an issue first so we can agree on the approach. Look at [docs/roadmap.md](docs/roadmap.md) for what is planned.
-- Branching: `main` holds releases and `dev` is the integration branch. Work on a branch from `dev` and open pull requests against `dev`.
+- Branching: `main` holds releases and `dev` is the integration branch. A change that was agreed in an issue is made on a branch from `dev` and goes against `dev`.
   The maintainer merges `dev` into `main` for a release ([docs/guides/release.md](docs/guides/release.md)).
 - Keep a pull request to one topic. Several small, focused commits are better than one large one.
 

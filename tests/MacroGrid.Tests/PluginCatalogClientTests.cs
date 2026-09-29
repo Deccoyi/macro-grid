@@ -57,11 +57,11 @@ public sealed class PluginCatalogClientTests
     }
 
     [Fact]
-    public async Task Parses_a_format_2_index_with_macro_grid_and_no_legacy_fields()
+    public async Task Parses_a_format_2_index_with_min_macro_grid_and_no_legacy_fields()
     {
         var json = ValidIndexJson()
             .Replace("\"formatVersion\": 1", "\"formatVersion\": 2")
-            .Replace("\"sdkVersion\": \"^0.3.0\",", "\"macroGrid\": \"1.0.0\",")
+            .Replace("\"sdkVersion\": \"^0.3.0\",", "\"minMacroGrid\": \"1.0.0\",")
             .Replace("\"minServerVersion\": \"0.1.0\",", "");
         var handler = new FakeHttpHandler(r => r.RequestUri!.Host == "raw.githubusercontent.com" ? Text200(json) : new HttpResponseMessage(HttpStatusCode.NotFound));
         var client = new PluginCatalogClient(new HttpClient(handler));
@@ -69,9 +69,28 @@ public sealed class PluginCatalogClientTests
         var index = await client.FetchIndexAsync(Owner, Repo, CancellationToken.None);
 
         var version = Assert.Single(Assert.Single(index.Plugins).Versions);
-        Assert.Equal("1.0.0", version.MacroGrid);
+        Assert.Equal("1.0.0", version.MinMacroGrid);
+        Assert.Null(version.MacroGrid);
         Assert.Null(version.SdkVersion);
         Assert.Null(version.MinServerVersion);
+    }
+
+    [Fact]
+    public async Task Parses_a_format_2_index_that_still_uses_the_legacy_macro_grid_name()
+    {
+        var json = ValidIndexJson()
+            .Replace("\"formatVersion\": 1", "\"formatVersion\": 2")
+            .Replace("\"sdkVersion\": \"^0.3.0\",", "\"macroGrid\": \"1.1.0\",")
+            .Replace("\"minServerVersion\": \"0.1.0\",", "");
+        var handler = new FakeHttpHandler(r => r.RequestUri!.Host == "raw.githubusercontent.com" ? Text200(json) : new HttpResponseMessage(HttpStatusCode.NotFound));
+        var client = new PluginCatalogClient(new HttpClient(handler));
+
+        var index = await client.FetchIndexAsync(Owner, Repo, CancellationToken.None);
+
+        var version = Assert.Single(Assert.Single(index.Plugins).Versions);
+        Assert.Null(version.MinMacroGrid);
+        Assert.Equal("1.1.0", version.MacroGrid);
+        Assert.Equal("1.1.0", MacroGrid.Core.Plugins.PluginCompatibility.Declared(version.MinMacroGrid, version.MacroGrid));
     }
 
     [Fact]

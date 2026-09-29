@@ -1,6 +1,6 @@
 # SDK 0.4.0 and the SoundBoard plugin
 
-Status: **done and released.** Phase A (SDK 0.4.0: the file, list, button and notice setting fields, `IReleaseAwareAction`, `ISettingsCommandHandler`, the plugin icon field), A4 (OBS and PLCIcons manifests bumped to the new SDK) and Phase B (the plugin itself, since renamed from Sound to **SoundBoard**) all shipped; see [../plans/version-unification-plan.md](../plans/version-unification-plan.md) for the SDK's move to the 1.0.0 baseline that followed. Kept here as a design reference for the setting field kinds and the plugin's audio engine.
+Status: **done and released.** Phase A (SDK 0.4.0: the file, list, button and notice setting fields, `IReleaseAwareAction`, `ISettingsCommandHandler`, the plugin icon field), A4 (OBS and PLCIcons manifests bumped to the new SDK) and Phase B (the plugin itself, since renamed from Sound to **SoundBoard**) all shipped; see the maintainer's version-unification notes (not published) for the SDK's move to the 1.0.0 baseline that followed. Kept here as a design reference for the setting field kinds and the plugin's audio engine.
 
 **Repositories:** `macro-grid` (phase A: SDK 0.4.0, host, editor) and `macro-grid-plugin` (phase A4: OBS and PLCIcons manifests; phase B: the Sound plugin). Phase A must ship first. `macro-grid-client` is not touched.
 

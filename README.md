@@ -96,12 +96,14 @@ Run the tests with `dotnet test`. More in [docs/guides/development.md](docs/guid
 
 Macro Grid is designed for a home or office network you trust, not for the internet.
 
-- Traffic is not encrypted. The server listens on all network interfaces on port 9820; do not forward the port, and allow it in the firewall only for
-  private networks.
+- The connection can be encrypted (the server makes its own certificate; the phone app pins its fingerprint from the pairing QR), but plain
+  `ws://`/`http://` also stays open, for the browser deck and older phone apps. The server listens on all network interfaces on ports 9820
+  (plain) and 9821 (TLS); do not forward either port, and allow them in the firewall only for private networks.
 - A device must be paired with the PIN, and tokens are stored in `%AppData%\MacroGrid\devices.json`, encrypted for your Windows account.
 - A paired device can press keys, type text and start programs on your PC. Pair only devices you trust.
 - The editor API is reachable only from the server's own computer.
-- C# plugins have full trust and can do anything the server can; install only ones you trust. JavaScript plugins are sandboxed.
+- Only official, signed C# plugins run (they have full trust); plugins by other authors are JavaScript and sandboxed.
+- The uninstaller can optionally delete all your data (`%AppData%\MacroGrid`); off by default.
 
 Details are in [docs/architecture.md](docs/architecture.md#security-model). To report a security problem, see [SECURITY.md](SECURITY.md).
 

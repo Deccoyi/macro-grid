@@ -8,14 +8,14 @@ Writing your own plugin, the manifest, the SDKs and tutorials are all on the **[
 
 ![The Plugins window with OBS and PLC Icons installed](/img/plugins.png)
 
-1. Get a plugin folder: unzip a release, or build it. A plugin folder contains `plugin.json`.
+1. Get a plugin folder: unzip a release. A plugin folder contains `plugin.json`. (An official C# plugin you built yourself is refused; only a development build of the server loads one.)
 2. In the editor open **Plugins → Manage Plugins…** and choose **Install from Folder…**.
 3. The plugin loads immediately. A JavaScript plugin first shows the permissions it wants (read variables, add actions, press keys, send web requests to a host) and only runs after you click **Allow and enable**.
 
 Use **Reload** after changing a plugin, the gear button for its **Settings**, and **Remove** to delete it. Plugins live in `%AppData%\MacroGrid\plugins\<id>\`.
 
 ::: danger Trust
-A **C# plugin** runs inside the server with full access, like the server itself. Install only C# plugins whose source you trust. **JavaScript plugins** are sandboxed and can only do what you approve.
+Only the **official C# plugins** run: a C# plugin has full access, like the server itself, so Macro Grid loads one only when it carries a valid official signature, checked every time it loads. Plugins by other authors are **JavaScript plugins**, which are sandboxed and can only do what you approve. Macro Grid does not review them: install only ones you trust.
 :::
 
 ## Official plugins

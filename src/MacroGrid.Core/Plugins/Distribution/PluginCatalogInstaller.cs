@@ -21,6 +21,10 @@ public sealed class PluginCatalogInstaller(
     public async Task<PluginInstallResult> InstallAsync(
         PluginCatalogEntry entry, PluginCatalogVersion version, string sourceUrl, bool isOfficial, CancellationToken cancellationToken)
     {
+        // Only the official source may ship C# code, and that is decided before anything is downloaded.
+        if (!isOfficial && string.Equals(entry.Kind, "csharp", StringComparison.OrdinalIgnoreCase))
+            throw new PluginDownloadException(PluginDownloadException.Refused, "Only official C# plugins can be installed.");
+
         var bytes = await downloader.DownloadAsync(version, requireOfficialSignature: isOfficial, cancellationToken);
 
         Directory.CreateDirectory(stagingRoot);
@@ -67,7 +71,7 @@ public sealed class PluginCatalogInstaller(
 
         Require(string.Equals(manifest.Id, entry.Id, StringComparison.Ordinal), "id");
         Require(string.Equals(manifest.Version, version.Version, StringComparison.Ordinal), "version");
-        Require(string.Equals(manifest.MacroGrid, version.MacroGrid, StringComparison.Ordinal), "macroGrid");
+        Require(string.Equals(PluginCompatibility.Declared(manifest.MinMacroGrid, manifest.MacroGrid), PluginCompatibility.Declared(version.MinMacroGrid, version.MacroGrid), StringComparison.Ordinal), "minMacroGrid");
         Require(string.Equals(manifest.SdkVersion, version.SdkVersion, StringComparison.Ordinal), "sdkVersion");
         Require(string.Equals(manifest.MinServerVersion, version.MinServerVersion, StringComparison.Ordinal), "minServerVersion");
         Require(string.Equals(manifest.Kind.ToString(), entry.Kind, StringComparison.OrdinalIgnoreCase), "kind");

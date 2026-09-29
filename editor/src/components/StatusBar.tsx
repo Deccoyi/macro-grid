@@ -3,6 +3,8 @@ import dynamicIconImports from "lucide-react/dynamicIconImports";
 import { Circle } from "lucide-react";
 import { api } from "../api/client";
 import type { StatusEntry, StatusLevel } from "../api/types";
+import { useT } from "../i18n/I18nContext";
+import { useStatusNotice } from "../state/statusNotice";
 
 const LEVEL_COLOR: Record<StatusLevel, string> = {
   Idle: "var(--ms-text-disabled)",
@@ -53,6 +55,8 @@ function StatusChip({ entry, onClick }: { entry: StatusEntry; onClick?: () => vo
  * with no registered IPluginSettingsPage just shows an empty window (see PluginSettingsWindow.tsx).
  */
 export function StatusBar({ items }: { items: StatusEntry[] }) {
+  const { t } = useT();
+  const notice = useStatusNotice();
   const core = items.filter((i) => i.pluginId === "core");
   const plugins = items.filter((i) => i.pluginId !== "core");
 
@@ -68,6 +72,11 @@ export function StatusBar({ items }: { items: StatusEntry[] }) {
           <StatusChip key={entry.id} entry={entry} onClick={entry.id === "update" ? () => api.openToolWindow("update") : undefined} />
         ))}
       </div>
+      {notice && (
+        <div style={{ fontSize: 11.5, color: "var(--ms-text-secondary)", padding: "0 8px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+          {t(notice.key, ...notice.args)}
+        </div>
+      )}
       <div style={{ flex: 1 }} />
       <div style={{ display: "flex", alignItems: "center" }}>
         {plugins.map((entry) => (

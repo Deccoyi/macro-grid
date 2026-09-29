@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Trash2 } from "lucide-react";
+import { RefreshCw, Trash2 } from "lucide-react";
 import type { AppMatch } from "@macro/renderer";
 import type { RunningWindowInfo } from "../api/types";
 import { api } from "../api/client";
@@ -11,11 +11,16 @@ import { SectionLabel } from "./fields/controls";
 export function AppMatchesEditor({ matches, onChange }: { matches: AppMatch[]; onChange: (matches: AppMatch[]) => void }) {
   const { t } = useT();
   const [running, setRunning] = useState<RunningWindowInfo[]>([]);
+  const [refreshing, setRefreshing] = useState(false);
   const [manualName, setManualName] = useState("");
 
-  useEffect(() => {
-    api.listRunningWindows().then(setRunning).catch(() => {});
-  }, []);
+  // Only scanned once on mount — a program opened afterwards doesn't appear until the person hits refresh.
+  const refresh = () => {
+    setRefreshing(true);
+    api.listRunningWindows().then(setRunning).catch(() => {}).finally(() => setRefreshing(false));
+  };
+
+  useEffect(refresh, []);
 
   const add = (processName: string) => {
     const trimmed = processName.trim();
@@ -53,6 +58,17 @@ export function AppMatchesEditor({ matches, onChange }: { matches: AppMatch[]; o
               <option key={w.processName} value={w.processName}>{w.processName} — {w.title}</option>
             ))}
         </select>
+        <button
+          type="button"
+          className="ghost"
+          title={t("profile.autoSwitch.refresh")}
+          aria-label={t("profile.autoSwitch.refresh")}
+          disabled={refreshing}
+          onClick={refresh}
+          style={{ display: "flex", padding: 4 }}
+        >
+          <RefreshCw size={13} className={refreshing ? "spin" : undefined} />
+        </button>
       </div>
       <div style={{ display: "flex", gap: 6, marginTop: 6 }}>
         <input

@@ -3,6 +3,31 @@
 New features and fixes in Macro Grid. For technical details, see [CHANGELOG-developer.md](CHANGELOG-developer.md).
 
 ## Unreleased
+### New
+- **The setup wizard now looks like Macro Grid:** the Macro Grid logo and colors on the welcome and finished pages, a small logo in the corner
+  of the other pages, and the Macro Grid icon on the setup and uninstall files.
+- **Undo, redo and the usual clipboard shortcuts in the editor:** Ctrl+Z/Ctrl+Y, Ctrl+X/C/V, Ctrl+D and Delete now work everywhere in
+  the editor, with an Edit menu, right-click menu entries and toolbar buttons for the same commands.
+- **A new Plugins panel:** installed plugins now have their own panel in the editor, next to Hierarchy. A plugin can list its own items there (for example a sound board's sounds), and selecting one shows its settings on the right, the same way a page or a profile does.
+- **A plugin's own settings window also supports Ctrl+Z/Ctrl+Y**, and a long list inside it (a sound board's sounds, for example) now
+  collapses each row to its name, with "Expand all"/"Collapse all" buttons, so it takes far less room.
+- **File menu gets a Save entry**, next to the existing Save button and its Ctrl+S shortcut.
+- **A plugin that asks for permissions shows them before it is installed,** not after, and starts right away once you agree.
+- **A store-like Discover tab:** search, filters, and plugin cards with a Get button. Clicking a card opens a page with its
+  description, author, version, homepage and what it asks for. The Plugins window is bigger to fit.
+- **A refresh button next to "Pick from running apps":** a program opened after the profile was selected now shows up.
+- **The web widget shows real pages:** put the link of a live chat or an alerts panel in a cell and the phone shows it. Pages cannot open
+  windows, download files or use the phone's camera or location, and a warning reminds you to use only sites you trust.
+- **A "Change web page" button action:** give a web widget a name, then a button can show another site in it, go back to the first one or reload it, on
+  the phone that pressed the button.
+- **Sites in an imported profile are listed first:** when a profile you import opens web pages, you see which sites and choose whether to keep them.
+- **Safer connections:** the editor's address and the phone connection now refuse requests that come from a web page pretending to be this computer.
+### Changed
+- **Only official plugins may use C#:** a C# plugin runs only when it is officially signed, and this is checked every time it loads. Plugins from other authors must be JavaScript. A C# plugin that is not allowed stays in the list with the reason and can be removed.
+- **Plugins that type on your PC are limited to button presses:** a plugin you allowed to press keys can do so only while you press one of its buttons, and only a little (at most 200 characters and 10 key combinations per press). It cannot type into a terminal, a system tool or Macro Grid itself, cannot use the Windows key, and is switched off if it tries to type a harmful command. The Plugins window shows how often it used the keyboard today.
+
+### Fixed
+- **Auto-switch settings surviving a re-pair:** If a device had to pair again (a lost token, or one that could not be decrypted after 1.2.0's encrypted pairings), "Follow active window" and its assigned profile were silently turned back off. They now carry over.
 
 ## 1.2.1 - 2026-09-28
 ### Fixed

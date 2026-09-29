@@ -14,7 +14,7 @@ public static class PluginSigning
 {
     /// <summary>SubjectPublicKeyInfo (DER), base64. Public by design; only the matching private key (a GitHub Actions
     /// secret in the plugins repository) can produce a signature this verifies.</summary>
-    private const string PublicKeyBase64 =
+    internal const string PublicKeyBase64 =
         "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEeRPznqxspydIc9Iq5a56OywKWDzxY9ILuCeWBBAcfFJHM2LWIeKXvRxwVyTPHA/zayTob/+TMxn7DWVGD5tyXw==";
 
     /// <summary>True when <paramref name="signatureBase64"/> is a valid ECDSA P-256/SHA-256 signature (IEEE P1363,

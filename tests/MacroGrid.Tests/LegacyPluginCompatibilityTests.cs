@@ -45,7 +45,7 @@ public sealed class LegacyPluginCompatibilityTests : IAsyncLifetime
         await _providerHost.StartAsync(CancellationToken.None);
         _manager = new PluginManager(Path.Combine(_root, "plugins"), PluginSdk.Version, new PluginStatusRegistry(),
             new ActionDispatcher([], NullLogger<ActionDispatcher>.Instance), new VariableCatalog([]), _providerHost,
-            new VariableStore(), new PluginPermissionStore(_root), null, NullLogger<PluginManager>.Instance);
+            new VariableStore(), new PluginPermissionStore(_root), null, NullLogger<PluginManager>.Instance, trustVerifier: TestPluginSigning.Lenient);
     }
 
     public async Task DisposeAsync()
@@ -64,5 +64,17 @@ public sealed class LegacyPluginCompatibilityTests : IAsyncLifetime
 
         var plugin = Assert.Single(_manager.Plugins);
         Assert.Equal(PluginLoadStatus.Loaded, plugin.Status);
+    }
+
+    /// <summary>The optional tree items (IPluginTreeProvider) are opt-in: a plugin that predates them gets no
+    /// chevron in the Plugins tool window, no provider, and no change-log entry.</summary>
+    [Fact]
+    public async Task A_plugin_without_a_tree_provider_has_no_tree_items()
+    {
+        await _manager.StartAsync(CancellationToken.None);
+
+        Assert.False(Assert.Single(_manager.Plugins).HasTreeItems);
+        Assert.Null(_manager.GetTreeProvider("legacy"));
+        Assert.Equal(0, _manager.TreeChanges.Revision);
     }
 }

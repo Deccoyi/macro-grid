@@ -74,7 +74,7 @@ Not tested yet against a running server or a real release (they need windows and
 
 ## Later
 
-- Phone app: done, see [phone-app-auto-update.md](phone-app-auto-update.md).
+- Phone app: done (the design note is kept by the maintainer, not published).
 - Plugins: update checks for installed plugins belong to [plugin-distribution.md](plugin-distribution.md), which shares the HTTP rules (HTTPS only, host allow-list, timeouts, size caps) but not this schedule.
 - Download in the background before asking, so "Install now" is instant.
 - Code signing, which would let the installer's publisher be checked as well.

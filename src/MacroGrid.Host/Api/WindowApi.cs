@@ -12,8 +12,10 @@ internal static class WindowApi
         api.MapPost("/windows/preferences", (IUiWindowService windows) =>
             ShowAsync(windows, "preferences", "Preferences", "preferences", 640, 520));
 
+        // Wider than the other tool windows: Discover shows a card grid plus a detail view, closer to a
+        // store page (docs/roadmap.md, "A richer Discover tab").
         api.MapPost("/windows/plugins", (IUiWindowService windows) =>
-            ShowAsync(windows, "plugins", "Plugins", "plugins", 640, 520));
+            ShowAsync(windows, "plugins", "Plugins", "plugins", 900, 640));
 
         api.MapPost("/windows/plugin-settings/{id}", async (string id, IUiWindowService windows, PluginManager plugins, PluginLocalizer localizer) =>
         {

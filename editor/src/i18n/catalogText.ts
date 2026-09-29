@@ -15,6 +15,7 @@ const TR: Record<string, string> = {
   "category:Audio": "Ses",
   "category:Keyboard": "Klavye",
   "category:Page & Profile": "Sayfa & Profil",
+  "category:Widgets": "Widget'lar",
   "category:Other": "Diğer",
   "category:Plugins": "Eklentiler",
 
@@ -33,6 +34,8 @@ const TR: Record<string, string> = {
   "actionDesc:core.page": "Cihazın gösterdiği sayfayı değiştirir",
   "action:core.profile": "Profil değiştir",
   "actionDesc:core.profile": "Cihazın profilini değiştirir",
+  "action:core.web": "Web sayfasını değiştir",
+  "actionDesc:core.web": "Bir web widget'ında başka bir adres gösterir veya sayfayı yeniden yükler (yalnızca butona basan telefonda)",
   "action:core.open": "Uygulama aç",
   "actionDesc:core.open": "Bir uygulama veya dosya açar",
   "action:core.openUrl": "URL aç",

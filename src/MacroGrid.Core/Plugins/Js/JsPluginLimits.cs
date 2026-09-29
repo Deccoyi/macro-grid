@@ -10,9 +10,11 @@ public sealed record JsPluginLimits(
     int MaxStatements,
     int MaxRecursion,
     int MaxTimers,
+    int MaxPendingHttp,
     TimeSpan HttpTimeout,
     int MaxHttpResponseBytes,
-    int MaxConsecutiveErrors)
+    int MaxConsecutiveErrors,
+    TimeSpan PressWindow)
 {
     public static JsPluginLimits Default { get; } = new(
         CallTimeout: TimeSpan.FromSeconds(2),
@@ -20,7 +22,11 @@ public sealed record JsPluginLimits(
         MaxStatements: 2_000_000,
         MaxRecursion: 100,
         MaxTimers: 20,
+        MaxPendingHttp: 4,
         HttpTimeout: TimeSpan.FromSeconds(5),
         MaxHttpResponseBytes: 1024 * 1024,
-        MaxConsecutiveErrors: 5);
+        MaxConsecutiveErrors: 5,
+        // How long keyboard input stays allowed after a button press: long enough for an action that waits for one web
+        // request before it types, short enough that a press cannot be reused for input later.
+        PressWindow: TimeSpan.FromSeconds(5));
 }

@@ -15,6 +15,12 @@ public sealed partial class PluginManager
         if (running is null) return;
         var id = entry.Info.Id;
 
+        if (running.TreeChangedHandler is { } treeHandler && running.Instance is IPluginTreeProvider treeProvider)
+        {
+            treeProvider.TreeItemsChanged -= treeHandler;
+            TreeChanges.Record(id, null, wholePlugin: true);
+        }
+
         foreach (var action in running.Host.Actions) dispatcher.Unregister(action);
         foreach (var source in running.Host.VariableProviders.OfType<IVariableCatalogSource>()) catalog.Remove(source);
 
@@ -25,6 +31,7 @@ public sealed partial class PluginManager
         statusRegistry.RemovePlugin(id);
         localizer?.Unregister(id);
         entry.Running = null;
+        RefreshUnsignedNotice();
 
         if (running.Context is { } context)
         {

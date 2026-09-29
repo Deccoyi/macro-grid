@@ -10,6 +10,8 @@ export interface ContextMenuItem {
   /** Renders a checkmark before the label (and icon, if any) — for a toggleable item like a View menu
    * entry. Leave undefined for a plain action item with no check column. */
   checked?: boolean;
+  /** Shown right-aligned, dimmed — a command's first shortcut ("Ctrl+Z"), see commandItem(). */
+  shortcut?: string;
   /** Omitted for a submenu-only row (opens `submenu` on hover, selects nothing itself). */
   onSelect?: () => void;
   /** A nested flyout, opened by hovering this row — e.g. View > Layouts > a saved layout list. */
@@ -126,6 +128,9 @@ function MenuLevel({ x, y, items, onSelect }: { x: number; y: number; items: Con
             <span style={{ flex: 1, minWidth: 0, textAlign: "left", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
               {item.label}
             </span>
+            {item.shortcut && (
+              <span style={{ flex: "0 0 auto", opacity: 0.55, fontSize: 11, marginLeft: 8 }}>{item.shortcut}</span>
+            )}
             {hasSubmenu && <ChevronRight size={12} strokeWidth={2} style={{ flex: "0 0 auto", opacity: 0.7 }} />}
           </button>
         );

@@ -69,7 +69,7 @@ export interface ProfileSummary {
   name: string;
 }
 
-/** One node of the root profile tree — docs/plans/hierarchy-tree-and-folders-plan.md, mirrors
+/** One node of the root profile tree — docs/design/hierarchy-tree-and-folders.md, mirrors
  * MacroGrid.Core.Profiles.ProfileTreeNode. Same shape convention as the renderer's PageTreeNode: a "type"
  * discriminator instead of subtypes, a "profile" node only ever setting `id`. */
 export interface ProfileTreeNode {
@@ -103,7 +103,7 @@ export interface PluginInfo {
   id: string;
   name: string;
   version: string;
-  status: "Loaded" | "Incompatible" | "Error" | "NeedsApproval";
+  status: "Loaded" | "Incompatible" | "Error" | "NeedsApproval" | "NotAllowed";
   detail: string | null;
   hasSettings: boolean;
   /** For "NeedsApproval": the permissions a JS plugin declares and is waiting to be allowed. */
@@ -115,6 +115,49 @@ export interface PluginInfo {
    * older server (treat as "Local"). Only GET /api/plugins sends this; approve/reload's single-plugin response
    * does not, since the caller already has it from the list. */
   trust?: "Official" | "ThirdParty" | "Local";
+  /** True when the running plugin implements the optional `IPluginTreeProvider` — only then does the Plugins
+   * tool window give it a chevron and ask GET /api/plugins/{id}/tree-items for anything. Missing from an
+   * older server (treat as false). See docs/design/plugins-tool-window.md. */
+  hasTreeItems?: boolean;
+  /** True only in a development build, for a C# plugin that loaded without a valid signature. */
+  unsigned?: boolean;
+  /** How many button presses used the keyboard through this JavaScript plugin today. Missing from an older server. */
+  keyboardUsesToday?: number;
+}
+
+/** Mirrors MacroGrid.Plugin.Abstractions.PluginTreeItem — one node of a plugin's own tree in the Plugins tool
+ * window (docs/design/plugins-tool-window.md). `icon` is a lucide-react name (the same names a status item
+ * uses); an unknown or missing name falls back to a plain dot. */
+export interface PluginTreeItem {
+  id: string;
+  label: string;
+  icon?: string | null;
+  hasChildren?: boolean;
+  tooltip?: string | null;
+  hasSettings?: boolean;
+}
+
+/** GET /api/plugins/{id}/tree-items — one page of a tree level. */
+export interface PluginTreeItemsResult {
+  items: PluginTreeItem[];
+  continuationToken?: string | null;
+}
+
+/** One entry of GET /api/plugins/tree-changes — mirrors MacroGrid.Core.Plugins.PluginTreeChange. `parentId`
+ * null means the plugin's top level; `wholePlugin` means the plugin itself was loaded, reloaded or removed. */
+export interface PluginTreeChange {
+  revision: number;
+  pluginId: string;
+  parentId?: string | null;
+  wholePlugin: boolean;
+}
+
+/** GET /api/plugins/tree-changes?since=N — mirrors MacroGrid.Core.Plugins.PluginTreeChanges. `reset` means
+ * `since` is older than what the server still remembers: the editor must drop its whole tree-item cache. */
+export interface PluginTreeChanges {
+  revision: number;
+  changes: PluginTreeChange[];
+  reset: boolean;
 }
 
 /** One icon pack contributed by a plugin via IPluginHost.RegisterIconPack — e.g. the PLC icon set.
@@ -133,6 +176,18 @@ export interface PluginInstallResult {
   /** How the plugin came up right after being copied in: "Loaded" means it is already live. */
   status?: PluginInfo["status"];
   detail?: string | null;
+}
+
+/** POST /api/plugins/install/browse — the folder is only read, not installed yet, so the editor can warn
+ * about a native (C#) plugin's full trust (see docs/plans/security-hardening-plan.md, part D) before the
+ * person confirms with POST /api/plugins/install/confirm. */
+export interface PluginInstallBrowseResult {
+  canceled: boolean;
+  path?: string;
+  id?: string;
+  name?: string;
+  kind?: string;
+  permissions?: string[];
 }
 
 export interface PluginUninstallResult {
@@ -210,7 +265,9 @@ export interface PluginLinkInspectResult {
   homepage?: string | null;
   kind?: string;
   version?: string;
-  /** The oldest Macro Grid the plugin runs on. Older plugins list sdkVersion and minServerVersion instead. */
+  /** The oldest Macro Grid the plugin runs on. Older plugins list it as macroGrid, or list sdkVersion and minServerVersion instead. */
+  minMacroGrid?: string | null;
+  /** Legacy: the earlier name of minMacroGrid, read only when minMacroGrid is absent. */
   macroGrid?: string | null;
   sdkVersion?: string | null;
   minServerVersion?: string | null;

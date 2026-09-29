@@ -6,16 +6,16 @@ How a release is made (tags, order, signing) is in [release.md](release.md).
 
 ## The rule
 
-> A plugin declares `"macroGrid": "1.3.0"` ⇒ it runs on every Macro Grid from **1.3.0 up to, but not including, 2.0.0**.
+> A plugin declares `"minMacroGrid": "1.3.0"` ⇒ it runs on every Macro Grid from **1.3.0 up to, but not including, 2.0.0**.
 
-**`macroGrid` is a minimum, not an exact match.** A plugin that declares `"macroGrid": "1.2.1"` does **not** run on Macro Grid `1.1.1`
+**`minMacroGrid` is a minimum, not an exact match.** A plugin that declares `"minMacroGrid": "1.2.1"` does **not** run on Macro Grid `1.1.1`
 (older than what it asks for) — only on `1.2.1` and every later version of the same MAJOR. Server older than the declared value ⇒
 incompatible ("Needs Macro Grid editor 1.2.1 or newer"); server on another MAJOR ⇒ incompatible ("must be rebuilt"); anything in between runs.
 
-**The server and the plugin SDK are one thing and carry one number.** Macro Grid 1.3.0 is server 1.3.0 and SDK 1.3.0 (the NuGet package
-`MacroGrid.Plugin.Abstractions` 1.3.0). There is no separate SDK number to keep in step, and a plugin needs no second range.
+**The server and the plugin SDK are one thing and carry one number.** Macro Grid 1.3.0 is server 1.3.0 and SDK 1.3.0 (the `MacroGrid.Plugin.Abstractions`
+source in this repository at that version; the NuGet package stopped at 1.2.0). There is no separate SDK number to keep in step, and a plugin needs no second range.
 
-**Say which version you mean.** In anything a user or plugin author reads, name what the number belongs to: "Macro Grid editor 1.3.0" (the number a plugin's `macroGrid` asks for; the editor and the server that runs on the PC share it, so do not write "server" there), "SDK 1.3.0" (the NuGet package a plugin is built against) and "plugin 0.3.0" (the plugin's own `version`). Never a bare "version 1.3.0".
+**Say which version you mean.** In anything a user or plugin author reads, name what the number belongs to: "Macro Grid editor 1.3.0" (the number a plugin's `minMacroGrid` asks for; the editor and the server that runs on the PC share it, so do not write "server" there), "SDK 1.3.0" (the SDK an official plugin is built against) and "plugin 0.3.0" (the plugin's own `version`). Never a bare "version 1.3.0".
 
 ## What is versioned, and where
 
@@ -55,14 +55,14 @@ Every plugin declares in `plugin.json` the oldest Macro Grid it runs on:
   "id": "obs",
   "name": "OBS Control",
   "version": "0.3.0",
-  "macroGrid": "1.0.0",
+  "minMacroGrid": "1.0.0",
   "entry": "MacroGrid.Plugin.Obs.dll",
   "kind": "csharp"
 }
 ```
 
-- `macroGrid` is `MAJOR.MINOR.PATCH`. A two-part value (`"1.0"`) or a range (`"^1.0.0"`) is refused.
-- A C# plugin is built against the SDK package, so `macroGrid` must be the SDK version it uses or older, in the same MAJOR (the plugin repository's
+- `minMacroGrid` is `MAJOR.MINOR.PATCH`. A two-part value (`"1.0"`) or a range (`"^1.0.0"`) is refused.
+- Only official plugins are C# (the server loads no other C# plugin, see `../architecture.md`), and they are built against the SDK package, so their `minMacroGrid` must be the SDK version they use or older, in the same MAJOR (the plugin repository's
   build checks this). Raise it only when the plugin starts to use something added in a newer MINOR; otherwise it keeps running on more servers.
 - A plugin that does not fit is listed as incompatible in the editor, with the reason ("Needs Macro Grid editor 1.3.0 or newer, this is 1.2.4", or
   "must be rebuilt" for a different MAJOR), and is not loaded. Discover and the source index use the same rule and only offer a version that fits.
@@ -74,26 +74,32 @@ Every plugin declares in `plugin.json` the oldest Macro Grid it runs on:
 
 ### Older manifests
 
-Before 1.0.0 a manifest carried `sdkVersion` (a caret range) and `minServerVersion` instead of `macroGrid`. They are still read, only when
-`macroGrid` is absent:
+Up to Macro Grid 1.2.x the field was called `macroGrid`; it was renamed because the old name did not say "minimum". `macroGrid` has the same
+meaning and format and is still read, only when `minMacroGrid` is absent (`minMacroGrid` wins when a manifest has both). It stays readable for at
+least one MAJOR after the rename. Macro Grid up to 1.2.x reads only `macroGrid` and refuses a manifest that has only `minMacroGrid`, so a
+plugin that must still run on those versions writes `macroGrid` next to `minMacroGrid`, with the same value.
 
-- `sdkVersion` `^0.4.x` counts as `macroGrid: 1.0.0`. SDK 1.0.0 changed nothing a 0.4 plugin uses, and the loader hands a plugin the server's own
+Before 1.0.0 a manifest carried `sdkVersion` (a caret range) and `minServerVersion` instead. They are still read, only when neither
+`minMacroGrid` nor `macroGrid` is present:
+
+- `sdkVersion` `^0.4.x` counts as `minMacroGrid: 1.0.0`. SDK 1.0.0 changed nothing a 0.4 plugin uses, and the loader hands a plugin the server's own
   copy of the SDK assembly whatever version it was built against, so a plugin built for 0.4.0 runs on 1.x without a re-release.
   `minServerVersion` is ignored.
 - Any other `sdkVersion` (`^0.3.0` and older) is incompatible with "must be rebuilt for Macro Grid editor 1.0.0".
-- A new plugin should write only `macroGrid`. A plugin that also has to run on servers older than 1.0.0 may keep the two old fields next to it.
+- A new plugin should write only `minMacroGrid`. A plugin that also has to run on servers older than 1.0.0 may keep the two old fields next to it.
 
 ## The connection between server and phone app
 
 The phone app and the browser deck talk to the server over a WebSocket (port 9820) with JSON messages. Compatibility works like this:
 
-- `hello` and `welcome` carry `clientVersion` and `serverVersion`. They are informational; nothing checks them yet.
+- `hello` and `welcome` carry `clientVersion` and `serverVersion`.
 - Optional features are negotiated. A client lists what it understands in `hello.capabilities` (`assets`, `layout.patch`, see
   `ClientCapabilities.cs`), and the server sends the older, plain form to a client that lists nothing. This is how a newer server keeps
   working with an older phone app and the browser deck. New optional features should be added the same way.
 - There is no `protocolVersion` number. Changing the meaning of an existing message or field is a breaking change (see above).
-- The phone app keeps its own number. Which Macro Grid it needs is meant to be recorded in its `package.json` (`macroGrid`) and checked when
-  `welcome` arrives; this is planned in [../plans/version-unification-plan.md](../plans/version-unification-plan.md).
+- The phone app keeps its own number. Which Macro Grid it needs is recorded in its `package.json` (`macroGrid`, `macro-grid-client`)
+  and checked when `welcome` arrives (`src/ws/connection.ts`): an older server than required shows "update the computer", a
+  different MAJOR shows "update the app".
 
 ## Releasing
 

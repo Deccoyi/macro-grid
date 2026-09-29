@@ -46,13 +46,18 @@ public sealed record AutoSwitchInfo(bool Enabled, bool Locked);
 /// <summary>Every profile on the server, sent on hello so a client can offer a profile-switcher (drawer) —
 /// not just the one it's currently assigned to.</summary>
 public sealed record ProfilesListPayload(List<ProfileSummary> Profiles, AutoSwitchInfo? AutoSwitch = null);
-/// <summary><paramref name="Style"/> is property name ("background"/"foreground"/"borderColor") to resolved CSS value, from dynamized properties.</summary>
+/// <summary><paramref name="Style"/> is property name ("background"/"foreground"/"borderColor") to resolved CSS value, from dynamized properties.
+/// <paramref name="Url"/> is for a <c>web</c> widget only: the address this device shows instead of the profile's (set by a button), or an empty string
+/// to go back to the profile's. <paramref name="Reload"/> is a counter for a <c>web</c> widget; a higher number than before means "load the page again".
+/// A client that does not know these two fields ignores them.</summary>
 public sealed record WidgetStateMessage(
     string WidgetId,
     string? Text = null,
     double? Value = null,
     bool? Active = null,
-    Dictionary<string, string>? Style = null);
+    Dictionary<string, string>? Style = null,
+    string? Url = null,
+    int? Reload = null);
 /// <summary><paramref name="RetryAfterSeconds"/> is set only for <c>pairing_required</c> when the address is
 /// blocked after too many wrong PINs — a machine-readable seconds-to-wait a client can count down with, kept
 /// separate from <paramref name="Message"/> so the prose text can change (wording, translation) without

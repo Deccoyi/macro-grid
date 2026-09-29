@@ -6,7 +6,7 @@ import { useT } from "../i18n/I18nContext";
 const COLUMNS = "90px 70px 1fr 160px 110px";
 type Filter = "all" | DiagnosticSeverity;
 
-/** The Error List tool window — docs/plans/docking-workspace-plan.md ("Error List"). A table, filter row
+/** The Error List tool window — docs/design/docking-workspace.md ("Error List"). A table, filter row
  * and severity counts over real (currently always empty) DiagnosticsContext data; no producer reports
  * anything yet, so this only ever shows real zero counts and the empty state, never invented rows.
  * Double-click-to-navigate is not built yet: it needs the document area's multi-tab open-page list
