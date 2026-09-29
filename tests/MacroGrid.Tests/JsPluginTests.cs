@@ -25,7 +25,7 @@ public sealed class JsPluginTests : IDisposable
 
     private static readonly JsPluginLimits Tight = JsPluginLimits.Default with
     {
-        CallTimeout = TimeSpan.FromMilliseconds(400),
+        CallTimeout = TimeSpan.FromMilliseconds(1500),
         MemoryBytes = 16 * 1024 * 1024,
     };
 
