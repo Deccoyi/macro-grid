@@ -68,7 +68,7 @@ internal static class PluginApi
                 var manifest = PluginManager.PeekManifest(sourceDir);
                 return ApiResults.Json(new {
                     canceled = false, path = sourceDir, id = manifest.Id, name = manifest.Name,
-                    kind = manifest.Kind.ToString(), permissions = manifest.Permissions ?? [],
+                    kind = manifest.Kind.ToString().ToLowerInvariant(), permissions = manifest.Permissions ?? [],
                 });
             }
             catch (Exception ex) when (ex is JsonException or InvalidOperationException)
