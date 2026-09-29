@@ -54,7 +54,7 @@ internal static class PluginApi
         // ask for consent before the second call actually installs it: a native (C#) plugin has no
         // permission gate at all, so only an official, signed one is accepted (anything else is refused here
         // and again at install), while a JS plugin's declared permissions are shown and confirmed here rather than after install.
-        api.MapPost("/plugins/install/browse", async (IUiDialogService dialogs, PluginManager plugins) =>
+        api.MapPost("/plugins/install/browse", async (IUiDialogService dialogs, PluginManager plugins, PluginInstallSelection selection) =>
         {
             var sourceDir = await dialogs.BrowseForFolderAsync("Choose the plugin folder (must contain plugin.json)");
             if (sourceDir is null) return Results.Json(new { canceled = true });
@@ -67,6 +67,7 @@ internal static class PluginApi
                 var manifest = PluginManager.PeekManifest(sourceDir);
                 if (plugins.CheckInstallTrust(sourceDir, manifest) is { } refusal)
                     return ApiResults.BadRequest(refusal);
+                selection.Set(sourceDir);
                 return ApiResults.Json(new {
                     canceled = false, path = sourceDir, id = manifest.Id, name = manifest.Name,
                     kind = manifest.Kind.ToString().ToLowerInvariant(), permissions = manifest.Permissions ?? [],
@@ -78,11 +79,14 @@ internal static class PluginApi
             }
         });
 
-        api.MapPost("/plugins/install/confirm", async (PluginInstallConfirmRequest body, PluginManager plugins) =>
+        api.MapPost("/plugins/install/confirm", async (PluginInstallConfirmRequest body, PluginManager plugins, PluginInstallSelection selection) =>
         {
+            // Only the folder the person picked in the dialog can be installed, never a path the request names.
+            if (selection.Take(body.Path) is not { } folder)
+                return ApiResults.BadRequest("Choose the plugin folder again before installing.");
             try
             {
-                var result = await plugins.InstallFromFolderAsync(body.Path);
+                var result = await plugins.InstallFromFolderAsync(folder);
                 return ApiResults.Json(new { installed = true, id = result.Id, name = result.Name, status = result.Plugin.Status, detail = result.Plugin.Detail });
             }
             catch (Exception ex) when (ex is JsonException or NotSupportedException or InvalidOperationException or IOException or UnauthorizedAccessException)

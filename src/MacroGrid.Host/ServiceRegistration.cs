@@ -103,6 +103,7 @@ internal static class ServiceRegistration
             sp.GetRequiredService<PluginLocalizer>(), sp.GetRequiredService<ISecretProtector>(),
             windowSource: sp.GetRequiredService<IActiveWindowSource>()));
         services.AddHostedService(sp => sp.GetRequiredService<PluginManager>());
+        services.AddSingleton<PluginInstallSelection>();
         return services;
     }
 
