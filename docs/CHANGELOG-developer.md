@@ -3,6 +3,8 @@
 This file follows the [Keep a Changelog](https://keepachangelog.com/) format. For versioning rules, see [versioning.md](guides/versioning.md). The short, public changelog is [CHANGELOG.md](CHANGELOG.md).
 
 ## [Unreleased]
+
+## [1.3.0] - 2026-09-29
 ### Added
 - **Async HTTP for JavaScript plugins (additive):** `host.http.getAsync(url, options)` and `host.http.postAsync(url, body, options)`
   return a promise for `{ status, body }`, so an `async` action can `await` a request without blocking the plugin's thread (the

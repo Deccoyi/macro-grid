@@ -3,6 +3,8 @@
 New features and fixes in Macro Grid. For technical details, see [CHANGELOG-developer.md](CHANGELOG-developer.md).
 
 ## Unreleased
+
+## 1.3.0 - 2026-09-29
 ### New
 - **The setup wizard now looks like Macro Grid:** the Macro Grid logo and colors on the welcome and finished pages, a small logo in the corner
   of the other pages, and the Macro Grid icon on the setup and uninstall files.
