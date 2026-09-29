@@ -3,6 +3,8 @@
 New features and fixes in Macro Grid. For technical details, see [CHANGELOG-developer.md](CHANGELOG-developer.md).
 
 ## Unreleased
+
+## 1.3.1 - 2026-09-29
 ### New
 - **Plugin updates are shown:** when installed plugins have an update, the status bar says how many need one and the Plugins menu shows a dot. Click the status bar entry to open the Plugins window.
 

@@ -3,6 +3,8 @@
 This file follows the [Keep a Changelog](https://keepachangelog.com/) format. For versioning rules, see [versioning.md](guides/versioning.md). The short, public changelog is [CHANGELOG.md](CHANGELOG.md).
 
 ## [Unreleased]
+
+## [1.3.1] - 2026-09-29
 ### Added
 - **`GET /api/problems`, `POST /api/problems/clear[?source=]`:** the server's `ProblemList` (in memory, at most 200 entries, the same source, code and message is one entry with a `count`). Producers: a refused `host.input.*` call (`P100`), blocked text (`P101`), a C# plugin that is not allowed (`P110`), a plugin that failed to load (`P120`), is incompatible (`P121`) or was switched off (`P122`), and a failed plugin call (`P130`). No text a plugin typed is ever stored. `PluginManager` and `JsPlugin` take an optional `ProblemList`.
 
