@@ -44,14 +44,16 @@ export function DialogHost() {
     <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.5)", zIndex: 80, display: "flex", alignItems: "center", justifyContent: "center" }} {...backdrop}>
       <div
         onClick={(e) => e.stopPropagation()}
-        style={{ width: request.kind === "choice" ? 380 : 320, background: "var(--ms-bg-surface)", border: "1px solid var(--ms-border-strong)", borderRadius: 6 }}
+        style={{ width: request.kind === "confirm" && request.content ? 440 : request.kind === "choice" ? 380 : 320, maxWidth: "calc(100vw - 32px)", maxHeight: "calc(100vh - 32px)", overflowY: "auto", background: "var(--ms-bg-surface)", border: "1px solid var(--ms-border-strong)", borderRadius: 6 }}
       >
         <div style={{ padding: "16px 18px 4px", fontSize: 14, fontWeight: 600 }}>
           {request.title ??
             (request.kind === "confirm" ? t("dialog.confirmTitle") : request.kind === "prompt" ? t("dialog.promptTitle") : t("dialog.alertTitle"))}
         </div>
         <div style={{ padding: "8px 18px 18px", display: "flex", flexDirection: "column", gap: 10 }}>
-          <p style={{ margin: 0, fontSize: 12.5, color: "var(--ms-text-secondary)" }}>{request.message}</p>
+          {request.kind === "confirm" && request.content
+            ? request.content
+            : <p style={{ margin: 0, fontSize: 12.5, color: "var(--ms-text-secondary)" }}>{request.message}</p>}
           {request.kind === "prompt" && (
             <input
               type="text"
@@ -79,7 +81,7 @@ export function DialogHost() {
             ))
           ) : (
             <button className={request.kind === "confirm" && request.danger ? "primary danger" : "primary"} onClick={accept}>
-              {request.kind === "confirm" ? t("dialog.confirm") : t("dialog.ok")}
+              {request.kind === "confirm" ? (request.confirmLabel ?? t("dialog.confirm")) : t("dialog.ok")}
             </button>
           )}
         </div>

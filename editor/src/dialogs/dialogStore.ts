@@ -1,8 +1,13 @@
+import type { ReactNode } from "react";
+
 interface ConfirmRequest {
   kind: "confirm";
   message: string;
   title?: string;
   danger?: boolean;
+  /** Rich body shown instead of `message` (see confirmRichAsync). */
+  content?: ReactNode;
+  confirmLabel?: string;
   resolve: (value: boolean) => void;
 }
 
@@ -76,5 +81,13 @@ export function alertAsync(message: string, opts?: { title?: string }): Promise<
 export function choiceAsync(message: string, options: ChoiceOption[], opts?: { title?: string }): Promise<string | null> {
   return new Promise((resolve) => {
     listener?.({ kind: "choice", message, title: opts?.title, options, resolve });
+  });
+}
+
+/** A confirm modal with a formatted body (icons, lists, callouts) and its own confirm button text, for the
+ * cases where a plain sentence is not enough — e.g. what a plugin is about to be allowed to do. */
+export function confirmRichAsync(opts: { title: string; content: ReactNode; confirmLabel?: string; danger?: boolean }): Promise<boolean> {
+  return new Promise((resolve) => {
+    listener?.({ kind: "confirm", message: "", title: opts.title, content: opts.content, confirmLabel: opts.confirmLabel, danger: opts.danger, resolve });
   });
 }

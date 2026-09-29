@@ -3,12 +3,13 @@ import { ArrowLeft, ExternalLink, FolderOpen, Link as LinkIcon, Plus, RefreshCw,
 import { api } from "../api/client";
 import type { PluginCatalogEntryInfo, PluginInfo, PluginLinkInspectResult, PluginSourceInfo } from "../api/types";
 import { DialogHost } from "../dialogs/DialogHost";
-import { confirmAsync, promptAsync } from "../dialogs/dialogStore";
+import { confirmAsync, confirmRichAsync, promptAsync } from "../dialogs/dialogStore";
 import { useT } from "../i18n/I18nContext";
 import { useDocumentTitle } from "../i18n/useDocumentTitle";
 import { SectionLabel } from "../panels/fields/controls";
 import { ToolWindowLayout } from "./ToolWindowLayout";
 import { httpTargetScope } from "./httpTarget";
+import { InstallConsent } from "./InstallConsent";
 
 type Category = "installed" | "discover";
 
@@ -203,13 +204,11 @@ export function PluginsWindow() {
       return;
     }
 
-    const risk = inspected.kind === "js" && (inspected.permissions?.length ?? 0) > 0
-      ? t("plugins.discover.thirdParty.permissions", inspected.permissions!.map(permissionText).join(", "))
-      : t("plugins.discover.thirdParty.fullAccess");
-    const repoLabel = `${inspected.owner}/${inspected.repo}`;
-    const proceed = await confirmAsync(`${t("plugins.discover.thirdParty.warning", repoLabel)} ${risk}`.trim(), {
+    const proceed = await confirmRichAsync({
       title: t("plugins.discover.thirdParty.title"),
-      danger: true,
+      content: <InstallConsent name={inspected.name ?? inspected.id ?? ""} kind={inspected.kind} permissions={inspected.permissions} sourceLabel={`${inspected.owner}/${inspected.repo}`} />,
+      confirmLabel: inspected.kind === "js" ? t("consent.allowInstall") : t("consent.installAnyway"),
+      danger: inspected.kind !== "js",
     });
     if (!proceed) return;
 
@@ -257,21 +256,19 @@ export function PluginsWindow() {
   const installFromCatalog = async (entry: PluginCatalogEntryInfo, official: boolean, sourceLabel: string) => {
     if (!entry.installableVersion) return;
 
-    if (!official) {
-      const risk = entry.kind === "js" && entry.permissions.length > 0
-        ? t("plugins.discover.thirdParty.permissions", entry.permissions.map(permissionText).join(", "))
-        : t("plugins.discover.thirdParty.fullAccess");
-      const proceed = await confirmAsync(`${t("plugins.discover.thirdParty.warning", sourceLabel)} ${risk}`.trim(), {
-        title: t("plugins.discover.thirdParty.title"),
-        danger: true,
-      });
-      if (!proceed) return;
-    } else if (entry.kind === "js" && entry.permissions.length > 0) {
-      // Official, but still asks to declared permissions before install rather than after (see approveIfNeeded).
-      const proceed = await confirmAsync(t("plugins.discover.thirdParty.permissions", entry.permissions.map(permissionText).join(", ")), {
-        title: t("plugins.install.jsPermissions.title"),
-      });
-      if (!proceed) return;
+    const hasPermissions = entry.kind === "js" && entry.permissions.length > 0;
+    if (!official || hasPermissions || entry.kind !== "js") {
+      // Official plugins skip the warning for a native plugin (they are ours) but a JS plugin's permissions
+      // are still confirmed before install, not after.
+      if (!official || hasPermissions) {
+        const proceed = await confirmRichAsync({
+          title: official ? t("plugins.install.jsPermissions.title") : t("plugins.discover.thirdParty.title"),
+          content: <InstallConsent name={entry.name} kind={entry.kind} permissions={entry.permissions} sourceLabel={official ? undefined : sourceLabel} />,
+          confirmLabel: entry.kind === "js" ? t("consent.allowInstall") : t("consent.installAnyway"),
+          danger: entry.kind !== "js",
+        });
+        if (!proceed) return;
+      }
     }
 
     setInstallingCatalogId(entry.id);
@@ -358,15 +355,20 @@ export function PluginsWindow() {
       // A native (C#) plugin has no permission gate at all — it runs with full trust in-process, and
       // Macro Grid cannot check or limit what it does (docs/plans/security-hardening-plan.md). A folder
       // install has no "official source" to skip the warning for, unlike Discover/link installs.
+      const name = browsed.name ?? browsed.id ?? "";
       if (browsed.kind === "csharp") {
-        const proceed = await confirmAsync(t("plugins.install.nativeWarning.warning", browsed.name ?? browsed.id ?? ""), {
+        const proceed = await confirmRichAsync({
           title: t("plugins.install.nativeWarning.title"),
+          content: <InstallConsent name={name} kind="csharp" />,
+          confirmLabel: t("consent.installAnyway"),
           danger: true,
         });
         if (!proceed) return;
       } else if (browsed.kind === "js" && (browsed.permissions?.length ?? 0) > 0) {
-        const proceed = await confirmAsync(t("plugins.discover.thirdParty.permissions", browsed.permissions!.map(permissionText).join(", ")), {
+        const proceed = await confirmRichAsync({
           title: t("plugins.install.jsPermissions.title"),
+          content: <InstallConsent name={name} kind="js" permissions={browsed.permissions} />,
+          confirmLabel: t("consent.allowInstall"),
         });
         if (!proceed) return;
       }
