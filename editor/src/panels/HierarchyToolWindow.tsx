@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ChevronDown, ChevronRight, Copy, Folder, FolderPlus, Pencil, Plus, Trash2 } from "lucide-react";
+import { ChevronDown, ChevronRight, Copy, Folder, FolderPlus, LayoutTemplate, LibraryBig, Pencil, Plus, Trash2 } from "lucide-react";
 import type { PageTreeNode } from "@macro/renderer";
 import type { ProfileTreeNode } from "../api/types";
 import { api } from "../api/client";
@@ -7,6 +7,7 @@ import { choiceAsync, confirmAsync, promptAsync } from "../dialogs/dialogStore";
 import { useT } from "../i18n/I18nContext";
 import { useEditorStateContext } from "../state/EditorStateContext";
 import { normalizePageTree } from "../state/pageTree";
+import { clearPluginTreeSelection } from "../state/pluginTreeSelectionStore";
 import { useProfileTreeContext } from "../state/ProfileTreeContext";
 import { countContents, findNode, findParentFolderId, type GenericTreeNode, removeNode } from "../state/tree";
 import { useWorkspaceUi } from "../workspace/WorkspaceUiContext";
@@ -257,6 +258,7 @@ export function HierarchyToolWindow() {
             state.setCurrentPageId(page.id);
             state.setSelectedIds([]);
             clearProfileProperties();
+            clearPluginTreeSelection();
             setTreeSelection({ kind: "page", id: page.id, profileId: profile!.id, parentFolderId: findParentFolderId(profile!.pageTree ?? [], page.id) ?? null });
           }}
           onDoubleClick={() => startRename("page", page.id)}
@@ -353,6 +355,7 @@ export function HierarchyToolWindow() {
           onClick={() => {
             if (!isOpen) state.selectProfile(node.id);
             showProfileProperties(node.id);
+            clearPluginTreeSelection();
             setTreeSelection({ kind: "profile", id: node.id, parentFolderId: findParentFolderId(profileTree.tree, node.id) ?? null });
           }}
           onDoubleClick={() => { if (isOpen) startRename("profile", node.id); }}
@@ -425,6 +428,7 @@ export function HierarchyToolWindow() {
             state.setCurrentPageId(page.id);
             state.setSelectedIds([]);
             clearProfileProperties();
+            clearPluginTreeSelection();
           }}
         />
       );
@@ -456,10 +460,10 @@ export function HierarchyToolWindow() {
       </div>
       <div style={{ padding: 8, borderTop: "1px solid var(--ms-border)", display: "flex", gap: 6 }}>
         <IconBtn label={t("profile.new")} onClick={async () => { await state.createProfile(); profileTree.refresh(); }}>
-          <Plus size={13} />
+          <LibraryBig size={13} />
         </IconBtn>
         <IconBtn label={t("page.add")} onClick={() => state.addPage()}>
-          <Plus size={13} />
+          <LayoutTemplate size={13} />
         </IconBtn>
         <IconBtn label={t("folder.new")} onClick={() => createPageSubfolder(null)}>
           <FolderPlus size={13} />

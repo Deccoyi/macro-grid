@@ -3,6 +3,13 @@
 This file follows the [Keep a Changelog](https://keepachangelog.com/) format. For versioning rules, see [versioning.md](guides/versioning.md). The short, public changelog is [CHANGELOG.md](CHANGELOG.md).
 
 ## [Unreleased]
+### Added
+- **`IPluginTreeProvider` (optional, additive):** a .NET plugin can now list its own items (sounds, scenes, saved presets, ...) as a
+  lazily-loaded tree in the editor's new Plugins tool window, alongside a matching optional `IPluginTreeItemSettings` for an item's own
+  schema-driven settings form. `LoadedPlugin`/`PluginInfo` gains `HasTreeItems`. New routes: `GET /api/plugins/tree-changes`,
+  `GET /api/plugins/{id}/tree-items`, `GET`/`PUT /api/plugins/{id}/tree-items/settings`,
+  `POST /api/plugins/{id}/tree-items/options/{sourceId}`. A plugin that does not implement the interface is unaffected. Additive; a
+  MINOR bump. See `docs/design/plugins-tool-window.md`. Tests: `PluginTreeTests`, `LegacyPluginCompatibilityTests`.
 
 ## [1.2.0] - 2026-09-28
 ### Added

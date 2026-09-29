@@ -1,8 +1,9 @@
-import { FolderTree, ListX, Shapes, Wrench, type LucideIcon } from "lucide-react";
+import { Blocks, FolderTree, ListX, Shapes, Wrench, type LucideIcon } from "lucide-react";
 import type { ComponentType } from "react";
 import type { DictKey } from "../i18n/tr";
 import { ErrorListPanel } from "../panels/ErrorListPanel";
 import { HierarchyToolWindow } from "../panels/HierarchyToolWindow";
+import { PluginsToolWindow } from "../panels/PluginsToolWindow";
 import { PropertiesToolWindow } from "../panels/PropertiesToolWindow";
 import { ToolboxToolWindow } from "../panels/ToolboxToolWindow";
 
@@ -39,6 +40,17 @@ export const TOOL_WINDOWS: ToolWindowDefinition[] = [
     defaultPlacement: { edge: "left", group: "left-top", order: 0, size: 178 },
     minSize: { width: 160, height: 120 },
     defaultOpen: true,
+  },
+  {
+    id: "pluginsTree",
+    titleKey: "panel.pluginsTree",
+    icon: Blocks,
+    Content: PluginsToolWindow,
+    defaultPlacement: { edge: "left", group: "left-top", order: 1, size: 178 },
+    minSize: { width: 160, height: 120 },
+    // Starts closed, reachable from View — a sibling of Hierarchy, not a node inside it
+    // (docs/design/plugins-tool-window.md).
+    defaultOpen: false,
   },
   {
     id: "toolbox",

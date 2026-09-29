@@ -15,7 +15,10 @@ import type {
   PluginLinkInstallResult,
   PluginSourcesResponse,
   PluginInfo,
+  PluginInstallBrowseResult,
   PluginInstallResult,
+  PluginTreeChanges,
+  PluginTreeItemsResult,
   PluginUninstallResult,
   ProfileSummary,
   ProfileTreeNode,
@@ -138,10 +141,13 @@ export const api = {
       return res.text();
     }),
 
-  /** Shows a native "choose a folder" dialog on the server's desktop, validates plugin.json there, copies it
-   * into the server's plugins/ folder and loads it right away (no restart). Installing over an existing id
-   * replaces that plugin. */
-  installPluginDialog: (): Promise<PluginInstallResult> => send("POST", "/api/plugins/install"),
+  /** Shows a native "choose a folder" dialog on the server's desktop and reads its plugin.json — nothing is
+   * installed yet, so the editor can warn about a native (C#) plugin's full trust first. */
+  browsePluginInstall: (): Promise<PluginInstallBrowseResult> => send("POST", "/api/plugins/install/browse"),
+
+  /** Copies the folder a previous browsePluginInstall() call found into the server's plugins/ folder and
+   * loads it right away (no restart). Installing over an existing id replaces that plugin. */
+  confirmPluginInstall: (path: string): Promise<PluginInstallResult> => send("POST", "/api/plugins/install/confirm", { path }),
 
   /** Unloads a plugin (its actions, variables and status items disappear immediately) and deletes its
    * folder under %AppData%. `pending` means a file was still in use and the folder goes at the next start. */
@@ -173,6 +179,39 @@ export const api = {
 
   /** URL of a plugin's manifest logo (PluginInfo.hasIcon) — an <img src>, not a fetch: nothing to parse. */
   getPluginIconUrl: (id: string): string => `${pluginPath(id)}/icon`,
+
+  // ---- Plugins tool window (docs/design/plugins-tool-window.md) ----
+
+  /** One level of a plugin's own tree (PluginInfo.hasTreeItems): `parentId` absent asks for the plugin's top
+   * level, `continuationToken` asks for the next page of a level that returned one. 404 (thrown as an Error)
+   * for a plugin that does not implement IPluginTreeProvider. */
+  getPluginTreeItems: (id: string, parentId?: string, continuationToken?: string): Promise<PluginTreeItemsResult> => {
+    const params = new URLSearchParams();
+    if (parentId) params.set("parent", parentId);
+    if (continuationToken) params.set("token", continuationToken);
+    const qs = params.toString();
+    return get(`${pluginPath(id)}/tree-items${qs ? `?${qs}` : ""}`);
+  },
+
+  /** What changed since `since` (a PluginTreeChangeLog revision, -1 for "just tell me the current revision") —
+   * polled only while the Plugins tool window is on screen. */
+  getPluginTreeChanges: (since: number): Promise<PluginTreeChanges> =>
+    get(`/api/plugins/tree-changes?since=${since}`),
+
+  /** A tree item's own settings form (PluginTreeItem.hasSettings) — the same schema-driven form a plugin's
+   * settings page uses, drawn from its IPluginTreeItemSettings. 404 if the plugin's tree provider does not
+   * implement that interface. */
+  getPluginTreeItemSettingsSchema: (id: string, itemId: string): Promise<SettingField[]> =>
+    get(`${pluginPath(id)}/tree-items/settings/schema?item=${encodeURIComponent(itemId)}`),
+
+  getPluginTreeItemSettings: (id: string, itemId: string): Promise<Record<string, unknown>> =>
+    get(`${pluginPath(id)}/tree-items/settings?item=${encodeURIComponent(itemId)}`),
+
+  savePluginTreeItemSettings: (id: string, itemId: string, values: Record<string, unknown>): Promise<void> =>
+    send("PUT", `${pluginPath(id)}/tree-items/settings?item=${encodeURIComponent(itemId)}`, values),
+
+  getPluginTreeItemSettingsOptions: (id: string, sourceId: string, currentValues: Record<string, unknown>): Promise<OptionsResult> =>
+    send("POST", `${pluginPath(id)}/tree-items/options/${encodeURIComponent(sourceId)}`, currentValues),
 
   /** Discover tab: browses a source's plugins (today, only `"official"`) — fetched fresh every time the tab
    * opens or is refreshed, never in the background. */

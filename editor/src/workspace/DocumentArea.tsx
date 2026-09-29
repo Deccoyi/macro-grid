@@ -1,11 +1,15 @@
 import { useState } from "react";
-import { Copy, Plus, Trash2, X } from "lucide-react";
+import { Plus, X } from "lucide-react";
+import { commandItem } from "../commands/commandItem";
+import { useCommands } from "../commands/CommandsContext";
+import type { Command } from "../commands/types";
 import type { DeviceSize } from "../grid/DevicePreviewFrame";
 import { DevicePreviewFrame } from "../grid/DevicePreviewFrame";
 import { EditorCanvas } from "../grid/EditorCanvas";
 import { useT } from "../i18n/I18nContext";
-import { ContextMenu, type ContextMenuItem } from "../panels/ContextMenu";
+import { ContextMenu, type ContextMenuEntry } from "../panels/ContextMenu";
 import { useEditorStateContext } from "../state/EditorStateContext";
+import { clearPluginTreeSelection } from "../state/pluginTreeSelectionStore";
 import { useOpenPages } from "./OpenPagesContext";
 import { useWorkspaceUi } from "./WorkspaceUiContext";
 
@@ -18,6 +22,7 @@ import { useWorkspaceUi } from "./WorkspaceUiContext";
 export function DocumentArea({ deviceSize }: { deviceSize: DeviceSize | null }) {
   const { t } = useT();
   const state = useEditorStateContext();
+  const { get } = useCommands();
   const { openMoveCopyForWidgets, clearProfileProperties } = useWorkspaceUi();
   const { openPageIds, closeTab } = useOpenPages();
   const [widgetMenu, setWidgetMenu] = useState<{ x: number; y: number } | null>(null);
@@ -88,7 +93,7 @@ export function DocumentArea({ deviceSize }: { deviceSize: DeviceSize | null }) 
               <EditorCanvas
                 page={currentPage}
                 selectedIds={state.selectedIds}
-                onSelect={(ids) => { state.setSelectedIds(ids); if (ids.length > 0) clearProfileProperties(); }}
+                onSelect={(ids) => { state.setSelectedIds(ids); if (ids.length > 0) { clearProfileProperties(); clearPluginTreeSelection(); } }}
                 onToggleSelect={state.toggleSelected}
                 onRectChange={state.setWidgetRect}
                 onContextMenu={(x, y) => setWidgetMenu({ x, y })}
@@ -104,11 +109,7 @@ export function DocumentArea({ deviceSize }: { deviceSize: DeviceSize | null }) 
           x={widgetMenu.x}
           y={widgetMenu.y}
           onClose={() => setWidgetMenu(null)}
-          items={widgetContextItems(t, state.selectedIds.length, {
-            onDuplicate: state.duplicateSelectedWidgets,
-            onMoveCopy: openMoveCopyForWidgets,
-            onDelete: state.deleteSelectedWidgets,
-          })}
+          items={widgetContextItems(t, get, openMoveCopyForWidgets)}
         />
       )}
     </div>
@@ -117,15 +118,19 @@ export function DocumentArea({ deviceSize }: { deviceSize: DeviceSize | null }) 
 
 type T = ReturnType<typeof useT>["t"];
 
-function widgetContextItems(
-  t: T,
-  selectedCount: number,
-  handlers: { onDuplicate: () => void; onMoveCopy: () => void; onDelete: () => void },
-): ContextMenuItem[] {
-  const label = selectedCount > 1 ? t("ctx.widget.labelMulti", String(selectedCount)) : t("ctx.widget.labelSingle");
+/** Undo/Redo, Cut/Copy/Paste/Duplicate/Delete plus the existing "Move/Copy to..." — the same commands as
+ * the Edit menu and the shortcuts (docs/design/editor-edit-commands.md, "Menus"). */
+function widgetContextItems(t: T, get: (id: string) => Command | undefined, onMoveCopy: () => void): ContextMenuEntry[] {
+  const cmd = (id: string) => commandItem(get(id)!, t);
   return [
-    { label: t("ctx.widget.duplicate", label), icon: <Copy size={13} />, onSelect: handlers.onDuplicate },
-    { label: t("ctx.widget.moveCopy", label), onSelect: handlers.onMoveCopy },
-    { label: t("ctx.widget.delete", label), icon: <Trash2 size={13} />, danger: true, onSelect: handlers.onDelete },
+    cmd("edit.undo"),
+    cmd("edit.redo"),
+    { divider: true },
+    cmd("edit.cut"),
+    cmd("edit.copy"),
+    cmd("edit.paste"),
+    cmd("edit.duplicate"),
+    cmd("edit.delete"),
+    { label: t("ctx.widget.moveCopy", t("ctx.widget.labelSingle")), onSelect: onMoveCopy },
   ];
 }

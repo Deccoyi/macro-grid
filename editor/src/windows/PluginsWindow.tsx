@@ -259,8 +259,21 @@ export function PluginsWindow() {
     setError(null);
     setNotice(null);
     try {
-      const result = await api.installPluginDialog();
-      if (result.canceled) return;
+      const browsed = await api.browsePluginInstall();
+      if (browsed.canceled || !browsed.path) return;
+
+      // A native (C#) plugin has no permission gate at all — it runs with full trust in-process, and
+      // Macro Grid cannot check or limit what it does (docs/plans/security-hardening-plan.md, part D).
+      // A folder install has no "official source" to skip the warning for, unlike Discover/link installs.
+      if (browsed.kind === "csharp") {
+        const proceed = await confirmAsync(t("plugins.install.nativeWarning.warning", browsed.name ?? browsed.id ?? ""), {
+          title: t("plugins.install.nativeWarning.title"),
+          danger: true,
+        });
+        if (!proceed) return;
+      }
+
+      const result = await api.confirmPluginInstall(browsed.path);
       if (result.installed) {
         const name = result.name ?? result.id ?? "";
         if (result.status && result.status !== "Loaded") setError(t("plugins.install.failed", name, result.detail ?? result.status));

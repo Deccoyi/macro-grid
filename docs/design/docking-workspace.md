@@ -4,7 +4,7 @@
 No change to the plugin SDK, the WebSocket protocol or the phone app.
 
 Related documents: [hierarchy-tree-and-folders.md](hierarchy-tree-and-folders.md) (the Hierarchy panel's content, built on this one) and
-[editor-edit-commands-plan.md](../plans/editor-edit-commands-plan.md) (Edit menu, clipboard, undo/redo, keyboard shortcuts — planned, not started).
+[editor-edit-commands.md](editor-edit-commands.md) (Edit menu, clipboard, undo/redo, keyboard shortcuts — planned, not started).
 
 Visual reference: [docking-workspace-mockups/](docking-workspace-mockups/) holds three static HTML pages (open them in a browser):
 `default-layout.html`, `custom-layout.html` (tabbed group, auto-hide, floating panel) and `component-states.html` (header, tab, splitter,

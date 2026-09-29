@@ -134,10 +134,19 @@ public sealed partial class PluginManager
             }
 
             localizer?.Register(manifest.Id, dir, manifest.DefaultLanguage);
+            var treeProvider = instance as IPluginTreeProvider;
             var info = new LoadedPlugin(manifest.Id, manifest.Name, manifest.Version, PluginLoadStatus.Loaded, null,
-                host.SettingsPage is not null, HasIcon: ResolveIconPath(dir, manifest) is not null);
-            var entry = new Entry(dir, info) { Running = new Running(context, instance, host, variableStore) };
+                host.SettingsPage is not null, HasIcon: ResolveIconPath(dir, manifest) is not null, HasTreeItems: treeProvider is not null);
+            var running = new Running(context, instance, host, variableStore);
+            if (treeProvider is not null)
+            {
+                var pluginId = manifest.Id;
+                running.TreeChangedHandler = parentId => TreeChanges.Record(pluginId, parentId);
+                treeProvider.TreeItemsChanged += running.TreeChangedHandler;
+            }
+            var entry = new Entry(dir, info) { Running = running };
             lock (_stateLock) _entries[manifest.Id] = entry;
+            if (treeProvider is not null) TreeChanges.Record(manifest.Id, null, wholePlugin: true);
             logger.LogInformation("Plugin loaded: {Id} {Version}", manifest.Id, manifest.Version);
             return info;
         }

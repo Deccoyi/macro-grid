@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
 import { api } from "../api/client";
 import type { SettingField, StatusEntry } from "../api/types";
+import { handleLocalUndoRedo } from "../commands/shortcuts";
 import { useT } from "../i18n/I18nContext";
 import { SchemaForm } from "../panels/actionForms/SchemaForm";
+import { useUndoableValues } from "../state/useUndoableValues";
 
 /**
  * The whole page of a plugin's own settings tool window (see ToolWindow.cs's `plugin-settings-{id}` kind
@@ -13,7 +15,7 @@ import { SchemaForm } from "../panels/actionForms/SchemaForm";
 export function PluginSettingsWindow({ id }: { id: string }) {
   const { t } = useT();
   const [fields, setFields] = useState<SettingField[] | null>(null);
-  const [values, setValues] = useState<Record<string, unknown>>({});
+  const { values, set: setValues, reset: resetValues, undo, redo } = useUndoableValues({});
   const [status, setStatus] = useState<StatusEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -24,7 +26,7 @@ export function PluginSettingsWindow({ id }: { id: string }) {
     Promise.all([api.getPluginSettingsSchema(id), api.getPluginSettings(id)])
       .then(([schema, current]) => {
         setFields(schema);
-        setValues(current);
+        resetValues(current);
       })
       .catch((err) => setError(err instanceof Error ? err.message : String(err)))
       .finally(() => setLoading(false));
@@ -47,7 +49,10 @@ export function PluginSettingsWindow({ id }: { id: string }) {
   const ownStatus = status.filter((s) => s.pluginId === id);
 
   return (
-    <div style={{ height: "100%", display: "flex", flexDirection: "column", background: "var(--ms-bg-canvas)", color: "var(--ms-text-primary)" }}>
+    <div
+      style={{ height: "100%", display: "flex", flexDirection: "column", background: "var(--ms-bg-canvas)", color: "var(--ms-text-primary)" }}
+      onKeyDown={(e) => handleLocalUndoRedo(e, undo, redo)}
+    >
       {ownStatus.length > 0 && (
         <div style={{ display: "flex", gap: 10, padding: "8px 16px", borderBottom: "1px solid var(--ms-border)", fontSize: 11.5, color: "var(--ms-text-secondary)" }}>
           {ownStatus.map((s) => <span key={s.id}>{s.text}</span>)}

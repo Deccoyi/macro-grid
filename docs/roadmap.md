@@ -15,6 +15,8 @@ Where the project stands. The server and the SDK are at 1.0.0 and under active d
   ([design/docking-workspace.md](design/docking-workspace.md)); one tree for every profile and page, with page and profile folders,
   drag-and-drop, copy/paste and lazily loaded profiles ([design/hierarchy-tree-and-folders.md](design/hierarchy-tree-and-folders.md)).
   The Error List has no producer yet and plugin-provided tree entries (phase 6) are not started, see "Next" below.
+- **Editor edit commands:** right-click Undo/Redo/Cut/Copy/Paste/Duplicate/Delete/Select All, an Edit menu, one shared undo/redo
+  history stack, standard Windows shortcuts, and a header toolbar ([design/editor-edit-commands.md](design/editor-edit-commands.md)).
 - **Pairing and devices:** PIN and QR pairing, per-device tokens, a device list with revoke, a profile per device.
 - **Encrypted connection:** the server makes its own certificate and serves `wss://`/`https://` on a second port next to the
   plain one; the pairing QR carries its fingerprint, so the phone app pins it with no certificate authority needed. Server side
@@ -54,8 +56,6 @@ The order of the bigger pieces of work, and their plans, are in [plans/README.md
   above), plain `ws://`/`http://` (port 9820) stay open unconditionally; a preference to turn them off is not built yet. Default
   on for now (the browser deck cannot use `wss://` at all, and older paired phones have no TLS support), default off starting
   the next MAJOR version once both are settled. See [plans/security-hardening-plan.md](plans/security-hardening-plan.md), part A.
-- **Keyboard shortcuts and undo/redo in the editor:** right-click Undo/Redo/Cut/Copy/Paste/Duplicate/Delete, an Edit menu, one shared undo/redo
-  history stack, standard Windows shortcuts. Has a plan: [plans/editor-edit-commands-plan.md](plans/editor-edit-commands-plan.md).
 - **A branded installer:** today the setup uses the plain modern wizard style with Inno Setup's default pictures and no icon of its own. Wanted: the
   Macro Grid logo and the product colors. What the setup tool can do natively: an icon for the setup file and the uninstaller (`SetupIconFile`, from
   `src/MacroGrid.Host/app.ico`), the large picture on the welcome and finished pages (`WizardImageFile`), the small logo in the corner of the
@@ -65,12 +65,7 @@ The order of the bigger pieces of work, and their plans, are in [plans/README.md
   and `website/public/logo.png`. The automatic update shows few pages (see `design/agreement-acceptance.md`), so the logo appears mostly
   in its progress window. The exact picture sizes are checked against the Inno Setup version the release workflow installs. It needs a small
   plan file first (`plans/`).
-- **A much faster install and update (fewer files):** the editor bundle installs as about 6,000 tiny files (one per icon in `wwwroot\editor\assets`,
-  because the editor loads each icon on demand), and copying them one by one made a setup on a fast PC take over a minute; an update shows this
-  in its progress window, and antivirus scanning makes it slower on other PCs. An upgrade also leaves the previous version's hashed editor files behind (`wwwroot\editor\assets` collects several `index-*.js`), so the setup should clear the old `wwwroot` first (an `[InstallDelete]` entry) or, better, install far fewer files. Wanted: a setup of a few seconds. Ideas to weigh: bundle the
-  icons into a few chunks or one file (the editor still loads only what it draws), or ship the editor as one archive that the app unpacks or
-  serves from; the setup itself gets faster with fewer, larger files. Measure the file count and the setup time before and after. It needs a
-  small plan file first (`plans/`).
+- **A much faster install and update (fewer files):** see [plans/faster-install-plan.md](plans/faster-install-plan.md).
 - **The `plugin-html` widget:** a plugin ships its own HTML and JavaScript widget. It would run in a sandboxed iframe on the client and talk to the
   server only through `postMessage`. It needs the widget type in the renderers, a bridge in the client and a message route on the server. Today the
   `plugin-html` type draws a placeholder.
