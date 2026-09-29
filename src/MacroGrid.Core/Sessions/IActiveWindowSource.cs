@@ -1,8 +1,9 @@
 namespace MacroGrid.Core.Sessions;
 
 /// <summary>The foreground window as process name + title. <see cref="ProcessName"/> has no ".exe"
-/// stripped/added expectation — callers compare it exactly as reported, case-insensitively.</summary>
-public sealed record ForegroundWindow(string ProcessName, string Title);
+/// stripped/added expectation — callers compare it exactly as reported, case-insensitively.
+/// <see cref="WindowClass"/> is the window's class name where the source can tell it (empty otherwise).</summary>
+public sealed record ForegroundWindow(string ProcessName, string Title, string WindowClass = "");
 
 /// <summary>
 /// Reports which process/window is in the foreground on the server machine — implemented by
@@ -19,6 +20,11 @@ public interface IActiveWindowSource
     /// detect "the app closed" (including one that minimized to the tray) without waiting for a
     /// foreground-change event that may never come (nothing else was clicked into focus).</summary>
     bool HasVisibleWindow(string processName);
+
+    /// <summary>The window that has the keyboard focus right now (asked live, not remembered), or null when there is none or
+    /// it cannot be identified. A JavaScript plugin's keyboard input is refused when this is null or a window it must not
+    /// type into.</summary>
+    ForegroundWindow? GetForeground();
 
     /// <summary>Starts watching. Safe to call once; the monitor runs for the process lifetime.</summary>
     void Start();

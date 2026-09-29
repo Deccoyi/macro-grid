@@ -137,7 +137,8 @@ internal static class PluginApi
                 var (valid, values) = await ApiResults.ReadJsonAsync<JsonObject>(request);
                 if (!valid || values is null) return ApiResults.InvalidJson();
                 RestoreUnchangedPasswords(page.Fields, values, page.Load);
-                page.Save(values);
+                try { page.Save(values); }
+                catch (InvalidOperationException ex) { return ApiResults.BadRequest(ex.Message); }
                 return Results.NoContent();
             }
 

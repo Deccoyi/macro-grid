@@ -442,6 +442,9 @@ export function PluginsWindow() {
                     )}
                   </div>
                   {p.detail && <div style={{ fontSize: 11, color: "var(--ms-text-secondary)", marginTop: 2 }}>{p.detail}</div>}
+                  {(p.keyboardUsesToday ?? 0) > 0 && (
+                    <div style={{ fontSize: 11, color: "var(--ms-text-secondary)", marginTop: 2 }}>{t("plugins.keyboardUses", String(p.keyboardUsesToday ?? 0))}</div>
+                  )}
                   {p.status === "NeedsApproval" && (
                     <div style={{ marginTop: 6 }}>
                       <div style={{ fontSize: 11.5, color: "var(--ms-text-secondary)" }}>{t("plugins.approve.intro")}</div>

@@ -133,7 +133,7 @@ public sealed partial class PluginManager
             if (manifest.Kind == PluginKind.Js)
             {
                 instance = new JsPlugin(manifest, entryPath, new JsPermissions(declared), variableStore, input, logger,
-                    reason => _ = Task.Run(() => DisableAsync(manifest.Id, reason)));
+                    reason => _ = Task.Run(() => DisableAsync(manifest.Id, reason)), windows: windowSource);
             }
             else
             {

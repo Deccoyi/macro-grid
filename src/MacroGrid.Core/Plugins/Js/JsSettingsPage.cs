@@ -7,6 +7,9 @@ namespace MacroGrid.Core.Plugins.Js;
 /// <summary>The plugin's settings page: the fields the script declared, stored in <c>settings.json</c> in its folder.</summary>
 internal sealed class JsSettingsPage(string dataDirectory, IReadOnlyList<SettingField> fields) : IPluginSettingsPage
 {
+    /// <summary>A JavaScript plugin has no other way to write a file, so what it can keep is capped.</summary>
+    public const int MaxBytes = 64 * 1024;
+
     private readonly string _path = Path.Combine(dataDirectory, "settings.json");
     private readonly Lock _lock = new();
 
@@ -37,10 +40,14 @@ internal sealed class JsSettingsPage(string dataDirectory, IReadOnlyList<Setting
         foreach (var field in fields)
             if (values[field.Key] is { } value) kept[field.Key] = value.DeepClone();
 
+        var json = kept.ToJsonString(new JsonSerializerOptions { WriteIndented = true });
+        if (System.Text.Encoding.UTF8.GetByteCount(json) > MaxBytes)
+            throw new InvalidOperationException($"The settings are too large to save (the limit is {MaxBytes / 1024} KB).");
+
         lock (_lock)
         {
             Directory.CreateDirectory(dataDirectory);
-            File.WriteAllText(_path, kept.ToJsonString(new JsonSerializerOptions { WriteIndented = true }));
+            File.WriteAllText(_path, json);
         }
     }
 }

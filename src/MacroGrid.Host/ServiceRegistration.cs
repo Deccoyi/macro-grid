@@ -100,7 +100,8 @@ internal static class ServiceRegistration
             sp.GetRequiredService<VariableCatalog>(), sp.GetRequiredService<VariableProviderHost>(),
             sp.GetRequiredService<VariableStore>(), new PluginPermissionStore(dataDir),
             sp.GetRequiredService<IInputService>(), sp.GetRequiredService<ILogger<PluginManager>>(),
-            sp.GetRequiredService<PluginLocalizer>(), sp.GetRequiredService<ISecretProtector>()));
+            sp.GetRequiredService<PluginLocalizer>(), sp.GetRequiredService<ISecretProtector>(),
+            windowSource: sp.GetRequiredService<IActiveWindowSource>()));
         services.AddHostedService(sp => sp.GetRequiredService<PluginManager>());
         return services;
     }

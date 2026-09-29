@@ -1,8 +1,10 @@
 using System.Text.Json;
 using MacroGrid.Core.Actions;
 using MacroGrid.Core.Diagnostics;
+using MacroGrid.Core.Plugins.Js;
 using MacroGrid.Core.Profiles;
 using MacroGrid.Core.Security;
+using MacroGrid.Core.Sessions;
 using MacroGrid.Core.Variables;
 using MacroGrid.Plugin.Abstractions;
 using Microsoft.Extensions.Hosting;
@@ -37,7 +39,8 @@ public sealed partial class PluginManager(
     ILogger<PluginManager> logger,
     PluginLocalizer? localizer = null,
     ISecretProtector? secretProtector = null,
-    PluginTrustVerifier? trustVerifier = null) : IHostedService
+    PluginTrustVerifier? trustVerifier = null,
+    IActiveWindowSource? windowSource = null) : IHostedService
 {
     private static readonly JsonSerializerOptions ManifestJson = new(JsonSerializerDefaults.Web);
     private readonly PluginTrustVerifier _trust = trustVerifier ?? PluginTrustVerifier.Official;
@@ -74,7 +77,11 @@ public sealed partial class PluginManager(
 
     public IReadOnlyList<LoadedPlugin> Plugins
     {
-        get { lock (_stateLock) return [.. _entries.Values.Select(e => e.Info), .. _unrecognized]; }
+        get
+        {
+            lock (_stateLock)
+                return [.. _entries.Values.Select(e => e.Running?.Instance is JsPlugin js ? e.Info with { KeyboardUsesToday = js.KeyboardUsesToday } : e.Info), .. _unrecognized];
+        }
     }
 
     public IReadOnlyList<IIconPackSource> IconPacks

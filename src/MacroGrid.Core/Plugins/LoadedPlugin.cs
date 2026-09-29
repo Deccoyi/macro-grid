@@ -22,7 +22,8 @@ public enum PluginLoadStatus
 /// <paramref name="HasIcon"/> is true when the manifest's optional <c>icon</c> path resolved to a valid
 /// file (see PluginManager.ResolveIconPath) — the editor then fetches it from <c>GET /api/plugins/{id}/icon</c>.
 /// <paramref name="Unsigned"/> is true only in a development build, for a C# plugin that loaded without a valid signature.
+/// <paramref name="KeyboardUsesToday"/> is how many button presses used the keyboard through a JavaScript plugin today.
 /// <paramref name="HasTreeItems"/> is true when the running plugin implements the optional
 /// <see cref="MacroGrid.Plugin.Abstractions.IPluginTreeProvider"/>: only then does the editor's Plugins tool window
 /// give it a chevron and ask <c>GET /api/plugins/{id}/tree-items</c> for anything.</summary>
-public sealed record LoadedPlugin(string Id, string Name, string Version, PluginLoadStatus Status, string? Detail, bool HasSettings = false, IReadOnlyList<string>? PendingPermissions = null, bool HasIcon = false, bool HasTreeItems = false, bool Unsigned = false);
+public sealed record LoadedPlugin(string Id, string Name, string Version, PluginLoadStatus Status, string? Detail, bool HasSettings = false, IReadOnlyList<string>? PendingPermissions = null, bool HasIcon = false, bool HasTreeItems = false, bool Unsigned = false, int KeyboardUsesToday = 0);

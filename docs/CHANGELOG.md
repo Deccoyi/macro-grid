@@ -51,6 +51,7 @@ No user-visible changes in this version — an addition to the plugin SDK only (
 ## 1.0.0 - 2026-09-26
 ### Changed
 - **Only official plugins may use C#:** a C# plugin runs only when it is officially signed, and this is checked every time it loads. Plugins from other authors must be JavaScript. A C# plugin that is not allowed stays in the list with the reason and can be removed.
+- **Plugins that type on your PC are limited to button presses:** a plugin you allowed to press keys can do so only while you press one of its buttons, and only a little (at most 200 characters and 10 key combinations per press). It cannot type into a terminal, a system tool or Macro Grid itself, cannot use the Windows key, and is switched off if it tries to type a harmful command. The Plugins window shows how often it used the keyboard today.
 - **One version number:** Macro Grid and the tools plugins are built with now share one version number, so it is easy to tell which plugins fit which version. Plugins that work today keep working.
 - **Clearer plugin messages:** When a plugin does not fit, the Plugins window now says which Macro Grid version it needs.
 

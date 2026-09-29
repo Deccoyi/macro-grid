@@ -1,5 +1,8 @@
+using System.Diagnostics;
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using MacroGrid.Core.Diagnostics;
+using Microsoft.Extensions.Logging;
 using MacroGrid.Core.Input;
 using MacroGrid.Plugin.Abstractions;
 using MacroGrid.Protocol;
@@ -84,18 +87,78 @@ public sealed partial class JsPlugin
         item.Update(Truncate(text, 80), Enum.TryParse<StatusLevel>(level, ignoreCase: true, out var parsed) ? parsed : StatusLevel.Idle);
     }
 
-    private void Hotkey(string combo)
+    /// <summary>The rules every keyboard call passes first: the permission, a real button press that is still open, not an
+    /// administrator server, and a window in front that may receive input. Returns the open press window.</summary>
+    private JsPressWindow RequireInput()
     {
         Require(JsPermissions.Input);
+        if (_inputBlocked)
+            throw new JsHostException("Keyboard input is switched off for this plugin.");
+        if (_press is not { Settled: false } press || Stopwatch.GetTimestamp() > press.Deadline)
+            throw new JsHostException("Keyboard input is only allowed while handling a button press.");
+        if (_input is null)
+            throw new JsHostException("Keyboard input is not available.");
+        if (_isElevated())
+            throw new JsHostException("Keyboard input is not available while Macro Grid runs as administrator.");
+        if (JsInputPolicy.RefuseTarget(_windows?.GetForeground()) is { } refused)
+            throw new JsHostException(refused);
+        return press;
+    }
+
+    private void Hotkey(string combo)
+    {
+        var press = RequireInput();
         if (!HotkeyParser.TryParse(combo, out var parsed, out var error))
             throw new JsHostException($"Not a valid key combination: {error}");
-        (_input ?? throw new JsHostException("Keyboard input is not available.")).SendKeyCombo(parsed);
+        if (JsInputPolicy.RefuseCombo(parsed) is { } refused)
+            throw new JsHostException(refused);
+        if (press.KeyCombos >= JsInputPolicy.MaxKeyCombosPerPress)
+            throw new JsHostException($"At most {JsInputPolicy.MaxKeyCombosPerPress} key combinations can be pressed in one button press.");
+
+        press.KeyCombos++;
+        CountKeyboardUse(press, 1);
+        _input!.SendKeyCombo(parsed);
     }
 
     private void TypeText(string text)
     {
-        Require(JsPermissions.Input);
-        (_input ?? throw new JsHostException("Keyboard input is not available.")).TypeText(Truncate(text, 2000));
+        var press = RequireInput();
+        if (text.Length > JsInputPolicy.MaxCharsPerTypeCall)
+            throw new JsHostException($"host.input.type takes at most {JsInputPolicy.MaxCharsPerTypeCall} characters.");
+        if (press.TypedChars + text.Length > JsInputPolicy.MaxTypedCharsPerPress)
+            throw new JsHostException($"At most {JsInputPolicy.MaxTypedCharsPerPress} characters can be typed in one button press.");
+
+        if (JsInputPolicy.MatchBlockedText(JsInputPolicy.Normalize(press.Text + text)) is { } rule)
+        {
+            // Never log the text, only which rule matched.
+            _inputBlocked = true;
+            _logger.LogWarning(SecurityEvents.PluginInputBlocked, "Security: plugin {Id} tried to type a blocked command (rule {Rule})",
+                SecurityEvents.ForLog(_manifest.Id), rule);
+            _onFaulted("Switched off: it tried to type a blocked command.");
+            throw new JsHostException("This text is not allowed.");
+        }
+
+        press.TypedChars += text.Length;
+        press.Text.Append(text);
+        CountKeyboardUse(press, text.Length);
+        _input!.TypeText(text);
+    }
+
+    /// <summary>Counts a press that used the keyboard once a day and logs how many keys it sent (never which).</summary>
+    private void CountKeyboardUse(JsPressWindow press, int keys)
+    {
+        if (!press.Counted)
+        {
+            press.Counted = true;
+            lock (_usageLock)
+            {
+                var today = DateOnly.FromDateTime(DateTime.Now);
+                if (_usageDay != today) { _usageDay = today; _usesToday = 0; }
+                _usesToday++;
+            }
+        }
+        _logger.LogInformation("Plugin {Id} sent {Keys} key(s) in a button press ({Combos} combinations, {Chars} characters so far)",
+            SecurityEvents.ForLog(_manifest.Id), keys, press.KeyCombos, press.TypedChars);
     }
 
     /// <summary>Checks the URL against the approved host:port pairs and builds the request; both the blocking and
@@ -140,6 +203,8 @@ public sealed partial class JsPlugin
     /// <see cref="JsPluginLimits.MaxPendingHttp"/> requests may be in flight at once.</summary>
     private void HttpAsync(int id, string method, string url, string body, string headersJson)
     {
+        // An answer that belongs to a request started during a button press continues that press (until its window closes).
+        var press = _press;
         var request = BuildRequest(method, url, body, headersJson);
         if (Interlocked.Increment(ref _pendingHttp) > _limits.MaxPendingHttp)
         {
@@ -178,8 +243,10 @@ public sealed partial class JsPlugin
 
             _ = Post(() =>
             {
+                _press = press;
                 try { Invoke("__httpDone", id, ok, payload); }
                 catch (InvalidOperationException) { /* already logged and counted */ }
+                finally { _press = null; }
                 return 0;
             });
         });

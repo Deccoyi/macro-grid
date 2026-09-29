@@ -121,6 +121,8 @@ export interface PluginInfo {
   hasTreeItems?: boolean;
   /** True only in a development build, for a C# plugin that loaded without a valid signature. */
   unsigned?: boolean;
+  /** How many button presses used the keyboard through this JavaScript plugin today. Missing from an older server. */
+  keyboardUsesToday?: number;
 }
 
 /** Mirrors MacroGrid.Plugin.Abstractions.PluginTreeItem — one node of a plugin's own tree in the Plugins tool
