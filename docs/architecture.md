@@ -151,8 +151,9 @@ warnings for what was removed.
 
 ## Plugins
 
-Plugins add actions, variables, settings pages, status items and icon packs. They can be C# (full trust, in an isolated assembly load context)
-or JavaScript (a Jint sandbox with approved permissions). They are installed, reloaded and removed while the server runs. The plugin SDK is
+Plugins add actions, variables, settings pages, status items and icon packs. They can be C# (full trust, in an isolated assembly load context, and
+only the official, signed plugins: `PluginTrustVerifier` checks the signature every time one loads) or JavaScript (a Jint sandbox with approved permissions;
+the only kind other authors can write). They are installed, reloaded and removed while the server runs. The plugin SDK is
 `MacroGrid.Plugin.Abstractions`; the guide for writing plugins is `docs/plugin-authoring.md` in the plugin repository. A .NET plugin can also
 optionally list its own items (sounds, scenes, saved presets, ...) as a lazily-loaded tree in the editor's Plugins tool window
 (`IPluginTreeProvider`, additive): [design/plugins-tool-window.md](design/plugins-tool-window.md). How it is built:
@@ -200,9 +201,17 @@ Macro Grid is meant for a home or office network you trust. It is not hardened f
   may hold a secret token). See [plans/web-widget-plan.md](plans/web-widget-plan.md).
 - **Actions run as you.** A paired device can press keys, type text and start programs on the PC, so pair only devices you trust and revoke the
   ones you do not.
-- **C# plugins have full trust** and can do anything the server can. Install only ones you trust. JavaScript plugins are sandboxed and need
-  approved permissions. A plugin can protect a secret value of its own (for example a password field) with `IPluginHost.Secrets`
-  (DPAPI-backed, same trust boundary as the device tokens); a plugin author has to opt in and call it, the host does not enforce it.
+- **Only official, signed C# plugins load**, checked at every load: the plugin folder must carry `signature.json` and `signature.sig` made with
+  the official plugin key (the private key stays on the maintainer's PC), every file must still match, and no unlisted file may be loadable or
+  executable. A plugin that fails is not loaded (status *Not allowed*). A C# plugin has full trust, so this is what keeps other authors' code out of the
+  server process; a build made from source in the Debug configuration (`MACROGRID_UNSIGNED_PLUGINS`) is the only exception, and no setting, switch or
+  environment variable turns it on in a released build. Plugins by other authors are JavaScript and are sandboxed and need approved permissions. The
+  `input` permission (pressing keys and typing) works only while a device button press is being handled, for at most 5 seconds, with at most 200
+  characters and 10 key combinations per press, never with the Windows key, never into a terminal, a script host, a system tool or a Macro Grid window,
+  never when the server runs as administrator, and text that looks like a harmful command switches the plugin off. An approved plugin with `input` can
+  still type up to 200 characters into an ordinary program when a button is pressed: the person's approval is the real decision. A plugin can protect a
+  secret value of its own (for example a password field) with `IPluginHost.Secrets` (DPAPI-backed, same trust boundary as the device tokens) in an official
+  C# plugin; a plugin author has to opt in and call it, the host does not enforce it. A JavaScript plugin's saved settings are capped at 64 KB.
 - **Uninstalling can remove your data.** The uninstaller asks whether to also delete `%AppData%\MacroGrid` (profiles, paired devices, plugins,
   logs); default is no, and it never asks on a silent uninstall.
 - **The server checks for updates on its own, once every few hours.** This is the one connection it makes without being asked, and it is on by
