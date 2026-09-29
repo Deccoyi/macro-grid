@@ -475,7 +475,8 @@ export const en: Record<DictKey, string | ((...args: string[]) => string)> = {
   "fields.text.iconColor": "Icon color",
   "fields.text.iconColorHint": "This icon was added in an older version — pick it again to change its color",
 
-  "widget.experimental": "Experimental",
+  "notice.dismiss": "Do not show this again",
+  "preferences.notices.reset": "Show closed notices again",
   "fields.web.experimentalTitle": "Experimental.",
   "fields.web.experimentalText": "The page runs inside the app, so a heavy page can slow down or freeze the deck. Use few web widgets and light pages.",
   "fields.web.url": "Page URL",

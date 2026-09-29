@@ -367,6 +367,8 @@ export interface AppPreferences {
   language: "tr" | "en";
   previewProfiles: PreviewProfileInfo[];
   collapsedInspectorSections: Record<string, boolean>;
+  /** Notes the person closed with "do not show again", by id. */
+  dismissedNotices: Record<string, boolean>;
   /** Fallback profile a device resolves to with no explicit assignment and no auto-switch rule currently
    * applying — see docs/design/auto-profile-switch.md. Null means "no preference set". */
   defaultProfileId: string | null;

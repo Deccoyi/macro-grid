@@ -493,7 +493,8 @@ export const tr = {
   "fields.text.iconColorHint": "Bu ikon eski bir sürümde eklenmiş, rengini değiştirmek için yeniden seçin",
 
   // ---- Web fields ----
-  "widget.experimental": "Deneysel",
+  "notice.dismiss": "Bir daha gösterme",
+  "preferences.notices.reset": "Kapatılan uyarıları yeniden göster",
   "fields.web.experimentalTitle": "Deneysel.",
   "fields.web.experimentalText": "Sayfa uygulamanın içinde çalışır; ağır bir sayfa deck'i yavaşlatabilir veya kilitleyebilir. Az sayıda web widget'ı ve hafif sayfalar kullanın.",
   "fields.web.url": "Sayfa URL'si",

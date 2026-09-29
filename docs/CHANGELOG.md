@@ -3,6 +3,9 @@
 New features and fixes in Macro Grid. For technical details, see [CHANGELOG-developer.md](CHANGELOG-developer.md).
 
 ## Unreleased
+### Changed
+- **Hints can be closed:** the hint boxes under a web widget's address now have a close button and stay closed. "Show closed notices again" in Preferences brings them back. A warning about the address you typed (not encrypted, not allowed) cannot be closed.
+- **The Toolbox marks the web widget with a small flask icon** instead of the word "Experimental".
 
 ## 1.3.1 - 2026-09-29
 ### New

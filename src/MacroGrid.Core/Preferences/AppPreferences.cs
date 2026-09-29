@@ -59,6 +59,10 @@ public sealed class AppPreferences
     /// section's own hardcoded default (see Inspector.tsx's SECTION_DEFAULTS).</summary>
     public Dictionary<string, bool> CollapsedInspectorSections { get; set; } = [];
 
+    /// <summary>Notes in the editor (for example the warning under a web widget's address) that the person closed with "do not show again".
+    /// Only closed notes are stored, by a short id. Warnings about a problem with the current input are never closable and never stored here.</summary>
+    public Dictionary<string, bool> DismissedNotices { get; set; } = [];
+
     /// <summary>The docking workspace arrangement the user last left the editor in (see
     /// <see cref="DockLayoutProfile.LayoutJson"/> for the format) — restored on the next launch instead of
     /// always rebuilding the built-in default. Empty until the user changes the layout at least once.</summary>
