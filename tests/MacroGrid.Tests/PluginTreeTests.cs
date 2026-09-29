@@ -31,7 +31,7 @@ public sealed class PluginTreeTests : IAsyncLifetime
         await _providerHost.StartAsync(CancellationToken.None);
         _manager = new PluginManager(Path.Combine(_root, "plugins"), "1.0.0", new PluginStatusRegistry(),
             new ActionDispatcher([], NullLogger<ActionDispatcher>.Instance), new VariableCatalog([]), _providerHost,
-            variables, new PluginPermissionStore(_root), null, NullLogger<PluginManager>.Instance);
+            variables, new PluginPermissionStore(_root), null, NullLogger<PluginManager>.Instance, trustVerifier: TestPluginSigning.Lenient);
     }
 
     public async Task DisposeAsync()

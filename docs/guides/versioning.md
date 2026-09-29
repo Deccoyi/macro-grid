@@ -12,10 +12,10 @@ How a release is made (tags, order, signing) is in [release.md](release.md).
 (older than what it asks for) — only on `1.2.1` and every later version of the same MAJOR. Server older than the declared value ⇒
 incompatible ("Needs Macro Grid editor 1.2.1 or newer"); server on another MAJOR ⇒ incompatible ("must be rebuilt"); anything in between runs.
 
-**The server and the plugin SDK are one thing and carry one number.** Macro Grid 1.3.0 is server 1.3.0 and SDK 1.3.0 (the NuGet package
-`MacroGrid.Plugin.Abstractions` 1.3.0). There is no separate SDK number to keep in step, and a plugin needs no second range.
+**The server and the plugin SDK are one thing and carry one number.** Macro Grid 1.3.0 is server 1.3.0 and SDK 1.3.0 (the `MacroGrid.Plugin.Abstractions`
+source in this repository at that version; the NuGet package stopped at 1.2.0). There is no separate SDK number to keep in step, and a plugin needs no second range.
 
-**Say which version you mean.** In anything a user or plugin author reads, name what the number belongs to: "Macro Grid editor 1.3.0" (the number a plugin's `minMacroGrid` asks for; the editor and the server that runs on the PC share it, so do not write "server" there), "SDK 1.3.0" (the NuGet package a plugin is built against) and "plugin 0.3.0" (the plugin's own `version`). Never a bare "version 1.3.0".
+**Say which version you mean.** In anything a user or plugin author reads, name what the number belongs to: "Macro Grid editor 1.3.0" (the number a plugin's `minMacroGrid` asks for; the editor and the server that runs on the PC share it, so do not write "server" there), "SDK 1.3.0" (the SDK an official plugin is built against) and "plugin 0.3.0" (the plugin's own `version`). Never a bare "version 1.3.0".
 
 ## What is versioned, and where
 
@@ -62,7 +62,7 @@ Every plugin declares in `plugin.json` the oldest Macro Grid it runs on:
 ```
 
 - `minMacroGrid` is `MAJOR.MINOR.PATCH`. A two-part value (`"1.0"`) or a range (`"^1.0.0"`) is refused.
-- A C# plugin is built against the SDK package, so `minMacroGrid` must be the SDK version it uses or older, in the same MAJOR (the plugin repository's
+- Only official plugins are C# (the server loads no other C# plugin, see `../architecture.md`), and they are built against the SDK package, so their `minMacroGrid` must be the SDK version they use or older, in the same MAJOR (the plugin repository's
   build checks this). Raise it only when the plugin starts to use something added in a newer MINOR; otherwise it keeps running on more servers.
 - A plugin that does not fit is listed as incompatible in the editor, with the reason ("Needs Macro Grid editor 1.3.0 or newer, this is 1.2.4", or
   "must be rebuilt" for a different MAJOR), and is not loaded. Discover and the source index use the same rule and only offer a version that fits.

@@ -12,9 +12,7 @@ New features and fixes in Macro Grid. For technical details, see [CHANGELOG-deve
 - **A plugin's own settings window also supports Ctrl+Z/Ctrl+Y**, and a long list inside it (a sound board's sounds, for example) now
   collapses each row to its name, with "Expand all"/"Collapse all" buttons, so it takes far less room.
 - **File menu gets a Save entry**, next to the existing Save button and its Ctrl+S shortcut.
-- **A clear warning before installing a native plugin from a folder:** these plugins run with full access to the computer, so you
-  are told to install them only from a folder you trust. A plugin that asks for permissions now shows them before it is installed,
-  not after, and starts right away once you agree.
+- **A plugin that asks for permissions shows them before it is installed,** not after, and starts right away once you agree.
 - **A store-like Discover tab:** search, filters, and plugin cards with a Get button. Clicking a card opens a page with its
   description, author, version, homepage and what it asks for. The Plugins window is bigger to fit.
 - **A refresh button next to "Pick from running apps":** a program opened after the profile was selected now shows up.
@@ -52,6 +50,8 @@ No user-visible changes in this version — an addition to the plugin SDK only (
 
 ## 1.0.0 - 2026-09-26
 ### Changed
+- **Only official plugins may use C#:** a C# plugin runs only when it is officially signed, and this is checked every time it loads. Plugins from other authors must be JavaScript. A C# plugin that is not allowed stays in the list with the reason and can be removed.
+- **Plugins that type on your PC are limited to button presses:** a plugin you allowed to press keys can do so only while you press one of its buttons, and only a little (at most 200 characters and 10 key combinations per press). It cannot type into a terminal, a system tool or Macro Grid itself, cannot use the Windows key, and is switched off if it tries to type a harmful command. The Plugins window shows how often it used the keyboard today.
 - **One version number:** Macro Grid and the tools plugins are built with now share one version number, so it is easy to tell which plugins fit which version. Plugins that work today keep working.
 - **Clearer plugin messages:** When a plugin does not fit, the Plugins window now says which Macro Grid version it needs.
 

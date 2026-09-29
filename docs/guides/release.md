@@ -5,7 +5,7 @@ Read it first for any release, version or signing work; the repository documents
 
 | Component | Repository | Detail | Release guide |
 |---|---|---|---|
-| Server, editor, installer and the plugin SDK (NuGet) | `macro-grid` | this page | this page |
+| Server, editor, installer and the plugin SDK (source only) | `macro-grid` | this page | this page |
 | Phone app (Android APK) | `macro-grid-client` | `docs/release.md` there (APK build, keystore) | this page, "Order" |
 | Plugins (`obs`, `plc-icons`, `soundboard`, `hellojs`) | `macro-grid-plugin` | `docs/release.md` there (release script, index) | this page, "Order" |
 
@@ -20,18 +20,18 @@ and a plugin says in `plugin.json` which Macro Grid it needs (`minMacroGrid`). A
 | Phone app (`macro-grid-client`) | `client-vX.Y.Z` | `client-v0.2.0` | `version` in `package.json` |
 | One plugin (`macro-grid-plugin`) | `plugin-<id>-vX.Y.Z` | `plugin-plc-icons-v0.1.3` | `version` in the plugin's `plugin.json` |
 
-Plugin ids: `obs`, `plc-icons`, `soundboard`, `hellojs`. There is no separate SDK tag: the tag `server-vX.Y.Z` publishes the SDK package as well.
+Plugin ids: `obs`, `plc-icons`, `soundboard`, `hellojs`. There is no separate SDK tag, and the SDK is not published anywhere (it left NuGet after 1.2.0): the official plugins build against a checkout of this repository at the server tag.
 
 While the project is in beta, the server tag ends in `-beta` and the GitHub Release is a pre-release: `server-v1.0.0-beta`. The version inside the
-program (and the NuGet package) stays plain `1.0.0`; the suffix exists only in the tag and the release title, and it is ignored when versions are compared
+program stays plain `1.0.0`; the suffix exists only in the tag and the release title, and it is ignored when versions are compared
 (before 1.0.0 the label was `-alpha`; those tags stay as history).
 
 ## Order of a release
 
-Each step waits for the one before it, because a plugin can only be built against an SDK that is on NuGet, and a phone app is only useful with a server it works with.
+Each step waits for the one before it, because a plugin can only be built against an SDK that has its server tag (the plugin repository checks that tag out), and a phone app is only useful with a server it works with.
 
-1. **Server and SDK** (below): set `<Version>`, changelogs, merge to `main`, tag `server-vX.Y.Z`. The tag builds the installer (draft release) and publishes the SDK package.
-   Done when the installer draft is tested and published, and the package is listed on nuget.org (5 to 30 minutes after the tag).
+1. **Server and SDK** (below): set `<Version>`, changelogs, merge to `main`, tag `server-vX.Y.Z`. The tag builds the installer (draft release).
+   Done when the installer draft is tested and published.
 2. **Plugins**: nothing to do after a MINOR or PATCH server release, they keep running (`minMacroGrid` says the *oldest* Macro Grid). A plugin needs a new release only when it
    has its own change, when it starts to use something from a newer MINOR (raise its `minMacroGrid` and `MacroGridSdkVersion`), or after a MAJOR (rebuild every plugin, set `minMacroGrid` to the new MAJOR).
 3. **Phone app**: independent. Raise the Macro Grid version it needs only when it starts to depend on something new in the server.
@@ -47,7 +47,6 @@ Nothing that signs is stored on GitHub. The keys stay on the maintainer's PC, ou
 | **Plugin package** (the release zip) | ECDSA P-256 over the zip, made locally by `scripts/release-plugin.ps1` in `macro-grid-plugin` (`scripts/sign-package.cs`), stored as `<zip>.sig` and in the source index | `%USERPROFILE%\signing\plugin-signing\plugin-signing-private.pem` on the maintainer's PC | The server, with the public key in `PluginSigning.cs`: a valid signature is what makes a plugin **Official** in the editor | A new key, a server release that contains its public key, and every plugin signed again |
 | **Phone app** (the APK) | Android release keystore, used by `scripts\build-release-apk.ps1` in `macro-grid-client`; the APK is uploaded to the draft release by hand | A keystore file outside the repository plus `android\keystore.properties` (git-ignored) | Android: an update installs only over an app signed with the same key. The script also stops when the certificate is not the release certificate | The update path closes for good: every user has to uninstall and reinstall |
 | **Server installer** | Not code-signed (Windows SmartScreen warns on first run) | none | The in-app updater checks the SHA-256 that GitHub reports for the asset | none |
-| **SDK package** (NuGet) | No key: NuGet Trusted Publishing from `publish-sdk.yml` (environment `nuget`) | none | nuget.org | none |
 
 Never put a key, a keystore or a password in a repository, in a workflow or in chat. The plugin repository has no release workflow on purpose: a plugin release is built and signed
 on the maintainer's PC, and `examples/third-party-release.yml` in that repository is a signing-free template for other authors. Details of the two local steps:
@@ -69,7 +68,6 @@ on the maintainer's PC, and `examples/third-party-release.yml` in that repositor
      `MacroGrid-Setup-<version>.exe` with Inno Setup (on every tag; the updater downloads exactly this file name) and attaches both to a **draft**
      GitHub Release whose body is the changelog section from step 3. If the installer is missing from the draft, the app offers the release page
      instead of "Install now".
-   - `Publish SDK` (`.github/workflows/publish-sdk.yml`) publishes `MacroGrid.Plugin.Abstractions` to nuget.org, see "Publishing the plugin SDK" below.
 9. Test the installer on a clean PC (install, upgrade over the old version, uninstall), and test the update on a PC that has the previous
    version installed (see "Updating from inside the app" below). **Publishing the draft is what reaches people: every running install checks
    for updates about a minute after start and every 6 hours after that, so an untested installer must not be published.**
@@ -131,54 +129,21 @@ The app finds new releases by itself (design: [../design/auto-update.md](../desi
 
 - The installer is not code-signed, so Windows SmartScreen will warn on first run. Signing needs a code-signing certificate. Updates are checked only against the SHA-256 that GitHub reports, which protects against a broken download, not against a compromised GitHub account.
 
-## Publishing the plugin SDK to NuGet
+## The plugin SDK is not published any more
 
-`MacroGrid.Plugin.Abstractions` is published from CI with NuGet Trusted Publishing, so no API key is stored in GitHub or on
-any machine. The workflow is `.github/workflows/publish-sdk.yml` (its file name is part of the policy on nuget.org: do not
-rename it). It runs on the same tag as the server release, `server-vX.Y.Z` or `server-vX.Y.Z-beta`, because the two share one
-version — but it only actually publishes when `src/MacroGrid.Plugin.Abstractions` differs from the previous `server-v*` tag.
-Most server releases do not touch the SDK, and a NuGet version can never be replaced, so a release that leaves the SDK unchanged
-does not create a new package (a "Check whether the SDK itself changed" step decides this and the rest of the job is skipped when
-it did not). This means the SDK's NuGet version is not always the same as the running server's: a plugin author uses the newest
-*published* SDK version, not the newest server version — `docs/guides/versioning.md` says so.
+Up to Macro Grid 1.2.0 `MacroGrid.Plugin.Abstractions` was published to nuget.org from CI. Since only the official plugins may be written in C#
+(the server loads no other C# plugin), no third party needs the package, and the same code is public in this repository. Publishing stopped and
+`publish-sdk.yml` is gone; the maintainer unlisted the existing versions on nuget.org on 2026-09-29 (package page > Manage > Listing). Unlisted versions disappear from search
+but stay downloadable by their exact version, which the tests need: `LegacyPluginCompatibilityTests` builds against the real SDK 0.4.0, and package
+validation compares against the 1.0.0 baseline. NuGet does not allow deleting a version.
 
-One-time setup:
+What replaces it:
 
-1. nuget.org, account menu > Trusted Publishing: add a policy with owner `Deccoyi`, repository `macro-grid`, workflow file
-   `publish-sdk.yml` and environment `nuget`. While the repository is private the policy is only temporarily active and
-   becomes permanent after the first successful push.
-2. GitHub, repository settings: create the environment `nuget` and add the secret `NUGET_USER` (your nuget.org user name,
-   not the e-mail address).
-
-### What happens on the tag
-
-A published version can never be replaced or deleted on nuget.org, only unlisted. Check everything before the tag (the server checklist above).
-
-1. **Tag and push** (only the owner does this; there is no API key to hand out): `git tag server-vX.Y.Z-beta` and `git push origin server-vX.Y.Z-beta`.
-2. **The workflow** (Actions > "Publish SDK") checks that the tagged commit is on `dev` or `main` and that the tag's `X.Y.Z` equals `<Version>` in
-   `Directory.Build.props`, then diffs `src/MacroGrid.Plugin.Abstractions` against the previous `server-v*` tag. Unchanged ⇒ the run ends there, nothing is
-   published, and that is expected, not a failure. Changed ⇒ it packs (also running the package-validation check below), logs in to nuget.org
-   (short-lived key) and pushes the `.nupkg` and the `.snupkg` symbols. `--skip-duplicate` makes a re-run of the same version harmless.
-3. **Verify**, only when the SDK changed: after 5 to 30 minutes https://www.nuget.org/packages/MacroGrid.Plugin.Abstractions shows the new version, or
-   `https://api.nuget.org/v3-flatcontainer/macrogrid.plugin.abstractions/index.json` lists it.
-4. **Move the plugins over** when they need it (see "Order of a release"): in the plugin repository set `MacroGridSdkVersion` in `Directory.Build.props` to the new
-   version and raise `minMacroGrid` in each `plugin.json` that uses the new API. Build and run the plugin CI.
-
-Update the SDK `README.md` if the reference snippet shows the version, and the changelogs (`docs/CHANGELOG-developer.md` for anything a plugin author must know).
-
-**Guardrail:** `dotnet pack` runs .NET's package validation (`EnablePackageValidation`) against the published `1.0.0` package (the SDK csproj's
-`PackageValidationBaselineVersion`) every time, changed or not. If a public member was removed or changed incompatibly since 1.0.0, the pack step fails
-right there with an `error CP0...`, before anything reaches nuget.org — that is the "no breaking change within a MAJOR" rule from `versioning.md`,
-enforced by the build instead of by memory. Move the baseline only when 2.0.0 ships. `LegacyPluginCompatibilityTests` (in the test suite) is the other
-half of that guarantee: it actually loads a plugin built against the real, published SDK 0.4.0 on the current server and asserts it is `Loaded`.
-
-If the publish fails:
-
-- Version check fails: the tag's version and `<Version>` differ, or the tag is not `server-vX.Y.Z[-beta]`. Fix the file; delete the tag locally and on
-  GitHub (`git tag -d <tag>`, `git push origin :refs/tags/<tag>`) and tag again. Nothing was published. (The `Release` workflow has the same check.)
-- Branch check fails: the tagged commit is not on `dev` or `main`. Push the commit first, then re-tag as above.
-- Login fails: the trusted-publishing policy on nuget.org does not match (owner `Deccoyi`, repository `macro-grid`, workflow
-  `publish-sdk.yml`, environment `nuget`), the policy is inactive, or the `NUGET_USER` secret is missing or is an e-mail
-  address.
-- Push rejected with 409 or "already exists": that version is on nuget.org already. Bump the version; it cannot be reused.
-- A broken version got out: unlist it on nuget.org (package page > Manage > Listing) and publish a fixed patch version.
+- The plugin repository builds against a checkout of this repository at the matching server tag (a project reference to
+  `src/MacroGrid.Plugin.Abstractions`); its CI checks both repositories out, and `scripts/release-plugin.ps1` there refuses to build when the sibling checkout is not
+  at the `MacroGridSdkVersion` it declares. To move the official plugins to a new SDK: tag and release the server first, set `MacroGridSdkVersion` in the plugin
+  repository's `Directory.Build.props` to that version and raise `minMacroGrid` in each `plugin.json` that uses the new API.
+- **Guardrail:** CI runs `dotnet pack` on the SDK (nothing is pushed), which runs .NET's package validation (`EnablePackageValidation`) against the published `1.0.0` baseline
+  (the SDK csproj's `PackageValidationBaselineVersion`). A public member removed or changed incompatibly since 1.0.0 fails the build with an `error CP0...` — the
+  "no breaking change within a MAJOR" rule from `versioning.md`, enforced by the build. Move the baseline only when 2.0.0 ships.
+- The trusted-publishing policy and the `nuget` environment and `NUGET_USER` secret are no longer used; remove them when convenient.

@@ -1,7 +1,10 @@
 using System.Collections.Concurrent;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using System.Diagnostics;
 using Jint;
+using MacroGrid.Core.Diagnostics;
+using MacroGrid.Core.Sessions;
 using MacroGrid.Plugin.Abstractions;
 using MacroGrid.Protocol;
 using Microsoft.Extensions.Logging;
@@ -40,6 +43,16 @@ public sealed partial class JsPlugin : IPlugin, IDisposable
     private readonly ILogger _logger;
     private readonly Action<string> _onFaulted;
     private readonly JsPluginLimits _limits;
+    private readonly IActiveWindowSource? _windows;
+    private readonly Func<bool> _isElevated;
+
+    // The press window of the job that is running on the plugin thread right now (null for start-up, timers and anything
+    // else that is not a button press). Only the plugin thread reads or writes it.
+    private JsPressWindow? _press;
+    private bool _inputBlocked;
+    private readonly Lock _usageLock = new();
+    private DateOnly _usageDay;
+    private int _usesToday;
 
     private readonly BlockingCollection<Action> _jobs = [];
     private readonly Dictionary<int, Timer> _timers = [];
@@ -66,8 +79,12 @@ public sealed partial class JsPlugin : IPlugin, IDisposable
         IInputService? input,
         ILogger logger,
         Action<string> onFaulted,
-        JsPluginLimits? limits = null)
+        JsPluginLimits? limits = null,
+        IActiveWindowSource? windows = null,
+        Func<bool>? isElevated = null)
     {
+        _windows = windows;
+        _isElevated = isElevated ?? JsInputPolicy.ServerIsElevated;
         _manifest = manifest;
         _scriptPath = scriptPath;
         _permissions = permissions;
@@ -116,10 +133,22 @@ public sealed partial class JsPlugin : IPlugin, IDisposable
         var contextJson = JsonSerializer.Serialize(new { context.DeviceId, context.PageId, context.WidgetId, context.Value }, ProtocolJson.Options);
         var run = Post(() =>
         {
-            Invoke("__runAction", type, contextJson, settings.ToJsonString());
+            // A person touched a device: keyboard input is allowed for this job and the continuations it starts.
+            _press = new JsPressWindow(Stopwatch.GetTimestamp() + (long)(_limits.PressWindow.TotalSeconds * Stopwatch.Frequency));
+            try { Invoke("__runAction", type, contextJson, settings.ToJsonString()); }
+            finally { _press = null; }
             return 0;
         });
         return run.WaitAsync(ct);
+    }
+
+    /// <summary>How many button presses used the keyboard through this plugin today (shown in the Plugins window).</summary>
+    internal int KeyboardUsesToday
+    {
+        get
+        {
+            lock (_usageLock) return _usageDay == DateOnly.FromDateTime(DateTime.Now) ? _usesToday : 0;
+        }
     }
 
     public void Dispose()
@@ -195,6 +224,7 @@ public sealed partial class JsPlugin : IPlugin, IDisposable
         engine.SetValue("__status", new Action<string, string, string>(Status));
         engine.SetValue("__hotkey", new Action<string>(Hotkey));
         engine.SetValue("__type", new Action<string>(TypeText));
+        engine.SetValue("__pressEnd", new Action(() => { if (_press is { } press) press.Settled = true; }));
         engine.SetValue("__http", new Func<string, string, string, string, string>(Http));
         engine.SetValue("__httpAsync", new Action<int, string, string, string, string>(HttpAsync));
         engine.SetValue("__timer", new Action<int, int, bool>(StartTimer));

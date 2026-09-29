@@ -212,8 +212,7 @@ Saved sources live in `%AppData%\MacroGrid\plugin-sources.json`.
   before the install call (folder, catalog and pasted link alike) and the plugin is approved right away
   once installed, so there is no second "Enable" click. Discover from a third-party source keeps its
   stronger warning on top. A native (C#) plugin has no permission gate by design (it runs in-process with
-  full trust), so installing one from a folder always shows a full-access warning first; Discover and link
-  installs from the official source skip it.
+  full trust), so only an official, signed one is accepted at all (see "10. Only official C# plugins" below); the folder warning this used to show is gone.
 - **Installed tab:** Official / Third-party / Local badges and "Update available".
   The update flag is only computed after Discover data has been fetched.
 - All strings go through `en.ts` and `tr.ts`.
@@ -241,3 +240,19 @@ Saved sources live in `%AppData%\MacroGrid\plugin-sources.json`.
 - [x] **Phase 5 — host:** badges and update-available.
 
 Each phase updates both changelogs under `[Unreleased]`.
+
+## 10. Only official C# plugins (decided 2026-09-29)
+
+A C# plugin runs in the server process with full trust, so the host loads one only when it carries a valid signature of the official plugin key, checked at
+every load (`PluginTrustVerifier`, see `architecture.md`, Security model). The zip signature protects the download; `signature.json` and `signature.sig` inside the package protect
+the installed folder. What each install path does:
+
+| Path | C# plugin | JavaScript plugin |
+|---|---|---|
+| Official catalog (Discover) | allowed; the package must also pass the load check | allowed |
+| Added third-party source | refused before download ("Only official C# plugins can be installed."); its C# entries are not listed | allowed, as before |
+| Pasted repository link | refused after reading its `plugin.json` | allowed, as before |
+| Local folder | refused unless the folder passes the check (a copy of an official plugin still works) | allowed, as before |
+
+A plugin that fails the check at start, install, reload or update is not loaded and shows *Not allowed* with the reason, and a `Security:` line is logged. A build made from
+source in the Debug configuration still loads an unsigned C# plugin and says so in red in the status bar; released builds never do. There is no setting for it.

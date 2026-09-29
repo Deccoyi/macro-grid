@@ -17,11 +17,13 @@ Macro Grid is designed for a home or office network you trust. It is **not** har
   Because the PIN and the token travel unencrypted, they protect against casual access, not against an attacker who can watch the network.
 - A paired device can press keys, type text and start programs on the PC. Pair only devices you trust and remove the ones you no longer use.
 - The editor API is reachable only from the server's own computer.
-- C# plugins run with full trust and can do anything the server can; install only plugins you trust. JavaScript plugins run in a sandbox and only
+- Only official, signed C# plugins run. A C# plugin has full trust and can do anything the server can, so Macro Grid loads one only when it carries a valid
+  signature of the official plugin key, checked every time it loads. Plugins by other authors are JavaScript plugins, which run in a sandbox and only
   get the permissions you allow.
-- **Plugins by other authors** are not reviewed by this project. A C# plugin can read your files, start programs and connect to the internet and
-  send data, and Macro Grid cannot limit or check that. A JavaScript plugin can only send web requests to the exact addresses it lists, and the
-  permission it asks for says whether each one is on this computer, your local network or the internet.
+- **Plugins by other authors** are not reviewed by this project. A JavaScript plugin can only send web requests to the exact addresses it lists, and the
+  permission it asks for says whether each one is on this computer, your local network or the internet. The `input` permission (pressing keys and typing)
+  works only while you press one of the plugin's buttons, with small limits, and never into a terminal or a system tool; an approved plugin with it can still
+  type up to 200 characters into an ordinary program when you press its button, so allow it only for plugins you trust.
 - **Security log.** Pairings, wrong PINs, removed devices and plugin installs and permissions are written to the log files in
   `%AppData%\MacroGrid\logs` with the address they came from (never a PIN or a token). The logs stay on this computer and are kept for 14
   days, at most 5 MB a day and 20 MB in total; older ones are deleted automatically.

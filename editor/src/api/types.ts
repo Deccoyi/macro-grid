@@ -103,7 +103,7 @@ export interface PluginInfo {
   id: string;
   name: string;
   version: string;
-  status: "Loaded" | "Incompatible" | "Error" | "NeedsApproval";
+  status: "Loaded" | "Incompatible" | "Error" | "NeedsApproval" | "NotAllowed";
   detail: string | null;
   hasSettings: boolean;
   /** For "NeedsApproval": the permissions a JS plugin declares and is waiting to be allowed. */
@@ -119,6 +119,10 @@ export interface PluginInfo {
    * tool window give it a chevron and ask GET /api/plugins/{id}/tree-items for anything. Missing from an
    * older server (treat as false). See docs/design/plugins-tool-window.md. */
   hasTreeItems?: boolean;
+  /** True only in a development build, for a C# plugin that loaded without a valid signature. */
+  unsigned?: boolean;
+  /** How many button presses used the keyboard through this JavaScript plugin today. Missing from an older server. */
+  keyboardUsesToday?: number;
 }
 
 /** Mirrors MacroGrid.Plugin.Abstractions.PluginTreeItem — one node of a plugin's own tree in the Plugins tool

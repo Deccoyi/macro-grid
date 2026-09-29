@@ -1,4 +1,5 @@
 using System.Text.Json;
+using MacroGrid.Core.Diagnostics;
 using MacroGrid.Core.Plugins.Js;
 using MacroGrid.Core.Variables;
 using MacroGrid.Plugin.Abstractions;
@@ -31,6 +32,19 @@ public sealed partial class PluginManager
             if (!File.Exists(Path.Combine(dir, "plugin.json"))) continue;
             await LoadFolderCoreAsync(dir);
         }
+    }
+
+    /// <summary>A development build that runs an unsigned C# plugin says so in the editor's status bar, in red, for as
+    /// long as one is running.</summary>
+    private void RefreshUnsignedNotice()
+    {
+        bool any;
+        lock (_stateLock) any = _entries.Values.Any(e => e.Running is not null && e.Info.Unsigned);
+        if (any)
+            statusRegistry.SetCore("unsigned-plugins", "Development build: unsigned C# plugins are loaded", StatusLevel.Error,
+                tooltip: "This server was built from source and runs C# plugins that are not officially signed. Released builds never do this.");
+        else
+            statusRegistry.RemoveCore("unsigned-plugins");
     }
 
     // ---- loading ----
@@ -77,6 +91,20 @@ public sealed partial class PluginManager
             return Fail(PluginLoadStatus.Error, "This id is already used by another installed plugin");
         }
 
+        // Only official, signed C# plugins run; checked at every load. Nothing of the plugin has executed before this point.
+        PluginTrustResult? trust = null;
+        if (manifest.Kind == PluginKind.Csharp)
+        {
+            trust = _trust.Verify(dir, manifest);
+            if (!trust.Allowed)
+            {
+                logger.LogWarning(SecurityEvents.PluginNotAllowed, "Security: C# plugin {Id} was not loaded: {Reason}", SecurityEvents.ForLog(manifest.Id), trust.Reason);
+                return Fail(PluginLoadStatus.NotAllowed, trust.Reason!);
+            }
+            if (trust.Unsigned)
+                logger.LogWarning("C# plugin {Id} is not signed; loaded because this is a development build", SecurityEvents.ForLog(manifest.Id));
+        }
+
         var compatibility = PluginCompatibility.Check(serverVersion, manifest.MinMacroGrid, manifest.MacroGrid, manifest.SdkVersion);
         if (!compatibility.Compatible)
             return Fail(PluginLoadStatus.Incompatible, compatibility.Reason!);
@@ -105,11 +133,11 @@ public sealed partial class PluginManager
             if (manifest.Kind == PluginKind.Js)
             {
                 instance = new JsPlugin(manifest, entryPath, new JsPermissions(declared), variableStore, input, logger,
-                    reason => _ = Task.Run(() => DisableAsync(manifest.Id, reason)));
+                    reason => _ = Task.Run(() => DisableAsync(manifest.Id, reason)), windows: windowSource);
             }
             else
             {
-                context = new PluginLoadContext(manifest.Id, entryPath);
+                context = new PluginLoadContext(manifest.Id, entryPath, trust!.SignedFiles, dir);
                 var assembly = context.LoadPluginAssembly(entryPath);
                 var pluginType = assembly.GetTypes().FirstOrDefault(t => typeof(IPlugin).IsAssignableFrom(t) && !t.IsAbstract && !t.IsInterface)
                     ?? throw new InvalidOperationException($"No type implementing IPlugin was found in {manifest.Entry}");
@@ -136,7 +164,8 @@ public sealed partial class PluginManager
             localizer?.Register(manifest.Id, dir, manifest.DefaultLanguage);
             var treeProvider = instance as IPluginTreeProvider;
             var info = new LoadedPlugin(manifest.Id, manifest.Name, manifest.Version, PluginLoadStatus.Loaded, null,
-                host.SettingsPage is not null, HasIcon: ResolveIconPath(dir, manifest) is not null, HasTreeItems: treeProvider is not null);
+                host.SettingsPage is not null, HasIcon: ResolveIconPath(dir, manifest) is not null, HasTreeItems: treeProvider is not null,
+                Unsigned: trust?.Unsigned == true);
             var running = new Running(context, instance, host, variableStore);
             if (treeProvider is not null)
             {
@@ -147,6 +176,7 @@ public sealed partial class PluginManager
             var entry = new Entry(dir, info) { Running = running };
             lock (_stateLock) _entries[manifest.Id] = entry;
             if (treeProvider is not null) TreeChanges.Record(manifest.Id, null, wholePlugin: true);
+            RefreshUnsignedNotice();
             logger.LogInformation("Plugin loaded: {Id} {Version}", manifest.Id, manifest.Version);
             return info;
         }

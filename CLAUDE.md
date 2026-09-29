@@ -15,7 +15,7 @@
 ## Versions, releases and signing
 - Any version, release, tag or signing work (server, SDK, phone app or plugins): read `docs/guides/release.md` first (the one release guide, with the tag table, the order and the signing keys), then `docs/guides/versioning.md` for the rules. The other repositories link here; do not copy their content into other documents.
 - The server and the SDK share one version, set only in `<Version>` in `Directory.Build.props`. Never write a version into code or a project file.
-- Tags, NuGet publishing and plugin or APK releases are outward-facing: ask the owner before each one.
+- Tags and plugin or APK releases are outward-facing: ask the owner before each one. The SDK is no longer published to NuGet.
 
 ## Commits
 - Conventional Commits (`type(scope): description`), always in English.

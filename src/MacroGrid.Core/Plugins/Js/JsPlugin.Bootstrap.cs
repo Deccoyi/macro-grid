@@ -11,7 +11,7 @@ public sealed partial class JsPlugin
           'use strict';
           const g = globalThis;
           const names = ['permissions', 'log', 'varSet', 'varGet', 'varRemove', 'varDescribe', 'registerAction',
-            'settingsPage', 'settingsGet', 'status', 'hotkey', 'type', 'http', 'httpAsync', 'timer', 'cancel'];
+            'settingsPage', 'settingsGet', 'status', 'hotkey', 'type', 'pressEnd', 'http', 'httpAsync', 'timer', 'cancel'];
           const n = {};
           for (const name of names) { n[name] = g['__' + name]; delete g['__' + name]; }
 
@@ -78,7 +78,12 @@ public sealed partial class JsPlugin
           g.__runAction = function (type, contextJson, settingsJson) {
             const run = actions[type];
             if (!run) throw new Error('Unknown action ' + type);
-            run(JSON.parse(contextJson), JSON.parse(settingsJson));
+            // Keyboard input is allowed only until the action, and the promise it returns, have settled.
+            let result;
+            try { result = run(JSON.parse(contextJson), JSON.parse(settingsJson)); }
+            catch (e) { n.pressEnd(); throw e; }
+            if (result && typeof result.then === 'function') result.then(() => n.pressEnd(), () => n.pressEnd());
+            else n.pressEnd();
           };
           g.__httpDone = function (id, ok, payload) {
             const p = pending[id];

@@ -3,7 +3,8 @@
 Status (checked 2026-09-29): **all parts released** (server 1.1.0/1.2.0, plugin repo `main` — OBS 0.3.0 uses part B, phone
 app `client-v0.3.0` has part A's certificate pinning). What was part D (a native C# plugin's install-time warning) is done
 too — see "Native plugins" below; it was never a permission mechanism to design, just a warning screen, and closing it
-does not need a decision.
+does not need a decision. (2026-09-29: that folder warning was replaced by the rule that only official, signed C# plugins load at all; see
+`../design/plugin-distribution.md`, section 10, and `../architecture.md`.)
 Repositories: `macro-grid` (all parts), `macro-grid-client` (part A), `macro-grid-plugin` (part B). Touches the security
 model: update `../architecture.md` and `../design/security-risk-assessment.md` with each part.
 

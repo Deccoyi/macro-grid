@@ -1,4 +1,5 @@
 using System.Reflection;
+using System.Security.Cryptography;
 using System.Runtime.Loader;
 using MacroGrid.Plugin.Abstractions;
 
@@ -12,7 +13,11 @@ namespace MacroGrid.Core.Plugins;
 /// right after) it ran. The trade-off is that <c>Assembly.Location</c> is empty inside a plugin — use
 /// <see cref="MacroGrid.Plugin.Abstractions.IPluginHost.DataDirectory"/> to find its files instead.
 /// </summary>
-internal sealed class PluginLoadContext(string pluginId, string entryDllPath) : AssemblyLoadContext(name: $"plugin:{pluginId}", isCollectible: true)
+///
+/// With <paramref name="signedFiles"/> (an official, signed plugin) only files the signature lists are ever loaded, and each
+/// one is hashed again right before it is loaded: a plugin cannot write a DLL into its own folder later and have it resolved,
+/// and a file swapped after the check is refused. Without it (an unsigned plugin in a development build) nothing is restricted.
+internal sealed class PluginLoadContext(string pluginId, string entryDllPath, IReadOnlyDictionary<string, string>? signedFiles = null, string? pluginDir = null) : AssemblyLoadContext(name: $"plugin:{pluginId}", isCollectible: true)
 {
     /// <summary>
     /// Must stay a single shared instance across the host and every plugin — otherwise a plugin's
@@ -34,18 +39,31 @@ internal sealed class PluginLoadContext(string pluginId, string entryDllPath) : 
             return SharedAssembly;
 
         var path = _resolver.ResolveAssemblyToPath(assemblyName);
-        return path is null ? null : LoadPluginAssembly(path);
+        if (path is null || !IsSigned(path)) return null;
+        return LoadPluginAssembly(path);
     }
 
     internal Assembly LoadPluginAssembly(string path)
     {
-        using var stream = new MemoryStream(File.ReadAllBytes(path));
+        var bytes = File.ReadAllBytes(path);
+        if (!IsSigned(path, bytes))
+            throw new InvalidOperationException($"'{Path.GetFileName(path)}' is not part of the plugin's signature.");
+        using var stream = new MemoryStream(bytes);
         return LoadFromStream(stream);
     }
 
     protected override nint LoadUnmanagedDll(string unmanagedDllName)
     {
         var path = _resolver.ResolveUnmanagedDllToPath(unmanagedDllName);
-        return path is null ? nint.Zero : LoadUnmanagedDllFromPath(path);
+        return path is null || !IsSigned(path) ? nint.Zero : LoadUnmanagedDllFromPath(path);
+    }
+
+    /// <summary>True when there is no restriction, or the file is listed in the signature and still has the listed hash.</summary>
+    private bool IsSigned(string path, byte[]? bytes = null)
+    {
+        if (signedFiles is null) return true;
+        var relative = Path.GetRelativePath(Path.GetFullPath(pluginDir ?? Path.GetDirectoryName(entryDllPath)!), Path.GetFullPath(path)).Replace('\\', '/');
+        if (!signedFiles.TryGetValue(relative, out var expected)) return false;
+        return string.Equals(Convert.ToHexString(SHA256.HashData(bytes ?? File.ReadAllBytes(path))), expected, StringComparison.OrdinalIgnoreCase);
     }
 }

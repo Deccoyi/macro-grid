@@ -35,6 +35,14 @@ public sealed class ForegroundWindowMonitor : IActiveWindowSource
         _thread.Start();
     }
 
+    public ForegroundWindow? GetForeground()
+    {
+        var hWnd = GetForegroundWindow();
+        if (hWnd == IntPtr.Zero) return null;
+        var processName = ProcessNameFor(hWnd);
+        return processName is null ? null : new ForegroundWindow(processName, TitleFor(hWnd), ClassFor(hWnd));
+    }
+
     public bool HasVisibleWindow(string processName)
     {
         var found = false;
@@ -104,6 +112,12 @@ public sealed class ForegroundWindowMonitor : IActiveWindowSource
         }
     }
 
+    private static string ClassFor(IntPtr hWnd)
+    {
+        var sb = new StringBuilder(256);
+        return GetClassName(hWnd, sb, sb.Capacity) > 0 ? sb.ToString() : "";
+    }
+
     private static string TitleFor(IntPtr hWnd)
     {
         var length = GetWindowTextLength(hWnd);
@@ -161,4 +175,10 @@ public sealed class ForegroundWindowMonitor : IActiveWindowSource
 
     [DllImport("user32.dll", CharSet = CharSet.Auto)]
     private static extern int GetWindowTextLength(IntPtr hWnd);
+
+    [DllImport("user32.dll")]
+    private static extern IntPtr GetForegroundWindow();
+
+    [DllImport("user32.dll", CharSet = CharSet.Auto)]
+    private static extern int GetClassName(IntPtr hWnd, StringBuilder lpClassName, int nMaxCount);
 }

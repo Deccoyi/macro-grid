@@ -31,6 +31,7 @@ public sealed partial class PluginManager
         statusRegistry.RemovePlugin(id);
         localizer?.Unregister(id);
         entry.Running = null;
+        RefreshUnsignedNotice();
 
         if (running.Context is { } context)
         {

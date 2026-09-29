@@ -1,8 +1,10 @@
 using System.Text.Json;
 using MacroGrid.Core.Actions;
 using MacroGrid.Core.Diagnostics;
+using MacroGrid.Core.Plugins.Js;
 using MacroGrid.Core.Profiles;
 using MacroGrid.Core.Security;
+using MacroGrid.Core.Sessions;
 using MacroGrid.Core.Variables;
 using MacroGrid.Plugin.Abstractions;
 using Microsoft.Extensions.Hosting;
@@ -36,9 +38,12 @@ public sealed partial class PluginManager(
     IInputService? input,
     ILogger<PluginManager> logger,
     PluginLocalizer? localizer = null,
-    ISecretProtector? secretProtector = null) : IHostedService
+    ISecretProtector? secretProtector = null,
+    PluginTrustVerifier? trustVerifier = null,
+    IActiveWindowSource? windowSource = null) : IHostedService
 {
     private static readonly JsonSerializerOptions ManifestJson = new(JsonSerializerDefaults.Web);
+    private readonly PluginTrustVerifier _trust = trustVerifier ?? PluginTrustVerifier.Official;
     private static readonly TimeSpan ProviderStopTimeout = TimeSpan.FromSeconds(5);
 
     /// <summary>One plugin folder: its list entry, and (only while it is running) the live instance.</summary>
@@ -72,7 +77,11 @@ public sealed partial class PluginManager(
 
     public IReadOnlyList<LoadedPlugin> Plugins
     {
-        get { lock (_stateLock) return [.. _entries.Values.Select(e => e.Info), .. _unrecognized]; }
+        get
+        {
+            lock (_stateLock)
+                return [.. _entries.Values.Select(e => e.Running?.Instance is JsPlugin js ? e.Info with { KeyboardUsesToday = js.KeyboardUsesToday } : e.Info), .. _unrecognized];
+        }
     }
 
     public IReadOnlyList<IIconPackSource> IconPacks
@@ -173,6 +182,8 @@ public sealed partial class PluginManager(
         var manifest = ReadManifest(Path.Combine(sourceDir, "plugin.json"));
         if (!IsSafeSegment(manifest.Id))
             throw new InvalidOperationException($"'{manifest.Id}' is not a valid plugin id.");
+        if (CheckInstallTrust(sourceDir, manifest) is { } refusal)
+            throw new InvalidOperationException(refusal);
 
         await _gate.WaitAsync();
         try
@@ -195,6 +206,18 @@ public sealed partial class PluginManager(
             return new PluginInstallResult(manifest.Id, manifest.Name, info);
         }
         finally { _gate.Release(); }
+    }
+
+    /// <summary>Null when the folder may be installed: a JavaScript plugin, or a C# plugin that passes the trust check
+    /// (a copy of an official plugin still works). Otherwise the reason it is refused.</summary>
+    public string? CheckInstallTrust(string sourceDir, PluginManifest? manifest = null)
+    {
+        manifest ??= ReadManifest(Path.Combine(sourceDir, "plugin.json"));
+        if (manifest.Kind != PluginKind.Csharp) return null;
+        var result = _trust.Verify(sourceDir, manifest);
+        if (result.Allowed) return null;
+        logger.LogWarning(SecurityEvents.PluginNotAllowed, "Security: C# plugin {Id} was refused at install", SecurityEvents.ForLog(manifest.Id));
+        return "Only official C# plugins can be installed.";
     }
 
     /// <summary>Reads a folder's plugin.json without installing anything — for the editor to show what it's
