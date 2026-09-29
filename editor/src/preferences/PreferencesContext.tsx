@@ -71,11 +71,18 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
   const [loadedState, setLoadedState] = useState(false);
   const [savedLanguage, setSavedLanguage] = useState<Language>(DEFAULTS.language);
   const channel = useRef<BroadcastChannel | null>(null);
+  // Counts local changes and the saves still in flight. A refetch (started by a window focus, and the first click into the
+  // editor is what focuses it) that was answered before this change reached the server carries the old values; applying
+  // them would put the change back (a section the user just collapsed opened again).
+  const localChanges = useRef(0);
+  const savesInFlight = useRef(0);
 
   const refetch = useCallback(() => {
+    const changesAtStart = localChanges.current;
     api.getPreferences().then((p) => {
       loaded.current = true;
       setLoadedState(true);
+      if (localChanges.current !== changesAtStart || savesInFlight.current > 0) return;
       setPrefs(p);
       setSavedLanguage(p.language);
     }).catch(() => {
@@ -108,10 +115,12 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
 
   const persist = useCallback((next: AppPreferences) => {
     setPrefs(next);
+    localChanges.current++;
     // Only after the initial GET resolves — otherwise a save could race the load and overwrite the
     // server's copy with these still-default values.
     if (loaded.current) {
-      api.savePreferences(next).then(() => setSavedLanguage(next.language)).catch(() => {});
+      savesInFlight.current++;
+      api.savePreferences(next).then(() => setSavedLanguage(next.language)).catch(() => {}).finally(() => { savesInFlight.current--; });
       channel.current?.postMessage(next);
     }
   }, []);
