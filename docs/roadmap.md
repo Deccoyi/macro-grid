@@ -34,7 +34,7 @@ Where the project stands. The server and the SDK are at 1.0.0 and under active d
   Official plugins live in the plugin repository: OBS, an icon pack and a JavaScript example.
 - **Browser deck** served by the server at `/deck/`.
 - **Packaging:** a single-file release build and a Windows installer with a user agreement, tested on a clean company PC (install, WebView2 setup, start with
-  Windows, upgrade, uninstall; [release.md](guides/release.md)); a signed release build of the phone app; the plugin SDK is published on NuGet.
+  Windows, upgrade, uninstall; [release.md](guides/release.md)); a signed release build of the phone app. (The plugin SDK was published on NuGet up to 1.2.0 and is not any more; see [guides/release.md](guides/release.md).)
 - **Phone app** (its own repository): connection with saved servers and QR pairing, the profile drawer, page swipes, kiosk mode and orientation lock,
   keep-awake, automatic reconnection, an offline layout cache, and auto-update (checks GitHub, downloads and verifies a release-signed APK, hands it
   to Android's installer).

@@ -2,7 +2,8 @@
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
 
-    <!-- NuGet package metadata. The version comes from the repository's Directory.Build.props, the single source. -->
+    <!-- NuGet package metadata. The SDK is no longer published to NuGet (2026-09-29): the official plugins build against a checkout of this
+         repository. Packing stays only as the compatibility guard below. The version comes from the repository's Directory.Build.props. -->
     <PackageId>MacroGrid.Plugin.Abstractions</PackageId>
     <Authors>Deccoyi</Authors>
     <Description>Plugin SDK for Macro Grid: the IPlugin entry point, action/variable/settings/icon-pack interfaces and the plugin manifest types that C# plugins compile against. The Macro Grid server supplies the runtime copy of this assembly.</Description>
@@ -26,8 +27,8 @@
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <NoWarn>$(NoWarn);CS1591;CS1734</NoWarn>
 
-    <!-- Guards the "no breaking change within a MAJOR" rule (docs/guides/versioning.md): `dotnet pack` fetches this baseline
-         package from nuget.org and fails the build if the new one removed or incompatibly changed a public member. Pinned to
+    <!-- Guards the "no breaking change within a MAJOR" rule (docs/guides/versioning.md): `dotnet pack` (run by CI, never pushed) fetches this baseline
+         package from nuget.org (the published versions stay there, unlisted) and fails the build if the new one removed or incompatibly changed a public member. Pinned to
          1.0.0 (the first version under the shared-version scheme) for the whole 1.x line; move it only when 2.0.0 ships. -->
     <EnablePackageValidation>true</EnablePackageValidation>
     <PackageValidationBaselineVersion>1.0.0</PackageValidationBaselineVersion>

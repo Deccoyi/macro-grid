@@ -50,6 +50,10 @@ jobs:
         run: dotnet build --no-restore -c Release
       - name: Test
         run: dotnet test --no-build -c Release
+      - name: SDK compatibility guard
+        # The SDK is no longer published to NuGet, but the "no breaking change within a MAJOR" rule stays: packing runs the package
+        # validation against the published 1.0.0 baseline and fails on a removed or incompatibly changed public member. Nothing is pushed.
+        run: dotnet pack src/MacroGrid.Plugin.Abstractions -c Release --no-build -o "${{ runner.temp }}/sdk-check"
 
   vulnerabilities:
     name: Known vulnerabilities in shipped dependencies

@@ -12,10 +12,10 @@ How a release is made (tags, order, signing) is in [release.md](release.md).
 (older than what it asks for) — only on `1.2.1` and every later version of the same MAJOR. Server older than the declared value ⇒
 incompatible ("Needs Macro Grid editor 1.2.1 or newer"); server on another MAJOR ⇒ incompatible ("must be rebuilt"); anything in between runs.
 
-**The server and the plugin SDK are one thing and carry one number.** Macro Grid 1.3.0 is server 1.3.0 and SDK 1.3.0 (the NuGet package
-`MacroGrid.Plugin.Abstractions` 1.3.0). There is no separate SDK number to keep in step, and a plugin needs no second range.
+**The server and the plugin SDK are one thing and carry one number.** Macro Grid 1.3.0 is server 1.3.0 and SDK 1.3.0 (the `MacroGrid.Plugin.Abstractions`
+source in this repository at that version; the NuGet package stopped at 1.2.0). There is no separate SDK number to keep in step, and a plugin needs no second range.
 
-**Say which version you mean.** In anything a user or plugin author reads, name what the number belongs to: "Macro Grid editor 1.3.0" (the number a plugin's `minMacroGrid` asks for; the editor and the server that runs on the PC share it, so do not write "server" there), "SDK 1.3.0" (the NuGet package a plugin is built against) and "plugin 0.3.0" (the plugin's own `version`). Never a bare "version 1.3.0".
+**Say which version you mean.** In anything a user or plugin author reads, name what the number belongs to: "Macro Grid editor 1.3.0" (the number a plugin's `minMacroGrid` asks for; the editor and the server that runs on the PC share it, so do not write "server" there), "SDK 1.3.0" (the SDK an official plugin is built against) and "plugin 0.3.0" (the plugin's own `version`). Never a bare "version 1.3.0".
 
 ## What is versioned, and where
 
