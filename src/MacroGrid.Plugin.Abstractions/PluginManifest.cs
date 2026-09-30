@@ -65,6 +65,12 @@ public sealed record PluginManifest
     /// <summary>A URL to the plugin's page or source, shown as a link. Additive.</summary>
     public string? Homepage { get; init; }
 
+    /// <summary>One word or short phrase to browse Discover by ("Streaming", "Audio"); at most 32 characters. Additive: an older host ignores it.</summary>
+    public string? Category { get; init; }
+
+    /// <summary>Up to 5 short search words (at most 24 characters each) shown on the plugin's page in Discover. Additive.</summary>
+    public string[]? Tags { get; init; }
+
     /// <summary>Optional path (relative to the plugin folder, e.g. "icon.svg") to a small square logo shown
     /// in the editor's Plugins window and the Store instead of the generic category glyph. Additive: an
     /// older host ignores it. Must be .svg or .png, at most 100 KB — square, roughly 256x256 recommended for

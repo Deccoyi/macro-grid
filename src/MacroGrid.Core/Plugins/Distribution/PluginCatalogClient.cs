@@ -179,8 +179,17 @@ public sealed class PluginCatalogClient(HttpClient http)
             GetString(element, "author"),
             GetString(element, "homepage"),
             GetRequiredString(element, "kind", id),
-            versions);
+            versions)
+        {
+            Category = CatalogText.Clean(GetString(element, "category"), CatalogText.MaxCategoryLength),
+            Tags = CatalogText.CleanTags(GetStringArray(element, "tags")),
+        };
     }
+
+    private static IEnumerable<string?>? GetStringArray(JsonElement element, string name) =>
+        element.TryGetProperty(name, out var array) && array.ValueKind == JsonValueKind.Array
+            ? array.EnumerateArray().Select(e => e.ValueKind == JsonValueKind.String ? e.GetString() : null).ToList()
+            : null;
 
     private static PluginCatalogVersion ParseVersion(JsonElement element, string pluginId)
     {

@@ -208,6 +208,9 @@ export interface PluginCatalogEntryInfo {
   author: string | null;
   homepage: string | null;
   kind: string;
+  /** What to browse by and search words, from the catalog; missing or empty when the plugin did not declare any. */
+  category?: string | null;
+  tags?: string[];
   /** The newest version listed, whether or not this server can run it. */
   latestVersion: string | null;
   /** The newest version this server's SDK and version actually satisfy — what Install would fetch. Null
