@@ -9,7 +9,11 @@ public static class HostGuard
     private static readonly string[] Names = ["localhost", "127.0.0.1", "[::1]"];
 
     /// <summary>The plain and TLS ports of the server, and the Vite dev servers (editor 5190, browser deck 5192) that proxy `/api` to it.</summary>
-    private static readonly string[] Ports = ["9820", "9821", "5190", "5192"];
+    private static readonly string[] Ports =
+#if DEBUG
+        int.TryParse(Environment.GetEnvironmentVariable("MACROGRID_PORT"), out var devPort) ? ["9820", "9821", "5190", "5192", devPort.ToString(), (devPort + 1).ToString()] :
+#endif
+        ["9820", "9821", "5190", "5192"];
 
     public static bool IsAllowed(string? host)
     {

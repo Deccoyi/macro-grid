@@ -15,11 +15,15 @@ namespace MacroGrid.Host;
 /// <summary>Composition root of the embedded server: services, middleware, the WebSocket endpoint and the editor API.</summary>
 internal static class ServerApp
 {
-    public const int Port = 9820;
+    public static readonly int Port =
+#if DEBUG
+        int.TryParse(Environment.GetEnvironmentVariable("MACROGRID_PORT"), out var devPort) ? devPort :
+#endif
+        9820;
 
     /// <summary><c>wss://</c>/<c>https://</c>, next to the plain <see cref="Port"/>. A Kestrel listener is either plain or
     /// TLS, not both, so a second port is the only way to add TLS without breaking clients that only speak plain.</summary>
-    public const int TlsPort = 9821;
+    public static readonly int TlsPort = Port + 1;
 
     public static WebApplication Build(string[] args, IUiDialogService dialogs, IUiWindowService windows)
     {

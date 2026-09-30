@@ -13,6 +13,10 @@ internal static class Program
     private static void Main(string[] args)
     {
         using var mutex = new Mutex(initiallyOwned: true, @"Local\MacroGrid.Server", out var isFirstInstance);
+#if DEBUG
+        if (Environment.GetEnvironmentVariable("MACROGRID_ALLOW_SECOND_INSTANCE") == "1")
+            isFirstInstance = true;
+#endif
         if (!isFirstInstance)
         {
             MessageBox.Show(HostText.Get("app.alreadyRunning"), "Macro Grid",

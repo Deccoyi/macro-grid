@@ -24,6 +24,10 @@ public sealed class ProfileStore
     }
 
     public static string DefaultDataDir =>
+#if DEBUG
+        // A development build can run next to an installed copy: its own data folder (with MACROGRID_PORT and MACROGRID_ALLOW_SECOND_INSTANCE).
+        Environment.GetEnvironmentVariable("MACROGRID_DATA_DIR") is { Length: > 0 } dev ? dev :
+#endif
         Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "MacroGrid");
 
     public IReadOnlyList<Profile> All
