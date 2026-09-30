@@ -6,7 +6,11 @@ namespace MacroGrid.Core.Plugins.Widgets;
 /// <summary>A widget that passed the checks: its files exist inside the plugin folder and the numbers are in range.</summary>
 /// <param name="Fps">The frame rate cap with the default applied and, for an unverified plugin, held to 30.</param>
 /// <param name="Assets">Declared path to full path.</param>
-public sealed record ValidatedWidget(PluginWidgetManifest Manifest, string EntryPath, IReadOnlyList<KeyValuePair<string, string>> Assets, int Fps, PluginWidgetSize Size, IReadOnlyList<string> Options);
+public sealed record ValidatedWidget(PluginWidgetManifest Manifest, string EntryPath, IReadOnlyList<KeyValuePair<string, string>> Assets, int Fps, PluginWidgetSize Size, IReadOnlyList<string> Options)
+{
+    /// <summary>The declared options that start switched off on a placed widget (the manifest says <c>default: false</c>). The person can switch each one per widget.</summary>
+    public IReadOnlyList<string> OptionsOffByDefault => Options.Where(o => Manifest.Options is { } declared && declared.TryGetValue(o, out var option) && !option.Default).ToArray();
+}
 
 /// <summary>One widget that was refused, with a reason a plugin author can act on.</summary>
 public sealed record PluginWidgetProblem(string WidgetId, string Reason);

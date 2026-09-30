@@ -35,6 +35,7 @@ internal static class PluginWidgetApi
                 fps = info.Widget.Fps,
                 interactive = info.Widget.Manifest.Interactive,
                 options = info.Widget.Options,
+                optionsOff = info.Widget.OptionsOffByDefault,
                 verified = info.Verified,
                 settings = info.Widget.Manifest.Settings,
             }));

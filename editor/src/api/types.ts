@@ -453,6 +453,8 @@ export interface PluginWidgetInfo {
   interactive: boolean;
   /** The abilities the widget declared and the person approved (keepLoaded, storage, notifications). */
   options: string[];
+  /** The declared options that start switched off on a placed widget. */
+  optionsOff?: string[];
   /** False for a plugin that is not verified (every JavaScript plugin). */
   verified: boolean;
   settings?: SettingField[] | null;

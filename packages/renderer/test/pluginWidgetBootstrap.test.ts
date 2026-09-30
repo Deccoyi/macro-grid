@@ -12,7 +12,7 @@ interface Api {
   subscribe(names: string[]): void;
   request(data: unknown): Promise<unknown>;
   run(action: string, settings?: unknown): Promise<unknown>;
-  storage: { get(): Promise<unknown> };
+  storage: { get(key: string): Promise<unknown>; set(key: string, value: unknown): Promise<unknown>; remove(key: string): Promise<unknown> };
   notify(): Promise<unknown>;
 }
 

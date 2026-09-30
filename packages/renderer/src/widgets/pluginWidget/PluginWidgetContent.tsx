@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
+import { createContext, useContext, useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
 import type { Widget } from "../../types";
 import { PlaceholderContent } from "../PlaceholderContent";
 import type { PluginWidgetInstance, PluginWidgetRuntime } from "./runtime";
@@ -53,6 +53,15 @@ export function runtimeInfoOf(widget: Widget): PluginWidgetRuntimeInfo | undefin
   return runtime && typeof runtime === "object" ? (runtime as PluginWidgetRuntimeInfo) : undefined;
 }
 
+/**
+ * The options that are on for one placed widget: the ones the plugin declared (and the person approved), each unless the person switched it off on
+ * this widget (`props.options`), starting from the manifest's default.
+ */
+export function effectiveOptions(info: PluginWidgetRuntimeInfo | undefined, props: Record<string, unknown> | undefined): string[] {
+  const chosen = props?.options && typeof props.options === "object" ? (props.options as Record<string, unknown>) : {};
+  return (info?.options ?? []).filter((name) => (typeof chosen[name] === "boolean" ? chosen[name] === true : !(info?.optionsOff ?? []).includes(name)));
+}
+
 export interface PluginWidgetContentProps {
   widget: Widget;
   /** True while the widget's page is the one shown. A widget that is not shown is stopped (or paused when it keeps itself loaded). */
@@ -66,7 +75,11 @@ export interface PluginWidgetContentProps {
 export function PluginWidgetContent({ widget, live = true }: PluginWidgetContentProps) {
   const context = useContext(PluginWidgetContext);
   const texts = { ...DEFAULT_PLUGIN_WIDGET_TEXTS, ...context?.texts };
-  const info = runtimeInfoOf(widget);
+  const declared = runtimeInfoOf(widget);
+  const enabledOptions = effectiveOptions(declared, widget.props);
+  const optionsKey = enabledOptions.join(",");
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const info = useMemo(() => (declared ? { ...declared, options: enabledOptions } : undefined), [declared, optionsKey]);
   const label = info?.name ?? widget.text ?? texts.widget;
 
   const container = useRef<HTMLDivElement>(null);
@@ -111,7 +124,7 @@ export function PluginWidgetContent({ widget, live = true }: PluginWidgetContent
     };
     // The worker is restarted only when the widget itself, its code or the device switch changes; settings and size are pushed into the running worker.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mountWanted, context?.runtime, context?.host, widget.id, info?.code]);
+  }, [mountWanted, context?.runtime, context?.host, widget.id, info?.code, optionsKey]);
 
   useEffect(() => {
     instance.current?.setPaused(!live);

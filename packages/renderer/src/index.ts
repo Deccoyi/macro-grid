@@ -14,6 +14,7 @@ export { widgetBaseCss } from "./style/widgetBaseCss";
 export { usePressGesture, type PressGestureOptions, type PressGestureHandlers } from "./interaction/usePressGesture";
 export {
   PluginWidgetContent,
+  effectiveOptions,
   PluginWidgetContext,
   DEFAULT_PLUGIN_WIDGET_TEXTS,
   runtimeInfoOf,

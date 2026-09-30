@@ -133,6 +133,7 @@ public sealed class LayoutSender(AssetStore assets, PluginWidgetCatalog? pluginW
             ["assets"] = assetRefs,
             ["fps"] = info.Widget.Fps,
             ["interactive"] = info.Widget.Manifest.Interactive,
+            ["optionsOff"] = new JsonArray(info.Widget.OptionsOffByDefault.Select(o => (JsonNode?)JsonValue.Create(o)).ToArray()),
             ["options"] = new JsonArray(info.Widget.Options.Select(o => (JsonNode?)JsonValue.Create(o)).ToArray()),
             // Which settings are Variable fields: the renderer hands these to the widget as its bindings.
             ["variables"] = new JsonArray((info.Widget.Manifest.Settings ?? []).Where(f => f.Kind == SettingFieldKind.Variable).Select(f => (JsonNode?)JsonValue.Create(f.Key)).ToArray()),

@@ -1,4 +1,5 @@
 import { ShieldAlert } from "lucide-react";
+import { effectiveOptions } from "@macro/renderer";
 import type { OptionsResult, VariableInfo } from "../../api/types";
 import { useT } from "../../i18n/I18nContext";
 import { turnOn } from "../../grid/widgetCrashGuard";
@@ -9,6 +10,12 @@ import { SchemaForm } from "../actionForms/SchemaForm";
 import type { FieldGroupProps } from "./AppearanceFields";
 
 const NO_OPTIONS: OptionsResult = { options: [] };
+
+/** The options a person can switch per widget, with their texts. (Notifications are not offered.) */
+const OPTION_TEXTS = {
+  keepLoaded: { label: "pluginWidget.option.keepLoaded", hint: "pluginWidget.option.keepLoaded.hint" },
+  storage: { label: "pluginWidget.option.storage", hint: "pluginWidget.option.storage.hint" },
+} as const;
 
 /**
  * For a `plugin-widget`: which plugin's widget it is, the "Unverified" note for a plugin that is not verified, and the widget's own settings drawn from
@@ -23,6 +30,7 @@ export function PluginWidgetFields({ widget, onChange, variableCatalog }: FieldG
   const info = available.find((w) => w.plugin === pluginId && w.widget === widgetId);
   const settings = (widget.props?.settings as Record<string, unknown> | undefined) ?? {};
 
+  const enabledOptions = effectiveOptions(info, widget.props);
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
       <div style={{ fontSize: 11.5, color: "var(--ms-text-secondary)" }}>
@@ -41,6 +49,23 @@ export function PluginWidgetFields({ widget, onChange, variableCatalog }: FieldG
           <span>{t("palette.unverifiedHint")}</span>
         </div>
       )}
+      {info && info.options.filter((name): name is keyof typeof OPTION_TEXTS => name in OPTION_TEXTS).map((name) => (
+        <label key={name} style={{ display: "flex", flexDirection: "column", gap: 2, fontSize: 12 }}>
+          <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            <input
+              type="checkbox"
+              checked={enabledOptions.includes(name)}
+              onChange={(e) =>
+                onChange((w) => {
+                  w.props = { ...w.props, options: { ...((w.props?.options as Record<string, boolean> | undefined) ?? {}), [name]: e.target.checked } };
+                })
+              }
+            />
+            {t(OPTION_TEXTS[name].label)}
+          </span>
+          <span style={{ fontSize: 11, color: "var(--ms-text-secondary)", lineHeight: 1.4 }}>{t(OPTION_TEXTS[name].hint)}</span>
+        </label>
+      ))}
       {info?.options?.includes("storage") && (
         <button type="button" onClick={() => editorWidgetData.clear(widget.id)} style={{ alignSelf: "flex-start" }}>{t("pluginWidget.clearData")}</button>
       )}

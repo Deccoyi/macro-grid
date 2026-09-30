@@ -25,6 +25,8 @@ export interface PluginWidgetRuntimeInfo {
   interactive?: boolean;
   /** The options the widget declared and the person approved (`keepLoaded`, `storage`, `notifications`). */
   options?: string[];
+  /** The declared options that start switched off on a placed widget; the person can switch each one per widget (`props.options`). */
+  optionsOff?: string[];
   /** Keys of the widget's settings that are `Variable` fields (the person's variable bindings). */
   variables?: string[];
   /** False for a plugin that is not verified (JavaScript plugins): stricter limits apply. */

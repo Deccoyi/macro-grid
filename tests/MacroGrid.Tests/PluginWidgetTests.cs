@@ -101,6 +101,21 @@ public sealed class PluginWidgetTests : IAsyncLifetime
         Assert.Equal(SettingFieldKind.Variable, widget.Settings![0].Kind);
     }
 
+    [Fact]
+    public void Options_that_start_off_are_the_declared_ones_with_default_false()
+    {
+        var manifest = new PluginWidgetManifest
+        {
+            Id = "gauge",
+            Name = "Gauge",
+            Entry = "widgets/gauge.js",
+            Options = new Dictionary<string, PluginWidgetOption> { ["keepLoaded"] = new() { Default = false }, ["storage"] = new() },
+        };
+        var widget = new ValidatedWidget(manifest, "", [], 15, new PluginWidgetSize(2, 2), ["keepLoaded", "storage"]);
+
+        Assert.Equal(["keepLoaded"], widget.OptionsOffByDefault);
+    }
+
     // ---- validator ----
 
     [Fact]
