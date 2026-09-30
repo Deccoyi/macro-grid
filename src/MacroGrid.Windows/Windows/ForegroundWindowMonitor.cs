@@ -101,6 +101,7 @@ public sealed class ForegroundWindowMonitor : IActiveWindowSource
     {
         GetWindowThreadProcessId(hWnd, out var pid);
         if (pid == 0) return null;
+        if (ImageNameFor(pid) is { } fast) return fast;
         try
         {
             using var process = Process.GetProcessById((int)pid);
@@ -109,6 +110,27 @@ public sealed class ForegroundWindowMonitor : IActiveWindowSource
         catch (ArgumentException)
         {
             return null; // process exited between the event firing and us looking it up
+        }
+    }
+
+    /// <summary>The executable name straight from the process handle. <c>Process.ProcessName</c> reads a snapshot of every
+    /// process on the machine, which is slow and is asked for every window on each check. Null when the process cannot be
+    /// opened (a protected one) and the slower lookup has to answer.</summary>
+    internal static string? ImageNameFor(uint pid)
+    {
+        var handle = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, false, pid);
+        if (handle == IntPtr.Zero) return null;
+        try
+        {
+            var buffer = new StringBuilder(1024);
+            var size = buffer.Capacity;
+            if (!QueryFullProcessImageName(handle, 0, buffer, ref size) || size == 0) return null;
+            var name = Path.GetFileName(buffer.ToString(0, size));
+            return name.Length == 0 ? null : name;
+        }
+        finally
+        {
+            CloseHandle(handle);
         }
     }
 
@@ -127,6 +149,7 @@ public sealed class ForegroundWindowMonitor : IActiveWindowSource
         return sb.ToString();
     }
 
+    private const uint PROCESS_QUERY_LIMITED_INFORMATION = 0x1000;
     private const uint EVENT_SYSTEM_FOREGROUND = 3;
     private const uint WINEVENT_OUTOFCONTEXT = 0;
 
@@ -148,6 +171,15 @@ public sealed class ForegroundWindowMonitor : IActiveWindowSource
     [DllImport("user32.dll")]
     private static extern IntPtr SetWinEventHook(uint eventMin, uint eventMax, IntPtr hmodWinEventProc,
         WinEventDelegate lpfnWinEventProc, uint idProcess, uint idThread, uint dwFlags);
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    private static extern IntPtr OpenProcess(uint desiredAccess, bool inheritHandle, uint processId);
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    private static extern bool CloseHandle(IntPtr handle);
+
+    [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+    private static extern bool QueryFullProcessImageName(IntPtr process, uint flags, StringBuilder exeName, ref int size);
 
     [DllImport("user32.dll")]
     private static extern bool UnhookWinEvent(IntPtr hWinEventHook);
