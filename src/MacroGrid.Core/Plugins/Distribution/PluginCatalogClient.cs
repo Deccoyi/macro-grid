@@ -183,6 +183,7 @@ public sealed class PluginCatalogClient(HttpClient http)
         {
             Category = CatalogText.Clean(GetString(element, "category"), CatalogText.MaxCategoryLength),
             Tags = CatalogText.CleanTags(GetStringArray(element, "tags")),
+            Icon = GetString(element, "icon") is { } icon && CatalogText.IsIconFileName(icon) ? icon : null,
         };
     }
 

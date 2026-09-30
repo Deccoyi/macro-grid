@@ -239,6 +239,10 @@ export const api = {
   clearProblems: (source?: string): Promise<void> =>
     send("POST", source ? `/api/problems/clear?source=${encodeURIComponent(source)}` : "/api/problems/clear"),
 
+  /** The icon of a catalog plugin, fetched by the server (404 when there is none). */
+  pluginCatalogIconUrl: (source: string, id: string): string =>
+    `/api/plugin-catalog/icon?source=${encodeURIComponent(source)}&id=${encodeURIComponent(id)}`,
+
   fetchPluginCatalog: (source: string): Promise<PluginCatalogResponse> =>
     get(`/api/plugin-catalog?source=${encodeURIComponent(source)}`),
 

@@ -211,6 +211,8 @@ export interface PluginCatalogEntryInfo {
   /** What to browse by and search words, from the catalog; missing or empty when the plugin did not declare any. */
   category?: string | null;
   tags?: string[];
+  /** True when the catalog names an icon for this plugin: fetch it from api.pluginCatalogIconUrl(source, id). */
+  hasIcon?: boolean;
   /** The newest version listed, whether or not this server can run it. */
   latestVersion: string | null;
   /** The newest version this server's SDK and version actually satisfy — what Install would fetch. Null

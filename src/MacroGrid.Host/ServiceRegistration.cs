@@ -133,6 +133,7 @@ internal static class ServiceRegistration
         http.DefaultRequestHeaders.UserAgent.ParseAdd($"MacroGrid/{ClientHub.ServerVersion}");
         services.AddSingleton(new PluginCatalogClient(http));
         services.AddSingleton(new PluginPackageDownloader(http));
+        services.AddSingleton(sp => new PluginCatalogIcons(sp.GetRequiredService<PluginPackageDownloader>()));
         services.AddSingleton(new PluginInstallOriginStore(dataDir));
         services.AddSingleton(new PluginSourceStore(dataDir));
         services.AddSingleton(sp => new PluginCatalogInstaller(
