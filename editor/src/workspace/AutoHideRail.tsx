@@ -43,7 +43,10 @@ export function AutoHideRail({
             title={def.id}
             style={{
               flex: "0 0 auto",
-              width: vertical ? 22 : 96,
+              width: vertical ? 22 : "auto",
+              minWidth: vertical ? undefined : 96,
+              padding: vertical ? undefined : "0 12px",
+              whiteSpace: "nowrap",
               height: vertical ? 96 : 22,
               display: "flex",
               alignItems: "center",
@@ -82,15 +85,18 @@ function ErrorListRailLabel({ def }: { def: ToolWindowDefinition }) {
   const { diagnostics } = useDiagnostics();
   let errorCount = 0;
   let warningCount = 0;
+  let infoCount = 0;
   for (const d of diagnostics) {
     if (d.severity === "error") errorCount++;
     else if (d.severity === "warning") warningCount++;
+    else infoCount++;
   }
   return (
-    <span style={{ display: "flex", alignItems: "center", gap: 5 }}>
+    <span style={{ display: "flex", alignItems: "center", gap: 5, whiteSpace: "nowrap" }}>
       {t(def.titleKey)}
       {errorCount > 0 && <Pill color="var(--ms-danger)">{errorCount}</Pill>}
-      {warningCount > 0 && <Pill color="var(--ms-text-secondary)">{warningCount}</Pill>}
+      {warningCount > 0 && <Pill color="var(--ms-warning, #facc15)">{warningCount}</Pill>}
+      {infoCount > 0 && <Pill color="var(--ms-text-secondary)">{infoCount}</Pill>}
     </span>
   );
 }

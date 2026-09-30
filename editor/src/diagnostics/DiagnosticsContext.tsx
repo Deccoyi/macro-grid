@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { api } from "../api/client";
 import type { ServerProblem } from "../api/types";
+import { onDiagnostic } from "./editorEvents";
 import type { Diagnostic } from "./types";
 
 interface DiagnosticsApi {
@@ -42,6 +43,20 @@ export function DiagnosticsProvider({ children }: { children: ReactNode }) {
     const timer = window.setInterval(poll, POLL_MS);
     return () => { stopped = true; window.clearInterval(timer); };
   }, []);
+
+  // What the editor's own hooks notice (a widget that did not fit): the same message again is counted, not listed twice.
+  useEffect(
+    () =>
+      onDiagnostic((d) =>
+        setBySource((prev) => {
+          const list = prev[d.source] ?? [];
+          const existing = list.find((x) => x.id === d.id);
+          const next = existing ? list.map((x) => (x.id === d.id ? { ...x, count: (x.count ?? 1) + 1 } : x)) : [...list, { ...d, count: 1 }];
+          return { ...prev, [d.source]: next };
+        }),
+      ),
+    [],
+  );
 
   const report = useCallback((source: string, list: Diagnostic[]) => {
     setBySource((prev) => ({ ...prev, [source]: list }));

@@ -219,7 +219,7 @@ export const en: Record<DictKey, string | ((...args: string[]) => string)> = {
   "panel.properties": "Properties",
   "panel.pin": "Pin",
   "panel.close": "Close",
-  "panel.errorList": "Error List",
+  "panel.errorList": "Diagnostic Messages",
   "panel.pluginsTree": "Plugins",
   "document.noOpenPage": "No open page",
 
@@ -241,6 +241,10 @@ export const en: Record<DictKey, string | ((...args: string[]) => string)> = {
   "errorList.severity.error": "Error",
   "errorList.severity.warning": "Warning",
   "errorList.severity.info": "Info",
+  "diag.save.total": (count: string, pages: string) => `Saved. This profile has ${count} plugin widgets on ${pages} page(s).`,
+  "diag.save.page": (page: string, count: string, recommended: string) => `Page "${page}": ${count} plugin widgets. Up to ${recommended} are recommended at the same time; the right number depends on the device that shows the page.`,
+  "diag.save.pageOver": (page: string, count: string, recommended: string) => `Page "${page}": ${count} plugin widgets, more than the recommended ${recommended} at the same time. Depending on the device, you may need fewer here; a strong device can manage more.`,
+  "diag.save.pluginOver": (page: string, count: string, plugin: string, recommended: string) => `Page "${page}": ${count} widgets of "${plugin}", a plugin that is not verified. Up to ${recommended} of such a plugin are recommended at the same time.`,
 
   "device.free": "Free",
   "device.phonePortrait": "Phone (portrait)",

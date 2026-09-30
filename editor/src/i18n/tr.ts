@@ -219,7 +219,7 @@ export const tr = {
   "panel.properties": "Özellikler",
   "panel.pin": "Sabitle",
   "panel.close": "Kapat",
-  "panel.errorList": "Hata Listesi",
+  "panel.errorList": "Tanılama Mesajları",
   "panel.pluginsTree": "Eklentiler",
   "document.noOpenPage": "Açık sayfa yok",
 
@@ -241,6 +241,10 @@ export const tr = {
   "errorList.severity.error": "Hata",
   "errorList.severity.warning": "Uyarı",
   "errorList.severity.info": "Bilgi",
+  "diag.save.total": (count: string, pages: string) => `Kaydedildi. Bu profilde ${pages} sayfada ${count} plugin widget'ı var.`,
+  "diag.save.page": (page: string, count: string, recommended: string) => `"${page}" sayfası: ${count} plugin widget'ı. Aynı anda en fazla ${recommended} önerilir; doğru sayı sayfayı gösteren cihaza göre değişir.`,
+  "diag.save.pageOver": (page: string, count: string, recommended: string) => `"${page}" sayfası: ${count} plugin widget'ı, aynı anda önerilen ${recommended} sayısından fazla. Cihaza göre burada daha az widget kullanmanız gerekebilir; güçlü bir cihaz daha fazlasını kaldırabilir.`,
+  "diag.save.pluginOver": (page: string, count: string, plugin: string, recommended: string) => `"${page}" sayfası: doğrulanmamış "${plugin}" plugin'inin ${count} widget'ı var. Böyle bir plugin için aynı anda en fazla ${recommended} önerilir.`,
 
   "device.free": "Serbest",
   "device.phonePortrait": "Telefon (dikey)",

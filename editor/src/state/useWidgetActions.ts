@@ -5,6 +5,7 @@ import type { PluginWidgetInfo } from "../api/types";
 import { findFreeCell, findFreeCellsForBatch } from "../grid/collision";
 import { useT } from "../i18n/I18nContext";
 import type { DictKey } from "../i18n/tr";
+import { emitDiagnostic, noFreeCellWarning } from "../diagnostics/editorEvents";
 import { setClipboard } from "./clipboard";
 import { showStatusNotice } from "./statusNotice";
 import { tempId } from "./tempId";
@@ -21,6 +22,7 @@ export function useWidgetActions({
       if (!currentPage) return;
       const cell = findFreeCell(1, 1, currentPage.widgets, currentPage.cols, currentPage.rows);
       if (!cell) {
+        emitDiagnostic(noFreeCellWarning());
         setError(t("state.noFreeCell"));
         return;
       }
@@ -49,6 +51,7 @@ export function useWidgetActions({
       const h = Math.min(info.size.h, currentPage.rows);
       const cell = findFreeCell(w, h, currentPage.widgets, currentPage.cols, currentPage.rows) ?? findFreeCell(1, 1, currentPage.widgets, currentPage.cols, currentPage.rows);
       if (!cell) {
+        emitDiagnostic(noFreeCellWarning());
         setError(t("state.noFreeCell"));
         return;
       }
@@ -188,6 +191,7 @@ export function useWidgetActions({
           cells = findFreeCellsForBatch(toPlace.map((w) => ({ w: w.w, h: w.h })), currentPage.widgets, currentPage.cols, currentPage.rows);
         }
         if (!cells) {
+          emitDiagnostic(noFreeCellWarning());
           setError(t("state.noFreeCell"));
           return;
         }

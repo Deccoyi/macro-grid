@@ -44,6 +44,8 @@ export function useProfileDocument() {
   const [history, setHistoryState] = useState<History<DocumentSnapshot>>(createHistory);
   // The profile as last opened or saved: what the Hierarchy tree's "*" markers compare against.
   const [savedProfile, setSavedProfile] = useState<Profile | null>(null);
+  /** How many times the profile was saved in this session; the Diagnostic Messages show a summary after each one. */
+  const [saveCount, setSaveCount] = useState(0);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -339,6 +341,7 @@ export function useProfileDocument() {
       await api.saveProfile(toSave);
       setHistory(markSaved(historyRef.current, savedId));
       setSavedProfile(toSave);
+      setSaveCount((n) => n + 1);
       setProfiles((prev) => prev.map((p) => (p.id === toSave.id ? { ...p, name: toSave.name } : p)));
     } catch (e) {
       setError(String(e));
@@ -361,6 +364,7 @@ export function useProfileDocument() {
     saving,
     error,
     setError,
+    saveCount,
     setCurrentPageId,
     setSelectedIds,
     toggleSelected,

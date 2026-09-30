@@ -32,6 +32,7 @@ export function useEditorState() {
     redoLabel: document.redoLabel,
     saving: document.saving,
     error: document.error,
+    saveCount: document.saveCount,
     clearError: () => document.setError(null),
     variables: catalogs.variables,
     actions: catalogs.actions,

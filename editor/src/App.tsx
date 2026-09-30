@@ -11,6 +11,7 @@ import { EditToolbar } from "./commands/EditToolbar";
 import { confirmAsync } from "./dialogs/dialogStore";
 import { DialogHost } from "./dialogs/DialogHost";
 import { DiagnosticsProvider } from "./diagnostics/DiagnosticsContext";
+import { SaveSummaryReporter } from "./diagnostics/SaveSummaryReporter";
 import type { DeviceSize } from "./grid/DevicePreviewFrame";
 import { useT } from "./i18n/I18nContext";
 import { useDocumentTitle } from "./i18n/useDocumentTitle";
@@ -348,6 +349,7 @@ function AppContent() {
 
       <EditorStateProvider value={state}>
        <DiagnosticsProvider>
+        <SaveSummaryReporter profile={state.profile} saveCount={state.saveCount} />
         <WorkspaceUiProvider
           value={{
             openPageContextMenu: (x, y, pageId) => setPageMenu({ x, y, pageId }),
