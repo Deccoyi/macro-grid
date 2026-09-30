@@ -383,6 +383,8 @@ export interface AppPreferences {
   checkForUpdates: boolean;
   /** Whether pre-releases (alpha versions) count as updates. */
   includePreReleases: boolean;
+  /** Whether other devices may connect without encryption (the plain port, which the browser deck needs). On by default. */
+  allowUnencrypted: boolean;
   /** The docking workspace arrangement last left in — see DockLayoutProfile's `layoutJson`. Empty until
    * the user changes the layout at least once. */
   dockLayoutJson: string;

@@ -54,8 +54,9 @@ one. Plain `ws://` is what's left over for what can't do better yet (old paired 
 option. "Prefer wss:// when the client supports it" was considered as a live per-connection negotiation and set aside: the two
 fixed ports make that meaningless — which port a client uses is decided once, when it reads the QR, not renegotiated per
 connection.
-- The "Allow unencrypted connections" preference itself is not built yet (both ports just stay open unconditionally in the
-  current code); when it is, default **on**, for the compatibility reasons above.
+- The "Allow unencrypted connections" preference is built (`AppPreferences.AllowUnencrypted`, Preferences window, default **on** for the
+  compatibility reasons above). Off, the plain port answers only this computer (the editor needs it) and refuses every other device with 403
+  (`PlainConnectionPolicy`); the encrypted port is unaffected, and open connections stay until they end.
 - Cutover point, concrete rather than open-ended: default **off** starting the next MAJOR version (2.0.0), once the Android
   client's TLS support has shipped for at least one MINOR release (so "old app, can't do TLS" stops being the common case)
   and the browser deck's story is settled one way or another. Before that MAJOR, a person who wants to require TLS today can
@@ -66,8 +67,8 @@ connection.
 every message is encrypted with it. Works in any browser without certificate warnings, but it is custom cryptography in a hobby
 project, which is harder to get right and to review. Not recommended.
 
-All three open questions above (port, how long to keep plain connections, the deck) are settled by the decision above. Still
-open: the "Allow unencrypted connections" preference itself (currently no-op, both ports always on) is not implemented yet.
+All three open questions above (port, how long to keep plain connections, the deck) are settled by the decision above. The
+"Allow unencrypted connections" preference is implemented.
 
 ## B. Secret storage for plugins (threat T5)
 

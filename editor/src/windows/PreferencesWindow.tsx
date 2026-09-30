@@ -18,7 +18,7 @@ export function PreferencesWindow() {
   const {
     theme, setTheme, previewProfiles, addPreviewProfile, removePreviewProfile, defaultProfileId, setDefaultProfileId,
     launchMode, setLaunchMode, autostartMode, setAutostartMode,
-    checkForUpdates, setCheckForUpdates, includePreReleases, setIncludePreReleases, dismissedNotices, dismissNotice,
+    checkForUpdates, setCheckForUpdates, includePreReleases, setIncludePreReleases, allowUnencrypted, setAllowUnencrypted, dismissedNotices, dismissNotice,
   } = usePreferences();
   const [category, setCategory] = useState<Category>("general");
   const [name, setName] = useState("");
@@ -89,6 +89,11 @@ export function PreferencesWindow() {
             <input type="checkbox" checked={includePreReleases} onChange={(e) => setIncludePreReleases(e.target.checked)} />
             {t("preferences.updates.prerelease")}
           </label>
+          <label style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <input type="checkbox" checked={allowUnencrypted} onChange={(e) => setAllowUnencrypted(e.target.checked)} />
+            {t("preferences.unencrypted")}
+          </label>
+          <p style={{ fontSize: 11.5, color: "var(--ms-text-secondary)", margin: 0 }}>{t("preferences.unencrypted.hint")}</p>
           {Object.keys(dismissedNotices).length > 0 && (
             <button type="button" onClick={() => dismissNotice()} style={{ alignSelf: "flex-start" }}>{t("preferences.notices.reset")}</button>
           )}
