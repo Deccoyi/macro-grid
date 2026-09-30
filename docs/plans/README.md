@@ -18,7 +18,8 @@ Each plan exists once. If the same text exists in another repository or on the D
 | # | Work | Repositories | Plan | Why here |
 |---|---|---|---|---|
 | 1 | [Crash report dialog](crash-report-dialog.md): a native window after a crash (needs a decision on how the report is sent) | `macro-grid` | [crash-report-dialog.md](crash-report-dialog.md) | The owner has to choose the sending mechanism; a saved report file needs nothing. |
-| 2 | Roadmap "Next": the parts of a store-like Discover tab that need catalog fields (screenshots, tags, real icons) | `macro-grid` | [roadmap.md](../roadmap.md) | Larger, no user is blocked on them, no plan file yet for any of them. |
+| 2 | [Discover: icons, screenshots](discover-store-fields.md) | `macro-grid`, `macro-grid-plugin` | [discover-store-fields.md](discover-store-fields.md) | Icon first; nobody is blocked. |
+| 3 | [Live-stream chat plugin](live-stream-chat-plugin.md) | `macro-grid-plugin` | [live-stream-chat-plugin.md](live-stream-chat-plugin.md) | Needs a platform that fits the two conditions in the plan. |
 
 Done and no longer listed: the `web` widget (iframe with popups, downloads and navigation blocked; crash guard, recommended live number and Keep loaded on the phone), the branded installer, the plugin manifest field rename (`macroGrid` is now `minMacroGrid`, the old name still read), version unification — one version for the server and the SDK, a `macroGrid` field for every plugin and
 the phone app, one release guide, all four sections released,
