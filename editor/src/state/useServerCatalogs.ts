@@ -42,9 +42,17 @@ export function useServerCatalogs() {
   // Auto-poll so the canvas's dynamic-style preview (evaluateWidgetDynamicStyle) actually reacts to
   // live values like system.cpu instead of only updating when the user clicks "Refresh variables" —
   // this is a one-shot REST snapshot, not a push, since the editor isn't a real device session.
+  // The poll is skipped while the window is hidden or minimized, and one refresh runs when it is shown again.
   useEffect(() => {
-    const timer = setInterval(refreshVariables, 2000);
-    return () => clearInterval(timer);
+    const tick = () => {
+      if (!document.hidden) refreshVariables();
+    };
+    const timer = setInterval(tick, 2000);
+    document.addEventListener("visibilitychange", tick);
+    return () => {
+      clearInterval(timer);
+      document.removeEventListener("visibilitychange", tick);
+    };
   }, [refreshVariables]);
 
   return { variables, actions, variableCatalog, status, refreshVariables };
