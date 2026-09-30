@@ -146,6 +146,8 @@ export const tr = {
   "plugins.reload": "Yeniden yükle",
   "plugins.approve": "İzin ver ve etkinleştir",
   "plugins.approve.intro": "Bu eklenti çalışmak için şu izinleri istiyor:",
+  "plugins.permissions.title": (count: string) => `İzinler (${count})`,
+  "plugins.permissions.hint": "Birinin işaretini kaldırırsan eklenti o izin olmadan çalışır. Eklenti yeniden başlar ve o izne ihtiyaç duyan özellikler durur.",
   "plugins.approve.success": (name: string) => `${name} etkinleştirildi.`,
   "plugins.permission.variables": "Değişkenleri okumak ve kendi değişkenlerini yayınlamak",
   "plugins.permission.actions": "Kendi aksiyonlarını eklemek",

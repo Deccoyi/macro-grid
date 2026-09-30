@@ -10,6 +10,7 @@ namespace MacroGrid.Core.Plugins;
 public sealed class PluginPermissionStore(string dataDir)
 {
     private readonly string _path = Path.Combine(dataDir, "plugin-permissions.json");
+    private readonly string _offPath = Path.Combine(dataDir, "plugin-permissions-off.json");
     private readonly Lock _lock = new();
 
     public bool IsGranted(string pluginId, IEnumerable<string> declared)
@@ -34,15 +35,35 @@ public sealed class PluginPermissionStore(string dataDir)
         {
             var all = Read();
             if (all.Remove(pluginId)) Write(all);
+            var off = Read(_offPath);
+            if (off.Remove(pluginId)) Write(off, _offPath);
         }
     }
 
-    private Dictionary<string, string[]> Read()
+    /// <summary>The approved permissions the person switched off for this plugin. They stay approved (switching one back on asks
+    /// nothing), the plugin just runs without them.</summary>
+    public IReadOnlyCollection<string> SwitchedOff(string pluginId) => Read(_offPath).GetValueOrDefault(pluginId) ?? [];
+
+    public void SetSwitchedOff(string pluginId, string permission, bool off)
     {
+        lock (_lock)
+        {
+            var all = Read(_offPath);
+            var list = (all.GetValueOrDefault(pluginId) ?? []).Where(p => !p.Equals(permission, StringComparison.OrdinalIgnoreCase)).ToList();
+            if (off) list.Add(permission);
+            if (list.Count == 0) all.Remove(pluginId);
+            else all[pluginId] = [.. list];
+            Write(all, _offPath);
+        }
+    }
+
+    private Dictionary<string, string[]> Read(string? path = null)
+    {
+        path ??= _path;
         try
         {
-            return File.Exists(_path)
-                ? JsonSerializer.Deserialize<Dictionary<string, string[]>>(File.ReadAllText(_path)) ?? []
+            return File.Exists(path)
+                ? JsonSerializer.Deserialize<Dictionary<string, string[]>>(File.ReadAllText(path)) ?? []
                 : [];
         }
         catch (Exception ex) when (ex is JsonException or IOException)
@@ -51,9 +72,10 @@ public sealed class PluginPermissionStore(string dataDir)
         }
     }
 
-    private void Write(Dictionary<string, string[]> all)
+    private void Write(Dictionary<string, string[]> all, string? path = null)
     {
-        Directory.CreateDirectory(Path.GetDirectoryName(_path)!);
-        File.WriteAllText(_path, JsonSerializer.Serialize(all, new JsonSerializerOptions { WriteIndented = true }));
+        path ??= _path;
+        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+        File.WriteAllText(path, JsonSerializer.Serialize(all, new JsonSerializerOptions { WriteIndented = true }));
     }
 }

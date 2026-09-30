@@ -83,11 +83,10 @@ The order of the bigger pieces of work, and their plans, are in [plans/README.md
 - **A phone-app style permission system for every plugin that is not C#** (JavaScript plugins today, and plugin widgets once they
   exist): C# plugins are left out because only official, signed ones load. Today a JavaScript plugin declares its permissions and the person
   approves the whole set once in the Plugins window; an update that asks for more waits again
-  ([design/js-plugin-runtime.md](design/js-plugin-runtime.md#approval)). Still missing, compared with phone app permissions: the approval
-  shown as a step of installing (and of updating) the plugin, not only afterwards in the Plugins window; each permission explained in
-  plain words with what it allows; switching a single permission off later, per plugin, without uninstalling, with the plugin kept running
-  without it (the API answers "not allowed"); a clear list of what every installed plugin may do; and the same model for the abilities a plugin
-  widget declares (keep loaded, data kept on the device). It needs a plan file first (`plans/`).
+  ([design/js-plugin-runtime.md](design/js-plugin-runtime.md#approval)). Each permission is explained in plain words, and a single permission of an installed
+  plugin can be switched off and on in the Plugins window (the plugin restarts and runs without it; the API answers "not allowed"). Still missing:
+  the approval shown as a step of installing (and of updating) the plugin, not only afterwards in the Plugins window; one clear list of what every
+  installed plugin may do; and the same switches for the abilities a plugin widget declares (keep loaded, data kept on the device). It needs a plan file first (`plans/`).
 
 ## Release status
 
