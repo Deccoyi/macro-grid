@@ -52,6 +52,9 @@ Where the project stands. The server and the SDK are at 1.0.0 and under active d
 - **The `web` widget:** an embedded page (a live chat, an alerts panel) in an iframe with popups, downloads and navigation blocked, a "Change web page" button
   action, and on the phone a crash guard, a recommended number of live pages and a "Keep loaded" option. Still marked experimental in the editor.
 - **"Allow unencrypted connections" preference:** off makes the plain port answer only this computer. Default on; default off is planned for the next MAJOR version once the browser deck and old paired phones are settled ([design/security-hardening.md](design/security-hardening.md)).
+- **A phone-app style permission system for plugins that are not C#:** each permission is explained in plain words and approved before an install or an
+  update runs, and every installed plugin lists what it may do with a tick box per permission (and per widget option: keep loaded, data kept on the
+  device) to switch one off without uninstalling ([design/js-plugin-runtime.md](design/js-plugin-runtime.md#approval)).
 - **Security hardening:** an encrypted connection (TLS, see "Done" above), device tokens and plugin secrets encrypted at rest, pairing rate limits and
   a security log, a security event log, dependency vulnerability scanning and an SBOM in CI, and only official signed C# plugins load
   ([design/security-hardening.md](design/security-hardening.md)).
@@ -77,13 +80,6 @@ The order of the bigger pieces of work, and their plans, are in [plans/README.md
   `macrogrid-index.json` (author-supplied vs. computed by the release workflow) versus what stays editor-only presentation,
   since every new field is something plugin authors have to fill in and the host has to validate and cap. It needs a plan file first (`plans/`).
 - **A crash report dialog:** when the server crashes, show the person a native confirmation window (WinForms, not a browser tab or the editor) with what would be sent — the log files and basic diagnostic info — and a choice to send it or not. On "send", the app itself emails the report to `macrogrid.app@gmail.com`; it must not open the person's own mail client or send them to a webmail site. Needs deciding how a crashed process reliably shows this window and mails from it (a small always-present watchdog process, or a next-start check for a previous crash marker), what "basic diagnostic info" contains, and the sending mechanism (SMTP with a project-owned account vs. a small backend). It needs a plan file first (`plans/`).
-- **A phone-app style permission system for every plugin that is not C#** (JavaScript plugins today, and plugin widgets once they
-  exist): C# plugins are left out because only official, signed ones load. Today a JavaScript plugin declares its permissions and the person
-  approves the whole set once in the Plugins window; an update that asks for more waits again
-  ([design/js-plugin-runtime.md](design/js-plugin-runtime.md#approval)). Each permission is explained in plain words, and a single permission of an installed
-  plugin can be switched off and on in the Plugins window (the plugin restarts and runs without it; the API answers "not allowed"). Still missing:
-  the approval shown as a step of installing (and of updating) the plugin, not only afterwards in the Plugins window; one clear list of what every
-  installed plugin may do; and the same switches for the abilities a plugin widget declares (keep loaded, data kept on the device). It needs a plan file first (`plans/`).
 
 ## Release status
 
