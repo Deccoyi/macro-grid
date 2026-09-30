@@ -5,7 +5,7 @@ describe("widget permission", () => {
   it("recognises the options a widget declares", () => {
     expect(widgetOptionOf("widget:gauge:storage")).toBe("storage");
     expect(widgetOptionOf("widget:clock:keepLoaded")).toBe("keepLoaded");
-    expect(widgetOptionOf("widget:x:notifications")).toBe("notifications");
+    expect(widgetOptionOf("widget:x:notifications")).toBeNull();
   });
 
   it("leaves everything else alone", () => {

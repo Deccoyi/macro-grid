@@ -36,7 +36,7 @@ The shared renderer lives in `packages/renderer/src/widgets/pluginWidget/`: `boo
   links, a script of at most 2 MB (1 MB for a plugin that is not verified), images and fonts at most 4 MB per plugin, at most 16 widgets, `fps` 1 to 60
   (default 15, held to 30 when not verified), known options only, no `Password` or `File` settings. A refused widget is reported in the Error List (`P140`)
   and the rest keeps working.
-- **Approval.** Options a widget declares (`keepLoaded`, `storage`, `notifications`) are approved together with a JavaScript plugin's permissions
+- **Approval.** Options a widget declares (`keepLoaded`, `storage`) are approved together with a JavaScript plugin's permissions
   (`widget:<id>:<option>` in `plugin-permissions.json`); a C# plugin with such options waits for approval too. An update that adds one waits again.
 - **Delivery.** A client that announces the capability `plugin-widgets` gets `props.runtime` on each `plugin-widget` in its layout: the script and images as
   content-hashed assets (`asset:<hash>`, fetched with `asset.get`), the frame-rate cap, the options, the keys of the `Variable` settings and whether the plugin

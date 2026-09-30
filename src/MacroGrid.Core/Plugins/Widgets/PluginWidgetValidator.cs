@@ -70,6 +70,7 @@ public static partial class PluginWidgetValidator
         var options = new List<string>();
         foreach (var name in widget.Options?.Keys.ToArray() ?? [])
         {
+            if (name == "notifications") return "The 'notifications' option is not supported (a widget cannot show notifications)";
             if (!PluginWidgetOptions.IsKnown(name)) return $"Unknown option '{name}'";
             options.Add(name);
         }

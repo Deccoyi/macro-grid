@@ -21,6 +21,7 @@ function pluginWidgetTexts() {
       noWidget: t("widget.unavailable.noWidget"),
       unsupported: t("widget.unavailable.unsupported"),
       off: t("widget.unavailable.off"),
+      crashedOff: t("widget.unavailable.crashedOff"),
     },
     stopped: {
       frozen: t("widget.stopped.frozen"),

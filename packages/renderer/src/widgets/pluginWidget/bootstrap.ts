@@ -258,8 +258,7 @@ export const WORKER_BOOTSTRAP = String.raw`
       get: function (key) { return ask("storage", { op: "get", key: String(key) }); },
       set: function (key, value) { return ask("storage", { op: "set", key: String(key), value: value }); },
       remove: function (key) { return ask("storage", { op: "remove", key: String(key) }); }
-    }),
-    notify: function () { return NativePromise.reject(new Error("not_allowed: this widget did not declare the notifications option")); }
+    })
   };
   Object.freeze(api);
   Object.defineProperty(g, "macroGrid", { value: api, writable: false, configurable: false });

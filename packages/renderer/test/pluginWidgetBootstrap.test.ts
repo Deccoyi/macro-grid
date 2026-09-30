@@ -13,7 +13,6 @@ interface Api {
   request(data: unknown): Promise<unknown>;
   run(action: string, settings?: unknown): Promise<unknown>;
   storage: { get(key: string): Promise<unknown>; set(key: string, value: unknown): Promise<unknown>; remove(key: string): Promise<unknown> };
-  notify(): Promise<unknown>;
 }
 
 /** A minimal stand-in for a worker's global scope, with timers the test moves by hand, to run the real bootstrap. */
@@ -304,7 +303,7 @@ describe("worker bootstrap", () => {
     expect(now).toBeGreaterThan(0);
   });
 
-  it("sends storage calls to the renderer, which decides whether the widget may use them, and refuses notifications for now", async () => {
+  it("sends storage calls to the renderer, which decides whether the widget may use them, and has no notifications", async () => {
     const w = makeWorld();
     w.start();
     w.init();
@@ -313,7 +312,7 @@ describe("worker bootstrap", () => {
     await new Promise((r) => setTimeout(r, 0));
 
     expect(w.of("storage")[0]!.data).toEqual({ op: "set", key: "n", value: 7 });
-    await expect(w.macroGrid().notify()).rejects.toThrow(/not_allowed/);
+    expect((w.macroGrid() as unknown as Record<string, unknown>).notify).toBeUndefined();
   });
 
   it("wraps the author's script so top-level await works and a thrown error is reported", async () => {

@@ -49,7 +49,7 @@ public sealed record PluginWidgetManifest
     /// <summary>True when the widget wants pointer input (touch and mouse) on its canvas.</summary>
     public bool Interactive { get; init; }
 
-    /// <summary>Extra abilities the widget declares by name (<c>keepLoaded</c>, <c>storage</c>, <c>notifications</c>). Approved at install.</summary>
+    /// <summary>Extra abilities the widget declares by name (<c>keepLoaded</c> or <c>storage</c>). Approved at install.</summary>
     public Dictionary<string, PluginWidgetOption>? Options { get; init; }
 
     /// <summary>The settings a person edits for a placed widget, drawn by the editor's schema-driven form. A <c>Variable</c> field lets

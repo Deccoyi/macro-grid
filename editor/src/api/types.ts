@@ -451,7 +451,7 @@ export interface PluginWidgetInfo {
   size: { w: number; h: number };
   fps: number;
   interactive: boolean;
-  /** The abilities the widget declared and the person approved (keepLoaded, storage, notifications). */
+  /** The abilities the widget declared and the person approved (keepLoaded, storage). */
   options: string[];
   /** The declared options that start switched off on a placed widget. */
   optionsOff?: string[];

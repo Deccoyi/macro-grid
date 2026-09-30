@@ -155,7 +155,6 @@ export const en: Record<DictKey, string | ((...args: string[]) => string)> = {
   "plugins.permission.http.internet": (target: string) => `Send web requests to ${target} on the internet (it can send data out of your network)`,
   "plugins.permission.widget.keepLoaded": "One of its widgets keeps running in the background when you leave its page",
   "plugins.permission.widget.storage": "One of its widgets keeps a small amount of its own data on your devices",
-  "plugins.permission.widget.notifications": "One of its widgets can show notifications on your phone",
   "plugins.permission.unknown": (name: string) => name,
   "plugins.reload.success": (name: string) => `${name} reloaded.`,
   "plugins.settings": "Settings",

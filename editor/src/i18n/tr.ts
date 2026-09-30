@@ -155,7 +155,6 @@ export const tr = {
   "plugins.permission.http.internet": (target: string) => `İnternetteki ${target} adresine web istekleri göndermek (ağınızın dışına veri gönderebilir)`,
   "plugins.permission.widget.keepLoaded": "Widget'larından biri sayfasından çıktığınızda arka planda çalışmaya devam eder",
   "plugins.permission.widget.storage": "Widget'larından biri cihazlarınızda kendi küçük verisini saklar",
-  "plugins.permission.widget.notifications": "Widget'larından biri telefonunuzda bildirim gösterebilir",
   "plugins.permission.unknown": (name: string) => name,
   "plugins.reload.success": (name: string) => `${name} yeniden yüklendi.`,
   "plugins.settings": "Ayarlar",

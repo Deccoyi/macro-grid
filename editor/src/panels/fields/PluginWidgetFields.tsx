@@ -12,7 +12,7 @@ import { SectionLabel } from "./controls";
 
 const NO_OPTIONS: OptionsResult = { options: [] };
 
-/** The options a person can switch per widget, with their texts. (Notifications are not offered.) */
+/** The options a person can switch per widget, with their texts. */
 const OPTION_TEXTS = {
   keepLoaded: { label: "pluginWidget.option.keepLoaded", hint: "pluginWidget.option.keepLoaded.hint" },
   storage: { label: "pluginWidget.option.storage", hint: "pluginWidget.option.storage.hint" },
