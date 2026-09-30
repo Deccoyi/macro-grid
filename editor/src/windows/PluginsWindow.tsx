@@ -348,6 +348,17 @@ export function PluginsWindow() {
     }
   };
 
+  const switchPermission = async (plugin: PluginInfo, permission: string, enabled: boolean) => {
+    setError(null);
+    setNotice(null);
+    try {
+      await api.setPluginPermission(plugin.id, permission, enabled);
+      refresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    }
+  };
+
   const install = async () => {
     setInstalling(true);
     setError(null);
@@ -447,6 +458,21 @@ export function PluginsWindow() {
                   {p.detail && <div style={{ fontSize: 11, color: "var(--ms-text-secondary)", marginTop: 2 }}>{p.detail}</div>}
                   {(p.keyboardUsesToday ?? 0) > 0 && (
                     <div style={{ fontSize: 11, color: "var(--ms-text-secondary)", marginTop: 2 }}>{t("plugins.keyboardUses", String(p.keyboardUsesToday ?? 0))}</div>
+                  )}
+                  {p.status === "Loaded" && (p.permissions?.length ?? 0) > 0 && (
+                    <details style={{ marginTop: 4 }}>
+                      <summary style={{ fontSize: 11.5, color: "var(--ms-text-secondary)", cursor: "pointer" }}>{t("plugins.permissions.title", String(p.permissions?.length ?? 0))}</summary>
+                      <div style={{ fontSize: 11, color: "var(--ms-text-secondary)", margin: "4px 0" }}>{t("plugins.permissions.hint")}</div>
+                      {(p.permissions ?? []).map((permission) => {
+                        const off = (p.switchedOffPermissions ?? []).includes(permission);
+                        return (
+                          <label key={permission} style={{ display: "flex", alignItems: "flex-start", gap: 6, fontSize: 12, padding: "2px 0" }}>
+                            <input type="checkbox" checked={!off} onChange={(e) => switchPermission(p, permission, e.target.checked)} style={{ marginTop: 2 }} />
+                            <span>{permissionText(permission)}</span>
+                          </label>
+                        );
+                      })}
+                    </details>
                   )}
                   {p.status === "NeedsApproval" && (
                     <div style={{ marginTop: 6 }}>

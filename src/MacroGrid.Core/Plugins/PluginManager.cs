@@ -250,6 +250,27 @@ public sealed partial class PluginManager(
         finally { _gate.Release(); }
     }
 
+    /// <summary>Switches one of a JavaScript plugin's approved permissions off or on and restarts the plugin, which then runs without it
+    /// (the calls that need it answer "not allowed"). Null when there is no such plugin or it did not declare that permission.</summary>
+    public async Task<LoadedPlugin?> SetPermissionAsync(string pluginId, string permission, bool enabled)
+    {
+        await _gate.WaitAsync();
+        try
+        {
+            var entry = FindEntry(pluginId);
+            var declared = entry?.Info.Permissions?.FirstOrDefault(p => p.Equals(permission, StringComparison.OrdinalIgnoreCase));
+            if (entry is null || declared is null) return null;
+
+            permissionStore.SetSwitchedOff(pluginId, declared, off: !enabled);
+            logger.LogInformation(SecurityEvents.PluginPermissionsGranted, "Security: plugin {Id} permission {Permission} was switched {State}",
+                SecurityEvents.ForLog(pluginId), SecurityEvents.ForLog(declared), enabled ? "on" : "off");
+            await UnloadCoreAsync(entry);
+            lock (_stateLock) _entries.Remove(pluginId);
+            return await LoadFolderCoreAsync(entry.Dir);
+        }
+        finally { _gate.Release(); }
+    }
+
     /// <summary>The user approved the permissions a JS plugin declares: remember that and start it.</summary>
     public async Task<LoadedPlugin?> ApproveAsync(string pluginId)
     {

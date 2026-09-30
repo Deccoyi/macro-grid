@@ -146,6 +146,8 @@ export const en: Record<DictKey, string | ((...args: string[]) => string)> = {
   "plugins.reload": "Reload",
   "plugins.approve": "Allow and enable",
   "plugins.approve.intro": "This plugin asks for these permissions to run:",
+  "plugins.permissions.title": (count: string) => `Permissions (${count})`,
+  "plugins.permissions.hint": "Untick one to run the plugin without it. The plugin restarts, and what needs that permission stops working.",
   "plugins.approve.success": (name: string) => `${name} enabled.`,
   "plugins.permission.variables": "Read variables and publish its own",
   "plugins.permission.actions": "Add its own actions",

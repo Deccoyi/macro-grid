@@ -48,7 +48,9 @@ The manifest's `permissions` are validated (`JsPermissions.IsKnown`; an unknown 
 approved exactly that set (`PluginPermissionStore`, `plugin-permissions.json` in the data folder) the plugin is not started
 and appears as `NeedsApproval` with `PendingPermissions`. The Plugins window lists them in plain language and
 `POST /api/plugins/{id}/approve` stores the approval and starts the plugin. An approval covers the set that was shown: an
-update that asks for more waits again. Uninstalling forgets the approval.
+update that asks for more waits again. Uninstalling forgets the approval. An approved permission can later be switched off on its own
+(`PUT /api/plugins/{id}/permissions`, the tick boxes in the Plugins window): the plugin restarts with the permission missing, so the calls that need it
+throw the same "not allowed" error, and it stays approved, so switching it back on asks nothing.
 
 ## Async requests
 

@@ -172,6 +172,10 @@ export const api = {
   /** Approves the permissions a JS plugin declares and starts it. */
   approvePlugin: (id: string): Promise<PluginInfo> => send("POST", `${pluginPath(id)}/approve`),
 
+  /** Switches one approved permission of a JavaScript plugin off or on; the plugin restarts without it. */
+  setPluginPermission: (id: string, permission: string, enabled: boolean): Promise<PluginInfo> =>
+    send("PUT", `${pluginPath(id)}/permissions`, { permission, enabled }),
+
   /** Unloads a plugin and loads it again from its folder, picking up a replaced DLL or changed manifest. */
   reloadPlugin: (id: string): Promise<PluginInfo> => send("POST", `${pluginPath(id)}/reload`),
 

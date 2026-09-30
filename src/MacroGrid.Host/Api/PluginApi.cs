@@ -27,6 +27,8 @@ internal static class PluginApi
                 p.PendingPermissions,
                 p.HasIcon,
                 p.HasTreeItems,
+                p.Permissions,
+                p.SwitchedOffPermissions,
                 Trust = (origins.Get(p.Id)?.Trust ?? PluginTrust.Local).ToString(),
             }));
 
@@ -98,6 +100,11 @@ internal static class PluginApi
         // The user approved the permissions a JS plugin declares (shown to them in the Plugins window first).
         api.MapPost("/plugins/{id}/approve", async (string id, PluginManager plugins) =>
             await plugins.ApproveAsync(id) is { } info ? ApiResults.Json(info) : Results.NotFound());
+
+        // Switches one approved permission of a JavaScript plugin off or on; the plugin restarts without it.
+        api.MapPut("/plugins/{id}/permissions", async (string id, PluginPermissionChange change, PluginManager plugins) =>
+            string.IsNullOrWhiteSpace(change.Permission) ? Results.BadRequest()
+            : await plugins.SetPermissionAsync(id, change.Permission, change.Enabled) is { } info ? ApiResults.Json(info) : Results.NotFound());
 
         api.MapPost("/plugins/{id}/reload", async (string id, PluginManager plugins) =>
             await plugins.ReloadAsync(id) is { } info ? ApiResults.Json(info) : Results.NotFound());
@@ -219,4 +226,6 @@ internal static class PluginApi
     private sealed record SettingsCommandRequest(string? Command, JsonObject? Values);
 
     private sealed record PluginInstallConfirmRequest(string Path);
+
+    private sealed record PluginPermissionChange(string Permission, bool Enabled);
 }

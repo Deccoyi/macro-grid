@@ -123,6 +123,9 @@ export interface PluginInfo {
   unsigned?: boolean;
   /** How many button presses used the keyboard through this JavaScript plugin today. Missing from an older server. */
   keyboardUsesToday?: number;
+  /** A running JavaScript plugin's approved permissions, and the ones the person switched off. Missing from an older server. */
+  permissions?: string[] | null;
+  switchedOffPermissions?: string[] | null;
 }
 
 /** Mirrors MacroGrid.Plugin.Abstractions.PluginTreeItem — one node of a plugin's own tree in the Plugins tool

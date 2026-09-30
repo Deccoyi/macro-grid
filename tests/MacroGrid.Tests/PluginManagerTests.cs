@@ -225,6 +225,43 @@ public sealed class PluginManagerTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task A_permission_switched_off_keeps_the_plugin_running_without_it_and_can_be_switched_back_on()
+    {
+        WriteJsPlugin(NewPluginFolder("js-five"), "js-five", ["variables", "actions"],
+            "try { host.registerAction({ type: 'js-five.say', name: 'Say', run() {} }); } catch (e) { host.variables.set('js-five.refused', e.message); } host.variables.set('js-five.ran', 1);");
+        await _manager.StartAsync(CancellationToken.None);
+        await _manager.ApproveAsync("js-five");
+        Assert.Equal("js-five", _manager.GetActionPluginId("js-five.say"));
+
+        var off = await _manager.SetPermissionAsync("js-five", "actions", enabled: false);
+
+        Assert.Equal(PluginLoadStatus.Loaded, off?.Status);
+        Assert.Equal(["actions"], off?.SwitchedOffPermissions);
+        Assert.Equal(["variables", "actions"], off?.Permissions);
+        Assert.Null(_manager.GetActionPluginId("js-five.say"));
+        Assert.Equal(1.0, _variables.Get("js-five.ran"));
+        Assert.NotNull(_variables.Get("js-five.refused"));
+
+        var reloaded = await _manager.ReloadAsync("js-five");
+        Assert.Equal(["actions"], reloaded?.SwitchedOffPermissions);
+
+        var on = await _manager.SetPermissionAsync("js-five", "actions", enabled: true);
+        Assert.Empty(on!.SwitchedOffPermissions!);
+        Assert.Equal("js-five", _manager.GetActionPluginId("js-five.say"));
+    }
+
+    [Fact]
+    public async Task A_permission_the_plugin_did_not_declare_cannot_be_switched()
+    {
+        WriteJsPlugin(NewPluginFolder("js-six"), "js-six", ["variables"], "");
+        await _manager.StartAsync(CancellationToken.None);
+        await _manager.ApproveAsync("js-six");
+
+        Assert.Null(await _manager.SetPermissionAsync("js-six", "input", enabled: false));
+        Assert.Null(await _manager.SetPermissionAsync("nobody", "variables", enabled: false));
+    }
+
+    [Fact]
     public async Task Uninstalling_a_js_plugin_unloads_it_and_forgets_its_approval()
     {
         WriteJsPlugin(NewPluginFolder("js-four"), "js-four", ["variables"], "host.variables.set('js-four.a', 1);");

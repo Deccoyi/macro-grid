@@ -160,7 +160,7 @@ public sealed partial class PluginManager
         {
             if (manifest.Kind == PluginKind.Js)
             {
-                instance = new JsPlugin(manifest, entryPath, new JsPermissions(declared), variableStore, input, logger,
+                instance = new JsPlugin(manifest, entryPath, new JsPermissions(declared.Except(permissionStore.SwitchedOff(manifest.Id), StringComparer.OrdinalIgnoreCase)), variableStore, input, logger,
                     reason => _ = Task.Run(() => DisableAsync(manifest.Id, reason)), windows: windowSource, problems: problems);
             }
             else
@@ -194,7 +194,9 @@ public sealed partial class PluginManager
             var treeProvider = instance as IPluginTreeProvider;
             var info = new LoadedPlugin(manifest.Id, manifest.Name, manifest.Version, PluginLoadStatus.Loaded, null,
                 host.SettingsPage is not null, HasIcon: ResolveIconPath(dir, manifest) is not null, HasTreeItems: treeProvider is not null,
-                Unsigned: trust?.Unsigned == true);
+                Unsigned: trust?.Unsigned == true,
+                Permissions: manifest.Kind == PluginKind.Js ? declared : null,
+                SwitchedOffPermissions: manifest.Kind == PluginKind.Js ? [.. declared.Where(p => permissionStore.SwitchedOff(manifest.Id).Contains(p, StringComparer.OrdinalIgnoreCase))] : null);
             var running = new Running(context, instance, host, variableStore) { WidgetHandler = instance as IPluginWidgetHandler };
             if (manifest.Widgets is { Length: > 0 })
                 widgetCatalog?.Set(manifest.Id, manifest.Name, PluginWidgetAvailability.Available, verified, widgetCheck.Widgets, widgetCheck.Problems, manifest.Kind);
