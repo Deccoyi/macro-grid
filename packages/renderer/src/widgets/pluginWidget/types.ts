@@ -23,7 +23,7 @@ export interface PluginWidgetRuntimeInfo {
   /** The most frames per second the widget may draw. */
   fps?: number;
   interactive?: boolean;
-  /** The options the widget declared and the person approved (`keepLoaded`, `storage`, `notifications`). */
+  /** The options the widget declared and the person approved (`keepLoaded`, `storage`). */
   options?: string[];
   /** The declared options that start switched off on a placed widget; the person can switch each one per widget (`props.options`). */
   optionsOff?: string[];

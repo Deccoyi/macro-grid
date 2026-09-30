@@ -1,5 +1,5 @@
 import type { Profile } from "@macro/renderer";
-type SettingFieldKind = "Text" | "Password" | "Number" | "Slider" | "Bool" | "Select" | "Segmented" | "File" | "List" | "Button" | "Notice" | "Variable";
+type SettingFieldKind = "Text" | "Password" | "Number" | "Slider" | "Bool" | "Select" | "Segmented" | "File" | "List" | "Button" | "Notice" | "Variable" | "Color";
 
 export interface SettingOption {
   value: string;
@@ -451,7 +451,7 @@ export interface PluginWidgetInfo {
   size: { w: number; h: number };
   fps: number;
   interactive: boolean;
-  /** The abilities the widget declared and the person approved (keepLoaded, storage, notifications). */
+  /** The abilities the widget declared and the person approved (keepLoaded, storage). */
   options: string[];
   /** The declared options that start switched off on a placed widget. */
   optionsOff?: string[];

@@ -116,6 +116,17 @@ public sealed class PluginWidgetTests : IAsyncLifetime
         Assert.Equal(["keepLoaded"], widget.OptionsOffByDefault);
     }
 
+    [Fact]
+    public void The_notifications_option_is_refused_because_it_is_not_supported()
+    {
+        var widget = Widget() with { Options = new Dictionary<string, PluginWidgetOption> { ["notifications"] = new() } };
+
+        var result = Validate(Dir(), Manifest(widget));
+
+        Assert.Empty(result.Widgets);
+        Assert.Contains("not supported", Assert.Single(result.Problems).Reason);
+    }
+
     // ---- icon ----
 
     private PluginWidgetValidation ValidateWithIcon(string svg)

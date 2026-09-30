@@ -146,7 +146,7 @@ public sealed partial class PluginManager
         }
         if (widgetCheck.Problems.Count == 0) problems?.Resolve(manifest.Id, ProblemCodes.WidgetInvalid);
 
-        // What the person approves: a JavaScript plugin's permissions plus every option a widget declares (keep loaded, storage, notifications).
+        // What the person approves: a JavaScript plugin's permissions plus every option a widget declares (keep loaded, storage).
         // Both kinds of plugin wait for approval; the C# ones only when they have widgets that declare options.
         string[] required = [.. declared, .. widgetCheck.Widgets.SelectMany(w => w.Options.Select(o => PluginWidgetOptions.ApprovalKey(w.Manifest.Id, o)))];
         if (required.Length > 0 && !permissionStore.IsGranted(manifest.Id, required))

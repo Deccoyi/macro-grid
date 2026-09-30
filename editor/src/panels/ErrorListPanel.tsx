@@ -1,9 +1,9 @@
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { CircleAlert, Eraser, Info, Search, TriangleAlert } from "lucide-react";
 import { useDiagnostics } from "../diagnostics/DiagnosticsContext";
 import type { Diagnostic, DiagnosticSeverity } from "../diagnostics/types";
 import { useT } from "../i18n/I18nContext";
-const COLUMNS = "90px 70px 1fr 150px 130px 100px";
+import { clampWidth, DIAGNOSTIC_COLUMNS, gridTemplate, loadColumnWidths, saveColumnWidths, tableMinWidth, type DiagnosticColumn } from "./diagnosticColumns";
 type Filter = "all" | DiagnosticSeverity;
 
 /** The Error List tool window — docs/design/docking-workspace.md ("Error List"). A table, filter row
@@ -16,6 +16,26 @@ export function ErrorListPanel() {
   const { diagnostics, clear } = useDiagnostics();
   const [filter, setFilter] = useState<Filter>("all");
   const [query, setQuery] = useState("");
+  const [widths, setWidths] = useState(loadColumnWidths);
+  const template = gridTemplate(widths);
+  const drag = useRef<{ column: DiagnosticColumn; startX: number; startWidth: number } | null>(null);
+
+  const startDrag = (column: DiagnosticColumn) => (e: React.PointerEvent<HTMLSpanElement>) => {
+    e.preventDefault();
+    e.currentTarget.setPointerCapture(e.pointerId);
+    drag.current = { column, startX: e.clientX, startWidth: widths[column] };
+  };
+  const moveDrag = (e: React.PointerEvent<HTMLSpanElement>) => {
+    const d = drag.current;
+    if (!d) return;
+    const width = clampWidth(d.startWidth + e.clientX - d.startX);
+    setWidths((w) => ({ ...w, [d.column]: width }));
+  };
+  const endDrag = () => {
+    if (!drag.current) return;
+    drag.current = null;
+    saveColumnWidths(widths);
+  };
 
   const counts = useMemo(() => {
     const c = { error: 0, warning: 0, info: 0 };
@@ -59,34 +79,44 @@ export function ErrorListPanel() {
         </button>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: COLUMNS, height: 24, flex: "0 0 auto", alignItems: "center", padding: "0 10px", color: "var(--ms-text-disabled)", fontSize: 11, borderBottom: "1px solid var(--ms-border)" }}>
-        <span>{t("errorList.col.severity")}</span>
-        <span>{t("errorList.col.code")}</span>
-        <span>{t("errorList.col.description")}</span>
-        <span>{t("errorList.col.source")}</span>
-        <span>{t("errorList.col.screen")}</span>
-        <span>{t("errorList.col.location")}</span>
-      </div>
-
       <div style={{ flex: "1 1 auto", overflow: "auto" }}>
-        {filtered.length === 0 ? (
-          <div style={{ padding: "16px 10px", color: "var(--ms-text-secondary)", fontSize: 12 }}>{t("errorList.empty")}</div>
-        ) : (
-          filtered.map((d) => <Row key={d.id} d={d} />)
-        )}
+        <div style={{ minWidth: tableMinWidth(widths) }}>
+          <div style={{ position: "sticky", top: 0, zIndex: 1, display: "grid", gridTemplateColumns: template, height: 24, alignItems: "center", padding: "0 10px", color: "var(--ms-text-disabled)", background: "var(--ms-bg-surface)", fontSize: 11, borderBottom: "1px solid var(--ms-border)" }}>
+            {DIAGNOSTIC_COLUMNS.map((column) => (
+              <span key={column} style={{ position: "relative", height: "100%", display: "flex", alignItems: "center", overflow: "hidden", whiteSpace: "nowrap" }}>
+                {t(`errorList.col.${column}`)}
+                <span
+                  role="separator"
+                  aria-orientation="vertical"
+                  aria-label={t("errorList.resizeColumn")}
+                  onPointerDown={startDrag(column)}
+                  onPointerMove={moveDrag}
+                  onPointerUp={endDrag}
+                  onPointerCancel={endDrag}
+                  style={{ position: "absolute", top: 0, right: 0, width: 7, height: "100%", cursor: "col-resize", borderRight: "1px solid var(--ms-border)", touchAction: "none" }}
+                />
+              </span>
+            ))}
+          </div>
+          {filtered.length === 0 ? (
+            <div style={{ padding: "16px 10px", color: "var(--ms-text-secondary)", fontSize: 12 }}>{t("errorList.empty")}</div>
+          ) : (
+            filtered.map((d) => <Row key={d.id} d={d} template={template} />)
+          )}
+        </div>
       </div>
     </div>
   );
 }
 
-function Row({ d }: { d: Diagnostic }) {
+function Row({ d, template }: { d: Diagnostic; template: string }) {
   const { t } = useT();
   const Icon = d.severity === "error" ? CircleAlert : d.severity === "warning" ? TriangleAlert : Info;
   const color = d.severity === "error" ? "var(--ms-danger)" : "var(--ms-text-secondary)";
   const text = d.message ?? (d.messageKey ? t(d.messageKey, ...(d.messageArgs ?? [])) : "");
   const label = d.severity === "error" ? t("errorList.severity.error") : d.severity === "warning" ? t("errorList.severity.warning") : t("errorList.severity.info");
   return (
-    <div style={{ display: "grid", gridTemplateColumns: COLUMNS, height: 24, alignItems: "center", padding: "0 10px", fontSize: 12, borderBottom: "1px solid var(--ms-bg-canvas)" }}>
+    <div style={{ display: "grid", gridTemplateColumns: template, height: 24, alignItems: "center", padding: "0 10px", fontSize: 12, borderBottom: "1px solid var(--ms-bg-canvas)" }}>
       <span style={{ display: "flex", alignItems: "center", gap: 6, color }}><Icon size={12} strokeWidth={2.25} />{label}</span>
       <span style={{ color: "var(--ms-text-secondary)", fontFamily: "Consolas, monospace" }}>{d.code}</span>
       <span style={{ color: "var(--ms-text-primary)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={text}>

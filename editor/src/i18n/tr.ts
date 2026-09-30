@@ -155,7 +155,6 @@ export const tr = {
   "plugins.permission.http.internet": (target: string) => `İnternetteki ${target} adresine web istekleri göndermek (ağınızın dışına veri gönderebilir)`,
   "plugins.permission.widget.keepLoaded": "Widget'larından biri sayfasından çıktığınızda arka planda çalışmaya devam eder",
   "plugins.permission.widget.storage": "Widget'larından biri cihazlarınızda kendi küçük verisini saklar",
-  "plugins.permission.widget.notifications": "Widget'larından biri telefonunuzda bildirim gösterebilir",
   "plugins.permission.unknown": (name: string) => name,
   "plugins.reload.success": (name: string) => `${name} yeniden yüklendi.`,
   "plugins.settings": "Ayarlar",
@@ -231,6 +230,7 @@ export const tr = {
   "errorList.all": "Tümü",
   "errorList.clear": "Temizle",
   "errorList.empty": "Sorun yok",
+  "errorList.resizeColumn": "Sütun genişliğini değiştirmek için sürükleyin",
   "errorList.col.severity": "Önem",
   "errorList.col.code": "Kod",
   "errorList.col.description": "Açıklama",
@@ -319,6 +319,12 @@ export const tr = {
 
   // ---- Widget palette ----
   "palette.search": "Widget ara",
+  "palette.menu": "Toolbox seçenekleri",
+  "palette.view.plugin": "Plugin'e göre grupla",
+  "palette.view.category": "Kategoriye göre grupla (A-Z)",
+  "palette.builtIn": "Standart",
+  "palette.other": "Diğer",
+  "palette.results": (count: string) => `${count} bulundu`,
   "palette.noMatch": "Eşleşen widget yok.",
   "palette.title": "Widget ekle",
 
@@ -666,6 +672,8 @@ export const tr = {
   "pluginWidget.option.keepLoaded.hint": "Widget arka planda yüklü kalır, sayfaya dönünce hemen görünür. Telefonun pilini daha çok kullanır.",
   "pluginWidget.option.storage": "Verisini hatırlasın",
   "pluginWidget.option.storage.hint": "Widget her cihazda kendi küçük verisini saklar, örneğin bir sayaç ya da son seçimi.",
+  "pluginWidget.section.options": "Seçenekler",
+  "pluginWidget.section.data": "Veri",
   "pluginWidget.clearData": "Widget verisini temizle",
   "pw.stopped.frozen": "Durduruldu: yanıt vermiyor",
   "pw.stopped.startTimeout": "Durduruldu: başlamadı",

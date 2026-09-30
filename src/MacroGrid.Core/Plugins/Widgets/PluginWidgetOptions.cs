@@ -10,10 +10,7 @@ public static class PluginWidgetOptions
     /// <summary>A small amount of data kept on the device between runs (a safe replacement for cookies).</summary>
     public const string Storage = "storage";
 
-    /// <summary>The widget may show a system notification on the phone.</summary>
-    public const string Notifications = "notifications";
-
-    private static readonly string[] All = [KeepLoaded, Storage, Notifications];
+    private static readonly string[] All = [KeepLoaded, Storage];
 
     public static bool IsKnown(string option) => All.Contains(option, StringComparer.Ordinal);
 

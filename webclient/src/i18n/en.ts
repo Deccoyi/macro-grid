@@ -20,6 +20,7 @@ export const en = {
   "widget.unavailable.noWidget": "The plugin has no such widget",
   "widget.unavailable.unsupported": "This app cannot show plugin widgets",
   "widget.unavailable.off": "Plugin widgets are off on this device",
+  "widget.unavailable.crashedOff": "Switched off: this plugin's widgets crashed the page",
   "widget.stopped.frozen": "Stopped: not responding",
   "widget.stopped.startTimeout": "Stopped: did not start",
   "widget.stopped.tooBusy": "Stopped: too much processor time",

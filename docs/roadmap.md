@@ -55,11 +55,8 @@ The order of the bigger pieces of work, and their plans, are in [plans/README.md
   the next MAJOR version once both are settled. See [plans/security-hardening-plan.md](plans/security-hardening-plan.md), part A.
 - **A branded installer:** done.
 - **A much faster install and update (fewer files):** done.
-- **Polish the example widgets before they are published:** the Hello Gauge and Hello Weather plugins are working examples, but how they look in
-  the Properties panel and on small or tall cells needs work (layout of the settings, spacing of the picture and text). Their names may change
-  before release.
-- **Resizable columns in Diagnostic Messages:** the columns have a fixed width, so a long message (for example the save summary) is cut off. The person
-  should be able to drag the column borders, and the full text should be readable (for example as a tooltip or by widening the Description column).
+- **Weather example layout on tall, narrow cells:** the Hello Weather widget leaves a large gap between the picture and the temperature in a tall
+  cell; the picture and text should be spaced by the cell's shape.
 - **The `web` widget** (an embedded page such as a live chat, or an alerts panel): an iframe with popups, downloads and device features blocked, plus a
   "Change web page" button action. See [plans/web-widget-plan.md](plans/web-widget-plan.md).
 - **The rest of a store-like Discover tab.** Discover now shows a card grid and a per-plugin detail view (description, author,
@@ -76,7 +73,7 @@ The order of the bigger pieces of work, and their plans, are in [plans/README.md
   shown as a step of installing (and of updating) the plugin, not only afterwards in the Plugins window; each permission explained in
   plain words with what it allows; switching a single permission off later, per plugin, without uninstalling, with the plugin kept running
   without it (the API answers "not allowed"); a clear list of what every installed plugin may do; and the same model for the abilities a plugin
-  widget declares (keep loaded, data kept on the device, notifications). It needs a plan file first (`plans/`).
+  widget declares (keep loaded, data kept on the device). It needs a plan file first (`plans/`).
 - **Plugins feeding the editor's Error List panel:** the docking workspace's Error List (`docs/design/docking-workspace.md`) is wired up but has
   no producer yet — it only ever shows "no problems". The status bar used to be where a plugin's own errors/warnings surfaced (`StatusEntry.level`
   `Warning`/`Error`); the Error List should take over that role instead, since it's a proper list with filtering and severity counts rather than a
