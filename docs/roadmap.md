@@ -66,7 +66,7 @@ The order of the bigger pieces of work, and their plans, are in [plans/README.md
 - **Weather example layout on tall, narrow cells:** the Hello Weather widget leaves a large gap between the picture and the temperature in a tall
   cell; the picture and text should be spaced by the cell's shape.
 - **The `web` widget** (an embedded page such as a live chat, or an alerts panel): an iframe with popups, downloads and device features blocked, plus a
-  "Change web page" button action. See [plans/web-widget-plan.md](plans/web-widget-plan.md).
+  "Change web page" button action. See [design/web-widget.md](design/web-widget.md).
 - **A live-stream chat plugin** (one plugin per streaming platform, sharing one chat view): a custom widget that shows the channel's live chat, with
   a per-chatter menu (ban, or one of a few preset timeouts), plus actions for ad breaks, switching the stream category between saved favorites, and
   chat modes where the platform's API offers them. Needs deciding first, per platform: how chat is received without a server of our own (a platform
