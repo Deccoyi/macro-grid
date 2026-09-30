@@ -33,6 +33,15 @@ A JS plugin is untrusted: the user installs it from a folder and only approves a
 6. **Isolation.** One thread per plugin, one job at a time. A blocked or slow plugin only delays itself. Five failures in a
    row switch the plugin off (`PluginManager.DisableAsync`, status `Error` with the last message; Reload restarts it).
 
+## Reporting problems
+
+`host.diagnostics.report(level, message, key?)` (`level` is `'info'`, `'warning'` or `'error'`) puts a line in the editor's Error List under the
+plugin's name, and `host.diagnostics.resolve(key)` takes back the lines reported with that key. It needs no permission: it only adds a line to
+a list the person reads. A message is cut to 300 characters and control characters are removed; the same message is one line with a count, and a
+plugin can keep at most 20 different lines (more are dropped, with one log line). The lines of a plugin are removed when it is reloaded. A C# plugin
+uses `IPluginHost.Diagnostics` (`IPluginDiagnostics`) the same way. The status bar item (`host.status`) stays for a one-line state; use a
+diagnostic for something the person has to fix.
+
 ## Approval
 
 The manifest's `permissions` are validated (`JsPermissions.IsKnown`; an unknown string is an `Error`). If the user has not

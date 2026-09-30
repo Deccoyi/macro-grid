@@ -14,7 +14,7 @@ Where the project stands. The server and the SDK are at 1.0.0 and under active d
 - **Docking workspace and hierarchy tree:** dockable, tabbed, floating and auto-hide tool windows, page tabs, a remembered layout
   ([design/docking-workspace.md](design/docking-workspace.md)); one tree for every profile and page, with page and profile folders,
   drag-and-drop, copy/paste and lazily loaded profiles ([design/hierarchy-tree-and-folders.md](design/hierarchy-tree-and-folders.md)).
-  The Error List has no producer yet and plugin-provided tree entries (phase 6) are not started, see "Next" below.
+  The server and plugins (through the plugin SDK's diagnostics) report to the Error List.
 - **Editor edit commands:** right-click Undo/Redo/Cut/Copy/Paste/Duplicate/Delete/Select All, an Edit menu, one shared undo/redo
   history stack, standard Windows shortcuts, and a header toolbar ([design/editor-edit-commands.md](design/editor-edit-commands.md)).
 - **Pairing and devices:** PIN and QR pairing, per-device tokens, a device list with revoke, a profile per device.
@@ -88,11 +88,6 @@ The order of the bigger pieces of work, and their plans, are in [plans/README.md
   plain words with what it allows; switching a single permission off later, per plugin, without uninstalling, with the plugin kept running
   without it (the API answers "not allowed"); a clear list of what every installed plugin may do; and the same model for the abilities a plugin
   widget declares (keep loaded, data kept on the device). It needs a plan file first (`plans/`).
-- **Plugins feeding the editor's Error List panel:** the docking workspace's Error List (`docs/design/docking-workspace.md`) is wired up but has
-  no producer yet — it only ever shows "no problems". The status bar used to be where a plugin's own errors/warnings surfaced (`StatusEntry.level`
-  `Warning`/`Error`); the Error List should take over that role instead, since it's a proper list with filtering and severity counts rather than a
-  single status-bar item. Needs an SDK addition (a way for a plugin to report a diagnostic, not just a status-bar entry) — planned for whenever the
-  SDK's next version bumps, not before.
 
 ## Release status
 

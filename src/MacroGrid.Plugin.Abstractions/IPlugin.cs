@@ -54,6 +54,9 @@ public interface IPluginHost
 
     /// <summary>Pushes events to the plugin's own custom widgets (<see cref="PluginManifest.Widgets"/>).</summary>
     IPluginWidgets Widgets { get; }
+
+    /// <summary>Reports problems the person can fix to the editor's Error List.</summary>
+    IPluginDiagnostics Diagnostics { get; }
 }
 
 /// <summary>Encrypts one plugin's own secret before it is written to disk and decrypts it when read back. Backed

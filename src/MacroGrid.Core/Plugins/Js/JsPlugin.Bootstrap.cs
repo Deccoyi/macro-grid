@@ -11,7 +11,7 @@ public sealed partial class JsPlugin
           'use strict';
           const g = globalThis;
           const names = ['permissions', 'log', 'varSet', 'varGet', 'varRemove', 'varDescribe', 'registerAction',
-            'settingsPage', 'settingsGet', 'status', 'hotkey', 'type', 'pressEnd', 'http', 'httpAsync', 'widgetPost', 'widgetReply', 'timer', 'cancel'];
+            'settingsPage', 'settingsGet', 'status', 'hotkey', 'type', 'pressEnd', 'http', 'httpAsync', 'widgetPost', 'widgetReply', 'diagnosticsReport', 'diagnosticsResolve', 'timer', 'cancel'];
           const n = {};
           for (const name of names) { n[name] = g['__' + name]; delete g['__' + name]; }
 
@@ -81,6 +81,10 @@ public sealed partial class JsPlugin
                 deviceId: options && options.deviceId ? String(options.deviceId) : null,
                 retain: !!(options && options.retain),
               })),
+            }),
+            diagnostics: Object.freeze({
+              report: (level, message, key) => n.diagnosticsReport(String(level), String(message), key === undefined || key === null ? null : String(key)),
+              resolve: (key) => n.diagnosticsResolve(String(key)),
             }),
             every: (ms, fn) => start(fn, ms, true),
             after: (ms, fn) => start(fn, ms, false),

@@ -55,6 +55,19 @@ public sealed partial class JsPlugin
         }
     }
 
+    /// <summary>Puts a line in the editor's Error List (<c>host.diagnostics.report</c>).</summary>
+    private void DiagnosticsReport(string level, string message, string? key)
+    {
+        var parsed = level.ToLowerInvariant() switch
+        {
+            "info" => PluginDiagnosticLevel.Info,
+            "warning" => PluginDiagnosticLevel.Warning,
+            "error" => PluginDiagnosticLevel.Error,
+            _ => throw new JsHostException("diagnostics.report needs a level of 'info', 'warning' or 'error'."),
+        };
+        _host!.Diagnostics.Report(parsed, Truncate(message, 300), string.IsNullOrEmpty(key) ? null : key);
+    }
+
     /// <summary>Sends an event to the plugin's own widgets (<c>host.widgets.post</c>).</summary>
     private void WidgetPost(string json)
     {
