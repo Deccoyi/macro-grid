@@ -44,6 +44,14 @@ Where the project stands. The server and the SDK are at 1.0.0 and under active d
 - **Plugin SDK 0.4.0:** file, list, button and notice setting fields, an action that learns when its button is released, a settings page that runs a
   host command (used for a sound preview), and an optional plugin icon; first used by the official **SoundBoard** plugin
   ([design/sdk-0.4.0-and-soundboard.md](design/sdk-0.4.0-and-soundboard.md)).
+- **Custom plugin widgets:** a plugin ships its own widget (server, SDK, shared renderer, browser deck, phone app and editor preview all built) that
+  runs in a sandboxed Web Worker with no network access, so a slow, looping or broken widget cannot freeze the deck; a per-device live-widget
+  recommendation (not a hard limit), a crash guard, a `storage` option, per-widget option switches, plugin SVG icons, a `Color` setting kind, a
+  Toolbox search and grouping menu, and Diagnostic Messages in the editor. Example plugins Hello Gauge and Hello Weather
+  ([design/plugin-widgets.md](design/plugin-widgets.md)).
+- **Security hardening:** an encrypted connection (TLS, see "Done" above), device tokens and plugin secrets encrypted at rest, pairing rate limits and
+  a security log, a security event log, dependency vulnerability scanning and an SBOM in CI, and only official signed C# plugins load
+  ([design/security-hardening.md](design/security-hardening.md)).
 
 ## Next
 
@@ -52,7 +60,7 @@ The order of the bigger pieces of work, and their plans, are in [plans/README.md
 - **The "Allow unencrypted connections" preference:** now that the server and the phone app both support `wss://` (see "Done"
   above), plain `ws://`/`http://` (port 9820) stay open unconditionally; a preference to turn them off is not built yet. Default
   on for now (the browser deck cannot use `wss://` at all, and older paired phones have no TLS support), default off starting
-  the next MAJOR version once both are settled. See [plans/security-hardening-plan.md](plans/security-hardening-plan.md), part A.
+  the next MAJOR version once both are settled. See [design/security-hardening.md](design/security-hardening.md), part A.
 - **A branded installer:** done.
 - **A much faster install and update (fewer files):** done.
 - **Weather example layout on tall, narrow cells:** the Hello Weather widget leaves a large gap between the picture and the temperature in a tall

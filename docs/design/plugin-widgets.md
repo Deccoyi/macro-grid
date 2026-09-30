@@ -5,7 +5,7 @@ canvas. It has no network access and no page around it, so a slow, looping or br
 own plugin on the PC, over a small bridge. The author's guide is in the plugin repository (`docs/plugin-authoring.md`, section "Custom widgets"); this note
 is the design behind it.
 
-Status: server, SDK, shared renderer, browser deck and editor preview are built. The phone app follows in its own repository.
+Status: **built and merged** — server, SDK, shared renderer, browser deck, editor preview and the phone app (its own repository) are all done.
 
 ## How it runs
 
