@@ -199,7 +199,7 @@ Macro Grid is meant for a home or office network you trust. It is not hardened f
   in every renderer); a profile that is saved or imported has a refused address cleared, and the editor asks once, on import, whether to keep the
   sites a profile opens. The editor window itself refuses new windows, downloads, other programs' links, permission prompts and script dialogs
   (`WebViewEnvironment.LockDown`), and the app pages carry a `frame-src http: https:` policy. Only host names are ever logged, never the full address (it
-  may hold a secret token). See [design/web-widget.md](design/web-widget.md).
+  may hold a secret token).
 - **Actions run as you.** A paired device can press keys, type text and start programs on the PC, so pair only devices you trust and revoke the
   ones you do not.
 - **Only official, signed C# plugins load**, checked at every load: the plugin folder must carry `signature.json` and `signature.sig` made with
