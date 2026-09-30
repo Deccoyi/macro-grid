@@ -31,6 +31,10 @@ public sealed record PluginCatalogEntry(
     /// <summary>What to browse by (at most 32 characters) and search words (at most 5, 24 characters each), both checked by <see cref="CatalogText"/>.</summary>
     public string? Category { get; init; }
     public IReadOnlyList<string> Tags { get; init; } = [];
+
+    /// <summary>The file name of the plugin's icon among its release's assets (a name only, see <see cref="CatalogText.IsIconFileName"/>);
+    /// the host builds the address from the release itself, so an entry cannot point the editor at another place.</summary>
+    public string? Icon { get; init; }
 }
 
 /// <summary>Limits for the free text a catalog entry carries, since every such field is written by a plugin author and drawn by the editor.</summary>
@@ -49,6 +53,9 @@ public static class CatalogText
         if (cleaned.Length > max) cleaned = cleaned[..max].TrimEnd();
         return cleaned.Length == 0 ? null : cleaned;
     }
+
+    public static bool IsIconFileName(string? name) =>
+        name is { Length: > 0 and <= 80 } && System.Text.RegularExpressions.Regex.IsMatch(name, @"^[A-Za-z0-9][A-Za-z0-9._-]*\.(png|svg)$", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
 
     public static IReadOnlyList<string> CleanTags(IEnumerable<string?>? tags) =>
         tags is null ? [] : [.. tags.Select(t => Clean(t, MaxTagLength)).OfType<string>().Distinct(StringComparer.OrdinalIgnoreCase).Take(MaxTags)];

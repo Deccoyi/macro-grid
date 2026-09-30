@@ -73,6 +73,20 @@ public sealed class PluginPackageDownloader(HttpClient http)
 
     /// <summary>Fetches a small text asset (a <c>.sha256</c> file) from an allowed host, following redirects the
     /// same way as the package download.</summary>
+    /// <summary>A small binary asset (a catalog icon) from an allowed host, at most <paramref name="maxBytes"/>.</summary>
+    public async Task<byte[]> FetchBytesAsync(Uri url, long maxBytes, CancellationToken cancellationToken)
+    {
+        try
+        {
+            using var response = await GetFollowingRedirectsAsync(url, cancellationToken);
+            return await ReadCappedAsync(response, expectedSize: 0, maxBytes, cancellationToken);
+        }
+        catch (HttpRequestException ex)
+        {
+            throw new PluginDownloadException(PluginDownloadException.Failed, "Could not reach the download server.", ex);
+        }
+    }
+
     public async Task<string> FetchTextAssetAsync(Uri url, CancellationToken cancellationToken)
     {
         try

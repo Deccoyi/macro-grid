@@ -1,10 +1,10 @@
 # Discover: icons, screenshots and ratings
 
-> Status: **planned, not built.** The category and search tags are built (plugin manifest `category` and `tags`, copied into `macrogrid-index.json`). **Repositories:** `macro-grid` (host, editor), `macro-grid-plugin` (release script, index).
+> Status: **the icon, category and tags are built; screenshots and ratings are not.** Category and search tags come from the plugin manifest (`category`, `tags`) through `macrogrid-index.json`; the icon is a release asset named by the index entry (`icon`) and fetched by the host (`PluginCatalogIcons`, `GET /api/plugin-catalog/icon`). The release script copies the manifest's `icon` (.png or .svg, at most 100 KB) next to the package; no official plugin has a plugin-level icon yet. **Repositories:** `macro-grid` (host, editor), `macro-grid-plugin` (release script, index).
 
 What is left of a store-like Discover tab: a real plugin icon on the cards, screenshots on the detail page, and later install counts or a rating.
 
-## Plugin icon (recommended first)
+## Plugin icon (built)
 
 - The manifest already has an optional `icon` (a square `.svg` or `.png`, at most 100 KB) used by the installed-plugins list. For the catalog the release
   script copies the icon next to the release as an asset (`<id>-<version>.icon.<ext>`) and the index entry gets `"icon": "<file name>"`, a name only,

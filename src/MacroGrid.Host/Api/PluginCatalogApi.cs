@@ -76,6 +76,23 @@ internal static class PluginCatalogApi
             }
         });
 
+        // A catalog plugin's icon, fetched by the host (the editor never loads a remote image itself). 404 when there is none.
+        api.MapGet("/plugin-catalog/icon", async (string? source, string? id, PluginCatalogClient client, PluginCatalogIcons icons, PluginSourceStore sources, CancellationToken cancellationToken) =>
+        {
+            if (!TryResolveSource(source, sources, out var owner, out var repo, out _) || string.IsNullOrWhiteSpace(id)) return Results.NotFound();
+            try
+            {
+                var index = await client.FetchIndexAsync(owner, repo, cancellationToken);
+                var entry = index.Plugins.FirstOrDefault(p => p.Id == id);
+                if (entry is null || await icons.GetAsync(owner, repo, entry, cancellationToken) is not { } icon) return Results.NotFound();
+                return Results.File(icon.Data, icon.ContentType);
+            }
+            catch (PluginCatalogException)
+            {
+                return Results.NotFound();
+            }
+        });
+
         api.MapPost("/plugin-catalog/install", async (PluginCatalogInstallRequest request, PluginCatalogClient client, PluginSourceStore sources, PluginCatalogInstaller installer, CancellationToken cancellationToken) =>
         {
             if (!TryResolveSource(request.Source, sources, out var owner, out var repo, out var isOfficial))
@@ -224,6 +241,7 @@ internal static class PluginCatalogApi
             entry.Kind,
             entry.Category,
             entry.Tags,
+            hasIcon = entry.Icon is not null,
             latestVersion = latest?.Version,
             installableVersion = compatible?.Version,
             compatible = compatible is not null,

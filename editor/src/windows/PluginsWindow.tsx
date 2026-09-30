@@ -80,8 +80,12 @@ function InfoCell({ label, value }: { label: string; value: string }) {
   );
 }
 
-function PluginAvatar({ id, name, size = 36 }: { id: string; name: string; size?: number }) {
+function PluginAvatar({ id, name, size = 36, iconUrl }: { id: string; name: string; size?: number; iconUrl?: string }) {
   const hue = avatarHue(id);
+  const [broken, setBroken] = useState(false);
+  if (iconUrl && !broken) {
+    return <img src={iconUrl} alt="" onError={() => setBroken(true)} style={{ width: size, height: size, borderRadius: 8, flexShrink: 0, objectFit: "contain" }} />;
+  }
   return (
     <div
       style={{
@@ -548,7 +552,7 @@ export function PluginsWindow() {
           </button>
 
           <div style={{ display: "flex", gap: 16, alignItems: "center" }}>
-            <PluginAvatar id={selectedEntry.id} name={selectedEntry.name} size={84} />
+            <PluginAvatar id={selectedEntry.id} name={selectedEntry.name} size={84} iconUrl={selectedEntry.hasIcon ? api.pluginCatalogIconUrl(selectedSource, selectedEntry.id) : undefined} />
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontSize: 22, fontWeight: 600 }}>{selectedEntry.name}</div>
               {selectedEntry.author && (
@@ -719,7 +723,7 @@ export function PluginsWindow() {
                       background: "var(--ms-bg-surface)", cursor: "pointer",
                     }}
                   >
-                    <PluginAvatar id={entry.id} name={entry.name} size={56} />
+                    <PluginAvatar id={entry.id} name={entry.name} size={56} iconUrl={entry.hasIcon ? api.pluginCatalogIconUrl(selectedSource, entry.id) : undefined} />
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: 13.5, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{entry.name}</div>
                       <div style={{ fontSize: 11, color: "var(--ms-text-secondary)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
