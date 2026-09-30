@@ -2,8 +2,11 @@
 
 Status: built in both repositories (branch `feat/web-widget`) and checked on a current phone (Samsung, Android 16-class WebView) with a test page over `http` and `https`:
 the page loads, `window.open`, `top.location`, `alert`/`prompt`, camera, microphone and location are refused, `tel:`, `intent:`, `market:` and `_blank` links open nothing, the
-native bridge is not visible to the page, no referrer is sent, and the Example/Reset/Reload/refused-address buttons behave. Still open: step 0 (real chat and alerts links, to be tried
-at home), a download check, the old-Android fallback (emulator at most) and whether the login of an embedded site is kept (third-party cookies are not enabled).
+native bridge is not visible to the page, no referrer is sent, and the Example/Reset/Reload/refused-address buttons behave. Checked on 2026-09-30: a real fast live chat embeds and scrolls smoothly on the phone (step 0, chat part; no alerts link tried), downloads, `window.open`, `top.location`, dialogs stay blocked
+(a page that answers with an attachment header makes the phone request the file, but nothing is saved), and a small phone (emulator with 2 cores and 2 GB) gets the recommended number 1.
+Login: cookies an embedded page sets without `SameSite=None; Secure` are not kept (measured with a test page), and a site's cookie banner may come back every time, so a login through an embedded
+site cannot be relied on; use a page that carries its key in the address. Still open: an alerts link (step 0), and the old-Android fallback: the stock API 24 emulator image has a WebView 53, and
+the app does not start on it (blank screen, `SyntaxError` in the bundle), so the "web pages are off" placeholder could not be reached; a phone with an updated WebView on API 24 is untested.
 The stability part below is built in both repositories (crash guard, recommended live number with Tap to load, Keep loaded, unloading in the background); slow-page detection is not buildable (see point 4). Tried on a phone (Samsung, Android 16-class, 2026-09-30): the Tap-to-load queue, Keep loaded, the 30-second unload, and a page that eats all memory (the renderer is killed, the deck comes back, the site is named in a notice and turned off, with Turn on). Not tried: a small phone (number 1) and the numbers are provisional until measured.
 Repositories: `macro-grid` (model, renderer, editor, browser deck) and `macro-grid-client` (the phone app's own renderer copy and the Android layer).
 

@@ -67,6 +67,16 @@ The order of the bigger pieces of work, and their plans, are in [plans/README.md
   cell; the picture and text should be spaced by the cell's shape.
 - **The `web` widget** (an embedded page such as a live chat, or an alerts panel): an iframe with popups, downloads and device features blocked, plus a
   "Change web page" button action. See [plans/web-widget-plan.md](plans/web-widget-plan.md).
+- **A live-stream chat plugin** (one plugin per streaming platform, sharing one chat view): a custom widget that shows the channel's live chat, with
+  a per-chatter menu (ban, or one of a few preset timeouts), plus actions for ad breaks, switching the stream category between saved favorites, and
+  chat modes where the platform's API offers them. Needs deciding first, per platform: how chat is received without a server of our own (a platform
+  that only delivers chat events to a public web address cannot be reached by an offline app, so it needs either a small relay we run or an
+  unofficial route; a platform with a WebSocket event stream needs neither), and how the account is linked without shipping a secret in the plugin
+  (a device-code sign-in with no client secret is the preferred shape; a platform that requires a secret for every token exchange needs each
+  person to register their own app, or a relay that holds the secret). A plugin that holds a WebSocket needs C#, because a JavaScript plugin has
+  no WebSocket and cannot listen for incoming connections; the widget itself only draws on a canvas and gets its messages from the plugin. Emote
+  images are a separate problem: a widget has no network, so only bundled assets can be drawn. The actions alone (no live chat) need no server on
+  any platform and can ship first. It needs a plan file first (`plans/`).
 - **The rest of a store-like Discover tab.** Discover now shows a card grid and a per-plugin detail view (description, author,
   homepage, declared permissions, install/update) built from what the catalog already carries, in a wider Plugins window. Still
   open, and each needs a catalog field first: a real plugin icon (cards show the plugin's initial on a stable color for now),
