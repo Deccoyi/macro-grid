@@ -234,6 +234,8 @@ public sealed partial class JsPlugin : IPlugin, IPluginWidgetHandler, IDisposabl
         engine.SetValue("__http", new Func<string, string, string, string, string>(Http));
         engine.SetValue("__httpAsync", new Action<int, string, string, string, string>(HttpAsync));
         engine.SetValue("__widgetPost", new Action<string>(WidgetPost));
+        engine.SetValue("__diagnosticsReport", new Action<string, string, string?>(DiagnosticsReport));
+        engine.SetValue("__diagnosticsResolve", new Action<string>(key => _host!.Diagnostics.Resolve(key)));
         engine.SetValue("__widgetReply", new Action<int, bool, string>(WidgetReply));
         engine.SetValue("__timer", new Action<int, int, bool>(StartTimer));
         engine.SetValue("__cancel", new Action<int>(CancelTimer));

@@ -5,7 +5,11 @@ public enum ProblemSeverity { Info, Warning, Error }
 /// <summary>One line of the editor's Error List: the same message from the same source counted, not repeated.</summary>
 public sealed record Problem(
     string Id, string Source, string SourceName, ProblemSeverity Severity, string Code, string Message,
-    int Count, DateTimeOffset FirstAt, DateTimeOffset LastAt);
+    int Count, DateTimeOffset FirstAt, DateTimeOffset LastAt)
+{
+    /// <summary>Set by a plugin that wants to take the line back later (<see cref="ProblemList.ResolveKey"/>); not shown.</summary>
+    public string? Key { get; init; }
+}
 
 /// <summary>Codes of the problems the server itself reports. The editor's own checks use their own codes.</summary>
 public static class ProblemCodes
@@ -32,6 +36,8 @@ public static class ProblemCodes
     public const string WidgetEventDropped = "P142";
     /// <summary>A custom widget reported an error from its own code.</summary>
     public const string WidgetScriptError = "P143";
+    /// <summary>A plugin reported a problem itself (<c>IPluginDiagnostics</c>).</summary>
+    public const string PluginReported = "P150";
 }
 
 /// <summary>
@@ -57,13 +63,18 @@ public sealed class ProblemList
         get { lock (_lock) return _version; }
     }
 
-    public void Report(string source, string sourceName, ProblemSeverity severity, string code, string message)
+    public void Report(string source, string sourceName, ProblemSeverity severity, string code, string message) =>
+        Report(source, sourceName, severity, code, message, key: null, maxPerSourceAndCode: int.MaxValue);
+
+    /// <summary>Adds the line, or counts it again. When the source already has <paramref name="maxPerSourceAndCode"/> different lines with
+    /// this code, a new one is dropped (false); a line that is already there is always counted.</summary>
+    public bool Report(string source, string sourceName, ProblemSeverity severity, string code, string message, string? key, int maxPerSourceAndCode)
     {
         message = Clean(message);
         var now = DateTimeOffset.UtcNow;
         lock (_lock)
         {
-            var index = _items.FindIndex(p => p.Source == source && p.Code == code && p.Message == message && p.Severity == severity);
+            var index = _items.FindIndex(p => p.Source == source && p.Code == code && p.Message == message && p.Severity == severity && p.Key == key);
             if (index >= 0)
             {
                 var existing = _items[index];
@@ -72,12 +83,14 @@ public sealed class ProblemList
             }
             else
             {
-                _items.Insert(0, new Problem(Guid.NewGuid().ToString("N"), source, sourceName, severity, code, message, 1, now, now));
+                if (_items.Count(p => p.Source == source && p.Code == code) >= maxPerSourceAndCode) return false;
+                _items.Insert(0, new Problem(Guid.NewGuid().ToString("N"), source, sourceName, severity, code, message, 1, now, now) { Key = key });
                 if (_items.Count > MaxEntries) _items.RemoveRange(MaxEntries, _items.Count - MaxEntries);
             }
             _version++;
         }
         Changed?.Invoke();
+        return true;
     }
 
     public IReadOnlyList<Problem> Snapshot()
@@ -102,6 +115,17 @@ public sealed class ProblemList
         lock (_lock)
         {
             if (_items.RemoveAll(p => p.Source == source && codes.Contains(p.Code)) == 0) return;
+            _version++;
+        }
+        Changed?.Invoke();
+    }
+
+    /// <summary>Removes the lines a plugin reported with this key.</summary>
+    public void ResolveKey(string source, string key)
+    {
+        lock (_lock)
+        {
+            if (_items.RemoveAll(p => p.Source == source && p.Key == key) == 0) return;
             _version++;
         }
         Changed?.Invoke();

@@ -1,6 +1,6 @@
 # Docking workspace for the editor
 
-**Status:** built in 1.2.0 (the docking workspace, tool windows, auto-hide rail, tabbed document area, saved layouts and the Error List). The Error List has no producer yet, see `../roadmap.md`. User guide: `website/guide/editor.md`. **Repositories:** `macro-grid` only (`editor/` and `src/MacroGrid.Host`, `src/MacroGrid.Core`).
+**Status:** built in 1.2.0 (the docking workspace, tool windows, auto-hide rail, tabbed document area, saved layouts and the Error List). The server and plugins report problems to it (`GET /api/problems`, `IPluginHost.Diagnostics`). User guide: `website/guide/editor.md`. **Repositories:** `macro-grid` only (`editor/` and `src/MacroGrid.Host`, `src/MacroGrid.Core`).
 No change to the plugin SDK, the WebSocket protocol or the phone app.
 
 Related documents: [hierarchy-tree-and-folders.md](hierarchy-tree-and-folders.md) (the Hierarchy panel's content, built on this one) and

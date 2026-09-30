@@ -172,7 +172,7 @@ public sealed partial class PluginManager
                 instance = (IPlugin)(Activator.CreateInstance(pluginType) ?? throw new InvalidOperationException("The plugin instance could not be created"));
             }
 
-            host = new PluginHostCollector(serverVersion, dir, manifest.Id, statusRegistry, logger, secretProtector, widgetEvents, manifest.Name);
+            host = new PluginHostCollector(serverVersion, dir, manifest.Id, statusRegistry, logger, secretProtector, widgetEvents, manifest.Name, problems);
             instance.Initialize(host);
 
             // All-or-nothing: a clash on any action type fails the whole plugin instead of half-registering it.
@@ -190,7 +190,7 @@ public sealed partial class PluginManager
             }
 
             localizer?.Register(manifest.Id, dir, manifest.DefaultLanguage);
-            problems?.Resolve(manifest.Id, ProblemCodes.NotAllowed, ProblemCodes.LoadFailed, ProblemCodes.Incompatible, ProblemCodes.SwitchedOff);
+            problems?.Resolve(manifest.Id, ProblemCodes.NotAllowed, ProblemCodes.LoadFailed, ProblemCodes.Incompatible, ProblemCodes.SwitchedOff, ProblemCodes.PluginReported);
             var treeProvider = instance as IPluginTreeProvider;
             var info = new LoadedPlugin(manifest.Id, manifest.Name, manifest.Version, PluginLoadStatus.Loaded, null,
                 host.SettingsPage is not null, HasIcon: ResolveIconPath(dir, manifest) is not null, HasTreeItems: treeProvider is not null,
