@@ -362,6 +362,24 @@ public sealed class PluginWidgetTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task A_widget_option_can_be_switched_off_and_the_widget_runs_without_it()
+    {
+        InstallJsPlugin("gaugeplug", """[ { "id": "gauge", "name": "Gauge", "entry": "widgets/gauge.js", "options": { "keepLoaded": {} } } ]""");
+        await _manager.StartAsync(CancellationToken.None);
+        await _manager.ApproveAsync("gaugeplug");
+        Assert.Contains("keepLoaded", _catalog.Resolve("gaugeplug", "gauge", out _)!.Widget.Options);
+
+        var off = await _manager.SetPermissionAsync("gaugeplug", "widget:gauge:keepLoaded", enabled: false);
+
+        Assert.Equal(PluginLoadStatus.Loaded, off!.Status);
+        Assert.Equal(["widget:gauge:keepLoaded"], off.SwitchedOffPermissions);
+        Assert.DoesNotContain("keepLoaded", _catalog.Resolve("gaugeplug", "gauge", out _)!.Widget.Options);
+
+        await _manager.SetPermissionAsync("gaugeplug", "widget:gauge:keepLoaded", enabled: true);
+        Assert.Contains("keepLoaded", _catalog.Resolve("gaugeplug", "gauge", out _)!.Widget.Options);
+    }
+
+    [Fact]
     public async Task A_plugin_with_widgets_but_no_options_or_permissions_loads_without_a_prompt()
     {
         InstallJsPlugin("plain", """[ { "id": "gauge", "name": "Gauge", "entry": "widgets/gauge.js" } ]""");

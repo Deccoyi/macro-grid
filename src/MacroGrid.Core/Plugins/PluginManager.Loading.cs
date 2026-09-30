@@ -148,9 +148,16 @@ public sealed partial class PluginManager
 
         // What the person approves: a JavaScript plugin's permissions plus every option a widget declares (keep loaded, storage).
         // Both kinds of plugin wait for approval; the C# ones only when they have widgets that declare options.
-        string[] required = [.. declared, .. widgetCheck.Widgets.SelectMany(w => w.Options.Select(o => PluginWidgetOptions.ApprovalKey(w.Manifest.Id, o)))];
+        string[] widgetKeys = [.. widgetCheck.Widgets.SelectMany(w => w.Options.Select(o => PluginWidgetOptions.ApprovalKey(w.Manifest.Id, o)))];
+        string[] required = [.. declared, .. widgetKeys];
         if (required.Length > 0 && !permissionStore.IsGranted(manifest.Id, required))
             return Fail(PluginLoadStatus.NeedsApproval, "Needs your approval before it can run", required);
+
+        // An approved widget option the person switched off is left out of the widget, so it runs without it.
+        var switchedOff = permissionStore.SwitchedOff(manifest.Id);
+        var widgets = widgetCheck.Widgets
+            .Select(w => w with { Options = [.. w.Options.Where(o => !switchedOff.Contains(PluginWidgetOptions.ApprovalKey(w.Manifest.Id, o), StringComparer.OrdinalIgnoreCase))] })
+            .ToList();
 
         PluginLoadContext? context = null;
         PluginHostCollector? host = null;
@@ -195,11 +202,11 @@ public sealed partial class PluginManager
             var info = new LoadedPlugin(manifest.Id, manifest.Name, manifest.Version, PluginLoadStatus.Loaded, null,
                 host.SettingsPage is not null, HasIcon: ResolveIconPath(dir, manifest) is not null, HasTreeItems: treeProvider is not null,
                 Unsigned: trust?.Unsigned == true,
-                Permissions: manifest.Kind == PluginKind.Js ? declared : null,
-                SwitchedOffPermissions: manifest.Kind == PluginKind.Js ? [.. declared.Where(p => permissionStore.SwitchedOff(manifest.Id).Contains(p, StringComparer.OrdinalIgnoreCase))] : null);
+                Permissions: required.Length > 0 ? required : null,
+                SwitchedOffPermissions: required.Length > 0 ? [.. required.Where(p => switchedOff.Contains(p, StringComparer.OrdinalIgnoreCase))] : null);
             var running = new Running(context, instance, host, variableStore) { WidgetHandler = instance as IPluginWidgetHandler };
             if (manifest.Widgets is { Length: > 0 })
-                widgetCatalog?.Set(manifest.Id, manifest.Name, PluginWidgetAvailability.Available, verified, widgetCheck.Widgets, widgetCheck.Problems, manifest.Kind);
+                widgetCatalog?.Set(manifest.Id, manifest.Name, PluginWidgetAvailability.Available, verified, widgets, widgetCheck.Problems, manifest.Kind);
             else
                 widgetCatalog?.Remove(manifest.Id);
             if (treeProvider is not null)
