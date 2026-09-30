@@ -21,7 +21,7 @@ OBS eklentisi: `obs.setScene`, `obs.setPreviewScene`, `obs.studioTransition`, `o
 
 ## Widget türleri ve olaylar
 
-Profil dosyalarındaki türler: `button`, `toggle`, `slider`, `knob`, `label`, `image`, `web`, `plugin-html` (son ikisi yer tutucudur).
+Profil dosyalarındaki türler: `button`, `toggle`, `slider`, `knob`, `label`, `image`, `web`, `plugin-widget`, `plugin-html` (`plugin-html` eski bir yer tutucudur, yalnızca boş bir kutu çizer).
 
 | Widget | Olaylar |
 |---|---|

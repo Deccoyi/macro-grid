@@ -57,6 +57,6 @@ browser API; `host.after`/`host.every` remain the timers.
 
 ## Not covered
 
-- `plugin-html`: a plugin drawing its own widget in a sandboxed iframe on the client, talking to the server through a
-  `postMessage` bridge. Needs the widget type in both renderers, a client bridge and a server route.
+- A plugin drawing its own widget: done differently, not by the script itself. A plugin ships widget scripts that run in a sandboxed worker on the
+  device ([design/plugin-widgets.md](plugin-widgets.md)); the earlier idea of a `plugin-html` iframe was dropped.
 - An unresponsive engine call cannot be interrupted from outside; the per-call time limit is what ends it.

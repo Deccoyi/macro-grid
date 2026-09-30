@@ -38,7 +38,7 @@ windows, start downloads, navigate the app away, use the device or reach the ser
 | Use camera, microphone, location, clipboard, payment, USB and other device features | `allow=""` (empty permissions policy). |
 | Tell the site which Macro Grid server the user has | `referrerpolicy="no-referrer"`. |
 | Load a scheme other than web pages | The URL must be `http:` or `https:`; `javascript:`, `data:`, `blob:`, `file:` and others are refused. A URL with a user name or password in it is refused too. |
-| Read the app's own data (variables, the WebSocket, storage) | The page is cross-origin. A URL that points at the server itself, or at the origin the renderer runs on, is refused (so it can never be same-origin with the app). No `postMessage` bridge exists in this widget (that is the separate `plugin-html` widget). |
+| Read the app's own data (variables, the WebSocket, storage) | The page is cross-origin. A URL that points at the server itself, or at the origin the renderer runs on, is refused (so it can never be same-origin with the app). No `postMessage` bridge exists in this widget (a plugin that needs one ships a plugin widget instead). |
 
 `allow-scripts` and `allow-same-origin` stay on (most pages do not work without them; `allow-same-origin` only means the page keeps its
 own origin, not ours), and `allow-forms` so a page's own input works.
@@ -248,7 +248,7 @@ ignored, the widget keeps what it shows. Variable templates in the URL (for exam
 version; the person picks a fixed address.
 
 **Plugin actions.** `core.web` is a core action, so plugins do not get a way to point a widget at any URL. A plugin that wants that
-would use the future `plugin-html` widget instead.
+would use a plugin widget instead.
 
 ## Limits, to write in the docs and in the inspector's note
 

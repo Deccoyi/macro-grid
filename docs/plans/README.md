@@ -17,8 +17,8 @@ Each plan exists once. If the same text exists in another repository or on the D
 
 | # | Work | Repositories | Plan | Why here |
 |---|---|---|---|---|
-| 0 | The `web` widget: an iframe with popups, downloads and navigation blocked | `macro-grid`, `macro-grid-client` | [web-widget-plan.md](web-widget-plan.md) | Built on `feat/web-widget` in both repositories; still to do: try real chat and alerts links (step 0) and run the device test page on a phone (step 5a). `plugin-html` reuses its iframe work, so it comes next. |
-| 1 | Roadmap "Next": the `plugin-html` widget, an Error List producer, and the parts of a store-like Discover tab that need catalog fields (screenshots, tags, real icons) | `macro-grid`, `macro-grid-client` (the `web` widget) | [roadmap.md](../roadmap.md) | Larger, no user is blocked on them, no plan file yet for any of them. |
+| 0 | The `web` widget: an iframe with popups, downloads and navigation blocked | `macro-grid`, `macro-grid-client` | [web-widget-plan.md](web-widget-plan.md) | Built on `feat/web-widget` in both repositories; still to do: try real chat and alerts links (step 0) and run the device test page on a phone (step 5a). |
+| 1 | Roadmap "Next": an Error List producer, and the parts of a store-like Discover tab that need catalog fields (screenshots, tags, real icons) | `macro-grid`, `macro-grid-client` (the `web` widget) | [roadmap.md](../roadmap.md) | Larger, no user is blocked on them, no plan file yet for any of them. |
 
 Done and no longer listed: the branded installer, the plugin manifest field rename (`macroGrid` is now `minMacroGrid`, the old name still read), version unification — one version for the server and the SDK, a `macroGrid` field for every plugin and
 the phone app, one release guide, all four sections released,

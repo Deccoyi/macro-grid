@@ -21,7 +21,7 @@ OBS plugin: `obs.setScene`, `obs.setPreviewScene`, `obs.studioTransition`, `obs.
 
 ## Widget types and events
 
-Types in profile files: `button`, `toggle`, `slider`, `knob`, `label`, `image`, `web`, `plugin-html` (the last two are placeholders).
+Types in profile files: `button`, `toggle`, `slider`, `knob`, `label`, `image`, `web`, `plugin-widget`, `plugin-html` (`plugin-html` is an old placeholder that only draws an empty box).
 
 | Widget | Events |
 |---|---|
