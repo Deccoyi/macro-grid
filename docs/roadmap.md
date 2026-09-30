@@ -55,11 +55,6 @@ The order of the bigger pieces of work, and their plans, are in [plans/README.md
   the next MAJOR version once both are settled. See [plans/security-hardening-plan.md](plans/security-hardening-plan.md), part A.
 - **A branded installer:** done.
 - **A much faster install and update (fewer files):** done.
-- **Polish the example widgets before they are published:** the Hello Gauge and Hello Weather plugins are working examples, but how they look in
-  the Properties panel and on small or tall cells needs work (layout of the settings, spacing of the picture and text). Their names may change
-  before release.
-- **Resizable columns in Diagnostic Messages:** the columns have a fixed width, so a long message (for example the save summary) is cut off. The person
-  should be able to drag the column borders, and the full text should be readable (for example as a tooltip or by widening the Description column).
 - **The `web` widget** (an embedded page such as a live chat, or an alerts panel): an iframe with popups, downloads and device features blocked, plus a
   "Change web page" button action. See [plans/web-widget-plan.md](plans/web-widget-plan.md).
 - **The rest of a store-like Discover tab.** Discover now shows a card grid and a per-plugin detail view (description, author,

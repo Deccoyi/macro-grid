@@ -231,6 +231,7 @@ export const tr = {
   "errorList.all": "Tümü",
   "errorList.clear": "Temizle",
   "errorList.empty": "Sorun yok",
+  "errorList.resizeColumn": "Sütun genişliğini değiştirmek için sürükleyin",
   "errorList.col.severity": "Önem",
   "errorList.col.code": "Kod",
   "errorList.col.description": "Açıklama",

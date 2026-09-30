@@ -231,6 +231,7 @@ export const en: Record<DictKey, string | ((...args: string[]) => string)> = {
   "errorList.all": "All",
   "errorList.clear": "Clear",
   "errorList.empty": "No problems",
+  "errorList.resizeColumn": "Drag to change the column width",
   "errorList.col.severity": "Severity",
   "errorList.col.code": "Code",
   "errorList.col.description": "Description",
