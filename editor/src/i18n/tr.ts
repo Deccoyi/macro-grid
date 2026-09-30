@@ -653,6 +653,7 @@ export const tr = {
   "pw.unavailable.crashedOff": "Kapatıldı: bu eklentinin widget'ları düzenleyiciyi çökertti",
   "pluginWidget.crashedOff": "Bu eklentinin widget'ları çalışırken düzenleyici beklenmedik şekilde kapandı, bu yüzden önizlemesi kapalı.",
   "pluginWidget.turnOn": "Önizlemeyi aç",
+  "pluginWidget.clearData": "Widget verisini temizle",
   "pw.stopped.frozen": "Durduruldu: yanıt vermiyor",
   "pw.stopped.startTimeout": "Durduruldu: başlamadı",
   "pw.stopped.tooBusy": "Durduruldu: çok fazla işlemci kullandı",

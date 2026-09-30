@@ -1,6 +1,7 @@
 import { PluginWidgetError, type PluginWidgetHost, type PluginWidgetListener } from "@macro/renderer";
 import { api } from "../api/client";
 import type { PluginWidgetInfo } from "../api/types";
+import { editorWidgetData } from "./widgetData";
 
 /** What the preview knows about one placed widget: which plugin widget it is and its settings (bound variables included). */
 export interface PreviewWidget {
@@ -17,6 +18,8 @@ export class EditorPluginWidgetHost implements PluginWidgetHost {
   readonly mode = "edit" as const;
   readonly theme = "dark" as const;
   readonly locale: string;
+  /** What preview widgets keep, apart from what the phones keep. "Clear widget data" in the inspector empties it. */
+  readonly storage = editorWidgetData;
 
   private variables: Record<string, unknown> = {};
   private readonly widgets = new Map<string, PreviewWidget>();

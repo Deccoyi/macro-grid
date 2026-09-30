@@ -271,6 +271,9 @@ export class PluginWidgetInstance {
       case "run":
         if (typeof m.id === "number") this.onRequest(m.id, d, true);
         break;
+      case "storage":
+        if (typeof m.id === "number") this.onStorage(m.id, d);
+        break;
       case "subscribe":
         this.onSubscribe(d);
         break;
@@ -370,6 +373,29 @@ export class PluginWidgetInstance {
         (data) => reply(true, data),
         (e) => reply(false, undefined, codeOf(e), messageOf(e)),
       );
+    }
+  }
+
+  private onStorage(id: number, d: Record<string, unknown>): void {
+    const reply = (ok: boolean, data?: unknown, error?: string, message?: string) => this.post("reply", { ok, data, error, message }, id);
+    const store = this.options.host.storage;
+    if (!this.options.info.options?.includes("storage") || !store) return reply(false, undefined, "not_allowed", "this widget did not declare the storage option");
+    const now = this.runtime.time.now();
+    this.requestStamps = this.requestStamps.filter((t) => now - t < 1000);
+    if (this.requestStamps.length >= L.requestsPerSecond) return reply(false, undefined, "rate_limited");
+    this.requestStamps.push(now);
+    const widgetId = this.options.widgetId;
+    const key = String(d.key ?? "");
+    try {
+      if (d.op === "get") return reply(true, store.get(widgetId, key));
+      if (d.op === "set") store.set(widgetId, key, d.value);
+      else if (d.op === "remove") store.remove(widgetId, key);
+      else return reply(false, undefined, "invalid", "unknown storage operation");
+      reply(true);
+    } catch (e) {
+      const text = (e as Error).message;
+      const code = text.split(":")[0] ?? "failed";
+      reply(false, undefined, code, text);
     }
   }
 

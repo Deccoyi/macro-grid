@@ -61,6 +61,8 @@ export class PluginWidgetError extends Error {
  * What a place that draws plugin widgets (the phone app, the browser deck, the editor) gives the renderer: the connection to the server for
  * one widget, kept apart from the drawing so the same runtime works everywhere. All widget ids are the placed widget's id in the profile.
  */
+import type { WidgetDataStore } from "./storage";
+
 export interface PluginWidgetHost {
   /** "run": a device showing the deck. "edit": the editor's preview (a run is refused, pointer input goes to the editor). */
   readonly mode: "run" | "edit";
@@ -73,6 +75,8 @@ export interface PluginWidgetHost {
   subscribe(widgetId: string, variables: string[]): void;
   ready(widgetId: string): void;
   reportError(widgetId: string, message: string): void;
+  /** The widget's own small store, for a widget that declared the `storage` option. Absent where the host keeps none. */
+  storage?: WidgetDataStore;
   /** Receives what the server pushes for one widget: changed variable values and events. Returns the way to stop listening. */
   listen(widgetId: string, listener: PluginWidgetListener): () => void;
 }

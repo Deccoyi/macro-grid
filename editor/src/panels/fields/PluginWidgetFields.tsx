@@ -2,6 +2,7 @@ import { ShieldAlert } from "lucide-react";
 import type { OptionsResult, VariableInfo } from "../../api/types";
 import { useT } from "../../i18n/I18nContext";
 import { turnOn } from "../../grid/widgetCrashGuard";
+import { editorWidgetData } from "../../grid/widgetData";
 import { useOffPlugins } from "../../state/useOffPlugins";
 import { usePluginWidgets } from "../../state/usePluginWidgets";
 import { SchemaForm } from "../actionForms/SchemaForm";
@@ -39,6 +40,9 @@ export function PluginWidgetFields({ widget, onChange, variableCatalog }: FieldG
           <ShieldAlert size={14} strokeWidth={2} style={{ flexShrink: 0, marginTop: 1 }} />
           <span>{t("palette.unverifiedHint")}</span>
         </div>
+      )}
+      {info?.options?.includes("storage") && (
+        <button type="button" onClick={() => editorWidgetData.clear(widget.id)} style={{ alignSelf: "flex-start" }}>{t("pluginWidget.clearData")}</button>
       )}
       {info?.settings && info.settings.length > 0 && (
         <>

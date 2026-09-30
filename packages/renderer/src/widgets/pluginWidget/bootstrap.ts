@@ -253,10 +253,11 @@ export const WORKER_BOOTSTRAP = String.raw`
       });
     },
     error: function (message) { report(new Error(String(message))); },
+    // The renderer answers with "not_allowed" when the widget did not declare the option.
     storage: Object.freeze({
-      get: function () { return NativePromise.reject(new Error("not_allowed: this widget did not declare the storage option")); },
-      set: function () { return NativePromise.reject(new Error("not_allowed: this widget did not declare the storage option")); },
-      remove: function () { return NativePromise.reject(new Error("not_allowed: this widget did not declare the storage option")); }
+      get: function (key) { return ask("storage", { op: "get", key: String(key) }); },
+      set: function (key, value) { return ask("storage", { op: "set", key: String(key), value: value }); },
+      remove: function (key) { return ask("storage", { op: "remove", key: String(key) }); }
     }),
     notify: function () { return NativePromise.reject(new Error("not_allowed: this widget did not declare the notifications option")); }
   };

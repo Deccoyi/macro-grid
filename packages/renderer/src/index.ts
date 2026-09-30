@@ -24,6 +24,7 @@ export {
 export { PluginWidgetRuntime, PluginWidgetInstance, dataUriToBytes, type PluginWidgetRuntimeOptions, type MountOptions, type RuntimeClock } from "./widgets/pluginWidget/runtime";
 export { startWidgetFrame, frameSrcdoc, FRAME_SANDBOX, FRAME_CSP, type FrameStarter, type WidgetFrame } from "./widgets/pluginWidget/launcher";
 export { WORKER_BOOTSTRAP, assembleWorkerScript } from "./widgets/pluginWidget/bootstrap";
+export { WidgetDataStore, WIDGET_STORAGE_LIMITS, browserStorageBackend, type WidgetStorageBackend } from "./widgets/pluginWidget/storage";
 export {
   PLUGIN_WIDGET_LIMITS,
   PluginWidgetError,

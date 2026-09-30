@@ -631,6 +631,7 @@ export const en: Record<DictKey, string | ((...args: string[]) => string)> = {
   "pw.unavailable.crashedOff": "Switched off: this plugin's widgets crashed the editor",
   "pluginWidget.crashedOff": "The editor closed unexpectedly while this plugin's widgets were running, so their preview is off.",
   "pluginWidget.turnOn": "Turn preview on",
+  "pluginWidget.clearData": "Clear widget data",
   "pw.stopped.frozen": "Stopped: not responding",
   "pw.stopped.startTimeout": "Stopped: did not start",
   "pw.stopped.tooBusy": "Stopped: too much processor time",

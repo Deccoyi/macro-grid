@@ -304,12 +304,15 @@ describe("worker bootstrap", () => {
     expect(now).toBeGreaterThan(0);
   });
 
-  it("refuses storage and notifications unless they are declared (phase 3 wires them)", async () => {
+  it("sends storage calls to the renderer, which decides whether the widget may use them, and refuses notifications for now", async () => {
     const w = makeWorld();
     w.start();
     w.init();
 
-    await expect(w.macroGrid().storage.get()).rejects.toThrow(/not_allowed/);
+    void w.macroGrid().storage.set("n", 7).catch(() => undefined);
+    await new Promise((r) => setTimeout(r, 0));
+
+    expect(w.of("storage")[0]!.data).toEqual({ op: "set", key: "n", value: 7 });
     await expect(w.macroGrid().notify()).rejects.toThrow(/not_allowed/);
   });
 

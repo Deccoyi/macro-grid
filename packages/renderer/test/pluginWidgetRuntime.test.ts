@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { WidgetDataStore } from "../src/widgets/pluginWidget/storage";
 import { FRAME_CSP, FRAME_SANDBOX, frameSrcdoc, type FrameStarter } from "../src/widgets/pluginWidget/launcher";
 import { dataUriToBytes, PluginWidgetRuntime, type PluginWidgetInstance, type RuntimeClock } from "../src/widgets/pluginWidget/runtime";
 import { PLUGIN_WIDGET_LIMITS as L, PluginWidgetError, type PluginWidgetHost, type PluginWidgetListener, type PluginWidgetRuntimeInfo, type PluginWidgetState } from "../src/widgets/pluginWidget/types";
@@ -279,6 +280,24 @@ describe("plugin widget runtime", () => {
     await settle();
 
     expect(workers[0]!.said("fps").at(-1)!.data).toEqual({ fps: 60 });
+  });
+
+  it("gives a widget that declared storage its own store, and refuses one that did not", async () => {
+    const map = new Map<string, string>();
+    const store = new WidgetDataStore({ getItem: (k) => map.get(k) ?? null, setItem: (k, v) => void map.set(k, v), removeItem: (k) => void map.delete(k) }, "t.");
+    const { mountBooted } = setup({ storage: store });
+    const allowed = await mountBooted({ options: ["storage"] });
+    const refused = await mountBooted({ options: [] });
+
+    allowed.send("storage", { op: "set", key: "n", value: 7 }, 1);
+    allowed.send("storage", { op: "get", key: "n" }, 2);
+    refused.send("storage", { op: "get", key: "n" }, 1);
+    await settle();
+
+    expect(allowed.said("reply").map((m) => m.data)).toEqual([expect.objectContaining({ ok: true }), expect.objectContaining({ ok: true, data: 7 })]);
+    expect(refused.said("reply")[0]!.data).toMatchObject({ ok: false, error: "not_allowed" });
+    expect(store.get(allowed.widgetId, "n")).toBe(7);
+    expect(store.get(refused.widgetId, "n")).toBeNull();
   });
 
   it("scales every widget down when the sum of their frame caps passes the budget", async () => {
