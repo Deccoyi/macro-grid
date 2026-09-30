@@ -63,7 +63,7 @@ public sealed partial class JsPlugin
             "info" => PluginDiagnosticLevel.Info,
             "warning" => PluginDiagnosticLevel.Warning,
             "error" => PluginDiagnosticLevel.Error,
-            _ => throw new JsHostException("diagnostics.report needs a level of 'info', 'warning' or 'error'."),
+            _ => (PluginDiagnosticLevel)(-1), // the host drops an unknown level and logs it once
         };
         _host!.Diagnostics.Report(parsed, Truncate(message, 300), string.IsNullOrEmpty(key) ? null : key);
     }

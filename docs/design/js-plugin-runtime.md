@@ -36,8 +36,8 @@ A JS plugin is untrusted: the user installs it from a folder and only approves a
 ## Reporting problems
 
 `host.diagnostics.report(level, message, key?)` (`level` is `'info'`, `'warning'` or `'error'`) puts a line in the editor's Error List under the
-plugin's name, and `host.diagnostics.resolve(key)` takes back the lines reported with that key. It needs no permission: it only adds a line to
-a list the person reads. A message is cut to 300 characters and control characters are removed; the same message is one line with a count, and a
+plugin's name, and `host.diagnostics.resolve(key)` takes back the lines reported with that key, and `host.diagnostics.clear()` all of them. A report with a key replaces the line of that key. It needs no permission: it only adds a line to
+a list the person reads. A message is cut to 300 characters and control, direction-changing and zero-width characters are removed; a key is at most 64 characters of letters, digits, `.`, `_` and `-`; about 10 calls a second are accepted and bad input is dropped without an error; the same message is one line with a count, and a
 plugin can keep at most 20 different lines (more are dropped, with one log line). The lines of a plugin are removed when it is reloaded. A C# plugin
 uses `IPluginHost.Diagnostics` (`IPluginDiagnostics`) the same way. The status bar item (`host.status`) stays for a one-line state; use a
 diagnostic for something the person has to fix.

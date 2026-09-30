@@ -66,20 +66,24 @@ public sealed class ProblemList
     public void Report(string source, string sourceName, ProblemSeverity severity, string code, string message) =>
         Report(source, sourceName, severity, code, message, key: null, maxPerSourceAndCode: int.MaxValue);
 
-    /// <summary>Adds the line, or counts it again. When the source already has <paramref name="maxPerSourceAndCode"/> different lines with
-    /// this code, a new one is dropped (false); a line that is already there is always counted.</summary>
+    /// <summary>Adds the line, or counts it again. With a <paramref name="key"/> the line of that key is replaced (an upsert), so a problem that
+    /// changes does not pile up. When the source already has <paramref name="maxPerSourceAndCode"/> different lines with this code, a new one is
+    /// dropped (false); a line that is already there (same key, or same text) is updated and never counts against the cap again.</summary>
     public bool Report(string source, string sourceName, ProblemSeverity severity, string code, string message, string? key, int maxPerSourceAndCode)
     {
         message = Clean(message);
         var now = DateTimeOffset.UtcNow;
         lock (_lock)
         {
-            var index = _items.FindIndex(p => p.Source == source && p.Code == code && p.Message == message && p.Severity == severity && p.Key == key);
+            var index = key is not null
+                ? _items.FindIndex(p => p.Source == source && p.Code == code && p.Key == key)
+                : _items.FindIndex(p => p.Source == source && p.Code == code && p.Message == message && p.Severity == severity && p.Key is null);
             if (index >= 0)
             {
                 var existing = _items[index];
                 _items.RemoveAt(index);
-                _items.Insert(0, existing with { Count = existing.Count + 1, LastAt = now, SourceName = sourceName });
+                var same = existing.Message == message && existing.Severity == severity;
+                _items.Insert(0, existing with { Message = message, Severity = severity, Count = same ? existing.Count + 1 : 1, LastAt = now, SourceName = sourceName });
             }
             else
             {
@@ -131,9 +135,16 @@ public sealed class ProblemList
         Changed?.Invoke();
     }
 
+    private static bool IsInvisibleFormat(char c) =>
+        c is >= '\u200B' and <= '\u200F' or >= '\u202A' and <= '\u202E' or >= '\u2066' and <= '\u2069' or '\uFEFF';
+
+    /// <summary>Removes every line of one source and code (a plugin clearing what it reported).</summary>
+    public void ClearCode(string source, string code) => Resolve(source, code);
+
     private static string Clean(string message)
     {
-        var chars = message.Where(c => !char.IsControl(c)).Take(MaxMessageLength).ToArray();
+        // Control characters, bidirectional overrides and zero-width characters could reorder or hide text in the list.
+        var chars = message.Where(c => !char.IsControl(c) && !IsInvisibleFormat(c)).Take(MaxMessageLength).ToArray();
         return new string(chars);
     }
 }
