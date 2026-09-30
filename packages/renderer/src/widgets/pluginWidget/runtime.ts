@@ -54,6 +54,9 @@ export class PluginWidgetRuntime {
   private readonly clock: RuntimeClock;
   private readonly frameStarter: FrameStarter;
   private readonly live = new Set<PluginWidgetInstance>();
+  /** Widgets that were refused because too many were live; they start by themselves when a place frees up or the limits are raised. */
+  private readonly waiting = new Set<PluginWidgetInstance>();
+  private limits = { maxLive: L.maxLive as number, maxLiveUnverified: L.maxLiveUnverified as number };
   private seq = 0;
 
   constructor(options: PluginWidgetRuntimeOptions = {}) {
@@ -71,6 +74,15 @@ export class PluginWidgetRuntime {
   /** How many workers are live (starting, running or paused). */
   get liveCount(): number {
     return this.live.size;
+  }
+
+  /**
+   * How many workers may be live on this device, in all and of plugins that are not verified (`Infinity`: no limit). The defaults are only
+   * defaults: the person may raise them (the phone differs from a tablet). Widgets that were refused start when the new limits allow it.
+   */
+  setLiveLimits(maxLive: number, maxLiveUnverified: number): void {
+    this.limits = { maxLive: Math.max(1, maxLive), maxLiveUnverified: Math.max(1, maxLiveUnverified) };
+    this.startWaiting();
   }
 
   /** Stops every worker and removes every frame. */
@@ -92,16 +104,34 @@ export class PluginWidgetRuntime {
 
   /** @internal Returns a reason when this widget may not start now. */
   admit(instance: PluginWidgetInstance): PluginWidgetStopReason | null {
-    if (this.live.size >= L.maxLive) return "tooMany";
-    if (!instance.verified && [...this.live].filter((i) => !i.verified).length >= L.maxLiveUnverified) return "tooMany";
+    if (this.live.size >= this.limits.maxLive || (!instance.verified && [...this.live].filter((i) => !i.verified).length >= this.limits.maxLiveUnverified)) {
+      this.waiting.add(instance);
+      return "tooMany";
+    }
+    this.waiting.delete(instance);
     this.live.add(instance);
     this.rebalance();
     return null;
   }
 
+  /** @internal A disposed widget no longer waits for a place. */
+  forget(instance: PluginWidgetInstance): void {
+    this.waiting.delete(instance);
+  }
+
   /** @internal */
   release(instance: PluginWidgetInstance): void {
-    if (this.live.delete(instance)) this.rebalance();
+    if (this.live.delete(instance)) {
+      this.rebalance();
+      this.startWaiting();
+    }
+  }
+
+  private startWaiting(): void {
+    for (const instance of [...this.waiting]) {
+      if (this.live.size >= this.limits.maxLive) return;
+      instance.restart();
+    }
   }
 
   /** Gives each live widget its share of the frame budget: the sum of the frame-rate caps never goes above the budget. */
@@ -393,6 +423,7 @@ export class PluginWidgetInstance {
   dispose(): void {
     if (this.disposed) return;
     this.disposed = true;
+    this.runtime.forget(this);
     this.teardown();
   }
 

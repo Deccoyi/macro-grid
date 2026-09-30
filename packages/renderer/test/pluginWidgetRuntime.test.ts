@@ -225,6 +225,30 @@ describe("plugin widget runtime", () => {
     expect(signed.filter((i) => i.current.kind === "stopped")).toHaveLength(2); // 8 live in total: 2 unverified + 6 signed
   });
 
+  it("takes the limits from the device and starts the refused widgets when they are raised or a place frees up", async () => {
+    const { runtime, mount } = setup();
+    runtime.setLiveLimits(2, 1);
+    const a = (await mount({ verified: false })).instance;
+    const b = (await mount({ verified: false })).instance;
+    const c = (await mount()).instance;
+    const d = (await mount()).instance;
+    expect([a, b, c, d].map((i) => i.current.kind)).toEqual(["starting", "stopped", "starting", "stopped"]);
+
+    runtime.setLiveLimits(4, 4);
+    await settle();
+    expect([a, b, c, d].map((i) => i.current.kind)).not.toContain("stopped");
+
+    runtime.setLiveLimits(1, 1);
+    const e = (await mount()).instance;
+    expect(e.current).toEqual({ kind: "stopped", reason: "tooMany" });
+    a.dispose();
+    b.dispose();
+    c.dispose();
+    d.dispose();
+    await settle();
+    expect(e.current.kind).not.toBe("stopped");
+  });
+
   it("scales every widget down when the sum of their frame caps passes the budget", async () => {
     const { mountBooted } = setup();
     const workers = [];
