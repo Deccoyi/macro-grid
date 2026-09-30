@@ -81,7 +81,7 @@ Every frame is `{ "type": "...", "data": { ... } }` in camelCase JSON (`Envelope
 - **Live state.** `widget.state { widgetId, text?, value?, active?, style?, url?, reload? }` pushes a rendered text, a slider position, a toggle state or
   dynamic style values. `url` and `reload` are for a `web` widget only: `url` is the address this device shows instead of the profile's (set by a
   `core.web` button; an empty string goes back to the profile's), `reload` is a counter, a higher number means "load the page again". Old clients
-  ignore both. It is batched at 100 ms (at most about 10 updates a second) and only sent when the value for that client changed.
+  ignore both. It is batched at 100 ms (at most about 10 updates a second) and only sent when the value for that client changed. Clients are served independently, and one that does not accept a frame for 10 seconds is disconnected (it reconnects by itself), so a sleeping phone cannot hold up the others.
 - **Actions run in order** per device, off the receive loop, so a slow action never delays reading the next message.
 - **Navigation.** Page and profile changes belong to one device: `core.page` and `core.profile` actions and the phone's own swipes affect only
   the phone that triggered them, through its `SessionDeviceController`.

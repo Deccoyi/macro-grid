@@ -47,7 +47,9 @@ internal static class ServerApp
         });
 
         builder.Logging.ClearProviders();
+#if DEBUG
         builder.Logging.AddDebug();
+#endif
         builder.Logging.AddProvider(new FileLoggerProvider(Path.Combine(dataDir, "logs")));
 
         builder.Services

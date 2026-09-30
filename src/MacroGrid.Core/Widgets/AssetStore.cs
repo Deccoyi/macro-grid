@@ -16,11 +16,26 @@ public sealed class AssetStore
 
     /// <summary>Values shorter than this stay inline — a reference would not be smaller.</summary>
     private const int MinExternalizedLength = 200;
-    private const int MaxEntries = 2000;
+    private const int DefaultMaxEntries = 2000;
+    /// <summary>Total length of the stored strings, in characters (two bytes each), so a few huge images cannot
+    /// hold hundreds of megabytes that the entry count alone would allow.</summary>
+    private const long DefaultMaxChars = 32L * 1024 * 1024;
+
+    private readonly int _maxEntries;
+    private readonly long _maxChars;
+    private long _chars;
 
     private readonly Lock _lock = new();
     private readonly Dictionary<string, LinkedListNode<(string Hash, string Data)>> _byHash = [];
     private readonly LinkedList<(string Hash, string Data)> _lru = new();
+
+    public AssetStore() : this(DefaultMaxEntries, DefaultMaxChars) { }
+
+    public AssetStore(int maxEntries, long maxChars)
+    {
+        _maxEntries = maxEntries;
+        _maxChars = maxChars;
+    }
 
     public string? Get(string hash)
     {
@@ -43,9 +58,12 @@ public sealed class AssetStore
             else
             {
                 _byHash[hash] = _lru.AddFirst((hash, data));
-                while (_byHash.Count > MaxEntries && _lru.Last is { } oldest)
+                _chars += data.Length;
+                // The newest entry always stays, even when it alone is over the budget.
+                while ((_byHash.Count > _maxEntries || _chars > _maxChars) && _lru.Last is { } oldest && oldest != _lru.First)
                 {
                     _byHash.Remove(oldest.Value.Hash);
+                    _chars -= oldest.Value.Data.Length;
                     _lru.RemoveLast();
                 }
             }

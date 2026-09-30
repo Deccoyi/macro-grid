@@ -17,7 +17,16 @@ public sealed class Template
     private readonly object[] _parts; // string (literal) or VariableRef
     public IReadOnlyList<string> VariableNames { get; }
 
-    public static Template Parse(string text) => Cache.GetOrAdd(text, static t => new Template(ParseParts(t)));
+    /// <summary>The editor saves every intermediate text of a widget, so the cache is cleared when it grows past this
+    /// (a cleared entry is only parsed again).</summary>
+    private const int MaxCachedTemplates = 4096;
+
+    public static Template Parse(string text)
+    {
+        if (Cache.TryGetValue(text, out var cached)) return cached;
+        if (Cache.Count >= MaxCachedTemplates) Cache.Clear();
+        return Cache.GetOrAdd(text, static t => new Template(ParseParts(t)));
+    }
 
     private Template(object[] parts)
     {
