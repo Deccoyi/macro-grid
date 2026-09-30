@@ -51,7 +51,7 @@ half-written profile).
     [design/plugin-widgets.md](design/plugin-widgets.md). The reserved `plugin-html` type only draws a placeholder.
   - `style`: `background`, `foreground`, `align`, `vAlign`, `fontSize`, `borderColor`, `borderWidth`, `radius`, `icon` (an image URL, normally
     a `data:` SVG baked by the icon picker), `iconSize`, `iconPosition`, `animation` (`none`, `blink`, `pulse`).
-  - `props`: type-specific settings: `min`, `max`, `step` and `valueVariable` for a slider or knob, `src` for an image, `url` for a web widget.
+  - `props`: type-specific settings: `min`, `max`, `step` and `valueVariable` for a slider or knob, `src` for an image, `url` and `keepLoaded` (keep the page running when its page of the grid is left; the phone app reads it) for a web widget.
   - `actions`: event name to an ordered list of `{ type, settings }`. Events: `press`, `release`, `longPress`, `doubleTap` for buttons,
     `toggleOn` and `toggleOff` for a toggle (a press flips the toggle instead of firing `press`), `valueChange` for a slider or knob.
   - `dynamic`: property path to a rule (see [Dynamic values](#dynamic-values)).

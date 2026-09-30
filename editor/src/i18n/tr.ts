@@ -521,6 +521,9 @@ export const tr = {
   "fields.web.warn": "Yalnızca güvendiğiniz siteleri kullanın. Sayfa, bu widget'ı gösteren telefonda çalışır. Pencere açamaz, dosya indiremez, kamera, konum veya diğer cihaz özelliklerini kullanamaz, uygulamadan çıkaramaz.",
   "fields.web.warnSecret": "Bağlantı bir sır içerebilir (örneğin bir bildirim panelinin anahtarı). Profili veya ekran görüntüsünü paylaşmayın.",
   "fields.web.warnHttp": "Bu adres şifreli değil (http): ağdaki herkes sayfayı okuyabilir veya değiştirebilir.",
+  "fields.web.keepLoaded": "Yüklü tut",
+  "fields.web.keepLoadedHint": "Gridin bu sayfasından ayrıldığınızda sayfayı çalışır halde tutar; böylece bir sohbet her seferinde yeniden yüklenmez. Telefonun aynı anda çalıştırdığı web sayfası sayısına dahildir ve bellek ile pil harcar.",
+  "fields.web.manyOnPage": (count: string, max: string) => `Bu sayfada ${count} web widget'ı var. Bir telefonun aynı anda en fazla ${max} tanesini çalıştırması önerilir (küçük telefonlarda 1); fazlası "Yüklemek için dokun" düğmesiyle bekler.`,
   "fields.web.warnLimits": "Bazı siteler başka bir sayfanın içinde gösterilmeyi reddeder ve boş kalır. Giriş çoğu zaman korunmaz. Sesler kapalıdır.",
   "fields.web.refused": "Bu adrese izin verilmiyor: yalnızca http ve https sayfaları, kullanıcı adı veya parola olmadan ve bu bilgisayar olmadan.",
 

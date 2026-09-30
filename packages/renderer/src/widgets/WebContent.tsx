@@ -29,6 +29,14 @@ export interface WebContentProps {
   blockedHosts?: readonly string[];
   /** Replaces the default English words of the placeholder. */
   texts?: Partial<WebTexts>;
+  /** Draws this instead of the page (a site turned off after a crash, or waiting with "Tap to load"), with a button. Checked before the address. */
+  blocked?: WebBlocked;
+}
+
+export interface WebBlocked {
+  text: string;
+  action: string;
+  onAction: () => void;
 }
 
 export interface WebTexts {
@@ -42,8 +50,18 @@ export interface WebTexts {
 
 const DEFAULT_TEXTS: WebTexts = { empty: "Web page", refused: "This web address is not allowed" };
 
-export function WebContent({ url, reload = 0, interactive = true, live = true, blockedHosts, texts }: WebContentProps) {
+export function WebContent({ url, reload = 0, interactive = true, live = true, blockedHosts, texts, blocked }: WebContentProps) {
   const words = { ...DEFAULT_TEXTS, ...texts };
+
+  if (blocked)
+    return (
+      <div className="ms-content ms-placeholder" style={{ flexDirection: "column", gap: 6 }}>
+        <span className="ms-text">{blocked.text}</span>
+        <button type="button" onPointerDown={(e) => e.stopPropagation()} onPointerUp={(e) => e.stopPropagation()} onClick={blocked.onAction}>
+          {blocked.action}
+        </button>
+      </div>
+    );
 
   if (url === undefined || url === "")
     return (

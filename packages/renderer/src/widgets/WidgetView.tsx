@@ -10,7 +10,7 @@ import { KnobContent } from "./KnobContent";
 import { PlaceholderContent } from "./PlaceholderContent";
 import { SliderContent } from "./SliderContent";
 import { PluginWidgetContent } from "./pluginWidget/PluginWidgetContent";
-import { WebContent, type WebTexts } from "./WebContent";
+import { WebContent, type WebBlocked, type WebTexts } from "./WebContent";
 
 export interface WidgetViewProps {
   widget: Widget;
@@ -34,6 +34,8 @@ export interface WidgetViewProps {
   webBlockedHosts?: readonly string[];
   /** A `web` widget only: replaces the English words of the placeholder. */
   webTexts?: Partial<WebTexts>;
+  /** A `web` widget only: draw a placeholder with a button instead of the page (the site crashed the app, or the widget waits with "Tap to load"). */
+  webBlocked?: WebBlocked;
   /** A `plugin-widget` only: false when its page is not the one shown (its worker is stopped, or paused when it keeps itself loaded). Default true. */
   pluginLive?: boolean;
   onPress?: () => void;
@@ -64,6 +66,7 @@ export function WidgetView({
   webLive,
   webBlockedHosts,
   webTexts,
+  webBlocked,
   pluginLive,
   onPress,
   onRelease,
@@ -108,6 +111,7 @@ export function WidgetView({
           live={webLive}
           blockedHosts={webBlockedHosts}
           texts={webTexts}
+          blocked={webBlocked}
         />
       ) : widget.type === "plugin-widget" ? (
         <PluginWidgetContent widget={widget} live={pluginLive} />

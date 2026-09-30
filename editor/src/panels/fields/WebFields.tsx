@@ -31,8 +31,11 @@ export function WebWarning({ url }: { url: string }) {
   );
 }
 
+/** The most web widgets a page can have before the editor warns: what a strong phone is recommended to run at once (a small phone is recommended 1). */
+export const WEB_WIDGETS_WARN_ABOVE = 3;
+
 /** For "web" widgets: the address to embed and a name for buttons to pick it by. ("plugin-html" shares this panel until it has its own.) */
-export function WebFields({ widget, onChange }: FieldGroupProps) {
+export function WebFields({ widget, onChange, webWidgetsOnPage = 0 }: FieldGroupProps & { webWidgetsOnPage?: number }) {
   const { t } = useT();
   const url = typeof widget.props?.url === "string" ? widget.props.url : "";
   const isWeb = widget.type === "web";
@@ -64,6 +67,24 @@ export function WebFields({ widget, onChange }: FieldGroupProps) {
           placeholder={t("fields.web.urlPlaceholder")}
         />
       </label>
+      {isWeb && (
+        <label style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+          <span style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "var(--ms-text-primary)" }}>
+            <input
+              type="checkbox"
+              checked={widget.props?.keepLoaded === true}
+              onChange={(e) => onChange((w) => { w.props = { ...(w.props ?? {}), keepLoaded: e.target.checked ? true : undefined }; })}
+            />
+            {t("fields.web.keepLoaded")}
+          </span>
+          <span style={{ marginLeft: 22, fontSize: 11, lineHeight: 1.4, color: "var(--ms-text-secondary)" }}>{t("fields.web.keepLoadedHint")}</span>
+        </label>
+      )}
+      {isWeb && webWidgetsOnPage > WEB_WIDGETS_WARN_ABOVE && (
+        <div role="alert" style={{ padding: "8px 10px", fontSize: 11.5, lineHeight: 1.4, background: "var(--ms-accent-bg-muted)", borderLeft: "3px solid var(--ms-warning, #facc15)", borderRadius: 4 }}>
+          {t("fields.web.manyOnPage", String(webWidgetsOnPage), String(WEB_WIDGETS_WARN_ABOVE))}
+        </div>
+      )}
       {isWeb ? (
         <WebWarning url={url} />
       ) : (

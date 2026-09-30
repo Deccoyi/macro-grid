@@ -503,6 +503,9 @@ export const en: Record<DictKey, string | ((...args: string[]) => string)> = {
   "fields.web.warn": "Only use sites you trust. The page runs on the phone that shows this widget. It cannot open windows, download files, use the camera, location or other device features, or leave the app.",
   "fields.web.warnSecret": "The link may contain a secret (for example the token of an alerts panel). Do not share the profile or a screenshot of it.",
   "fields.web.warnHttp": "This address is not encrypted (http): anyone on the network can read or change the page.",
+  "fields.web.keepLoaded": "Keep loaded",
+  "fields.web.keepLoadedHint": "Keeps the page running when you leave this page of the grid, so a chat does not reload each time. It counts toward the number of web pages the phone runs at once and uses memory and battery.",
+  "fields.web.manyOnPage": (count: string, max: string) => `This page has ${count} web widgets. A phone is recommended to run ${max} at most at once (a small one 1); the rest wait with a "Tap to load" button.`,
   "fields.web.warnLimits": "Some sites refuse to be shown inside another page and stay blank. A login often is not kept. Sounds are muted.",
   "fields.web.refused": "This address is not allowed: only http and https pages, without a user name or password, and not this computer.",
 

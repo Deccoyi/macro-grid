@@ -102,7 +102,7 @@ export function Inspector({
       <hr className="sep" />
 
       <CollapsibleSection id="typeFields" label={t("fields.content.title")}>
-        {renderTypeFields(widget, onChange, variableCatalog)}
+        {renderTypeFields(widget, onChange, variableCatalog, page.widgets.filter((w) => w.type === "web").length)}
       </CollapsibleSection>
 
       {widget.type !== "label" && (
@@ -228,13 +228,13 @@ function PageProperties({ page, onRename, onSetGrid, onSetGap, onSetPadding, onS
   );
 }
 
-function renderTypeFields(widget: Widget, onChange: InspectorProps["onChange"], variableCatalog: VariableInfo[]) {
+function renderTypeFields(widget: Widget, onChange: InspectorProps["onChange"], variableCatalog: VariableInfo[], webWidgetsOnPage: number) {
   switch (widget.type) {
     case "image":
       return <ImageFields widget={widget} onChange={onChange} />;
     case "web":
     case "plugin-html":
-      return <WebFields widget={widget} onChange={onChange} />;
+      return <WebFields widget={widget} onChange={onChange} webWidgetsOnPage={webWidgetsOnPage} />;
     case "plugin-widget":
       return <PluginWidgetFields widget={widget} onChange={onChange} variableCatalog={variableCatalog} />;
     case "slider":

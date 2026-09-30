@@ -4,7 +4,7 @@ Status: built in both repositories (branch `feat/web-widget`) and checked on a c
 the page loads, `window.open`, `top.location`, `alert`/`prompt`, camera, microphone and location are refused, `tel:`, `intent:`, `market:` and `_blank` links open nothing, the
 native bridge is not visible to the page, no referrer is sent, and the Example/Reset/Reload/refused-address buttons behave. Still open: step 0 (real chat and alerts links, to be tried
 at home), a download check, the old-Android fallback (emulator at most) and whether the login of an embedded site is kept (third-party cookies are not enabled).
-Not built yet: the stability part below (crash guard, live limit, pausing and slow-page detection on the phone), which reuses what plugin widgets already have.
+The stability part below is built in both repositories (crash guard, recommended live number with Tap to load, Keep loaded, unloading in the background); slow-page detection is not buildable (see point 4). Not yet tried on a phone: the memory-crash test and the deck coming back, the Tap-to-load queue, Keep loaded and the 30-second unload, and the numbers are provisional until measured.
 Repositories: `macro-grid` (model, renderer, editor, browser deck) and `macro-grid-client` (the phone app's own renderer copy and the Android layer).
 
 **What changed from the plan while building it**
@@ -308,7 +308,7 @@ turned off after it crashed or unloaded after it slowed the deck; and a web widg
 
 ## Steps
 
-(Done in code: 0a, 1, 2, 3, 3a, 4, 5, 5a and 6 except the open items marked below. Open: step 0 and the device checks of 5a, and steps 7-10.)
+(Done in code: 0a, 1 to 6 except the open items marked below, 8, 9 and 10. Open: step 0, the device checks of 5a, the phone checks of steps 7 to 9.)
 
 0a. Server, before the widget: the `Host` check on `/api` (review item 6) and the `Origin` check on `/ws` (item 7), with tests. They
    close a hole that exists today, so they may ship on their own.
@@ -335,10 +335,10 @@ turned off after it crashed or unloaded after it slowed the deck; and a web widg
 8. `macro-grid-client`: web sites in the crash guard (the `web:<host>` id, one merged live list, write-ahead with a confirmation before
    mounting), the placeholder with Turn on, Settings list; native unit tests for the rules with `web:` ids, vitest for the merged list.
    Also make the plugin widgets' own report wait for the confirmation (today it is sent without waiting).
-9. `macro-grid-client` and the renderer in `macro-grid`: the recommended live number for web widgets with the "Tap to load" queue, Keep loaded,
-   unloading in the background; the editor's warning for pages over the number; tests with fake timers. No slow-page detection (step 7 decided
-   against it).
-10. Docs: this plan's status, `architecture.md` (the guard now covers web pages), the inspector note, `CHANGELOG.md` in both repositories.
+9. **Done in code, not tried on a phone.** `macro-grid-client` and the renderer in `macro-grid`: the recommended live number for web widgets with the "Tap to load" queue (`planWebLoad`,
+   `autoWebLimit`, Settings), Keep loaded (`props.keepLoaded`, inspector switch), unloading 30 seconds after the background (`useHeldTrue`); the editor's warning for
+   pages with more than 3 web widgets; tests with fake timers. No slow-page detection (step 7 decided against it).
+10. **Done.** Docs: this plan's status, `architecture.md` (the guard now covers web pages; the client's has the limit, Keep loaded and the background rule), `CHANGELOG.md` in both repositories.
 
 ## Decided (by the owner)
 
@@ -358,6 +358,6 @@ turned off after it crashed or unloaded after it slowed the deck; and a web widg
 - Should the override survive a server restart? Built as no (it is a live view state, not a setting).
 - Should the widget have an optional reload interval (`props.refreshSeconds`) for pages that do not update themselves? Leave out until
   someone needs it.
-- **Recommended live web widgets:** 1 on a small phone up to 3 on a strong one, changeable in Settings. Good starting numbers?
-- **Background:** unload web pages 30 seconds after the app goes to the background (saves battery, chat reloads when you come back), or keep them
-  running while the app is open in the background?
+- **Recommended live web widgets:** built as 1 on a small phone (2 GB or less, or 4 cores or fewer), 3 on a strong one (6 GB and 8 cores or more), 2 between, changeable in
+  Settings. The owner has not confirmed the numbers; change `autoWebLimit` after measuring on real phones.
+- **Background:** built as unloading web pages 30 seconds after the app goes to the background (saves battery, a chat reloads when you come back). The owner has not confirmed it.
