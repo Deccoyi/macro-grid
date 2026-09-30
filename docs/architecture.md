@@ -46,8 +46,9 @@ half-written profile).
 - **Profile** `{ id, name, pages[], appMatches[], previewDeviceId? }`
 - **Page** `{ id, name, cols, rows, gap, padding, alignment, widgets[] }`: a grid; a profile can have several pages.
 - **Widget** `{ id, type, x, y, w, h, text, style, customCss, props, actions, dynamic }`
-  - `type` is `button`, `toggle`, `slider`, `knob`, `label`, `image`, `web` or `plugin-html`. **The `web` and `plugin-html` types currently render a
-    placeholder only;** the web widget (for example a live chat) and the plugin HTML bridge are not implemented yet.
+  - `type` is `button`, `toggle`, `slider`, `knob`, `label`, `image`, `web`, `plugin-widget` or `plugin-html`. A `web` widget shows a page in a sandboxed iframe; a `plugin-widget` is a
+    custom widget of a plugin (`props`: `plugin`, `widget`, `settings`) whose code runs in a sandboxed worker on the device and draws to a canvas, see
+    [design/plugin-widgets.md](design/plugin-widgets.md). The reserved `plugin-html` type only draws a placeholder.
   - `style`: `background`, `foreground`, `align`, `vAlign`, `fontSize`, `borderColor`, `borderWidth`, `radius`, `icon` (an image URL, normally
     a `data:` SVG baked by the icon picker), `iconSize`, `iconPosition`, `animation` (`none`, `blink`, `pulse`).
   - `props`: type-specific settings: `min`, `max`, `step` and `valueVariable` for a slider or knob, `src` for an image, `url` for a web widget.
