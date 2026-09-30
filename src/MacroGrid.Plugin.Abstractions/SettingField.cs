@@ -35,6 +35,10 @@ public enum SettingFieldKind
     /// <summary>Widget settings only: the person picks one variable in the editor's variable picker, and the widget may read that variable
     /// (and only that one, besides its own plugin's). The value is the variable's name.</summary>
     Variable,
+
+    /// <summary>A color: the editor shows its color picker (a swatch, a hex box and preset colors). The value is a <c>#rrggbb</c> string;
+    /// <see cref="SettingField.Default"/> is the color used until the person picks one.</summary>
+    Color,
 }
 
 /// <summary>One labeled option in a <see cref="SettingFieldKind.Select"/> or <see cref="SettingFieldKind.Segmented"/> field.

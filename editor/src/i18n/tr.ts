@@ -319,6 +319,12 @@ export const tr = {
 
   // ---- Widget palette ----
   "palette.search": "Widget ara",
+  "palette.menu": "Toolbox seçenekleri",
+  "palette.view.plugin": "Plugin'e göre grupla",
+  "palette.view.category": "Kategoriye göre grupla (A-Z)",
+  "palette.builtIn": "Standart",
+  "palette.other": "Diğer",
+  "palette.results": (count: string) => `${count} bulundu`,
   "palette.noMatch": "Eşleşen widget yok.",
   "palette.title": "Widget ekle",
 
@@ -666,6 +672,8 @@ export const tr = {
   "pluginWidget.option.keepLoaded.hint": "Widget arka planda yüklü kalır, sayfaya dönünce hemen görünür. Telefonun pilini daha çok kullanır.",
   "pluginWidget.option.storage": "Verisini hatırlasın",
   "pluginWidget.option.storage.hint": "Widget her cihazda kendi küçük verisini saklar, örneğin bir sayaç ya da son seçimi.",
+  "pluginWidget.section.options": "Seçenekler",
+  "pluginWidget.section.data": "Veri",
   "pluginWidget.clearData": "Widget verisini temizle",
   "pw.stopped.frozen": "Durduruldu: yanıt vermiyor",
   "pw.stopped.startTimeout": "Durduruldu: başlamadı",

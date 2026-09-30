@@ -4,7 +4,7 @@ import { api } from "../../api/client";
 import type { OptionsResult, SettingField, SettingOption, VariableInfo } from "../../api/types";
 import { useT } from "../../i18n/I18nContext";
 import { VariablePicker } from "../VariablePicker";
-import { Seg } from "../fields/controls";
+import { ColorField, Seg } from "../fields/controls";
 
 interface SchemaFormProps {
   fields: SettingField[];
@@ -166,11 +166,22 @@ function SchemaFieldRow({
           mode="bare"
           onInsert={(picked) => onChange(picked)}
           renderTrigger={(open) => (
-            <button type="button" onClick={open} style={{ textAlign: "left" }}>
+            <button type="button" onClick={open} style={{ textAlign: "left", width: "100%" }}>
               {name || t("schemaForm.variable.pick")}
             </button>
           )}
         />
+        {field.description && <FieldHint text={field.description} />}
+      </div>
+    );
+  }
+
+  if (field.kind === "Color") {
+    const color = typeof value === "string" ? value : typeof field.default === "string" ? field.default : "";
+    return (
+      <div className="field">
+        <span>{field.label}</span>
+        <ColorField value={color} onChange={onChange} />
         {field.description && <FieldHint text={field.description} />}
       </div>
     );

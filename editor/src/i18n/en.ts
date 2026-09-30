@@ -315,6 +315,12 @@ export const en: Record<DictKey, string | ((...args: string[]) => string)> = {
   "page.properties.delete": "Delete Page",
 
   "palette.search": "Search widgets",
+  "palette.menu": "Toolbox options",
+  "palette.view.plugin": "Group by plugin",
+  "palette.view.category": "Group by category (A to Z)",
+  "palette.builtIn": "Standard",
+  "palette.other": "Other",
+  "palette.results": (count: string) => `${count} found`,
   "palette.noMatch": "No widget matches.",
   "palette.title": "Add widget",
 
@@ -625,7 +631,9 @@ export const en: Record<DictKey, string | ((...args: string[]) => string)> = {
   "palette.pluginWidgets": "Plugin widgets",
   "palette.unverified": "Unverified",
   "palette.unverifiedHint": "This plugin is not verified. Its widgets run sandboxed code on your devices.",
-  "pluginWidget.settings": "Widget settings",
+  "pluginWidget.settings": "Settings",
+  "pluginWidget.section.options": "Options",
+  "pluginWidget.section.data": "Data",
   "pluginWidget.unavailable": "This widget cannot run now (the plugin is missing, switched off or waiting for approval).",
   "pw.plugin": "Plugin widget",
   "pw.restart": "Restart",

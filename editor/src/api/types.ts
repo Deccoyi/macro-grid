@@ -1,5 +1,5 @@
 import type { Profile } from "@macro/renderer";
-type SettingFieldKind = "Text" | "Password" | "Number" | "Slider" | "Bool" | "Select" | "Segmented" | "File" | "List" | "Button" | "Notice" | "Variable";
+type SettingFieldKind = "Text" | "Password" | "Number" | "Slider" | "Bool" | "Select" | "Segmented" | "File" | "List" | "Button" | "Notice" | "Variable" | "Color";
 
 export interface SettingOption {
   value: string;
