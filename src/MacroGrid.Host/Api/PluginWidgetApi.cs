@@ -20,6 +20,14 @@ internal static class PluginWidgetApi
     /// <summary>The device id a request from the editor's preview carries.</summary>
     public const string EditorDeviceId = "editor";
 
+    /// <summary>The widget's icon as a data URI the editor can draw, or null when it has none. The file was checked when the plugin loaded.</summary>
+    private static string? IconDataUri(string? path)
+    {
+        if (path is null) return null;
+        try { return "data:image/svg+xml;base64," + Convert.ToBase64String(File.ReadAllBytes(path)); }
+        catch (IOException) { return null; }
+    }
+
     public static RouteGroupBuilder MapPluginWidgetApi(this RouteGroupBuilder api)
     {
         api.MapGet("/plugin-widgets", (PluginWidgetCatalog catalog, PluginLocalizer localizer) =>
@@ -36,6 +44,7 @@ internal static class PluginWidgetApi
                 interactive = info.Widget.Manifest.Interactive,
                 options = info.Widget.Options,
                 optionsOff = info.Widget.OptionsOffByDefault,
+                icon = IconDataUri(info.Widget.IconPath),
                 verified = info.Verified,
                 settings = info.Widget.Manifest.Settings,
             }));

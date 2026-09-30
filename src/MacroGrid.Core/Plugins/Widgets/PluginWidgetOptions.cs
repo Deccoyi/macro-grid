@@ -31,6 +31,7 @@ public static class PluginWidgetLimits
     public const int MaxEntryBytesUnverified = 1024 * 1024;
     public const int MaxAssetBytesPerPlugin = 4 * 1024 * 1024;
     public const int MaxSettingsFields = 24;
+    public const int MaxIconBytes = 8 * 1024;
     public const int MaxFps = 60;
     public const int MaxFpsUnverified = 30;
     public const int DefaultFps = 15;

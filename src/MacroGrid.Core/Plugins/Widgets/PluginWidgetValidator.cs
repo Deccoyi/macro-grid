@@ -6,7 +6,7 @@ namespace MacroGrid.Core.Plugins.Widgets;
 /// <summary>A widget that passed the checks: its files exist inside the plugin folder and the numbers are in range.</summary>
 /// <param name="Fps">The frame rate cap with the default applied and, for an unverified plugin, held to 30.</param>
 /// <param name="Assets">Declared path to full path.</param>
-public sealed record ValidatedWidget(PluginWidgetManifest Manifest, string EntryPath, IReadOnlyList<KeyValuePair<string, string>> Assets, int Fps, PluginWidgetSize Size, IReadOnlyList<string> Options)
+public sealed record ValidatedWidget(PluginWidgetManifest Manifest, string EntryPath, IReadOnlyList<KeyValuePair<string, string>> Assets, int Fps, PluginWidgetSize Size, IReadOnlyList<string> Options, string? IconPath = null)
 {
     /// <summary>The declared options that start switched off on a placed widget (the manifest says <c>default: false</c>). The person can switch each one per widget.</summary>
     public IReadOnlyList<string> OptionsOffByDefault => Options.Where(o => Manifest.Options is { } declared && declared.TryGetValue(o, out var option) && !option.Default).ToArray();
@@ -94,6 +94,15 @@ public static partial class PluginWidgetValidator
         if (entryLength == 0) return "entry: the file is empty";
         if (entryLength > maxEntry) return $"entry: the script is larger than {maxEntry / 1024} KB";
 
+        string? iconPath = null;
+        if (!string.IsNullOrWhiteSpace(widget.Icon))
+        {
+            iconPath = ResolveFile(dir, widget.Icon, [".svg"], out var iconError);
+            if (iconPath is null) return $"icon: {iconError}";
+            var iconProblem = CheckIcon(iconPath);
+            if (iconProblem is not null) return $"icon: {iconProblem}";
+        }
+
         var assets = new List<KeyValuePair<string, string>>();
         foreach (var declared in widget.Assets ?? [])
         {
@@ -104,7 +113,7 @@ public static partial class PluginWidgetValidator
             assets.Add(new KeyValuePair<string, string>(declared, path));
         }
 
-        result = new ValidatedWidget(widget, entry, assets, fps, size, options);
+        result = new ValidatedWidget(widget, entry, assets, fps, size, options, iconPath);
         return null;
     }
 
@@ -123,6 +132,27 @@ public static partial class PluginWidgetValidator
         if (info.Attributes.HasFlag(FileAttributes.ReparsePoint)) { error = "links are not allowed"; return null; }
         return full;
     }
+
+    /// <summary>An icon is drawn by the editor as an image, so scripts could not run in it anyway; it is still kept to plain shapes: no scripts, no embedded pages or images, no links to anywhere.</summary>
+    public static string? CheckIcon(string path)
+    {
+        var info = new FileInfo(path);
+        if (info.Length == 0) return "the file is empty";
+        if (info.Length > PluginWidgetLimits.MaxIconBytes) return $"the file is larger than {PluginWidgetLimits.MaxIconBytes / 1024} KB";
+        string text;
+        try { text = File.ReadAllText(path); }
+        catch (IOException) { return "the file could not be read"; }
+        if (!SvgStart().IsMatch(text)) return "the file is not an SVG";
+        if (ForbiddenSvg().IsMatch(text)) return "an SVG icon may not contain scripts, embedded pages or images, event handlers or links";
+        return null;
+    }
+
+    [GeneratedRegex(@"^\s*(<\?xml[^>]*\?>\s*)?(<!--.*?-->\s*)*<svg[\s>]", RegexOptions.Singleline | RegexOptions.IgnoreCase)]
+    private static partial Regex SvgStart();
+
+    // Anything that can run code or reach outside the file. The svg namespace itself (xmlns="http://www.w3.org/...") is fine and not matched.
+    [GeneratedRegex(@"<\s*(script|foreignObject|image|iframe|object|embed|use|a|animate|set)\b|\bon\w+\s*=|javascript:|(href|src)\s*=|url\(\s*['""]?\s*(https?:|data:|//)|<!ENTITY|<!DOCTYPE", RegexOptions.IgnoreCase)]
+    private static partial Regex ForbiddenSvg();
 
     [GeneratedRegex("^[A-Za-z0-9_-]{1,64}$")]
     private static partial Regex IdPattern();

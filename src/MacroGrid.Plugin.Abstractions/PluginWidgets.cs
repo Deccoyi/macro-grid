@@ -37,6 +37,9 @@ public sealed record PluginWidgetManifest
     /// <summary>Package files the script can load by name (png, jpeg, webp images and woff2 fonts), as paths inside the plugin folder.</summary>
     public string[]? Assets { get; init; }
 
+    /// <summary>Path of the widget's Toolbox icon inside the plugin folder: a small SVG file (at most 8 KB), no scripts and no outside links. Optional.</summary>
+    public string? Icon { get; init; }
+
     /// <summary>The size on the grid when dropped; defaults to 2 x 2.</summary>
     public PluginWidgetSize? Size { get; init; }
 

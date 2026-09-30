@@ -18,6 +18,15 @@ const PALETTE: { type: WidgetType; key: DictKey; icon: LucideIcon }[] = [
   { type: "web", key: "widget.type.web", icon: Globe },
 ];
 
+/**
+ * A plugin's own icon. Only its shape is used (the alpha of the image), painted in the tile's text color, so it follows the theme and the hover state
+ * like the built-in icons do. The file is drawn as an image, so nothing in it can run.
+ */
+function PluginIcon({ src }: { src: string }) {
+  const mask = `url("${src}") center / contain no-repeat`;
+  return <span aria-hidden style={{ width: 16, height: 16, display: "inline-block", background: "currentColor", WebkitMask: mask, mask }} />;
+}
+
 interface WidgetPaletteProps {
   onAdd: (type: WidgetType) => void;
   onAddPluginWidget: (info: PluginWidgetInfo) => void;
@@ -103,7 +112,7 @@ export function WidgetPalette({ onAdd, onAddPluginWidget, disabled }: WidgetPale
                   color: disabled ? "var(--ms-text-disabled)" : "var(--ms-text-secondary)", cursor: disabled ? "default" : "pointer", opacity: disabled ? 0.6 : 1,
                 }}
               >
-                <Puzzle size={16} strokeWidth={1.75} />
+                {info.icon ? <PluginIcon src={info.icon} /> : <Puzzle size={16} strokeWidth={1.75} />}
                 <span style={{ fontSize: 10.5, maxWidth: "100%", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{info.name}</span>
                 {!info.verified && (
                   <ShieldAlert size={11} strokeWidth={2} color="var(--ms-warning, #facc15)" aria-label={t("palette.unverified")} style={{ position: "absolute", top: 4, right: 4 }} />

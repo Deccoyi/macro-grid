@@ -455,6 +455,8 @@ export interface PluginWidgetInfo {
   options: string[];
   /** The declared options that start switched off on a placed widget. */
   optionsOff?: string[];
+  /** The widget's Toolbox icon as an SVG data URI, when the plugin ships one. */
+  icon?: string | null;
   /** False for a plugin that is not verified (every JavaScript plugin). */
   verified: boolean;
   settings?: SettingField[] | null;

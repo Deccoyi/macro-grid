@@ -116,6 +116,49 @@ public sealed class PluginWidgetTests : IAsyncLifetime
         Assert.Equal(["keepLoaded"], widget.OptionsOffByDefault);
     }
 
+    // ---- icon ----
+
+    private PluginWidgetValidation ValidateWithIcon(string svg)
+    {
+        var dir = Dir();
+        File.WriteAllText(Path.Combine(dir, "widgets", "gauge.svg"), svg);
+        return Validate(dir, Manifest(Widget() with { Icon = "widgets/gauge.svg" }));
+    }
+
+    [Fact]
+    public void A_plain_svg_icon_is_accepted()
+    {
+        var result = ValidateWithIcon("<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\"><defs><linearGradient id=\"g\"/></defs><path fill=\"url(#g)\" stroke-linejoin=\"round\" d=\"M2 2h20v20H2z\"/></svg>");
+
+        var ok = Assert.Single(result.Widgets);
+        Assert.NotNull(ok.IconPath);
+        Assert.Empty(result.Problems);
+    }
+
+    [Theory]
+    [InlineData("<svg viewBox=\"0 0 1 1\"><script>alert(1)</script></svg>")]
+    [InlineData("<svg viewBox=\"0 0 1 1\" onload=\"x()\"></svg>")]
+    [InlineData("<svg viewBox=\"0 0 1 1\"><image href=\"https://example.com/a.png\"/></svg>")]
+    [InlineData("<svg viewBox=\"0 0 1 1\"><a xlink:href=\"javascript:x()\"><path d=\"M0 0\"/></a></svg>")]
+    [InlineData("<svg viewBox=\"0 0 1 1\"><foreignObject><div/></foreignObject></svg>")]
+    [InlineData("<svg viewBox=\"0 0 1 1\"><rect style=\"fill:url(https://example.com/x)\"/></svg>")]
+    [InlineData("<html><body/></html>")]
+    public void An_icon_with_scripts_links_or_no_svg_leaves_the_widget_out(string svg)
+    {
+        var result = ValidateWithIcon(svg);
+
+        Assert.Empty(result.Widgets);
+        Assert.StartsWith("icon:", Assert.Single(result.Problems).Reason);
+    }
+
+    [Fact]
+    public void A_big_icon_is_refused()
+    {
+        var result = ValidateWithIcon("<svg viewBox=\"0 0 1 1\">" + new string(' ', PluginWidgetLimits.MaxIconBytes) + "</svg>");
+
+        Assert.Contains("larger", Assert.Single(result.Problems).Reason);
+    }
+
     // ---- validator ----
 
     [Fact]
