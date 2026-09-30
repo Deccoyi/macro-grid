@@ -4,6 +4,7 @@ Status: built in both repositories (branch `feat/web-widget`) and checked on a c
 the page loads, `window.open`, `top.location`, `alert`/`prompt`, camera, microphone and location are refused, `tel:`, `intent:`, `market:` and `_blank` links open nothing, the
 native bridge is not visible to the page, no referrer is sent, and the Example/Reset/Reload/refused-address buttons behave. Still open: step 0 (real chat and alerts links, to be tried
 at home), a download check, the old-Android fallback (emulator at most) and whether the login of an embedded site is kept (third-party cookies are not enabled).
+Not built yet: the stability part below (crash guard, live limit, pausing and slow-page detection on the phone), which reuses what plugin widgets already have.
 Repositories: `macro-grid` (model, renderer, editor, browser deck) and `macro-grid-client` (the phone app's own renderer copy and the Android layer).
 
 **What changed from the plan while building it**
@@ -258,10 +259,56 @@ would use a plugin widget instead.
   needs a login may not keep it.
 - A page served over `http://` cannot be shown inside the browser deck when the deck itself is opened over `https://` (mixed content).
 - Nothing in the widget refreshes the page; the page updates itself.
+- On the phone every page, the deck included, shares one renderer process: a heavy page can slow the deck, and a page that crashes it is turned
+  off on that device afterwards (see "Stability on the phone"). A plugin widget does not have this problem.
+
+## Stability on the phone: crash guard, live limit, pausing
+
+Plugin widgets (`docs/design/plugin-widgets.md`) run in workers and can be stopped from outside. A `web` widget cannot: it is a real page
+in an iframe, and on Android every page of the app, the deck and all its iframes, shares **one** renderer process and one main thread. A heavy
+page can slow or freeze the whole deck, and a page that runs out of memory takes the renderer down with it. The page is cross-origin, so it
+cannot answer a watchdog ping either. What can be done is what plugin widgets already do around their workers, adapted to pages:
+
+**1. The crash guard covers web pages too.** The phone's guard (`WidgetGuard`, `WidgetCrashRules`, `SafeWebViewClient`) already recreates the
+deck when the renderer dies, blames what was live, gives strikes and keeps a culprit off with a notice at the next start. Web widgets join it:
+
+- The suspect of a web widget is its **site**, written `web:<host>` (host of the address it shows, lower case, no path or query: an alerts link
+  carries a secret, so only the host is ever stored, shown or logged). The id rule of the guard is widened to accept exactly this form next to
+  plugin ids.
+- **Write-ahead:** before an iframe is mounted or pointed at a new address (the widget's own `url`, or a `core.web` override), the app
+  writes the full live list (plugin ids and `web:` hosts together, in one call: the guard stores one list, so two callers would overwrite each
+  other) and **waits for the phone to confirm** before it mounts. An iframe that navigates inside itself to another site is not seen by the app;
+  it stays blamed under its starting host. The docs say so.
+- Same rules as plugins: only a real crash counts (not the system taking memory back); the only suspect, or a site with two strikes, stays off
+  until the person turns it on; other suspects are off for one session; a crash loop stops restarting.
+- A site that is off draws the widget's placeholder: "This page crashed the app and was turned off on this device", with a **Turn on** button
+  (and the same list in Settings, next to the plugins). The notice at the next start names the site.
+
+**2. A recommended number of live web widgets.** Like plugin widgets (`src/widgets/limits.ts`): a starting number by how strong the phone is
+(for example 1 on a small phone, up to 3 on a strong one), shown in Settings, where the person can choose another number or no limit. It is a
+recommendation, not a wall: web widgets over the number wait with a "Tap to load" placeholder in page order, and the editor warns when a page
+has more than the number. Web widgets have their own number (a page costs far more than a worker); they do not take slots from plugin widgets.
+
+**3. Pausing.** Already built: only the shown page's web widgets are mounted. Added:
+
+- **App in the background or screen off:** web iframes are unloaded after 30 seconds (the same timing as plugin workers) and loaded again when the
+  app comes back. A chat reconnects by itself; this is the price of not draining the battery.
+- **Keep loaded** (inspector switch per widget, off by default): the widget stays mounted, hidden, when its page is left, so a chat does not
+  reload on every page change (the reload finding of the first phone test). Kept-loaded web widgets count toward the live number.
+
+**4. Slow-page detection.** A frozen page cannot be pinged, but the app can watch its own main thread: long tasks (the browser's long-task
+report, which names the iframe a task came from when it can) and gaps between the app's own frames. When one web widget is behind most of the
+blocked time (for example more than half of 10 seconds), it is unloaded and shows "Paused: this page was slowing down the deck. Tap to load it
+again." After three pauses in one session it stays paused until tapped. This is not a strike (a slow page is not a crash) and nothing is kept
+across restarts. A Settings switch "Pause slow web pages" (on by default) turns it off. Whether the long-task report names the iframe inside the
+phone's WebView is checked first (step 7); if it does not, only the frame-gap check remains and a pause names no single widget, so it is not built.
+
+What still cannot be done, written in the docs and the inspector note: a page cannot be limited in memory or CPU from outside, it can only be
+turned off after it crashed or unloaded after it slowed the deck; and a web widget is never as safe for the deck as a plugin widget.
 
 ## Steps
 
-(Done in code: 0a, 1, 2, 3, 3a, 4, 5, 5a and 6 except the open items marked below. Open: step 0 and the device checks of 5a.)
+(Done in code: 0a, 1, 2, 3, 3a, 4, 5, 5a and 6 except the open items marked below. Open: step 0 and the device checks of 5a, and steps 7-10.)
 
 0a. Server, before the widget: the `Host` check on `/api` (review item 6) and the `Origin` check on `/ws` (item 7), with tests. They
    close a hole that exists today, so they may ship on their own.
@@ -281,6 +328,15 @@ would use a plugin widget instead.
    hook for iframe navigations (item 3), the "no" to every prompt (item 4), the "Show web pages" switch and "clear web page data" button (item 13)
    and mounting only on the shown page (item 8). Run the full test page on a current phone **and** on the oldest Android the app supports.
 6. Docs: `architecture.md` (also the new `widget.state` field and the `core.web` action), the roadmap line, `CHANGELOG.md` in both repositories, and a `docs/design/` note for the action.
+7. Phone check before code (with the owner): a small test page on the local network that (a) allocates memory until it crashes, (b) runs a busy
+   loop for 5 seconds every 10 seconds; confirm that the renderer-gone handler brings the deck back, and whether the long-task report inside the
+   WebView names the iframe. The result decides point 4 of "Stability on the phone".
+8. `macro-grid-client`: web sites in the crash guard (the `web:<host>` id, one merged live list, write-ahead with a confirmation before
+   mounting), the placeholder with Turn on, Settings list; native unit tests for the rules with `web:` ids, vitest for the merged list.
+   Also make the plugin widgets' own report wait for the confirmation (today it is sent without waiting).
+9. `macro-grid-client` and the renderer in `macro-grid`: the recommended live number for web widgets with the "Tap to load" queue, Keep loaded,
+   unloading in the background, and (if step 7 allows) slow-page detection; the editor's warning for pages over the number; tests with fake timers.
+10. Docs: this plan's status, `architecture.md` (the guard now covers web pages), the inspector note, `CHANGELOG.md` in both repositories.
 
 ## Decided (by the owner)
 
@@ -297,3 +353,8 @@ would use a plugin widget instead.
 - Should the override survive a server restart? Built as no (it is a live view state, not a setting).
 - Should the widget have an optional reload interval (`props.refreshSeconds`) for pages that do not update themselves? Leave out until
   someone needs it.
+- **Recommended live web widgets:** 1 on a small phone up to 3 on a strong one, changeable in Settings. Good starting numbers?
+- **Background:** unload web pages 30 seconds after the app goes to the background (saves battery, chat reloads when you come back), or keep them
+  running while the app is open in the background?
+- **Slow pages:** pause a page automatically when it slows the deck (on by default, can be switched off), or only show a warning and let the
+  person decide?
