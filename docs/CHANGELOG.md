@@ -3,6 +3,8 @@
 New features and fixes in Macro Grid. For technical details, see [CHANGELOG-developer.md](CHANGELOG-developer.md).
 
 ## Unreleased
+### New
+- **Plugins can add their own widgets:** a plugin can draw a widget of its own, such as a gauge, and it appears in the Toolbox under the plugin's name. Plugin widgets run in a closed box with no network, so a broken one cannot harm the rest of the deck. If one keeps crashing the app, it is switched off and you can turn it back on.
 ### Changed
 - **Hints can be closed:** the hint boxes under a web widget's address now have a close button and stay closed. "Show closed notices again" in Preferences brings them back. A warning about the address you typed (not encrypted, not allowed) cannot be closed.
 - **The Toolbox marks the web widget with a small flask icon** instead of the word "Experimental".
