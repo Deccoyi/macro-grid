@@ -39,6 +39,7 @@ export const WORKER_BOOTSTRAP = String.raw`
   var frameTimer = null;
   var lastFrameAt = 0;
   var busyMs = 0;
+  var framesRun = 0;
   var busySince = nativeNow();
   var pendingResume = [];
   var canvas = null;
@@ -95,10 +96,12 @@ export const WORKER_BOOTSTRAP = String.raw`
     lastFrameAt = start;
     for (var j = 0; j < batch.length; j++) guard(batch[j].cb, start);
     busyMs += nativeNow() - start;
+    framesRun++;
     var span = nativeNow() - busySince;
     if (span >= 5000) {
-      send("load", { busy: Math.min(1, busyMs / span) });
+      send("load", { busy: Math.min(1, busyMs / span), frames: framesRun });
       busyMs = 0;
+      framesRun = 0;
       busySince = nativeNow();
     }
     kick();

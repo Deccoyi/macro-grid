@@ -90,6 +90,8 @@ export const PLUGIN_WIDGET_LIMITS = {
   maxLiveUnverified: 2,
   /** The sum of the frame-rate caps of all live widgets; above it every widget is scaled down. */
   frameBudget: 120,
+  /** How long a widget counts as drawing after its last report of frames. */
+  activeForMs: 12000,
   maxDpr: 2,
   pingEveryMs: 1000,
   frozenAfterMs: 3000,

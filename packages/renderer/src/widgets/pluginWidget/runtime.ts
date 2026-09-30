@@ -154,8 +154,14 @@ export class PluginWidgetRuntime {
   }
 
   /** Gives each live widget its share of the frame budget: the sum of the frame-rate caps never goes above the budget. */
+  /** @internal */
+  rebalanceNow(): void {
+    this.rebalance();
+  }
+
   private rebalance(): void {
-    const total = [...this.live].reduce((sum, i) => sum + i.fpsCap, 0);
+    // Only widgets that drew lately take part, so idle widgets do not use up the budget of animating ones.
+    const total = [...this.live].reduce((sum, i) => sum + (i.active ? i.fpsCap : 0), 0);
     const scale = total > L.frameBudget ? L.frameBudget / total : 1;
     for (const instance of this.live) instance.setFpsScale(scale);
   }
@@ -178,6 +184,7 @@ export class PluginWidgetInstance {
   private stopListening: (() => void) | null = null;
   private busyStrikes = 0;
   private fpsScale = 1;
+  private activeUntil = 0;
   private gestureUntil = 0;
   private requestStamps: number[] = [];
   private errorStamps: number[] = [];
@@ -203,6 +210,11 @@ export class PluginWidgetInstance {
 
   get fpsCap(): number {
     return Math.max(1, Math.min(60, this.options.info.fps ?? 15));
+  }
+
+  /** Whether the widget drew in the last few seconds; a widget that has just started counts as active until its first report. */
+  get active(): boolean {
+    return !this.booted || this.runtime.time.now() < this.activeUntil;
   }
 
   get current(): PluginWidgetState {
@@ -266,7 +278,7 @@ export class PluginWidgetInstance {
         this.onWorkerError(String(d.message ?? ""));
         break;
       case "load":
-        this.onLoad(Number(d.busy) || 0);
+        this.onLoad(Number(d.busy) || 0, Number(d.frames) || 0);
         break;
       case "asset":
         void this.onAsset(String(d.name ?? ""));
@@ -280,6 +292,7 @@ export class PluginWidgetInstance {
     this.runtime.time.clearTimeout(this.startTimer);
     this.startTimer = null;
     this.lastPong = this.runtime.time.now();
+    this.activeUntil = this.lastPong + L.activeForMs;
     this.watchdog = this.runtime.time.setInterval(() => this.checkWatchdog(), L.pingEveryMs);
     const { host, widgetId, info, settings } = this.options;
     this.stopListening = host.listen(widgetId, {
@@ -313,7 +326,10 @@ export class PluginWidgetInstance {
     this.post("ping");
   }
 
-  private onLoad(busy: number): void {
+  private onLoad(busy: number, frames: number): void {
+    // A report comes every few seconds while the widget draws; the budget is shared out again among the widgets that drew lately.
+    if (frames > 0) this.activeUntil = this.runtime.time.now() + L.activeForMs;
+    this.runtime.rebalanceNow();
     const limit = this.verified ? L.busyLimit : L.busyLimitUnverified;
     if (busy <= limit) {
       this.busyStrikes = 0;
@@ -405,8 +421,9 @@ export class PluginWidgetInstance {
   setFpsScale(scale: number): void {
     // The budget scale multiplies with a busy-strike reduction; keep the smaller of the two effects.
     const strikes = this.busyStrikes > 0 ? 0.5 : 1;
+    const before = this.effectiveFps();
     this.fpsScale = Math.min(scale, strikes);
-    if (this.booted) this.post("fps", { fps: this.effectiveFps() });
+    if (this.booted && this.effectiveFps() !== before) this.post("fps", { fps: this.effectiveFps() });
   }
 
   /** The cell was resized or the screen density changed. */

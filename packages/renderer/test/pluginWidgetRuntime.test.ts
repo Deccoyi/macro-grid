@@ -263,6 +263,24 @@ describe("plugin widget runtime", () => {
     expect(seen).toEqual([["gauges"], ["clock", "gauges"], ["clock", "gauges"], ["clock", "gauges"], ["clock"], []]);
   });
 
+  it("does not let widgets that stopped drawing take budget from the ones that still draw", async () => {
+    const { mountBooted, advance } = setup();
+    const workers = [];
+    for (let i = 0; i < 6; i++) workers.push(await mountBooted({ fps: 60 }));
+
+    // Time passes with the workers answering the watchdog but drawing nothing.
+    for (let t = 0; t < L.activeForMs + 1000; t += 1000) {
+      advance(1000);
+      for (const w of workers) w.send("pong");
+      await settle();
+    }
+    // Only the first widget reports frames; the others drew nothing since they started.
+    workers[0]!.send("load", { busy: 0.01, frames: 30 });
+    await settle();
+
+    expect(workers[0]!.said("fps").at(-1)!.data).toEqual({ fps: 60 });
+  });
+
   it("scales every widget down when the sum of their frame caps passes the budget", async () => {
     const { mountBooted } = setup();
     const workers = [];
