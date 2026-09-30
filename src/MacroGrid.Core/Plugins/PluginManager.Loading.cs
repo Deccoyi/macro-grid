@@ -1,6 +1,7 @@
 using System.Text.Json;
 using MacroGrid.Core.Diagnostics;
 using MacroGrid.Core.Plugins.Js;
+using MacroGrid.Core.Plugins.Widgets;
 using MacroGrid.Core.Variables;
 using MacroGrid.Plugin.Abstractions;
 using Microsoft.Extensions.Logging;
@@ -74,6 +75,15 @@ public sealed partial class PluginManager
         LoadedPlugin Fail(PluginLoadStatus status, string detail, IReadOnlyList<string>? pending = null)
         {
             var info = new LoadedPlugin(manifest.Id, manifest.Name, manifest.Version, status, detail, false, pending);
+            if (manifest.Widgets is { Length: > 0 })
+                widgetCatalog?.Set(manifest.Id, manifest.Name, status switch
+                {
+                    PluginLoadStatus.NeedsApproval => PluginWidgetAvailability.NeedsApproval,
+                    PluginLoadStatus.Incompatible => PluginWidgetAvailability.Incompatible,
+                    _ => PluginWidgetAvailability.Disabled,
+                }, false, [], []);
+            else
+                widgetCatalog?.Remove(manifest.Id);
             // Needs approval is not a fault: the Plugins window already asks for it.
             if (status != PluginLoadStatus.NeedsApproval)
                 problems?.Report(manifest.Id, manifest.Name, status == PluginLoadStatus.Incompatible ? ProblemSeverity.Warning : ProblemSeverity.Error,
@@ -124,9 +134,23 @@ public sealed partial class PluginManager
             var unknown = declared.FirstOrDefault(p => !JsPermissions.IsKnown(p));
             if (unknown is not null)
                 return Fail(PluginLoadStatus.Error, $"Unknown permission '{unknown}'");
-            if (!permissionStore.IsGranted(manifest.Id, declared))
-                return Fail(PluginLoadStatus.NeedsApproval, "Needs your approval before it can run", declared);
         }
+
+        // A C# plugin is verified when it is officially signed; a JavaScript plugin never is (its widgets get the stricter limits).
+        var verified = manifest.Kind == PluginKind.Csharp && trust?.Unsigned != true;
+        var widgetCheck = PluginWidgetValidator.Validate(dir, manifest, verified);
+        foreach (var refused in widgetCheck.Problems)
+        {
+            logger.LogWarning("Plugin {Id}: widget '{Widget}' was left out: {Reason}", SecurityEvents.ForLog(manifest.Id), SecurityEvents.ForLog(refused.WidgetId), refused.Reason);
+            problems?.Report(manifest.Id, manifest.Name, ProblemSeverity.Warning, ProblemCodes.WidgetInvalid, $"Widget '{refused.WidgetId}' was left out: {refused.Reason}");
+        }
+        if (widgetCheck.Problems.Count == 0) problems?.Resolve(manifest.Id, ProblemCodes.WidgetInvalid);
+
+        // What the person approves: a JavaScript plugin's permissions plus every option a widget declares (keep loaded, storage, notifications).
+        // Both kinds of plugin wait for approval; the C# ones only when they have widgets that declare options.
+        string[] required = [.. declared, .. widgetCheck.Widgets.SelectMany(w => w.Options.Select(o => PluginWidgetOptions.ApprovalKey(w.Manifest.Id, o)))];
+        if (required.Length > 0 && !permissionStore.IsGranted(manifest.Id, required))
+            return Fail(PluginLoadStatus.NeedsApproval, "Needs your approval before it can run", required);
 
         PluginLoadContext? context = null;
         PluginHostCollector? host = null;
@@ -148,7 +172,7 @@ public sealed partial class PluginManager
                 instance = (IPlugin)(Activator.CreateInstance(pluginType) ?? throw new InvalidOperationException("The plugin instance could not be created"));
             }
 
-            host = new PluginHostCollector(serverVersion, dir, manifest.Id, statusRegistry, logger, secretProtector);
+            host = new PluginHostCollector(serverVersion, dir, manifest.Id, statusRegistry, logger, secretProtector, widgetEvents, manifest.Name);
             instance.Initialize(host);
 
             // All-or-nothing: a clash on any action type fails the whole plugin instead of half-registering it.
@@ -171,7 +195,11 @@ public sealed partial class PluginManager
             var info = new LoadedPlugin(manifest.Id, manifest.Name, manifest.Version, PluginLoadStatus.Loaded, null,
                 host.SettingsPage is not null, HasIcon: ResolveIconPath(dir, manifest) is not null, HasTreeItems: treeProvider is not null,
                 Unsigned: trust?.Unsigned == true);
-            var running = new Running(context, instance, host, variableStore);
+            var running = new Running(context, instance, host, variableStore) { WidgetHandler = instance as IPluginWidgetHandler };
+            if (manifest.Widgets is { Length: > 0 })
+                widgetCatalog?.Set(manifest.Id, manifest.Name, PluginWidgetAvailability.Available, verified, widgetCheck.Widgets, widgetCheck.Problems);
+            else
+                widgetCatalog?.Remove(manifest.Id);
             if (treeProvider is not null)
             {
                 var pluginId = manifest.Id;

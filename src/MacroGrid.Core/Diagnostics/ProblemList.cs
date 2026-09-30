@@ -24,6 +24,14 @@ public static class ProblemCodes
     public const string SwitchedOff = "P122";
     /// <summary>One call of a plugin (an action, a timer) failed.</summary>
     public const string CallFailed = "P130";
+    /// <summary>A custom widget in a plugin's manifest was refused (a bad file, size or setting); the rest of the plugin works.</summary>
+    public const string WidgetInvalid = "P140";
+    /// <summary>A custom widget's request to its plugin failed or ran too long.</summary>
+    public const string WidgetCallFailed = "P141";
+    /// <summary>Events a plugin pushed to its widgets were dropped (too large or too many).</summary>
+    public const string WidgetEventDropped = "P142";
+    /// <summary>A custom widget reported an error from its own code.</summary>
+    public const string WidgetScriptError = "P143";
 }
 
 /// <summary>

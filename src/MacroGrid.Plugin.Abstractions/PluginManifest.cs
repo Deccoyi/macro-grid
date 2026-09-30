@@ -72,4 +72,8 @@ public sealed record PluginManifest
     /// too-large or wrong-shaped picture is a plugin-author mistake, not a load failure: the host just falls
     /// back to no icon for it, logged as a warning). A missing or invalid path is the same as not set.</summary>
     public string? Icon { get; init; }
+
+    /// <summary>Custom widgets the plugin adds to the toolbox. Additive: an older host ignores it. A plugin with widgets sets
+    /// <see cref="MinMacroGrid"/> to the version that introduced them.</summary>
+    public PluginWidgetManifest[]? Widgets { get; init; }
 }

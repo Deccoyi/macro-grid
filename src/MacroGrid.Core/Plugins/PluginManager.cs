@@ -2,6 +2,7 @@ using System.Text.Json;
 using MacroGrid.Core.Actions;
 using MacroGrid.Core.Diagnostics;
 using MacroGrid.Core.Plugins.Js;
+using MacroGrid.Core.Plugins.Widgets;
 using MacroGrid.Core.Profiles;
 using MacroGrid.Core.Security;
 using MacroGrid.Core.Sessions;
@@ -41,7 +42,9 @@ public sealed partial class PluginManager(
     ISecretProtector? secretProtector = null,
     PluginTrustVerifier? trustVerifier = null,
     IActiveWindowSource? windowSource = null,
-    ProblemList? problems = null) : IHostedService
+    ProblemList? problems = null,
+    PluginWidgetCatalog? widgetCatalog = null,
+    PluginWidgetEventHub? widgetEvents = null) : IHostedService
 {
     private static readonly JsonSerializerOptions ManifestJson = new(JsonSerializerDefaults.Web);
     private readonly PluginTrustVerifier _trust = trustVerifier ?? PluginTrustVerifier.Official;
@@ -69,6 +72,8 @@ public sealed partial class PluginManager(
         /// <summary>The handler subscribed to the instance's <see cref="IPluginTreeProvider.TreeItemsChanged"/>, if
         /// it implements that interface — kept so unloading can unsubscribe exactly it.</summary>
         public Action<string?>? TreeChangedHandler { get; set; }
+        /// <summary>The plugin's answer to its widgets' requests, if it implements <see cref="IPluginWidgetHandler"/>.</summary>
+        public IPluginWidgetHandler? WidgetHandler { get; set; }
     }
 
     private readonly Lock _stateLock = new();
@@ -151,6 +156,9 @@ public sealed partial class PluginManager(
         try { return ResolveIconPath(entry.Dir, ReadManifest(Path.Combine(entry.Dir, "plugin.json"))); }
         catch (Exception ex) when (ex is JsonException or InvalidOperationException) { return null; }
     }
+
+    /// <summary>The running plugin's handler for its widgets' requests, or null when the plugin is not running or has none.</summary>
+    public IPluginWidgetHandler? GetWidgetHandler(string pluginId) => FindEntry(pluginId)?.Running?.WidgetHandler;
 
     private Entry? FindEntry(string pluginId)
     {
@@ -273,6 +281,7 @@ public sealed partial class PluginManager(
             await UnloadCoreAsync(entry);
             entry.Info = entry.Info with { Status = PluginLoadStatus.Error, Detail = reason, HasSettings = false, HasTreeItems = false };
             logger.LogWarning("Plugin {Id} was switched off: {Reason}", pluginId, reason);
+            widgetCatalog?.Set(pluginId, entry.Info.Name, PluginWidgetAvailability.Disabled, false, [], []);
             problems?.Report(pluginId, entry.Info.Name, ProblemSeverity.Error, ProblemCodes.SwitchedOff, reason);
         }
         finally { _gate.Release(); }
@@ -290,6 +299,8 @@ public sealed partial class PluginManager(
 
             await UnloadCoreAsync(entry);
             lock (_stateLock) _entries.Remove(pluginId);
+            widgetCatalog?.Remove(pluginId);
+            widgetEvents?.Forget(pluginId);
             permissionStore.Revoke(pluginId);
             logger.LogInformation(SecurityEvents.PluginUninstalled, "Security: plugin {Id} uninstalled", SecurityEvents.ForLog(pluginId));
 

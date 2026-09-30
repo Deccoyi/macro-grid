@@ -51,6 +51,9 @@ public interface IPluginHost
     /// file, so that copying the data folder does not copy a usable secret. Optional: a plugin that stores its
     /// settings as plain JSON without using this keeps working exactly as before.</summary>
     IPluginSecrets Secrets { get; }
+
+    /// <summary>Pushes events to the plugin's own custom widgets (<see cref="PluginManifest.Widgets"/>).</summary>
+    IPluginWidgets Widgets { get; }
 }
 
 /// <summary>Encrypts one plugin's own secret before it is written to disk and decrypts it when read back. Backed

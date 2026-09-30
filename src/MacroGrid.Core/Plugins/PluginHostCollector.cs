@@ -1,3 +1,5 @@
+using System.Text.Json.Nodes;
+using MacroGrid.Core.Plugins.Widgets;
 using MacroGrid.Core.Security;
 using MacroGrid.Plugin.Abstractions;
 using Microsoft.Extensions.Logging;
@@ -9,7 +11,7 @@ namespace MacroGrid.Core.Plugins;
 /// here — PluginLoader adds the collected instances to the app's own DI container afterwards, the same
 /// way built-in actions/providers are registered in ServiceRegistration.cs.
 /// </summary>
-internal sealed class PluginHostCollector(string serverVersion, string dataDirectory, string pluginId, PluginStatusRegistry statusRegistry, ILogger logger, ISecretProtector? secretProtector = null) : IPluginHost
+internal sealed class PluginHostCollector(string serverVersion, string dataDirectory, string pluginId, PluginStatusRegistry statusRegistry, ILogger logger, ISecretProtector? secretProtector = null, PluginWidgetEventHub? widgetEvents = null, string pluginName = "") : IPluginHost
 {
     /// <summary>Adapts the host's own <see cref="ISecretProtector"/> to the SDK-facing <see cref="IPluginSecrets"/>.
     /// <paramref name="protector"/> is only ever null in a test host that never registered one; a plugin that
@@ -24,10 +26,18 @@ internal sealed class PluginHostCollector(string serverVersion, string dataDirec
             ?? throw new InvalidOperationException($"Plugin '{pluginId}' called IPluginSecrets, but this host has no secret protector configured.");
     }
 
+    /// <summary>Hands a plugin's events for its widgets to the hub; a host without a hub (some tests) drops them.</summary>
+    private sealed class WidgetsAdapter(PluginWidgetEventHub? hub, string pluginId, string pluginName) : IPluginWidgets
+    {
+        public void Post(string widget, string name, JsonNode? data, string? widgetId = null, string? deviceId = null, bool retain = false) =>
+            hub?.Post(pluginName, new PluginWidgetEvent(pluginId, widget, name, data?.DeepClone(), widgetId, deviceId, retain));
+    }
+
     public string ServerVersion { get; } = serverVersion;
     public string SdkVersion { get; } = PluginSdk.Version;
     public string DataDirectory { get; } = dataDirectory;
     public IPluginSecrets Secrets { get; } = new SecretsAdapter(secretProtector, pluginId);
+    public IPluginWidgets Widgets { get; } = new WidgetsAdapter(widgetEvents, pluginId, pluginName);
 
     public List<IActionHandler> Actions { get; } = [];
     public List<IVariableProvider> VariableProviders { get; } = [];

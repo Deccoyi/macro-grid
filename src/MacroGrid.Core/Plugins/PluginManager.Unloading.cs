@@ -29,6 +29,7 @@ public sealed partial class PluginManager
 
         DisposeAll(running.Host, id, running.Instance);
         statusRegistry.RemovePlugin(id);
+        widgetEvents?.Forget(id);
         localizer?.Unregister(id);
         entry.Running = null;
         RefreshUnsignedNotice();
