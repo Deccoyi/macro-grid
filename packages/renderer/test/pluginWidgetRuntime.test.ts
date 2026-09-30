@@ -48,7 +48,7 @@ afterEach(() => {
   for (const c of cleanups.splice(0)) c();
 });
 
-function setup(hostOverrides: Partial<PluginWidgetHost> = {}) {
+function setup(hostOverrides: Partial<PluginWidgetHost> = {}, runtimeOptions: { onLiveChange?: (plugins: string[]) => void } = {}) {
   const { clock, advance } = fakeClock();
   const started: Started[] = [];
   const terminated: string[] = [];
@@ -66,7 +66,7 @@ function setup(hostOverrides: Partial<PluginWidgetHost> = {}) {
       },
     };
   };
-  const runtime = new PluginWidgetRuntime({ frameStarter, clock });
+  const runtime = new PluginWidgetRuntime({ frameStarter, clock, ...runtimeOptions });
   const listeners = new Map<string, PluginWidgetListener>();
   const host = {
     mode: "run",
@@ -95,10 +95,10 @@ function setup(hostOverrides: Partial<PluginWidgetHost> = {}) {
   });
 
   let n = 0;
-  const mount = async (extra: Partial<PluginWidgetRuntimeInfo> = {}, mountExtra: { states?: PluginWidgetState[]; widgetId?: string } = {}) => {
+  const mount = async (extra: Partial<PluginWidgetRuntimeInfo> = {}, mountExtra: { states?: PluginWidgetState[]; widgetId?: string; plugin?: string } = {}) => {
     const widgetId = mountExtra.widgetId ?? `w${++n}`;
     const instance = runtime.mount({
-      widgetId, container, info: infoOf(extra), settings: { source: "sys.cpu", max: 5 }, host, width: 200, height: 100, dpr: 3,
+      widgetId, plugin: mountExtra.plugin, container, info: infoOf(extra), settings: { source: "sys.cpu", max: 5 }, host, width: 200, height: 100, dpr: 3,
       onState: (s) => mountExtra.states?.push(s),
     });
     await settle();
@@ -247,6 +247,20 @@ describe("plugin widget runtime", () => {
     d.dispose();
     await settle();
     expect(e.current.kind).not.toBe("stopped");
+  });
+
+  it("tells which plugins have live widgets, before a worker starts and after the last one of a plugin ends", async () => {
+    const seen: string[][] = [];
+    const { mount } = setup({}, { onLiveChange: (plugins) => seen.push(plugins) });
+
+    const a = (await mount({}, { plugin: "gauges" })).instance;
+    const b = (await mount({}, { plugin: "clock" })).instance;
+    const c = (await mount({}, { plugin: "gauges" })).instance;
+    a.dispose();
+    c.dispose();
+    b.dispose();
+
+    expect(seen).toEqual([["gauges"], ["clock", "gauges"], ["clock", "gauges"], ["clock", "gauges"], ["clock"], []]);
   });
 
   it("scales every widget down when the sum of their frame caps passes the budget", async () => {

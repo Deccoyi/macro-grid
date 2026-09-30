@@ -30,10 +30,17 @@ export interface PluginWidgetRuntimeOptions {
   /** Makes the sandboxed frame with the canvas and the worker; defaults to the real one. Tests use a fake. */
   frameStarter?: FrameStarter;
   clock?: RuntimeClock;
+  /**
+   * Called before a worker starts and after one ends, with the ids of the plugins whose widgets are live (starting, running or paused). The phone
+   * app keeps the list where it survives a crash of the web view, so it can tell which plugins were running when the app died.
+   */
+  onLiveChange?: (plugins: string[]) => void;
 }
 
 export interface MountOptions {
   widgetId: string;
+  /** The id of the plugin the widget belongs to. */
+  plugin?: string;
   container: HTMLElement;
   info: PluginWidgetRuntimeInfo;
   settings: Record<string, unknown>;
@@ -62,6 +69,16 @@ export class PluginWidgetRuntime {
   constructor(options: PluginWidgetRuntimeOptions = {}) {
     this.clock = options.clock ?? realClock;
     this.frameStarter = options.frameStarter ?? startWidgetFrame;
+    this.onLiveChange = options.onLiveChange;
+  }
+
+  private readonly onLiveChange: ((plugins: string[]) => void) | undefined;
+
+  private notifyLive(): void {
+    if (!this.onLiveChange) return;
+    const plugins = new Set<string>();
+    for (const i of this.live) if (i.plugin) plugins.add(i.plugin);
+    this.onLiveChange([...plugins].sort());
   }
 
   /** Mounts one widget. It never throws: a widget that cannot start ends up stopped with a reason. */
@@ -111,6 +128,7 @@ export class PluginWidgetRuntime {
     this.waiting.delete(instance);
     this.live.add(instance);
     this.rebalance();
+    this.notifyLive();
     return null;
   }
 
@@ -122,6 +140,7 @@ export class PluginWidgetRuntime {
   /** @internal */
   release(instance: PluginWidgetInstance): void {
     if (this.live.delete(instance)) {
+      this.notifyLive();
       this.rebalance();
       this.startWaiting();
     }
@@ -176,6 +195,10 @@ export class PluginWidgetInstance {
 
   get verified(): boolean {
     return this.options.info.verified === true;
+  }
+
+  get plugin(): string | undefined {
+    return this.options.plugin;
   }
 
   get fpsCap(): number {

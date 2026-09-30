@@ -9,7 +9,9 @@ export type PluginWidgetUnavailable =
   /** The server did not send the widget's code (an older app or server). */
   | "unsupported"
   /** Plugin widgets are switched off on this device. */
-  | "off";
+  | "off"
+  /** The device switched this plugin's widgets off because they crashed the app. */
+  | "crashedOff";
 
 /** What the server adds to a `plugin-widget` (`props.runtime`); never saved in a profile. */
 export interface PluginWidgetRuntimeInfo {

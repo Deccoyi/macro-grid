@@ -10,6 +10,8 @@ export interface PluginWidgetContextValue {
   host: PluginWidgetHost;
   /** False when plugin widgets are switched off on this device. */
   enabled?: boolean;
+  /** Ids of plugins whose widgets the device switched off after a crash: their widgets draw a placeholder and never start. */
+  disabledPlugins?: ReadonlySet<string>;
   texts?: Partial<PluginWidgetTexts>;
 }
 
@@ -34,6 +36,7 @@ export const DEFAULT_PLUGIN_WIDGET_TEXTS: PluginWidgetTexts = {
     noWidget: "The plugin has no such widget",
     unsupported: "This app cannot show plugin widgets",
     off: "Plugin widgets are off on this device",
+    crashedOff: "Switched off: this plugin's widgets crashed the app",
   },
   stopped: {
     frozen: "Stopped: not responding",
@@ -73,7 +76,9 @@ export function PluginWidgetContent({ widget, live = true }: PluginWidgetContent
   const keptMounted = useRef(false);
   const settings = (widget.props?.settings as Record<string, unknown> | undefined) ?? EMPTY;
   const settingsKey = JSON.stringify(settings);
-  const runnable = !!context && context.enabled !== false && !!info?.code && !info.unavailable;
+  const pluginId = typeof widget.props?.plugin === "string" ? widget.props.plugin : undefined;
+  const crashedOff = !!pluginId && context?.disabledPlugins?.has(pluginId) === true;
+  const runnable = !!context && context.enabled !== false && !crashedOff && !!info?.code && !info.unavailable;
   const mountWanted = runnable && (live || (keepLoaded && keptMounted.current));
 
   useEffect(() => {
@@ -82,6 +87,7 @@ export function PluginWidgetContent({ widget, live = true }: PluginWidgetContent
     const rect = box.getBoundingClientRect();
     const created = context.runtime.mount({
       widgetId: widget.id,
+      plugin: pluginId,
       container: box,
       info,
       settings,
@@ -141,7 +147,7 @@ export function PluginWidgetContent({ widget, live = true }: PluginWidgetContent
   };
 
   // No runtime yet while a host is still fetching it (the editor asks per widget): the cell stays empty until it arrives.
-  const reason: PluginWidgetUnavailable | null = !context ? "unsupported" : context.enabled === false ? "off" : !info ? null : (info.unavailable ?? (info.code ? null : "unsupported"));
+  const reason: PluginWidgetUnavailable | null = !context ? "unsupported" : context.enabled === false ? "off" : crashedOff ? "crashedOff" : !info ? null : (info.unavailable ?? (info.code ? null : "unsupported"));
   if (reason) return <PlaceholderContent label={`${label}: ${texts.unavailable[reason]}`} />;
 
   return (
