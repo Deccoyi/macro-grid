@@ -49,6 +49,8 @@ Where the project stands. The server and the SDK are at 1.0.0 and under active d
   recommendation (not a hard limit), a crash guard, a `storage` option, per-widget option switches, plugin SVG icons, a `Color` setting kind, a
   Toolbox search and grouping menu, and Diagnostic Messages in the editor. Example plugins Hello Gauge and Hello Weather
   ([design/plugin-widgets.md](design/plugin-widgets.md)).
+- **The `web` widget:** an embedded page (a live chat, an alerts panel) in an iframe with popups, downloads and navigation blocked, a "Change web page" button
+  action, and on the phone a crash guard, a recommended number of live pages and a "Keep loaded" option. Still marked experimental in the editor.
 - **Security hardening:** an encrypted connection (TLS, see "Done" above), device tokens and plugin secrets encrypted at rest, pairing rate limits and
   a security log, a security event log, dependency vulnerability scanning and an SBOM in CI, and only official signed C# plugins load
   ([design/security-hardening.md](design/security-hardening.md)).
@@ -61,12 +63,6 @@ The order of the bigger pieces of work, and their plans, are in [plans/README.md
   above), plain `ws://`/`http://` (port 9820) stay open unconditionally; a preference to turn them off is not built yet. Default
   on for now (the browser deck cannot use `wss://` at all, and older paired phones have no TLS support), default off starting
   the next MAJOR version once both are settled. See [design/security-hardening.md](design/security-hardening.md), part A.
-- **A branded installer:** done.
-- **A much faster install and update (fewer files):** done.
-- **Weather example layout on tall, narrow cells:** the Hello Weather widget leaves a large gap between the picture and the temperature in a tall
-  cell; the picture and text should be spaced by the cell's shape.
-- **The `web` widget** (an embedded page such as a live chat, or an alerts panel): an iframe with popups, downloads and device features blocked, plus a
-  "Change web page" button action.
 - **A live-stream chat plugin** (one plugin per streaming platform, sharing one chat view): a custom widget that shows the channel's live chat, with
   a per-chatter menu (ban, or one of a few preset timeouts), plus actions for ad breaks, switching the stream category between saved favorites, and
   chat modes where the platform's API offers them. Needs deciding first, per platform: how chat is received without a server of our own (a platform
