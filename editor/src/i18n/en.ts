@@ -205,6 +205,8 @@ export const en: Record<DictKey, string | ((...args: string[]) => string)> = {
   "update.error.start": "The installer could not be started.",
   "preferences.updates.auto": "Check for updates automatically",
   "preferences.updates.auto.hint": "Every few hours Macro Grid contacts github.com, and only that, to look for a new version. Nothing about you is sent. If you switch this off, you can still check by hand with \"Check for updates\".",
+  "preferences.unencrypted": "Allow unencrypted connections",
+  "preferences.unencrypted.hint": "Turn this off to make other devices connect only over the encrypted port. The browser deck and phones paired before encryption existed stop working; the phone app pairs again by scanning the code. Connections already open stay until they end.",
   "preferences.updates.prerelease": "Include pre-releases (alpha versions)",
 
   "header.preview": "Preview",

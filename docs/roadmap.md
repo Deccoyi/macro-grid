@@ -51,6 +51,7 @@ Where the project stands. The server and the SDK are at 1.0.0 and under active d
   ([design/plugin-widgets.md](design/plugin-widgets.md)).
 - **The `web` widget:** an embedded page (a live chat, an alerts panel) in an iframe with popups, downloads and navigation blocked, a "Change web page" button
   action, and on the phone a crash guard, a recommended number of live pages and a "Keep loaded" option. Still marked experimental in the editor.
+- **"Allow unencrypted connections" preference:** off makes the plain port answer only this computer. Default on; default off is planned for the next MAJOR version once the browser deck and old paired phones are settled ([design/security-hardening.md](design/security-hardening.md)).
 - **Security hardening:** an encrypted connection (TLS, see "Done" above), device tokens and plugin secrets encrypted at rest, pairing rate limits and
   a security log, a security event log, dependency vulnerability scanning and an SBOM in CI, and only official signed C# plugins load
   ([design/security-hardening.md](design/security-hardening.md)).
@@ -59,10 +60,6 @@ Where the project stands. The server and the SDK are at 1.0.0 and under active d
 
 The order of the bigger pieces of work, and their plans, are in [plans/README.md](plans/README.md). The items below have no plan file yet.
 
-- **The "Allow unencrypted connections" preference:** now that the server and the phone app both support `wss://` (see "Done"
-  above), plain `ws://`/`http://` (port 9820) stay open unconditionally; a preference to turn them off is not built yet. Default
-  on for now (the browser deck cannot use `wss://` at all, and older paired phones have no TLS support), default off starting
-  the next MAJOR version once both are settled. See [design/security-hardening.md](design/security-hardening.md), part A.
 - **A live-stream chat plugin** (one plugin per streaming platform, sharing one chat view): a custom widget that shows the channel's live chat, with
   a per-chatter menu (ban, or one of a few preset timeouts), plus actions for ad breaks, switching the stream category between saved favorites, and
   chat modes where the platform's API offers them. Needs deciding first, per platform: how chat is received without a server of our own (a platform

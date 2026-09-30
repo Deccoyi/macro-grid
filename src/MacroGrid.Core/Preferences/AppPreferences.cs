@@ -54,6 +54,11 @@ public sealed class AppPreferences
     /// <summary>Whether pre-releases (for example an alpha) count as updates. On by default while every release is an alpha.</summary>
     public bool IncludePreReleases { get; set; } = true;
 
+    /// <summary>Whether other devices may connect over the plain, unencrypted port (<c>ws://</c>, <c>http://</c>, and with them the browser deck).
+    /// On by default, because the browser deck and phones paired before encryption existed need it; off makes the server answer only encrypted
+    /// connections from other devices. This computer is always allowed. See docs/design/security-hardening.md, part A.</summary>
+    public bool AllowUnencrypted { get; set; } = true;
+
     /// <summary>Whether each Inspector section ("appearance", "typeFields", "actions", "css") is
     /// collapsed — only entries the user actually toggled are stored; a missing key falls back to that
     /// section's own hardcoded default (see Inspector.tsx's SECTION_DEFAULTS).</summary>

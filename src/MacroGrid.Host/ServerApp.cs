@@ -1,6 +1,7 @@
 using MacroGrid.Core.Devices;
 using MacroGrid.Core.Diagnostics;
 using MacroGrid.Core.Plugins;
+using MacroGrid.Core.Preferences;
 using MacroGrid.Core.Profiles;
 using MacroGrid.Core.Security;
 using MacroGrid.Core.Sessions;
@@ -72,6 +73,23 @@ internal static class ServerApp
         if (deviceStore.UnreadableOnLoad > 0)
             app.Services.GetRequiredService<ILoggerFactory>().CreateLogger("MacroGrid.Security").LogWarning(SecurityEvents.DeviceTokenUnreadable,
                 "Security: {Count} paired device(s) dropped because their token cannot be decrypted by this Windows user on this PC; they have to pair again", deviceStore.UnreadableOnLoad);
+
+        // "Allow unencrypted connections" off: the plain port answers only this computer (PlainConnectionPolicy).
+        var preferences = app.Services.GetRequiredService<PreferencesStore>();
+        var refusedPlain = 0;
+        app.Use(async (ctx, next) =>
+        {
+            if (!PlainConnectionPolicy.IsAllowed(preferences.Get().AllowUnencrypted, ctx.Connection.LocalPort, Port, ctx.Connection.RemoteIpAddress))
+            {
+                if (Interlocked.Exchange(ref refusedPlain, 1) == 0)
+                    app.Services.GetRequiredService<ILoggerFactory>().CreateLogger("MacroGrid.Security").LogInformation(
+                        "Security: a connection on the unencrypted port was refused because unencrypted connections are switched off (logged once per start)");
+                ctx.Response.StatusCode = StatusCodes.Status403Forbidden;
+                await ctx.Response.WriteAsync("Unencrypted connections are switched off. Use the encrypted port.");
+                return;
+            }
+            await next();
+        });
 
         app.UseWebSockets(new WebSocketOptions { KeepAliveInterval = TimeSpan.FromSeconds(15) });
         app.Map("/ws", async (HttpContext http, ClientHub hub) =>

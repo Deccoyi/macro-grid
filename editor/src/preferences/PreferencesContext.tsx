@@ -17,6 +17,7 @@ const DEFAULTS: AppPreferences = {
   autostartMode: "tray",
   checkForUpdates: true,
   includePreReleases: true,
+  allowUnencrypted: true,
   dockLayoutJson: "",
   dockLayoutProfiles: [],
 };
@@ -46,6 +47,8 @@ interface PreferencesContextValue {
   setCheckForUpdates: (enabled: boolean) => void;
   includePreReleases: boolean;
   setIncludePreReleases: (enabled: boolean) => void;
+  allowUnencrypted: boolean;
+  setAllowUnencrypted: (allowed: boolean) => void;
   /** True once the initial GET /api/preferences has resolved (or failed) — callers that must not act on
    * still-default values (like restoring the saved dock layout) wait for this. */
   loaded: boolean;
@@ -181,6 +184,11 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
     [prefs, persist],
   );
 
+  const setAllowUnencrypted = useCallback(
+    (allowUnencrypted: boolean) => persist({ ...prefs, allowUnencrypted }),
+    [prefs, persist],
+  );
+
   const setDockLayoutJson = useCallback(
     (dockLayoutJson: string) => persist({ ...prefs, dockLayoutJson }),
     [prefs, persist],
@@ -231,6 +239,8 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
       checkForUpdates: prefs.checkForUpdates,
       setCheckForUpdates,
       includePreReleases: prefs.includePreReleases,
+      allowUnencrypted: prefs.allowUnencrypted,
+      setAllowUnencrypted,
       setIncludePreReleases,
       loaded: loadedState,
       dockLayoutJson: prefs.dockLayoutJson,
@@ -242,7 +252,7 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
     [
       prefs, savedLanguage, loadedState, setTheme, setLanguage, addPreviewProfile, removePreviewProfile,
       setInspectorSectionCollapsed, dismissNotice, setDefaultProfileId, setLaunchMode, setAutostartMode, setCheckForUpdates,
-      setIncludePreReleases, setDockLayoutJson, saveDockLayoutProfile, deleteDockLayoutProfile,
+      setIncludePreReleases, setAllowUnencrypted, setDockLayoutJson, saveDockLayoutProfile, deleteDockLayoutProfile,
     ],
   );
 
