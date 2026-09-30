@@ -1,3 +1,4 @@
+import { widgetOptionOf } from "./widgetPermission";
 import { useEffect, useState } from "react";
 import { ArrowLeft, ExternalLink, FolderOpen, Link as LinkIcon, Plus, RefreshCw, RotateCw, Search, Settings, Trash2 } from "lucide-react";
 import { api } from "../api/client";
@@ -247,6 +248,8 @@ export function PluginsWindow() {
 
   const permissionText = (permission: string) => {
     if (permission === "variables" || permission === "actions" || permission === "input") return t(`plugins.permission.${permission}`);
+    const widgetOption = widgetOptionOf(permission);
+    if (widgetOption) return t(`plugins.permission.widget.${widgetOption}`);
     if (permission.startsWith("http:")) {
       const target = permission.slice(5);
       return t(`plugins.permission.http.${httpTargetScope(target)}`, target);

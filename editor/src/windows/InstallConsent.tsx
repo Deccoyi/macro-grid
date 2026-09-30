@@ -1,3 +1,4 @@
+import { widgetOptionOf } from "./widgetPermission";
 import type { ReactNode } from "react";
 import { Braces, FolderOpen, Globe, Keyboard, ShieldAlert, ShieldCheck, Terminal, TriangleAlert, Zap } from "lucide-react";
 import { useT } from "../i18n/I18nContext";
@@ -95,6 +96,8 @@ function PermissionRow({ permission }: { permission: string }) {
   if (permission === "variables") return <Row icon={<Braces size={14} />}>{t("plugins.permission.variables")}</Row>;
   if (permission === "actions") return <Row icon={<Zap size={14} />}>{t("plugins.permission.actions")}</Row>;
   if (permission === "input") return <Row icon={<Keyboard size={14} />}>{t("plugins.permission.input")}</Row>;
+  const widgetOption = widgetOptionOf(permission);
+  if (widgetOption) return <Row icon={<ShieldCheck size={14} />}>{t(`plugins.permission.widget.${widgetOption}`)}</Row>;
   if (permission.startsWith("http:")) {
     const target = permission.slice(5);
     const scope = httpTargetScope(target);
