@@ -35,6 +35,10 @@ public sealed class WidgetStateService : IHostedService, IDisposable
     private readonly HashSet<string> _dirtyVariables = [];
     private readonly Lock _dirtyLock = new();
     private Timer? _timer;
+    private int _flushing;
+
+    /// <summary>A client that does not take a frame for this long is dropped, so it cannot hold up the others; a phone reconnects by itself.</summary>
+    internal TimeSpan SendTimeout { get; set; } = TimeSpan.FromSeconds(10);
 
     public WidgetStateService(VariableStore variables, SessionRegistry sessions, ProfileStore profiles, ToggleStateStore toggles, LayoutSender layouts, WebViewState webViews, ILogger<WidgetStateService> logger,
         PluginWidgetCatalog? pluginWidgets = null)
@@ -76,7 +80,7 @@ public sealed class WidgetStateService : IHostedService, IDisposable
 
     public Task StartAsync(CancellationToken cancellationToken)
     {
-        _timer = new Timer(_ => _ = FlushAsync(), null, TimeSpan.FromMilliseconds(100), TimeSpan.FromMilliseconds(100));
+        _timer = new Timer(_ => _ = FlushOnceAsync(), null, TimeSpan.FromMilliseconds(100), TimeSpan.FromMilliseconds(100));
         return Task.CompletedTask;
     }
 
@@ -247,7 +251,22 @@ public sealed class WidgetStateService : IHostedService, IDisposable
         lock (_dirtyLock) _dirtyVariables.Add(name);
     }
 
-    private async Task FlushAsync()
+    /// <summary>One flush at a time: a flush that is still sending (a slow client) is not overlapped by the next tick, the variables
+    /// that changed meanwhile simply wait in the dirty set and go out together in the next flush.</summary>
+    private async Task FlushOnceAsync()
+    {
+        if (Interlocked.CompareExchange(ref _flushing, 1, 0) != 0) return;
+        try
+        {
+            await FlushAsync();
+        }
+        finally
+        {
+            Volatile.Write(ref _flushing, 0);
+        }
+    }
+
+    internal async Task FlushAsync()
     {
         HashSet<string> dirty;
         lock (_dirtyLock)
@@ -257,51 +276,66 @@ public sealed class WidgetStateService : IHostedService, IDisposable
             _dirtyVariables.Clear();
         }
 
-        foreach (var session in _sessions.All)
+        // Each client is served on its own, so one that is slow to take frames does not delay the rest.
+        var sessions = _sessions.All;
+        if (sessions.Count == 1)
+            await FlushSessionAsync(sessions.First(), dirty);
+        else
+            await Task.WhenAll(sessions.Select(s => FlushSessionAsync(s, dirty)));
+    }
+
+    private async Task FlushSessionAsync(ClientSession session, HashSet<string> dirty)
+    {
+        if (!session.IsIdentified || session.ProfileId is null || session.PageId is null) return;
+        var page = _profiles.Get(session.ProfileId)?.FindPage(session.PageId);
+        if (page is null) return;
+
+        foreach (var widget in page.Widgets)
         {
-            if (!session.IsIdentified || session.ProfileId is null || session.PageId is null) continue;
-            var page = _profiles.Get(session.ProfileId)?.FindPage(session.PageId);
-            if (page is null) continue;
+            string? text = null;
+            if (DynamicText.Dependencies(widget).Any(dirty.Contains) && DynamicText.Resolve(widget, _variables) is { } rendered
+                && (!session.SentTexts.TryGetValue(widget.Id, out var prevText) || prevText != rendered))
+                text = rendered;
 
-            foreach (var widget in page.Widgets)
+            Dictionary<string, string>? style = null;
+            if (widget.Dynamic.Count > 0 && BindingsDependOn(widget.Dynamic.Values, dirty))
             {
-                string? text = null;
-                if (DynamicText.Dependencies(widget).Any(dirty.Contains) && DynamicText.Resolve(widget, _variables) is { } rendered
-                    && (!session.SentTexts.TryGetValue(widget.Id, out var prevText) || prevText != rendered))
-                    text = rendered;
+                var resolved = ResolveDynamicStyle(widget);
+                if (resolved is not null && StyleChanged(session.SentStyles.GetValueOrDefault(widget.Id), resolved))
+                    style = resolved;
+            }
 
-                Dictionary<string, string>? style = null;
-                if (widget.Dynamic.Count > 0 && BindingsDependOn(widget.Dynamic.Values, dirty))
-                {
-                    var resolved = ResolveDynamicStyle(widget);
-                    if (resolved is not null && StyleChanged(session.SentStyles.GetValueOrDefault(widget.Id), resolved))
-                        style = resolved;
-                }
+            double? value = null;
+            var variableName = widget.Props?["valueVariable"]?.GetValue<string>();
+            if (!string.IsNullOrEmpty(variableName) && dirty.Contains(variableName))
+            {
+                var resolved = ResolveBoundValue(widget);
+                if (resolved is not null && (!session.SentValues.TryGetValue(widget.Id, out var prevValue) || prevValue != resolved))
+                    value = resolved;
+            }
 
-                double? value = null;
-                var variableName = widget.Props?["valueVariable"]?.GetValue<string>();
-                if (!string.IsNullOrEmpty(variableName) && dirty.Contains(variableName))
-                {
-                    var resolved = ResolveBoundValue(widget);
-                    if (resolved is not null && (!session.SentValues.TryGetValue(widget.Id, out var prevValue) || prevValue != resolved))
-                        value = resolved;
-                }
+            if (text is null && style is null && value is null) continue;
 
-                if (text is null && style is null && value is null) continue;
+            if (text is not null) session.SentTexts[widget.Id] = text;
+            if (style is not null) session.SentStyles[widget.Id] = style;
+            if (value is not null) session.SentValues[widget.Id] = value.Value;
 
-                if (text is not null) session.SentTexts[widget.Id] = text;
-                if (style is not null) session.SentStyles[widget.Id] = style;
-                if (value is not null) session.SentValues[widget.Id] = value.Value;
-
-                try
-                {
-                    await session.SendAsync(MessageTypes.WidgetState, new WidgetStateMessage(widget.Id, Text: text, Value: value, Style: style is null ? null : _layouts.ForClient(session, style)));
-                }
-                catch (Exception ex) when (ex is IOException or ObjectDisposedException)
-                {
-                    // Client disconnected between the snapshot above and the send; ClientHub will clean up the session.
-                    _logger.LogDebug(ex, "Could not push widget.state to {Session}", session.Id);
-                }
+            try
+            {
+                using var timeout = new CancellationTokenSource(SendTimeout);
+                await session.SendAsync(MessageTypes.WidgetState, new WidgetStateMessage(widget.Id, Text: text, Value: value, Style: style is null ? null : _layouts.ForClient(session, style)), timeout.Token);
+            }
+            catch (OperationCanceledException)
+            {
+                // The client stopped taking frames; closing its socket ends its session, and it reconnects with fresh state.
+                _logger.LogWarning("Client {Session} did not accept a widget.state in {Seconds}s; dropping the connection", session.Id, SendTimeout.TotalSeconds);
+                session.Socket.Abort();
+                return;
+            }
+            catch (Exception ex) when (ex is IOException or ObjectDisposedException)
+            {
+                // Client disconnected between the snapshot above and the send; ClientHub will clean up the session.
+                _logger.LogDebug(ex, "Could not push widget.state to {Session}", session.Id);
             }
         }
     }
