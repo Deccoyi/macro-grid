@@ -4,7 +4,9 @@ import { api } from "../api/client";
 import { useT } from "../i18n/I18nContext";
 import type { DictKey } from "../i18n/tr";
 import { usePluginWidgets } from "../state/usePluginWidgets";
+import { useOffPlugins } from "../state/useOffPlugins";
 import { EditorPluginWidgetHost } from "./EditorPluginWidgetHost";
+import { reportRunning, takeCrash } from "./widgetCrashGuard";
 
 /**
  * Everything the canvas needs to show plugin widgets running: the runtime, the editor host, the words for the placeholders, and a function that gives a
@@ -13,7 +15,12 @@ import { EditorPluginWidgetHost } from "./EditorPluginWidgetHost";
 export function usePluginWidgetPreview(widgets: Widget[], variables: Record<string, unknown>) {
   const { t, lang } = useT();
   const available = usePluginWidgets();
-  const runtime = useMemo(() => new PluginWidgetRuntime(), []);
+  // A reload after the web view died switches off the plugins that were running; this has to happen before any widget starts.
+  const runtime = useMemo(() => {
+    takeCrash();
+    return new PluginWidgetRuntime({ onLiveChange: reportRunning });
+  }, []);
+  const off = useOffPlugins();
   const host = useMemo(() => new EditorPluginWidgetHost(lang, (id, message) => console.warn("Plugin widget", id, message)), [lang]);
   useEffect(() => () => runtime.dispose(), [runtime]);
 
@@ -50,7 +57,7 @@ export function usePluginWidgetPreview(widgets: Widget[], variables: Record<stri
       unavailable: {
         missing: k("unavailable.missing"), disabled: k("unavailable.disabled"), needsApproval: k("unavailable.needsApproval"),
         incompatible: k("unavailable.incompatible"), invalid: k("unavailable.invalid"), noWidget: k("unavailable.noWidget"),
-        unsupported: k("unavailable.unsupported"), off: k("unavailable.off"),
+        unsupported: k("unavailable.unsupported"), off: k("unavailable.off"), crashedOff: k("unavailable.crashedOff"),
       },
       stopped: {
         frozen: k("stopped.frozen"), startTimeout: k("stopped.startTimeout"), tooBusy: k("stopped.tooBusy"),
@@ -59,7 +66,7 @@ export function usePluginWidgetPreview(widgets: Widget[], variables: Record<stri
     };
   }, [t]);
 
-  const context = useMemo<PluginWidgetContextValue>(() => ({ runtime, host, texts }), [runtime, host, texts]);
+  const context = useMemo<PluginWidgetContextValue>(() => ({ runtime, host, texts, disabledPlugins: off }), [runtime, host, texts, off]);
 
   /** The widget as the renderer draws it: with `props.runtime`, and the host told which plugin widget it is. */
   const withRuntime = (widget: Widget): Widget => {
