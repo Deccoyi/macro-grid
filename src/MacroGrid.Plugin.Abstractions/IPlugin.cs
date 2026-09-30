@@ -55,8 +55,9 @@ public interface IPluginHost
     /// <summary>Pushes events to the plugin's own custom widgets (<see cref="PluginManifest.Widgets"/>).</summary>
     IPluginWidgets Widgets { get; }
 
-    /// <summary>Reports problems the person can fix to the editor's Error List.</summary>
-    IPluginDiagnostics Diagnostics { get; }
+    /// <summary>Reports problems the person can fix to the editor's Error List. Has a default (nothing is reported), so a test double that does
+    /// not care keeps compiling; the real host always overrides it. Error lines are display only and never stop anything.</summary>
+    IPluginDiagnostics Diagnostics => NullPluginDiagnostics.Instance;
 }
 
 /// <summary>Encrypts one plugin's own secret before it is written to disk and decrypts it when read back. Backed

@@ -21,8 +21,8 @@ public sealed class PluginDiagnosticsTests : IDisposable
         try { Directory.Delete(_dir, recursive: true); } catch (IOException) { } catch (UnauthorizedAccessException) { }
     }
 
-    private PluginHostCollector Host(string id = "t", string name = "Test") =>
-        new("1.4.0", _dir, id, new PluginStatusRegistry(), NullLogger.Instance, pluginName: name, problems: _problems);
+    private PluginHostCollector Host(string id = "t", string name = "Test", double rate = 10000) =>
+        new("1.4.0", _dir, id, new PluginStatusRegistry(), NullLogger.Instance, pluginName: name, problems: _problems, diagnosticsCallsPerSecond: rate);
 
     [Fact]
     public void A_reported_problem_shows_up_under_the_plugin_with_its_severity()
@@ -101,5 +101,113 @@ public sealed class PluginDiagnosticsTests : IDisposable
 
         host.Diagnostics.Report(PluginDiagnosticLevel.Error, "nobody listens");
         host.Diagnostics.Resolve("x");
+    }
+
+    [Fact]
+    public void A_report_with_a_key_replaces_the_line_of_that_key_instead_of_adding_another()
+    {
+        var diagnostics = Host().Diagnostics;
+        diagnostics.Report(PluginDiagnosticLevel.Warning, "Retrying in 5 s", "link");
+        diagnostics.Report(PluginDiagnosticLevel.Error, "Gave up", "link");
+
+        var problem = Assert.Single(_problems.Snapshot());
+        Assert.Equal(("Gave up", ProblemSeverity.Error), (problem.Message, problem.Severity));
+    }
+
+    [Fact]
+    public void Updating_a_key_does_not_count_against_the_cap()
+    {
+        var diagnostics = Host().Diagnostics;
+        for (var i = 0; i < 20; i++) diagnostics.Report(PluginDiagnosticLevel.Info, "m", "k" + i);
+        diagnostics.Report(PluginDiagnosticLevel.Info, "changed", "k3");
+
+        Assert.Equal(20, _problems.Snapshot().Count);
+        Assert.Contains(_problems.Snapshot(), p => p.Message == "changed");
+    }
+
+    [Fact]
+    public void Clear_removes_every_line_the_plugin_reported_and_no_other_plugin_s()
+    {
+        Host("b", "B").Diagnostics.Report(PluginDiagnosticLevel.Info, "other");
+        var mine = Host().Diagnostics;
+        mine.Report(PluginDiagnosticLevel.Info, "one");
+        mine.Report(PluginDiagnosticLevel.Info, "two", "k");
+
+        mine.Clear();
+
+        Assert.Equal("b", Assert.Single(_problems.Snapshot()).Source);
+    }
+
+    [Theory]
+    [InlineData("has space")]
+    [InlineData("new\nline")]
+    [InlineData("")]
+    public void A_bad_key_is_dropped_without_an_exception(string key)
+    {
+        Host().Diagnostics.Report(PluginDiagnosticLevel.Info, "x", key);
+
+        Assert.Empty(_problems.Snapshot());
+    }
+
+    [Fact]
+    public void An_unknown_level_is_dropped_without_an_exception()
+    {
+        Host().Diagnostics.Report((PluginDiagnosticLevel)99, "x");
+
+        Assert.Empty(_problems.Snapshot());
+    }
+
+    [Fact]
+    public void Calls_faster_than_ten_a_second_are_dropped()
+    {
+        var diagnostics = Host(rate: 10).Diagnostics;
+        for (var i = 0; i < 100; i++) diagnostics.Report(PluginDiagnosticLevel.Info, "line " + i, "k" + i);
+
+        Assert.InRange(_problems.Snapshot().Count, 10, 12);
+    }
+
+    [Fact]
+    public void After_the_host_is_retired_calls_do_nothing()
+    {
+        var host = Host();
+        host.Diagnostics.Report(PluginDiagnosticLevel.Info, "before");
+        host.Retire();
+        _problems.Clear("t");
+
+        host.Diagnostics.Report(PluginDiagnosticLevel.Error, "late");
+
+        Assert.Empty(_problems.Snapshot());
+    }
+
+    [Fact]
+    public void Direction_overrides_and_zero_width_characters_are_removed()
+    {
+        Host().Diagnostics.Report(PluginDiagnosticLevel.Info, "a‮b​c⁦d﻿e");
+
+        Assert.Equal("abcde", Assert.Single(_problems.Snapshot()).Message);
+    }
+
+    [Fact]
+    public void A_host_that_does_not_override_diagnostics_hands_out_a_silent_default()
+    {
+        IPluginHost host = new MinimalHost();
+
+        host.Diagnostics.Report(PluginDiagnosticLevel.Error, "x");
+        host.Diagnostics.Clear();
+    }
+
+    private sealed class MinimalHost : IPluginHost
+    {
+        public string ServerVersion => "";
+        public string SdkVersion => "";
+        public string DataDirectory => "";
+        public IPluginSecrets Secrets => throw new NotSupportedException();
+        public IPluginWidgets Widgets => throw new NotSupportedException();
+        public void Log(string message) { }
+        public void RegisterAction(IActionHandler handler) { }
+        public void RegisterVariableProvider(IVariableProvider provider) { }
+        public void RegisterSettingsPage(IPluginSettingsPage page) { }
+        public IPluginStatusItem CreateStatusItem(string id) => throw new NotSupportedException();
+        public void RegisterIconPack(IIconPackSource iconPack) { }
     }
 }

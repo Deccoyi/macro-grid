@@ -1,3 +1,4 @@
+using MacroGrid.Core.Diagnostics;
 using MacroGrid.Plugin.Abstractions;
 using Microsoft.Extensions.Logging;
 
@@ -28,6 +29,8 @@ public sealed partial class PluginManager
         running.VariableStore.RemoveAll();
 
         DisposeAll(running.Host, id, running.Instance);
+        running.Host.Retire();
+        problems?.Resolve(id, ProblemCodes.PluginReported);
         statusRegistry.RemovePlugin(id);
         widgetEvents?.Forget(id);
         localizer?.Unregister(id);
