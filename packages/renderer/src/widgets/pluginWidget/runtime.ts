@@ -94,7 +94,7 @@ export class PluginWidgetRuntime {
   }
 
   /**
-   * How many workers may be live on this device, in all and of plugins that are not verified (`Infinity`: no limit). The defaults are only
+   * How many workers may be live on this device, in all and for each plugin that is not verified (`Infinity`: no limit). The defaults are only
    * defaults: the person may raise them (the phone differs from a tablet). Widgets that were refused start when the new limits allow it.
    */
   setLiveLimits(maxLive: number, maxLiveUnverified: number): void {
@@ -121,7 +121,8 @@ export class PluginWidgetRuntime {
 
   /** @internal Returns a reason when this widget may not start now. */
   admit(instance: PluginWidgetInstance): PluginWidgetStopReason | null {
-    if (this.live.size >= this.limits.maxLive || (!instance.verified && [...this.live].filter((i) => !i.verified).length >= this.limits.maxLiveUnverified)) {
+    const samePlugin = (i: PluginWidgetInstance) => !i.verified && i.plugin === instance.plugin;
+    if (this.live.size >= this.limits.maxLive || (!instance.verified && [...this.live].filter(samePlugin).length >= this.limits.maxLiveUnverified)) {
       this.waiting.add(instance);
       return "tooMany";
     }

@@ -226,6 +226,17 @@ describe("plugin widget runtime", () => {
     expect(signed.filter((i) => i.current.kind === "stopped")).toHaveLength(2); // 8 live in total: 2 unverified + 6 signed
   });
 
+  it("counts the widgets of a plugin that is not verified for each plugin, not all together", async () => {
+    const { mount } = setup();
+    const first = [];
+    const second = [];
+    for (let i = 0; i < 3; i++) first.push((await mount({ verified: false }, { plugin: "one" })).instance);
+    for (let i = 0; i < 3; i++) second.push((await mount({ verified: false }, { plugin: "two" })).instance);
+
+    expect(first.map((i) => i.current.kind)).toEqual(["starting", "starting", "stopped"]);
+    expect(second.map((i) => i.current.kind)).toEqual(["starting", "starting", "stopped"]);
+  });
+
   it("takes the limits from the device and starts the refused widgets when they are raised or a place frees up", async () => {
     const { runtime, mount } = setup();
     runtime.setLiveLimits(2, 1);
