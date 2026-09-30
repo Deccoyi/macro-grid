@@ -48,7 +48,7 @@ parent.postMessage({ type: "frame-ready" }, "*");
 `;
 
 export function frameSrcdoc(): string {
-  return `<meta http-equiv="Content-Security-Policy" content="${FRAME_CSP}"><style>html,body{margin:0;height:100%;background:transparent;overflow:hidden}canvas{display:block;width:100%;height:100%}</style><canvas id="c"></canvas><script>${FRAME_SCRIPT}<\/script>`;
+  return `<meta http-equiv="Content-Security-Policy" content="${FRAME_CSP}"><meta name="color-scheme" content="light"><style>html,body{margin:0;height:100%;background:transparent;overflow:hidden}canvas{display:block;width:100%;height:100%}</style><canvas id="c"></canvas><script>${FRAME_SCRIPT}<\/script>`;
 }
 
 /**
@@ -63,7 +63,7 @@ export const startWidgetFrame: FrameStarter = (id, container, script, port) => {
   frame.setAttribute("aria-hidden", "true");
   frame.setAttribute("data-widget-frame", id);
   frame.tabIndex = -1;
-  frame.style.cssText = "position:absolute;inset:0;width:100%;height:100%;border:0;background:transparent;pointer-events:none";
+  frame.style.cssText = "position:absolute;inset:0;width:100%;height:100%;border:0;background:transparent;pointer-events:none;color-scheme:light";
 
   return new Promise<WidgetFrame>((resolve, reject) => {
     let settled = false;
