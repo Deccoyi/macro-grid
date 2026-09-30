@@ -67,7 +67,7 @@ internal static class ProfileApi
             profiles.Delete(id) ? Results.NoContent() : ApiResults.BadRequest("The last profile cannot be deleted."));
 
         // .msprofile (a zip with the profile and a manifest naming the plugins it needs) or a plain profile JSON file.
-        api.MapPost("/browse/import-profile", async (IUiDialogService dialogs, PluginManager plugins, ActionDispatcher dispatcher) =>
+        api.MapPost("/browse/import-profile", async (IUiDialogService dialogs, PluginManager plugins, ActionDispatcher dispatcher, PluginWidgetCatalog widgetCatalog) =>
         {
             var (path, bytes) = await dialogs.OpenFileAsync("Import profile", "Macro Grid profile (*.msprofile;*.json)|*.msprofile;*.json");
             if (bytes is null) return Results.Json(new { path = (string?)null });
@@ -79,7 +79,8 @@ internal static class ProfileApi
             var missing = plugins.MissingPlugins(package.Manifest);
             var known = dispatcher.Handlers.Select(h => h.Type).ToHashSet(StringComparer.OrdinalIgnoreCase);
             var unknownTypes = ProfilePackage.ActionTypes(package.Profile).Where(t => !known.Contains(t)).ToList();
-            return ApiResults.Json(new { path, profile = package.Profile, missingPlugins = missing, unknownActionTypes = unknownTypes });
+            var clearedBindings = PluginWidgetProps.ClearOutsideBindings(package.Profile, widgetCatalog);
+            return ApiResults.Json(new { path, profile = package.Profile, missingPlugins = missing, unknownActionTypes = unknownTypes, clearedWidgetBindings = clearedBindings });
         });
 
         api.MapPost("/browse/export-profile", async (HttpRequest request, IUiDialogService dialogs, PluginManager plugins) =>

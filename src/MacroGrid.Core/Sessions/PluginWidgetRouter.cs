@@ -55,6 +55,8 @@ internal sealed class PluginWidgetSessionState
     /// <summary>Placed widget id to the last value sent per variable (as JSON text), so only changes go out.</summary>
     public readonly Dictionary<string, Dictionary<string, string>> Sent = new(StringComparer.Ordinal);
     public readonly Dictionary<string, TokenBucket> WidgetBuckets = new(StringComparer.Ordinal);
+    /// <summary>For <c>ready</c> and <c>subscribe</c>: a small burst, then two a second, per widget.</summary>
+    public readonly Dictionary<string, TokenBucket> LightBuckets = new(StringComparer.Ordinal);
     public readonly TokenBucket DeviceBucket = new(PluginWidgetRouter.MaxRequestsPerSecondPerDevice, PluginWidgetRouter.MaxRequestsPerSecondPerDevice);
     public readonly Dictionary<string, int> InFlight = new(StringComparer.Ordinal);
     public readonly Dictionary<string, Queue<DateTimeOffset>> Errors = new(StringComparer.Ordinal);
@@ -93,6 +95,7 @@ public sealed class PluginWidgetRouter : IHostedService, IDisposable
     private readonly HashSet<string> _dirty = [];
     private readonly Lock _dirtyLock = new();
     private Timer? _timer;
+    private int _flushing;
 
     public PluginWidgetRouter(PluginWidgetCatalog catalog, IPluginWidgetHost plugins, PluginPermissionStore permissions, ProfileStore profiles,
         SessionRegistry sessions, ActionDispatcher dispatcher, VariableStore variables, PluginWidgetEventHub events, ProblemList problems,
@@ -162,20 +165,20 @@ public sealed class PluginWidgetRouter : IHostedService, IDisposable
             return;
         }
 
+        if (message.Data is { } data && data.ToJsonString().Length > MaxRequestBytes)
+        {
+            if (isCall) await ReplyAsync(session, message, ok: false, error: "too_large");
+            return;
+        }
+
         switch (message.Kind)
         {
             case PluginWidgetKinds.Ready:
-                await SendRetainedAsync(session, widget, info);
+                if (TryStartLight(state, widget.Id)) await SendRetainedAsync(session, widget, info);
                 return;
             case PluginWidgetKinds.Subscribe:
-                await SubscribeAsync(session, widget, info, message.Data);
+                if (TryStartLight(state, widget.Id)) await SubscribeAsync(session, widget, info, message.Data);
                 return;
-        }
-
-        if (message.Data is { } data && data.ToJsonString().Length > MaxRequestBytes)
-        {
-            await ReplyAsync(session, message, ok: false, error: "too_large");
-            return;
         }
         if (!TryStartCall(state, widget.Id))
         {
@@ -244,6 +247,18 @@ public sealed class PluginWidgetRouter : IHostedService, IDisposable
         }
         _logger.LogWarning(SecurityEvents.PluginWidgetDenied,
             "Security: device {Device} sent a plugin widget message for a widget that is not on a page of its profile", SecurityEvents.ForLog(session.DeviceName ?? "?"));
+    }
+
+    /// <summary>A <c>ready</c> or <c>subscribe</c> costs the server a read and a push, so it is limited too (no reply to send; the widget simply asks again later).</summary>
+    private bool TryStartLight(PluginWidgetSessionState state, string widgetId)
+    {
+        var now = _clock();
+        lock (state.Lock)
+        {
+            if (!state.LightBuckets.TryGetValue(widgetId, out var bucket))
+                state.LightBuckets[widgetId] = bucket = new TokenBucket(4, 2);
+            return bucket.Take(now) && state.DeviceBucket.Take(now);
+        }
     }
 
     private bool TryStartCall(PluginWidgetSessionState state, string widgetId)
@@ -375,6 +390,14 @@ public sealed class PluginWidgetRouter : IHostedService, IDisposable
 
     private async Task FlushVariablesAsync()
     {
+        // One flush at a time: a slow send must not let a second tick overtake it and deliver an older value after a newer one.
+        if (Interlocked.Exchange(ref _flushing, 1) == 1) return;
+        try { await FlushCoreAsync(); }
+        finally { Interlocked.Exchange(ref _flushing, 0); }
+    }
+
+    private async Task FlushCoreAsync()
+    {
         HashSet<string> dirty;
         lock (_dirtyLock)
         {
@@ -426,9 +449,10 @@ public sealed class PluginWidgetRouter : IHostedService, IDisposable
 
     private async Task PushEventAsync(PluginWidgetEvent e)
     {
-        try
+        foreach (var session in _sessions.All)
         {
-            foreach (var session in _sessions.All)
+            // One broken connection must not stop the push to the others.
+            try
             {
                 if (!session.IsIdentified || session.ProfileId is null || session.PageId is null || !session.Supports(ClientCapabilities.PluginWidgets)) continue;
                 if (e.DeviceId is not null && e.DeviceId != session.DeviceId) continue;
@@ -441,10 +465,10 @@ public sealed class PluginWidgetRouter : IHostedService, IDisposable
                     await session.SendAsync(MessageTypes.PluginWidgetEvent, new PluginWidgetEventMessage(widget.Id, e.Name, e.Data));
                 }
             }
-        }
-        catch (Exception ex) when (ex is IOException or ObjectDisposedException or System.Net.WebSockets.WebSocketException)
-        {
-            _logger.LogDebug(ex, "Could not push plugin.widget.event");
+            catch (Exception ex) when (ex is IOException or ObjectDisposedException or System.Net.WebSockets.WebSocketException)
+            {
+                _logger.LogDebug(ex, "Could not push plugin.widget.event to {Session}", session.Id);
+            }
         }
     }
 

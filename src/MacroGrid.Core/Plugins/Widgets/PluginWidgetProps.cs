@@ -53,6 +53,31 @@ public static partial class PluginWidgetProps
             if (widget.Type == WidgetTypes.PluginWidget) widget.Props?.Remove(RuntimeKey);
     }
 
+    /// <summary>
+    /// Clears, in a profile that came from someone else, every variable a plugin widget is bound to outside its own plugin (the person did not choose it,
+    /// and the widget could pass it on to its plugin). Returns how many bindings were cleared; the person binds them again. For a plugin that is loaded the
+    /// widget's <c>Variable</c> fields decide; for one that is not, a setting that looks like another owner's dotted variable name is cleared.
+    /// </summary>
+    public static int ClearOutsideBindings(Profile profile, PluginWidgetCatalog catalog)
+    {
+        var cleared = 0;
+        foreach (var widget in profile.Pages.SelectMany(p => p.Widgets))
+        {
+            if (!TryRead(widget, out var pluginId, out var widgetId) || widget.Props?["settings"] is not JsonObject settings) continue;
+            var info = catalog.Resolve(pluginId, widgetId, out _);
+            var keys = info is not null
+                ? (info.Widget.Manifest.Settings ?? []).Where(f => f.Kind == SettingFieldKind.Variable).Select(f => f.Key).ToList()
+                : settings.Where(kv => kv.Value is JsonValue v && v.TryGetValue<string>(out var text) && text.Contains('.') && IsVariableName(text)).Select(kv => kv.Key).ToList();
+            foreach (var key in keys)
+            {
+                if (settings[key] is not JsonValue v || !v.TryGetValue<string>(out var name) || name.StartsWith(pluginId + ".", StringComparison.Ordinal)) continue;
+                settings.Remove(key);
+                cleared++;
+            }
+        }
+        return cleared;
+    }
+
     [GeneratedRegex(@"^[A-Za-z0-9._\-]+$")]
     private static partial Regex VariableNamePattern();
 }

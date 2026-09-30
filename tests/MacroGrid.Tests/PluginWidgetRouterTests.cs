@@ -369,6 +369,29 @@ public sealed class PluginWidgetRouterTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Ready_and_subscribe_are_rate_limited_and_size_checked_too()
+    {
+        _variables.Set("gp.count", 1.0);
+        _events.Post("Gauge plugin", new PluginWidgetEvent("gp", "gauge", "status", JsonValue.Create("ok"), null, null, Retain: true));
+        await Task.Delay(50);
+        _socket.Sent.Clear();
+
+        for (var i = 0; i < 50; i++)
+        {
+            await Send(Msg(PluginWidgetKinds.Subscribe, Names("gp.count"), id: null));
+            await Send(Msg(PluginWidgetKinds.Ready, id: null));
+        }
+
+        // A burst of four each way (they share the device bucket), then nothing until time passes.
+        Assert.InRange(_socket.Of(MessageTypes.PluginWidgetVars).Count, 1, 4);
+        Assert.InRange(_socket.Of(MessageTypes.PluginWidgetEvent).Count, 1, 4);
+
+        _socket.Sent.Clear();
+        await Send(Msg(PluginWidgetKinds.Subscribe, JsonValue.Create(new string('z', PluginWidgetRouter.MaxRequestBytes + 10)), id: null));
+        Assert.Empty(_socket.Sent);
+    }
+
+    [Fact]
     public async Task At_most_32_variables_are_taken()
     {
         var names = Enumerable.Range(0, 40).Select(i => "gp.v" + i).ToArray();
@@ -489,6 +512,24 @@ public sealed class PluginWidgetRouterTests : IAsyncLifetime
         var broken = new Profile { Id = "p", Name = "P", Pages = [new Page { Id = "a", Widgets = [new Widget { Id = "x", Type = WidgetTypes.PluginWidget, Props = [] }] }] };
         Assert.False(ProfileValidator.Validate(broken, out var error));
         Assert.Contains("plugin and widget", error);
+    }
+
+    [Fact]
+    public void An_imported_profile_loses_widget_bindings_that_point_outside_the_widgets_own_plugin()
+    {
+        var own = PlaceWidget("a", "gp", "gauge", new JsonObject { ["source"] = "gp.count" });
+        var foreign = PlaceWidget("b", "gp", "gauge", new JsonObject { ["source"] = "sys.cpu" });
+        var unknownPlugin = PlaceWidget("c", "later", "x", new JsonObject { ["v"] = "sys.cpu", ["label"] = "Hello", ["mine"] = "later.total" });
+        var profile = new Profile { Id = "p", Name = "P", Pages = [new Page { Id = "pg", Widgets = [own, foreign, unknownPlugin] }] };
+
+        var cleared = PluginWidgetProps.ClearOutsideBindings(profile, _catalog);
+
+        Assert.Equal(2, cleared);
+        Assert.Equal("gp.count", own.Props!["settings"]!["source"]!.GetValue<string>());
+        Assert.Null(foreign.Props!["settings"]!["source"]);
+        Assert.Null(unknownPlugin.Props!["settings"]!["v"]);
+        Assert.Equal("Hello", unknownPlugin.Props["settings"]!["label"]!.GetValue<string>());
+        Assert.Equal("later.total", unknownPlugin.Props["settings"]!["mine"]!.GetValue<string>());
     }
 
     // ---- JavaScript plugin side ----
