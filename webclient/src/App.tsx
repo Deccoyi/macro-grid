@@ -1,11 +1,37 @@
-import { useEffect, useRef, useState } from "react";
-import { Grid, WidgetView, type Profile, type WidgetState } from "@macro/renderer";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Grid, PluginWidgetContext, PluginWidgetRuntime, WidgetView, type Profile, type WidgetState } from "@macro/renderer";
 import { getDeviceId } from "./deviceId";
 import { ActionErrorToast } from "./components/ActionErrorToast";
 import { ConnectScreen } from "./components/ConnectScreen";
 import { TopBar } from "./components/TopBar";
 import { t } from "./i18n";
+import { DeckPluginWidgetHost } from "./pluginWidgetHost";
 import { ConnectionStatus, PairingError, ProfileSummary, ServerConnection } from "./ws/connection";
+
+function pluginWidgetTexts() {
+  return {
+    widget: t("widget.plugin"),
+    restart: t("widget.restart"),
+    unavailable: {
+      missing: t("widget.unavailable.missing"),
+      disabled: t("widget.unavailable.disabled"),
+      needsApproval: t("widget.unavailable.needsApproval"),
+      incompatible: t("widget.unavailable.incompatible"),
+      invalid: t("widget.unavailable.invalid"),
+      noWidget: t("widget.unavailable.noWidget"),
+      unsupported: t("widget.unavailable.unsupported"),
+      off: t("widget.unavailable.off"),
+    },
+    stopped: {
+      frozen: t("widget.stopped.frozen"),
+      startTimeout: t("widget.stopped.startTimeout"),
+      tooBusy: t("widget.stopped.tooBusy"),
+      tooMany: t("widget.stopped.tooMany"),
+      crashed: t("widget.stopped.crashed"),
+      failed: t("widget.stopped.failed"),
+    },
+  };
+}
 
 export function App() {
   const [status, setStatus] = useState<ConnectionStatus>("connecting");
@@ -17,6 +43,18 @@ export function App() {
   const [actionError, setActionError] = useState<string | null>(null);
   const [pairingError, setPairingError] = useState<PairingError | null>(null);
   const connectionRef = useRef<ServerConnection | null>(null);
+  const pageIdRef = useRef<string | null>(null);
+  pageIdRef.current = pageId;
+  // One runtime and one host for the life of the page: the runtime owns the sandboxed launcher frame and the workers.
+  const widgets = useMemo(() => {
+    const runtime = new PluginWidgetRuntime();
+    const host = new DeckPluginWidgetHost(
+      { send: (type, data) => connectionRef.current?.send(type, data) },
+      () => pageIdRef.current ?? undefined,
+    );
+    return { runtime, host };
+  }, []);
+  useEffect(() => () => widgets.runtime.dispose(), [widgets]);
   const actionErrorTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
@@ -48,11 +86,14 @@ export function App() {
         actionErrorTimer.current = setTimeout(() => setActionError(null), 4000);
       },
       onPairingError: setPairingError,
+      onPluginWidgetMessage: (type, data) => widgets.host.onMessage(type, data),
+      onAsset: (hash, data) => widgets.host.onAsset(hash, data),
+      onWelcome: () => widgets.host.onReconnected(),
     });
     connectionRef.current = connection;
     connection.connect();
     return () => connection.disconnect();
-  }, []);
+  }, [widgets]);
 
   const page = profile?.pages.find((p) => p.id === pageId) ?? profile?.pages[0];
 
@@ -81,6 +122,7 @@ export function App() {
         onPrevPage={() => connectionRef.current?.prevPage()}
         onNextPage={() => connectionRef.current?.nextPage()}
       />
+      <PluginWidgetContext.Provider value={{ runtime: widgets.runtime, host: widgets.host, texts: pluginWidgetTexts() }}>
       <div style={{ flex: 1, position: "relative" }}>
         <Grid
           page={page}
@@ -109,6 +151,7 @@ export function App() {
           }}
         />
       </div>
+      </PluginWidgetContext.Provider>
       {actionError && <ActionErrorToast message={actionError} />}
     </div>
   );

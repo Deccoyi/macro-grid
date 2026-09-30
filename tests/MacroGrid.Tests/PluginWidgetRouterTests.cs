@@ -483,6 +483,7 @@ public sealed class PluginWidgetRouterTests : IAsyncLifetime
         var runtime = widgets[0]!["props"]!["runtime"]!;
         Assert.StartsWith("asset:", runtime["code"]!.GetValue<string>());
         Assert.Equal(15, runtime["fps"]!.GetValue<int>());
+        Assert.Equal("source", Assert.Single(runtime["variables"]!.AsArray())!.GetValue<string>());
         Assert.Equal("missing", widgets[1]!["props"]!["runtime"]!["unavailable"]!.GetValue<string>());
     }
 

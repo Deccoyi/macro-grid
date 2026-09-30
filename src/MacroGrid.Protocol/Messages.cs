@@ -20,8 +20,9 @@ public static class ClientCapabilities
     /// <summary>A saved profile edit is sent as a <c>layout.patch</c> (only the changed widgets) instead of a full layout.</summary>
     public const string LayoutPatch = "layout.patch";
 
-    /// <summary>The client can run custom plugin widgets (sandboxed workers drawing to a canvas). It also has to announce <see cref="Assets"/>:
-    /// a widget's script and images arrive as asset references. Without this capability a plugin widget is sent without its code and the client draws a placeholder.</summary>
+    /// <summary>The client can run custom plugin widgets (sandboxed workers drawing to a canvas). A widget's script and images arrive as asset references
+    /// the client fetches with <c>asset.get</c> (which every client may use, whether or not it announced <see cref="Assets"/>). Without this capability a plugin widget
+    /// is sent without its code and the client draws a placeholder.</summary>
     public const string PluginWidgets = "plugin-widgets";
 }
 

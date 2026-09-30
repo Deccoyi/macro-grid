@@ -10,6 +10,22 @@ export const en = {
   "connect.reason.wrong_pin": "Wrong PIN. Enter the PIN shown in the Pairing window of the Macro Grid editor on the computer.",
   "connect.reason.pairing_closed": "Pairing is closed. Open the Pairing window in the Macro Grid editor on the computer, then enter the PIN shown there.",
   "connect.reason.not_paired": "Pairing is required. Open the Pairing window in the Macro Grid editor on the computer and enter the PIN shown there.",
+  "widget.plugin": "Plugin widget",
+  "widget.restart": "Restart",
+  "widget.unavailable.missing": "The plugin is not installed",
+  "widget.unavailable.disabled": "The plugin is switched off",
+  "widget.unavailable.needsApproval": "The plugin needs approval",
+  "widget.unavailable.incompatible": "The plugin does not fit this Macro Grid",
+  "widget.unavailable.invalid": "The widget was refused",
+  "widget.unavailable.noWidget": "The plugin has no such widget",
+  "widget.unavailable.unsupported": "This app cannot show plugin widgets",
+  "widget.unavailable.off": "Plugin widgets are off on this device",
+  "widget.stopped.frozen": "Stopped: not responding",
+  "widget.stopped.startTimeout": "Stopped: did not start",
+  "widget.stopped.tooBusy": "Stopped: too much processor time",
+  "widget.stopped.tooMany": "Paused: too many widgets on this page",
+  "widget.stopped.crashed": "Stopped: crashed",
+  "widget.stopped.failed": "Stopped: could not run",
 } as const;
 
 export type MessageKey = keyof typeof en;

@@ -4,7 +4,7 @@
  * Keep this in sync by hand for now; a generated-types step can replace it later.
  */
 
-export type WidgetType = "button" | "toggle" | "slider" | "knob" | "label" | "image" | "web" | "plugin-html";
+export type WidgetType = "button" | "toggle" | "slider" | "knob" | "label" | "image" | "web" | "plugin-html" | "plugin-widget";
 
 export type Align = "left" | "center" | "right";
 export type VAlign = "top" | "middle" | "bottom";

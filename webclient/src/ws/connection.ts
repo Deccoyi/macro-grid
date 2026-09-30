@@ -45,6 +45,11 @@ interface ProfilesListData {
   profiles: ProfileSummary[];
 }
 
+interface AssetData {
+  hash: string;
+  data?: string | null;
+}
+
 export type ConnectionStatus = "connecting" | "connected" | "disconnected" | "pairing_required";
 
 interface ConnectionEvents {
@@ -60,6 +65,12 @@ interface ConnectionEvents {
    * to show as-is; not called for the initial "not paired yet" state before any PIN was ever submitted.
    * `retryAfterSeconds` is set only for the "blocked" case, for a real countdown. */
   onPairingError: (error: PairingError) => void;
+  /** A message of a plugin widget (`plugin.widget.reply`, `.vars`, `.event`); the widget host in pluginWidgetHost.ts reads them. */
+  onPluginWidgetMessage?: (type: string, data: unknown) => void;
+  /** An asset the server sent for an `asset.get` (a plugin widget's script or image), with null data when it no longer has it. */
+  onAsset?: (hash: string, data: string | null) => void;
+  /** The server accepted this connection (after `welcome`): anything asked of an earlier connection is gone and has to be asked again. */
+  onWelcome?: () => void;
 }
 
 export interface PairingError {
@@ -125,6 +136,8 @@ export class ServerConnection {
       token: this.token,
       clientVersion: CLIENT_VERSION,
       pin,
+      // The browser deck draws plugin widgets (sandboxed workers). A widget's script arrives as an asset reference this page fetches itself.
+      capabilities: ["plugin-widgets"],
     });
   }
 
@@ -175,6 +188,7 @@ export class ServerConnection {
           this.events.onPaired(data.token);
         }
         this.events.onStatusChange("connected");
+        this.events.onWelcome?.();
         break;
       }
       case "layout.full": {
@@ -189,6 +203,16 @@ export class ServerConnection {
       }
       case "widget.state":
         this.events.onWidgetState(envelope.data as WidgetState);
+        break;
+      case "asset": {
+        const data = envelope.data as AssetData;
+        this.events.onAsset?.(data.hash, data.data ?? null);
+        break;
+      }
+      case "plugin.widget.reply":
+      case "plugin.widget.vars":
+      case "plugin.widget.event":
+        this.events.onPluginWidgetMessage?.(envelope.type, envelope.data);
         break;
       case "profiles.list":
         this.events.onProfiles((envelope.data as ProfilesListData).profiles);
