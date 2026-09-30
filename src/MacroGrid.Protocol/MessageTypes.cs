@@ -15,6 +15,8 @@ public static class MessageTypes
     public const string ProfileChange = "profile.change";
     public const string ProfileLock = "profile.lock";
     public const string AssetGet = "asset.get";
+    public const string PluginWidgetRequest = "plugin.widget.request";
+    public const string PluginWidgetError = "plugin.widget.error";
 
     // server -> client
     public const string Welcome = "welcome";
@@ -24,5 +26,8 @@ public static class MessageTypes
     public const string PageShow = "page.show";
     public const string WidgetState = "widget.state";
     public const string ProfilesList = "profiles.list";
+    public const string PluginWidgetReply = "plugin.widget.reply";
+    public const string PluginWidgetVars = "plugin.widget.vars";
+    public const string PluginWidgetEvent = "plugin.widget.event";
     public const string Error = "error";
 }

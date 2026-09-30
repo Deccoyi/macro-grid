@@ -108,6 +108,12 @@ internal static class ServiceRegistration
         services.AddSingleton<PluginWidgetCatalog>();
         services.AddSingleton(sp => new PluginWidgetEventHub(sp.GetRequiredService<ProblemList>()));
         services.AddHostedService(sp => sp.GetRequiredService<PluginManager>());
+        services.AddSingleton<IPluginWidgetHost>(sp => sp.GetRequiredService<PluginManager>());
+        services.AddSingleton(sp => new PluginWidgetRouter(sp.GetRequiredService<PluginWidgetCatalog>(), sp.GetRequiredService<IPluginWidgetHost>(),
+            new PluginPermissionStore(dataDir), sp.GetRequiredService<ProfileStore>(), sp.GetRequiredService<SessionRegistry>(), sp.GetRequiredService<ActionDispatcher>(),
+            sp.GetRequiredService<VariableStore>(), sp.GetRequiredService<PluginWidgetEventHub>(), sp.GetRequiredService<ProblemList>(),
+            sp.GetRequiredService<ILogger<PluginWidgetRouter>>()));
+        services.AddHostedService(sp => sp.GetRequiredService<PluginWidgetRouter>());
         services.AddSingleton<ProblemList>();
         services.AddSingleton<PluginInstallSelection>();
         return services;

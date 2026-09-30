@@ -30,7 +30,7 @@ public sealed class JsHostException(string message) : Exception(message);
 /// The script registers everything at its top level (actions, settings page, timers); registrations made later
 /// from a callback are not picked up.
 /// </summary>
-public sealed partial class JsPlugin : IPlugin, IDisposable
+public sealed partial class JsPlugin : IPlugin, IPluginWidgetHandler, IDisposable
 {
     private static readonly TimeSpan InitTimeout = TimeSpan.FromSeconds(10);
     private const int MaxPendingTimerJobs = 50;
@@ -138,8 +138,9 @@ public sealed partial class JsPlugin : IPlugin, IDisposable
         var contextJson = JsonSerializer.Serialize(new { context.DeviceId, context.PageId, context.WidgetId, context.Value }, ProtocolJson.Options);
         var run = Post(() =>
         {
-            // A person touched a device: keyboard input is allowed for this job and the continuations it starts.
-            _press = new JsPressWindow(Stopwatch.GetTimestamp() + (long)(_limits.PressWindow.TotalSeconds * Stopwatch.Frequency));
+            // A person touched a device: keyboard input is allowed for this job and the continuations it starts. An action a widget's script
+            // started without a real touch (ActionContext.UserGesture false) gets no press window, so it cannot type.
+            _press = context.UserGesture ? new JsPressWindow(Stopwatch.GetTimestamp() + (long)(_limits.PressWindow.TotalSeconds * Stopwatch.Frequency)) : null;
             try { Invoke("__runAction", type, contextJson, settings.ToJsonString()); }
             finally { _press = null; }
             return 0;
@@ -232,6 +233,8 @@ public sealed partial class JsPlugin : IPlugin, IDisposable
         engine.SetValue("__pressEnd", new Action(() => { if (_press is { } press) press.Settled = true; }));
         engine.SetValue("__http", new Func<string, string, string, string, string>(Http));
         engine.SetValue("__httpAsync", new Action<int, string, string, string, string>(HttpAsync));
+        engine.SetValue("__widgetPost", new Action<string>(WidgetPost));
+        engine.SetValue("__widgetReply", new Action<int, bool, string>(WidgetReply));
         engine.SetValue("__timer", new Action<int, int, bool>(StartTimer));
         engine.SetValue("__cancel", new Action<int>(CancelTimer));
         return engine;

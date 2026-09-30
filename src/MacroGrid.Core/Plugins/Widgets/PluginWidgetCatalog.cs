@@ -1,5 +1,6 @@
 using System.Text;
 using MacroGrid.Core.Widgets;
+using MacroGrid.Plugin.Abstractions;
 
 namespace MacroGrid.Core.Plugins.Widgets;
 
@@ -18,7 +19,8 @@ public enum PluginWidgetAvailability
 /// held in the <see cref="AssetStore"/> (the device fetches each once and caches it, so a new plugin version is simply a new hash).
 /// </summary>
 public sealed record PluginWidgetInfo(
-    string PluginId, string PluginName, ValidatedWidget Widget, bool Verified, string CodeRef, IReadOnlyDictionary<string, string> AssetRefs);
+    string PluginId, string PluginName, ValidatedWidget Widget, bool Verified, string CodeRef, IReadOnlyDictionary<string, string> AssetRefs,
+    PluginKind Kind = PluginKind.Js);
 
 /// <summary>
 /// The custom widgets of every plugin, as the loader validated them. The loader fills it on every load outcome and empties it on unload; the layout
@@ -38,7 +40,7 @@ public sealed class PluginWidgetCatalog(AssetStore assets)
 
     /// <summary>Records what a plugin's load outcome means for its widgets. <paramref name="widgets"/> are already validated; their files are read here.</summary>
     public void Set(string pluginId, string pluginName, PluginWidgetAvailability availability, bool verified,
-        IReadOnlyList<ValidatedWidget> widgets, IReadOnlyList<PluginWidgetProblem> problems)
+        IReadOnlyList<ValidatedWidget> widgets, IReadOnlyList<PluginWidgetProblem> problems, PluginKind kind = PluginKind.Js)
     {
         var infos = new Dictionary<string, PluginWidgetInfo>(StringComparer.Ordinal);
         var problemMap = problems.ToDictionary(p => p.WidgetId, p => p.Reason, StringComparer.Ordinal);
@@ -53,7 +55,7 @@ public sealed class PluginWidgetCatalog(AssetStore assets)
                 var assetRefs = new Dictionary<string, string>(StringComparer.Ordinal);
                 foreach (var (name, path) in widget.Assets)
                     assetRefs[name] = Track(payload, ToDataUri(path));
-                infos[widget.Manifest.Id] = new PluginWidgetInfo(pluginId, pluginName, widget, verified, codeRef, assetRefs);
+                infos[widget.Manifest.Id] = new PluginWidgetInfo(pluginId, pluginName, widget, verified, codeRef, assetRefs, kind);
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {

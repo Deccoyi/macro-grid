@@ -52,6 +52,9 @@ public sealed class ClientSession(WebSocket socket)
     /// the client never received.</summary>
     internal SemaphoreSlim LayoutLock { get; } = new(1, 1);
 
+    /// <summary>What the plugin widget router keeps for this device (subscriptions, rate buckets).</summary>
+    internal PluginWidgetSessionState WidgetBridge { get; } = new();
+
     internal WebSocket Socket => socket;
 
     public async Task SendAsync(Envelope envelope, CancellationToken cancellationToken = default)

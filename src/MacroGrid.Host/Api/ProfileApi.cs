@@ -4,6 +4,7 @@ using MacroGrid.Core;
 using MacroGrid.Core.Actions;
 using MacroGrid.Core.Model;
 using MacroGrid.Core.Plugins;
+using MacroGrid.Core.Plugins.Widgets;
 using MacroGrid.Core.Profiles;
 using MacroGrid.Core.Sessions;
 using MacroGrid.Core.Web;
@@ -56,6 +57,7 @@ internal static class ProfileApi
                 return ApiResults.BadRequest(error);
 
             WebUrlRule.Sanitize(profile, loggers.CreateLogger("MacroGrid.Security"));
+            PluginWidgetProps.Strip(profile);
             profiles.Save(profile);
             await widgetState.BroadcastProfileAsync(profile);
             return Results.NoContent();

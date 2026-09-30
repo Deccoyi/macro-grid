@@ -1,4 +1,5 @@
 using MacroGrid.Core.Model;
+using MacroGrid.Core.Plugins.Widgets;
 using MacroGrid.Core.Profiles;
 using MacroGrid.Core.Variables;
 using MacroGrid.Protocol;
@@ -35,7 +36,8 @@ public sealed class WidgetStateService : IHostedService, IDisposable
     private readonly Lock _dirtyLock = new();
     private Timer? _timer;
 
-    public WidgetStateService(VariableStore variables, SessionRegistry sessions, ProfileStore profiles, ToggleStateStore toggles, LayoutSender layouts, WebViewState webViews, ILogger<WidgetStateService> logger)
+    public WidgetStateService(VariableStore variables, SessionRegistry sessions, ProfileStore profiles, ToggleStateStore toggles, LayoutSender layouts, WebViewState webViews, ILogger<WidgetStateService> logger,
+        PluginWidgetCatalog? pluginWidgets = null)
     {
         _variables = variables;
         _sessions = sessions;
@@ -45,6 +47,31 @@ public sealed class WidgetStateService : IHostedService, IDisposable
         _webViews = webViews;
         _logger = logger;
         _variables.Changed += OnVariableChanged;
+        _pluginWidgets = pluginWidgets;
+        if (pluginWidgets is not null) pluginWidgets.PluginChanged += OnPluginWidgetsChanged;
+    }
+
+    private readonly PluginWidgetCatalog? _pluginWidgets;
+
+    /// <summary>A plugin's widgets changed (approved, reloaded, switched off, removed): devices showing a profile with plugin widgets get their layout again, so a
+    /// widget that could not run starts, or one that stopped draws its placeholder.</summary>
+    private void OnPluginWidgetsChanged(string pluginId) => _ = RefreshPluginWidgetLayoutsAsync(pluginId);
+
+    private async Task RefreshPluginWidgetLayoutsAsync(string pluginId)
+    {
+        try
+        {
+            foreach (var profileId in _sessions.All.Select(s => s.ProfileId).Where(id => id is not null).Distinct().ToList())
+            {
+                var profile = _profiles.Get(profileId!);
+                if (profile is not null && profile.Pages.SelectMany(p => p.Widgets).Any(w => PluginWidgetProps.TryRead(w, out var owner, out _) && owner == pluginId))
+                    await BroadcastProfileAsync(profile);
+            }
+        }
+        catch (Exception ex) when (ex is IOException or ObjectDisposedException or System.Net.WebSockets.WebSocketException)
+        {
+            _logger.LogDebug(ex, "Could not refresh layouts after plugin widgets changed");
+        }
     }
 
     public Task StartAsync(CancellationToken cancellationToken)
@@ -59,7 +86,11 @@ public sealed class WidgetStateService : IHostedService, IDisposable
         return Task.CompletedTask;
     }
 
-    public void Dispose() => _variables.Changed -= OnVariableChanged;
+    public void Dispose()
+    {
+        _variables.Changed -= OnVariableChanged;
+        if (_pluginWidgets is not null) _pluginWidgets.PluginChanged -= OnPluginWidgetsChanged;
+    }
 
     /// <summary>Sends a profile's full layout to one client (see <see cref="LayoutSender"/>).</summary>
     public Task SendLayoutAsync(ClientSession session, Profile profile, string pageId, CancellationToken ct = default) =>

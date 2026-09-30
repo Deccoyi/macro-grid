@@ -29,7 +29,8 @@ public sealed class ClientHub(
     PreferencesStore preferences,
     AutoProfileSwitcher autoSwitcher,
     ILogger<ClientHub> logger,
-    PluginLocalizer localizer)
+    PluginLocalizer localizer,
+    PluginWidgetRouter widgetRouter)
 {
     /// <summary>The server's version. It is the SDK's version on purpose: the two carry one number (docs/guides/versioning.md).</summary>
     public static string ServerVersion => PluginSdk.Version;
@@ -81,6 +82,7 @@ public sealed class ClientHub(
         {
             queue.Writer.TryComplete();
             await worker;
+            widgetRouter.Forget(session);
             sessions.Remove(session);
             logger.LogInformation("Client {Session} ({Device}) disconnected", session.Id, session.DeviceName ?? "?");
         }
@@ -166,6 +168,20 @@ public sealed class ClientHub(
             case MessageTypes.AssetGet:
                 if (envelope.DataAs<AssetGetMessage>() is { } request)
                     await widgetState.SendAssetsAsync(session, request.Hashes.Take(MaxAssetsPerRequest), ct);
+                break;
+            case MessageTypes.PluginWidgetRequest:
+                if (envelope.DataAs<PluginWidgetRequestMessage>() is { } widgetRequest)
+                {
+                    var device = new SessionDeviceController(session, profiles, widgetState);
+                    // A run goes through the device's action queue like a press (in order); the others must not wait behind a slow action.
+                    if (widgetRequest.Kind == PluginWidgetKinds.Run)
+                        queue.TryWrite(() => widgetRouter.HandleRequestAsync(session, widgetRequest, device, CancellationToken.None));
+                    else
+                        _ = widgetRouter.HandleRequestAsync(session, widgetRequest, device, CancellationToken.None);
+                }
+                break;
+            case MessageTypes.PluginWidgetError:
+                if (envelope.DataAs<PluginWidgetErrorMessage>() is { } widgetError) widgetRouter.HandleError(session, widgetError);
                 break;
             case MessageTypes.PageChange:
                 var page = envelope.DataAs<PageChangeMessage>();

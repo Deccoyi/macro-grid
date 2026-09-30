@@ -197,7 +197,7 @@ public sealed partial class PluginManager
                 Unsigned: trust?.Unsigned == true);
             var running = new Running(context, instance, host, variableStore) { WidgetHandler = instance as IPluginWidgetHandler };
             if (manifest.Widgets is { Length: > 0 })
-                widgetCatalog?.Set(manifest.Id, manifest.Name, PluginWidgetAvailability.Available, verified, widgetCheck.Widgets, widgetCheck.Problems);
+                widgetCatalog?.Set(manifest.Id, manifest.Name, PluginWidgetAvailability.Available, verified, widgetCheck.Widgets, widgetCheck.Problems, manifest.Kind);
             else
                 widgetCatalog?.Remove(manifest.Id);
             if (treeProvider is not null)

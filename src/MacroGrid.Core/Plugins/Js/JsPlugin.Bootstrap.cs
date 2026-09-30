@@ -11,11 +11,12 @@ public sealed partial class JsPlugin
           'use strict';
           const g = globalThis;
           const names = ['permissions', 'log', 'varSet', 'varGet', 'varRemove', 'varDescribe', 'registerAction',
-            'settingsPage', 'settingsGet', 'status', 'hotkey', 'type', 'pressEnd', 'http', 'httpAsync', 'timer', 'cancel'];
+            'settingsPage', 'settingsGet', 'status', 'hotkey', 'type', 'pressEnd', 'http', 'httpAsync', 'widgetPost', 'widgetReply', 'timer', 'cancel'];
           const n = {};
           for (const name of names) { n[name] = g['__' + name]; delete g['__' + name]; }
 
           const actions = Object.create(null);
+          let widgetHandler = null;
           const timers = Object.create(null);
           let nextTimer = 1;
           const start = (fn, ms, repeat) => {
@@ -69,6 +70,18 @@ public sealed partial class JsPlugin
               getAsync: (url, options) => requestAsync('GET', url, undefined, options),
               postAsync: (url, body, options) => requestAsync('POST', url, body, options),
             }),
+            widgets: Object.freeze({
+              onMessage: (fn) => {
+                if (typeof fn !== 'function') throw new Error('widgets.onMessage needs a function.');
+                widgetHandler = fn;
+              },
+              post: (widget, name, data, options) => n.widgetPost(JSON.stringify({
+                widget: String(widget), name: String(name), data: data === undefined ? null : data,
+                widgetId: options && options.widgetId ? String(options.widgetId) : null,
+                deviceId: options && options.deviceId ? String(options.deviceId) : null,
+                retain: !!(options && options.retain),
+              })),
+            }),
             every: (ms, fn) => start(fn, ms, true),
             after: (ms, fn) => start(fn, ms, false),
             cancel: (id) => { delete timers[id]; n.cancel(id); },
@@ -84,6 +97,16 @@ public sealed partial class JsPlugin
             catch (e) { n.pressEnd(); throw e; }
             if (result && typeof result.then === 'function') result.then(() => n.pressEnd(), () => n.pressEnd());
             else n.pressEnd();
+          };
+          g.__widgetMessage = function (id, messageJson) {
+            if (!widgetHandler) { n.widgetReply(id, false, 'This plugin does not answer widget requests.'); return; }
+            let result;
+            try { result = widgetHandler(JSON.parse(messageJson)); }
+            catch (e) { n.widgetReply(id, false, String(e && e.message ? e.message : e)); return; }
+            if (result && typeof result.then === 'function')
+              result.then((v) => n.widgetReply(id, true, JSON.stringify(v === undefined ? null : v)),
+                          (e) => n.widgetReply(id, false, String(e && e.message ? e.message : e)));
+            else n.widgetReply(id, true, JSON.stringify(result === undefined ? null : result));
           };
           g.__httpDone = function (id, ok, payload) {
             const p = pending[id];

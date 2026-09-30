@@ -79,6 +79,26 @@ public sealed class ActionDispatcher(IEnumerable<IActionHandler> handlers, ILogg
         return (IReadOnlyList<string>?)errors ?? [];
     }
 
+    /// <summary>True when an action of this type is registered.</summary>
+    public bool Has(string type) => _handlers.ContainsKey(type);
+
+    /// <summary>Runs one registered action directly with the given settings (a plugin widget's <c>macroGrid.run</c>), not through a widget's bindings.
+    /// Returns null when it ran, otherwise a short message: unknown type or the action's own error.</summary>
+    public async Task<string?> RunAsync(string type, JsonObject settings, ActionContext context, CancellationToken cancellationToken)
+    {
+        if (!_handlers.TryGetValue(type, out var handler)) return $"Unknown action '{type}'";
+        try
+        {
+            await handler.ExecuteAsync(context, ResolveVariables(handler, settings), cancellationToken);
+            return null;
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            logger.LogError(ex, "Action {Type} failed when a widget ran it", type);
+            return ex.Message;
+        }
+    }
+
     /// <summary>
     /// For every field the handler declares with <see cref="SettingField.AllowVariables"/>, replaces the
     /// <c>{variable}</c> templates in the user's text with the current values before the handler runs. The
