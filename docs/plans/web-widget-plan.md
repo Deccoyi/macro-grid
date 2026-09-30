@@ -296,12 +296,12 @@ has more than the number. Web widgets have their own number (a page costs far mo
 - **Keep loaded** (inspector switch per widget, off by default): the widget stays mounted, hidden, when its page is left, so a chat does not
   reload on every page change (the reload finding of the first phone test). Kept-loaded web widgets count toward the live number.
 
-**4. Slow-page detection.** A frozen page cannot be pinged, but the app can watch its own main thread: long tasks (the browser's long-task
-report, which names the iframe a task came from when it can) and gaps between the app's own frames. When one web widget is behind most of the
-blocked time (for example more than half of 10 seconds), it is unloaded and shows "Paused: this page was slowing down the deck. Tap to load it
-again." After three pauses in one session it stays paused until tapped. This is not a strike (a slow page is not a crash) and nothing is kept
-across restarts. A Settings switch "Pause slow web pages" (on by default) turns it off. Whether the long-task report names the iframe inside the
-phone's WebView is checked first (step 7); if it does not, only the frame-gap check remains and a pause names no single widget, so it is not built.
+**4. Slow-page detection: not built.** Checked on the owner's phone (Chrome, step 7): an iframe busy-loop froze the parent page's own animation
+frame for the full ~10 seconds (a real freeze, confirmed), but the parent's `PerformanceObserver` for long tasks reported **nothing** while it was
+frozen — the browser does not attribute a long task to the iframe that caused it, and cannot report one anyway while the main thread it would
+report from is itself blocked. Without a long-task report there is no way to name which web widget is slow, so an automatic per-widget pause is
+not buildable this way. What stays: the frame-gap check can still show a plain "the deck is running slowly" notice with no widget named, and the
+person can always Tap-to-load a page back manually after leaving and returning to it. No automatic pause, no Settings switch for it.
 
 What still cannot be done, written in the docs and the inspector note: a page cannot be limited in memory or CPU from outside, it can only be
 turned off after it crashed or unloaded after it slowed the deck; and a web widget is never as safe for the deck as a plugin widget.
@@ -328,14 +328,16 @@ turned off after it crashed or unloaded after it slowed the deck; and a web widg
    hook for iframe navigations (item 3), the "no" to every prompt (item 4), the "Show web pages" switch and "clear web page data" button (item 13)
    and mounting only on the shown page (item 8). Run the full test page on a current phone **and** on the oldest Android the app supports.
 6. Docs: `architecture.md` (also the new `widget.state` field and the `core.web` action), the roadmap line, `CHANGELOG.md` in both repositories, and a `docs/design/` note for the action.
-7. Phone check before code (with the owner): a small test page on the local network that (a) allocates memory until it crashes, (b) runs a busy
-   loop for 5 seconds every 10 seconds; confirm that the renderer-gone handler brings the deck back, and whether the long-task report inside the
-   WebView names the iframe. The result decides point 4 of "Stability on the phone".
+7. Phone check before code (with the owner). **Busy-loop part done** (2026-09-30, Chrome on the owner's phone, not yet the app's own WebView): an
+   iframe busy-loop froze the parent's animation frame for the full test window, but the parent's long-task observer reported nothing while frozen
+   — point 4 of "Stability on the phone" is decided as not buildable, see there. **Still open** (needs the owner's longer time, inside the app):
+   the memory-allocation crash test and confirming the renderer-gone handler brings the deck back.
 8. `macro-grid-client`: web sites in the crash guard (the `web:<host>` id, one merged live list, write-ahead with a confirmation before
    mounting), the placeholder with Turn on, Settings list; native unit tests for the rules with `web:` ids, vitest for the merged list.
    Also make the plugin widgets' own report wait for the confirmation (today it is sent without waiting).
 9. `macro-grid-client` and the renderer in `macro-grid`: the recommended live number for web widgets with the "Tap to load" queue, Keep loaded,
-   unloading in the background, and (if step 7 allows) slow-page detection; the editor's warning for pages over the number; tests with fake timers.
+   unloading in the background; the editor's warning for pages over the number; tests with fake timers. No slow-page detection (step 7 decided
+   against it).
 10. Docs: this plan's status, `architecture.md` (the guard now covers web pages), the inspector note, `CHANGELOG.md` in both repositories.
 
 ## Decided (by the owner)
@@ -347,6 +349,9 @@ turned off after it crashed or unloaded after it slowed the deck; and a web widg
   process isolation (review item 8). The widget is an iframe with every fix of the security review that is possible; the remaining
   limits (one renderer process on the phone, pages that refuse framing) are documented, and the person is responsible for opening
   well-behaved sites. The inspector warning and the docs say so.
+- **No automatic slow-page pause (2026-09-30, step 7).** Not an owner preference: checked on a phone and found not buildable. A frozen iframe
+  blocks the parent's own long-task reporting, so there is never a report naming which widget is slow. Only a plain, un-named "the deck is
+  running slowly" notice and manual Tap-to-load stay; see "Stability on the phone", point 4.
 
 ## Open questions
 
@@ -356,5 +361,3 @@ turned off after it crashed or unloaded after it slowed the deck; and a web widg
 - **Recommended live web widgets:** 1 on a small phone up to 3 on a strong one, changeable in Settings. Good starting numbers?
 - **Background:** unload web pages 30 seconds after the app goes to the background (saves battery, chat reloads when you come back), or keep them
   running while the app is open in the background?
-- **Slow pages:** pause a page automatically when it slows the deck (on by default, can be switched off), or only show a warning and let the
-  person decide?
