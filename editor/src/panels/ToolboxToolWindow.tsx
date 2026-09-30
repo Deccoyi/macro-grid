@@ -7,5 +7,5 @@ import { WidgetPalette } from "./WidgetPalette";
 export function ToolboxToolWindow() {
   const state = useEditorStateContext();
   const { openPageIds } = useOpenPages();
-  return <WidgetPalette onAdd={state.addWidget} disabled={openPageIds.length === 0} />;
+  return <WidgetPalette onAdd={state.addWidget} onAddPluginWidget={state.addPluginWidget} disabled={openPageIds.length === 0} />;
 }

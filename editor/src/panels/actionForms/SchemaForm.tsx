@@ -149,6 +149,33 @@ function SchemaFieldRow({
     );
   }
 
+  if (field.kind === "Variable") {
+    const name = typeof value === "string" ? value : "";
+    return (
+      <div className="field">
+        <div style={{ display: "flex", alignItems: "center" }}>
+          <span style={{ flex: 1 }}>{field.label}</span>
+          {name && (
+            <button type="button" className="ghost" style={{ padding: "2px 6px", fontSize: 11 }} onClick={() => onChange("")}>
+              {t("schemaForm.variable.clear")}
+            </button>
+          )}
+        </div>
+        <VariablePicker
+          catalog={variableCatalog}
+          mode="bare"
+          onInsert={(picked) => onChange(picked)}
+          renderTrigger={(open) => (
+            <button type="button" onClick={open} style={{ textAlign: "left" }}>
+              {name || t("schemaForm.variable.pick")}
+            </button>
+          )}
+        />
+        {field.description && <FieldHint text={field.description} />}
+      </div>
+    );
+  }
+
   if (field.kind === "Bool") {
     return (
       <label className="field" style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>

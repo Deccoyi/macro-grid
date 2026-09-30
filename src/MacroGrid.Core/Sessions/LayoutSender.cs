@@ -118,8 +118,12 @@ public sealed class LayoutSender(AssetStore assets, PluginWidgetCatalog? pluginW
     {
         if (!PluginWidgetProps.TryRead(widget, out var pluginId, out var widgetId)) return new JsonObject { ["unavailable"] = "invalid" };
         var info = pluginWidgets!.Resolve(pluginId, widgetId, out var unavailable);
-        if (info is null) return new JsonObject { ["unavailable"] = unavailable ?? "missing" };
+        return info is null ? new JsonObject { ["unavailable"] = unavailable ?? "missing" } : BuildRuntimeFor(info);
+    }
 
+    /// <summary>The <c>props.runtime</c> of a widget that can run: what a device (or the editor's preview) needs to start it.</summary>
+    public static JsonObject BuildRuntimeFor(PluginWidgetInfo info)
+    {
         var assetRefs = new JsonObject();
         foreach (var (name, reference) in info.AssetRefs) assetRefs[name] = reference;
         return new JsonObject

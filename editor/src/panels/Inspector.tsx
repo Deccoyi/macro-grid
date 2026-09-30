@@ -9,6 +9,7 @@ import { CollapsibleSection, Seg, SectionLabel } from "./fields/controls";
 import { ImageFields } from "./fields/ImageFields";
 import { RangeFields } from "./fields/RangeFields";
 import { TextFields } from "./fields/TextFields";
+import { PluginWidgetFields } from "./fields/PluginWidgetFields";
 import { WebFields } from "./fields/WebFields";
 
 interface InspectorProps {
@@ -234,6 +235,8 @@ function renderTypeFields(widget: Widget, onChange: InspectorProps["onChange"], 
     case "web":
     case "plugin-html":
       return <WebFields widget={widget} onChange={onChange} />;
+    case "plugin-widget":
+      return <PluginWidgetFields widget={widget} onChange={onChange} variableCatalog={variableCatalog} />;
     case "slider":
     case "knob":
       return <RangeFields widget={widget} onChange={onChange} variableCatalog={variableCatalog} />;
@@ -255,6 +258,7 @@ function typeLabel(type: Widget["type"], t: ReturnType<typeof useT>["t"]): strin
     case "knob": return t("widget.type.knob");
     case "web": return t("widget.type.web");
     case "plugin-html": return t("widget.type.plugin-html");
+    case "plugin-widget": return t("widget.type.plugin-widget");
     default: return type;
   }
 }

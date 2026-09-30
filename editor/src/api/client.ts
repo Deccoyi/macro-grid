@@ -1,4 +1,4 @@
-import type { Profile } from "@macro/renderer";
+import type { PluginWidgetRuntimeInfo, Profile } from "@macro/renderer";
 import type {
   ServerProblem,
   ActionInfo,
@@ -19,6 +19,7 @@ import type {
   PluginInstallBrowseResult,
   PluginInstallResult,
   PluginTreeChanges,
+  PluginWidgetInfo,
   PluginTreeItemsResult,
   PluginUninstallResult,
   ProfileSummary,
@@ -103,6 +104,20 @@ export const api = {
   getStatus: (): Promise<StatusEntry[]> => get("/api/status"),
 
   variablesSnapshot: (): Promise<VariableSnapshot> => get("/api/variables/snapshot"),
+  /** Custom widgets of every plugin that can run now (the Toolbox groups them by plugin). */
+  pluginWidgets: (): Promise<PluginWidgetInfo[]> => get("/api/plugin-widgets"),
+  /** The `props.runtime` a device would get for one plugin widget (script and image asset references, or why it cannot run). */
+  pluginWidgetRuntime: (plugin: string, widget: string): Promise<PluginWidgetRuntimeInfo> =>
+    get(`/api/plugin-widgets/${encodeURIComponent(plugin)}/${encodeURIComponent(widget)}/runtime`),
+  /** The text of a widget script or the data URI of a widget image, by asset hash. */
+  pluginWidgetAsset: (hash: string): Promise<string> =>
+    req(`/api/plugin-widgets/assets/${encodeURIComponent(hash)}`).then((res) => {
+      if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
+      return res.text();
+    }),
+  /** A request from a widget's preview to its plugin (the plugin sees the device id "editor"). */
+  pluginWidgetRequest: (plugin: string, widget: string, settings: unknown, data: unknown): Promise<{ data?: unknown }> =>
+    send("POST", `/api/plugin-widgets/${encodeURIComponent(plugin)}/${encodeURIComponent(widget)}/request`, { settings, data }),
 
   variableCatalog: (): Promise<VariableInfo[]> => get("/api/variables/catalog"),
 

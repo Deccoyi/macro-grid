@@ -140,7 +140,8 @@ export function PluginWidgetContent({ widget, live = true }: PluginWidgetContent
     instance.current?.pointer(phase, x, y, e.nativeEvent.isTrusted);
   };
 
-  const reason: PluginWidgetUnavailable | null = !context ? "unsupported" : context.enabled === false ? "off" : !info ? "unsupported" : (info.unavailable ?? (info.code ? null : "unsupported"));
+  // No runtime yet while a host is still fetching it (the editor asks per widget): the cell stays empty until it arrives.
+  const reason: PluginWidgetUnavailable | null = !context ? "unsupported" : context.enabled === false ? "off" : !info ? null : (info.unavailable ?? (info.code ? null : "unsupported"));
   if (reason) return <PlaceholderContent label={`${label}: ${texts.unavailable[reason]}`} />;
 
   return (

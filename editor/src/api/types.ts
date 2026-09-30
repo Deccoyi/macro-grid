@@ -1,5 +1,5 @@
 import type { Profile } from "@macro/renderer";
-type SettingFieldKind = "Text" | "Password" | "Number" | "Slider" | "Bool" | "Select" | "Segmented" | "File" | "List" | "Button" | "Notice";
+type SettingFieldKind = "Text" | "Password" | "Number" | "Slider" | "Bool" | "Select" | "Segmented" | "File" | "List" | "Button" | "Notice" | "Variable";
 
 export interface SettingOption {
   value: string;
@@ -438,4 +438,22 @@ export interface ImportProfileResult {
 
 export interface ExportProfileResult {
   path: string | null;
+}
+
+/** One custom widget a plugin offers (GET /api/plugin-widgets): what the Toolbox lists and the Inspector draws a settings form from. */
+export interface PluginWidgetInfo {
+  plugin: string;
+  pluginName: string;
+  widget: string;
+  name: string;
+  description?: string | null;
+  category?: string | null;
+  size: { w: number; h: number };
+  fps: number;
+  interactive: boolean;
+  /** The abilities the widget declared and the person approved (keepLoaded, storage, notifications). */
+  options: string[];
+  /** False for a plugin that is not verified (every JavaScript plugin). */
+  verified: boolean;
+  settings?: SettingField[] | null;
 }

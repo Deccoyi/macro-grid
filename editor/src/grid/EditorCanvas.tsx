@@ -1,8 +1,9 @@
 import { useCallback, useRef, useState } from "react";
-import { Grid, WidgetView, gridArea, type Page, type Widget } from "@macro/renderer";
+import { Grid, PluginWidgetContext, WidgetView, gridArea, type Page, type Widget } from "@macro/renderer";
 import { useT } from "../i18n/I18nContext";
 import { canPlace, canPlaceExcluding, clamp, overlappingWidgets } from "./collision";
 import { evaluateWidgetDynamicStyle, evaluateWidgetDynamicText } from "./evaluateDynamic";
+import { usePluginWidgetPreview } from "./usePluginWidgetPreview";
 
 interface EditorCanvasProps {
   page: Page;
@@ -32,6 +33,7 @@ interface DragState {
  */
 export function EditorCanvas({ page, selectedIds, onSelect, onToggleSelect, onRectChange, onContextMenu, variables }: EditorCanvasProps) {
   const { t } = useT();
+  const pluginPreview = usePluginWidgetPreview(page.widgets, variables);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [drag, setDrag] = useState<DragState | null>(null);
   const [previewRect, setPreviewRect] = useState<{ x: number; y: number; w: number; h: number } | null>(null);
@@ -132,6 +134,7 @@ export function EditorCanvas({ page, selectedIds, onSelect, onToggleSelect, onRe
       onPointerCancel={endDrag}
       onPointerDown={() => onSelect([])}
     >
+      <PluginWidgetContext.Provider value={pluginPreview.context}>
       <Grid
         page={page}
         gap={gap}
@@ -143,7 +146,7 @@ export function EditorCanvas({ page, selectedIds, onSelect, onToggleSelect, onRe
           return (
             <div style={{ position: "relative", width: "100%", height: "100%" }}>
               <WidgetView
-                widget={rect === widget ? widget : { ...widget, ...rect }}
+                widget={pluginPreview.withRuntime(rect === widget ? widget : { ...widget, ...rect })}
                 liveText={renderPreviewText(evaluateWidgetDynamicText(widget, variables), variables)}
                 liveStyle={evaluateWidgetDynamicStyle(widget, variables)}
                 haptics={false}
@@ -196,6 +199,7 @@ export function EditorCanvas({ page, selectedIds, onSelect, onToggleSelect, onRe
           );
         }}
       />
+      </PluginWidgetContext.Provider>
 
       {drag && previewRect && (
         <div

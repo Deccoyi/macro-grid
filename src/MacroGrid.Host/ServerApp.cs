@@ -180,6 +180,7 @@ internal static class ServerApp
             .MapAppApi()
             .MapCatalogApi()
             .MapPluginApi()
+            .MapPluginWidgetApi()
             .MapPluginCatalogApi()
             .MapProblemApi()
             .MapWindowApi()
