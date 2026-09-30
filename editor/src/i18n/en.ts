@@ -310,6 +310,8 @@ export const en: Record<DictKey, string | ((...args: string[]) => string)> = {
   "page.properties.duplicate": "Duplicate Page",
   "page.properties.delete": "Delete Page",
 
+  "palette.search": "Search widgets",
+  "palette.noMatch": "No widget matches.",
   "palette.title": "Add widget",
 
   "ctx.widget.duplicate": (label: string) => `Duplicate ${label.toLowerCase()}`,

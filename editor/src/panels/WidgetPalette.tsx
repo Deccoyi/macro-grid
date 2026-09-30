@@ -1,9 +1,11 @@
+import { useState } from "react";
 import { CircleGauge, FlaskConical, Globe, Image as ImageIcon, Puzzle, RectangleHorizontal, ShieldAlert, SlidersHorizontal, ToggleRight, Type, type LucideIcon } from "lucide-react";
 import type { WidgetType } from "@macro/renderer";
 import type { PluginWidgetInfo } from "../api/types";
 import { useT } from "../i18n/I18nContext";
 import { usePluginWidgets } from "../state/usePluginWidgets";
 import type { DictKey } from "../i18n/tr";
+import { matchesSearch } from "./paletteSearch";
 
 // Icon per widget type — see docs/ui/editor-icons.md ("Toolbox (widget types)").
 const PALETTE: { type: WidgetType; key: DictKey; icon: LucideIcon }[] = [
@@ -26,7 +28,10 @@ interface WidgetPaletteProps {
 
 export function WidgetPalette({ onAdd, onAddPluginWidget, disabled }: WidgetPaletteProps) {
   const { t } = useT();
-  const pluginWidgets = usePluginWidgets();
+  const allPluginWidgets = usePluginWidgets();
+  const [query, setQuery] = useState("");
+  const pluginWidgets = allPluginWidgets.filter((w) => matchesSearch(query, w.name, w.description, w.pluginName));
+  const builtIn = PALETTE.filter((item) => matchesSearch(query, t(item.key)));
   // One group per plugin, in the order the plugins were listed.
   const groups = [...new Set(pluginWidgets.map((w) => w.plugin))].map((plugin) => ({ plugin, name: pluginWidgets.find((w) => w.plugin === plugin)!.pluginName, widgets: pluginWidgets.filter((w) => w.plugin === plugin) }));
   return (
@@ -34,8 +39,17 @@ export function WidgetPalette({ onAdd, onAddPluginWidget, disabled }: WidgetPale
       <div style={{ fontSize: 11, color: "var(--ms-text-secondary)", textTransform: "uppercase", letterSpacing: ".04em" }}>
         {t("palette.title")}
       </div>
+      <input
+        type="search"
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+        placeholder={t("palette.search")}
+        aria-label={t("palette.search")}
+        style={{ height: 24, padding: "0 6px", fontSize: 12, background: "var(--ms-bg-input, var(--ms-bg-surface-raised))", border: "1px solid var(--ms-border)", borderRadius: 3, color: "var(--ms-text-primary)" }}
+      />
+      {builtIn.length === 0 && pluginWidgets.length === 0 && <div style={{ fontSize: 11.5, color: "var(--ms-text-secondary)" }}>{t("palette.noMatch")}</div>}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 6 }}>
-        {PALETTE.map((item) => {
+        {builtIn.map((item) => {
           const Icon = item.icon;
           return (
             <button

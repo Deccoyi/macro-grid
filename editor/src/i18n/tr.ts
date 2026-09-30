@@ -314,6 +314,8 @@ export const tr = {
   "page.properties.delete": "Sayfayı Sil",
 
   // ---- Widget palette ----
+  "palette.search": "Widget ara",
+  "palette.noMatch": "Eşleşen widget yok.",
   "palette.title": "Widget ekle",
 
   // ---- Context menus ----
