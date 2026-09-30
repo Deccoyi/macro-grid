@@ -407,7 +407,7 @@ export function PluginsWindow() {
   const selectedEntry = catalog?.find((e) => e.id === selectedEntryId) ?? null;
   const needle = query.trim().toLowerCase();
   const visibleEntries = (catalog ?? []).filter((e) =>
-    matchesFilter(e, filter) && (!needle || `${e.name} ${e.author ?? ""} ${e.description ?? ""}`.toLowerCase().includes(needle)));
+    matchesFilter(e, filter) && (!needle || `${e.name} ${e.author ?? ""} ${e.description ?? ""} ${e.category ?? ""} ${(e.tags ?? []).join(" ")}`.toLowerCase().includes(needle)));
   const filterCount = (f: DiscoverFilter) => (catalog ?? []).filter((e) => matchesFilter(e, f)).length;
 
   return (
@@ -564,8 +564,17 @@ export function PluginsWindow() {
             <InfoCell label={t("plugins.discover.info.version")} value={selectedEntry.latestVersion ? `v${selectedEntry.latestVersion}` : "-"} />
             <InfoCell label={t("plugins.discover.info.type")} value={selectedEntry.kind === "js" ? t("plugins.discover.kind.js") : t("plugins.discover.kind.native")} />
             <InfoCell label={t("plugins.discover.info.source")} value={t(`plugins.badge.${catalogOfficial ? "official" : "thirdParty"}`)} />
+            {selectedEntry.category && <InfoCell label={t("plugins.discover.info.category")} value={selectedEntry.category} />}
             <InfoCell label={t("plugins.discover.info.access")} value={selectedEntry.kind === "js" ? t("plugins.discover.info.permissionsCount", String(selectedEntry.permissions.length)) : t("plugins.discover.info.fullAccess")} />
           </div>
+
+          {(selectedEntry.tags?.length ?? 0) > 0 && (
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 12 }}>
+              {selectedEntry.tags?.map((tag) => (
+                <span key={tag} style={{ fontSize: 11, padding: "1px 8px", borderRadius: 10, border: "1px solid var(--ms-border)", color: "var(--ms-text-secondary)" }}>{tag}</span>
+              ))}
+            </div>
+          )}
 
           {selectedEntry.description && (
             <>

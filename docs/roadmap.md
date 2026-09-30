@@ -71,9 +71,9 @@ The order of the bigger pieces of work, and their plans, are in [plans/README.md
   images are a separate problem: a widget has no network, so only bundled assets can be drawn. The actions alone (no live chat) need no server on
   any platform and can ship first. It needs a plan file first (`plans/`).
 - **The rest of a store-like Discover tab.** Discover now shows a card grid and a per-plugin detail view (description, author,
-  homepage, declared permissions, install/update) built from what the catalog already carries, in a wider Plugins window. Still
+  homepage, declared permissions, install/update) built from what the catalog already carries, in a wider Plugins window. A category and search tags now come from the catalog (the plugin manifest's `category` and `tags`). Still
   open, and each needs a catalog field first: a real plugin icon (cards show the plugin's initial on a stable color for now),
-  screenshots, category/tags to browse by, and (later) install counts or a rating. Needs deciding what's worth adding to
+  screenshots, and (later) install counts or a rating. Needs deciding what's worth adding to
   `macrogrid-index.json` (author-supplied vs. computed by the release workflow) versus what stays editor-only presentation,
   since every new field is something plugin authors have to fill in and the host has to validate and cap. It needs a plan file first (`plans/`).
 - **A crash report dialog:** when the server crashes, show the person a native confirmation window (WinForms, not a browser tab or the editor) with what would be sent — the log files and basic diagnostic info — and a choice to send it or not. On "send", the app itself emails the report to `macrogrid.app@gmail.com`; it must not open the person's own mail client or send them to a webmail site. Needs deciding how a crashed process reliably shows this window and mails from it (a small always-present watchdog process, or a next-start check for a previous crash marker), what "basic diagnostic info" contains, and the sending mechanism (SMTP with a project-owned account vs. a small backend). It needs a plan file first (`plans/`).

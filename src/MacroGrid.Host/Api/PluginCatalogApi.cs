@@ -222,6 +222,8 @@ internal static class PluginCatalogApi
             entry.Author,
             entry.Homepage,
             entry.Kind,
+            entry.Category,
+            entry.Tags,
             latestVersion = latest?.Version,
             installableVersion = compatible?.Version,
             compatible = compatible is not null,

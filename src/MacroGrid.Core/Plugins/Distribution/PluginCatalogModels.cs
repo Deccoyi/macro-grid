@@ -26,7 +26,33 @@ public sealed record PluginCatalogEntry(
     string? Author,
     string? Homepage,
     string Kind,
-    IReadOnlyList<PluginCatalogVersion> Versions);
+    IReadOnlyList<PluginCatalogVersion> Versions)
+{
+    /// <summary>What to browse by (at most 32 characters) and search words (at most 5, 24 characters each), both checked by <see cref="CatalogText"/>.</summary>
+    public string? Category { get; init; }
+    public IReadOnlyList<string> Tags { get; init; } = [];
+}
+
+/// <summary>Limits for the free text a catalog entry carries, since every such field is written by a plugin author and drawn by the editor.</summary>
+public static class CatalogText
+{
+    public const int MaxCategoryLength = 32;
+    public const int MaxTags = 5;
+    public const int MaxTagLength = 24;
+
+    /// <summary>Trims, removes control and direction-changing characters and cuts to <paramref name="max"/>; null when nothing is left.</summary>
+    public static string? Clean(string? text, int max)
+    {
+        if (text is null) return null;
+        var chars = text.Where(c => !char.IsControl(c) && c is not (>= '\u200B' and <= '\u200F') and not (>= '\u202A' and <= '\u202E') and not (>= '\u2066' and <= '\u2069') and not '\uFEFF').ToArray();
+        var cleaned = new string(chars).Trim();
+        if (cleaned.Length > max) cleaned = cleaned[..max].TrimEnd();
+        return cleaned.Length == 0 ? null : cleaned;
+    }
+
+    public static IReadOnlyList<string> CleanTags(IEnumerable<string?>? tags) =>
+        tags is null ? [] : [.. tags.Select(t => Clean(t, MaxTagLength)).OfType<string>().Distinct(StringComparer.OrdinalIgnoreCase).Take(MaxTags)];
+}
 
 /// <summary>The parsed and validated contents of a <c>macrogrid-index.json</c>. <see cref="Owner"/> and
 /// <see cref="Repo"/> are the repository it was fetched from, used to check that every version's <c>url</c>

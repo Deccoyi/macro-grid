@@ -89,6 +89,7 @@ export const tr = {
   "plugins.discover.info.version": "Sürüm",
   "plugins.discover.info.type": "Tür",
   "plugins.discover.info.source": "Kaynak",
+  "plugins.discover.info.category": "Kategori",
   "plugins.discover.info.access": "Erişim",
   "plugins.discover.info.permissionsCount": (n: string) => `${n} izin`,
   "plugins.discover.info.fullAccess": "Tam erişim",

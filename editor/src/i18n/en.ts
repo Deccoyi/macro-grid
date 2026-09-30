@@ -90,6 +90,7 @@ export const en: Record<DictKey, string | ((...args: string[]) => string)> = {
   "plugins.discover.info.type": "Type",
   "plugins.discover.info.source": "Source",
   "plugins.discover.info.access": "Access",
+  "plugins.discover.info.category": "Category",
   "plugins.discover.info.permissionsCount": (n: string) => `${n} permissions`,
   "plugins.discover.info.fullAccess": "Full access",
   "plugins.discover.back": "Back to Discover",
