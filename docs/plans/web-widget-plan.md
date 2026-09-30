@@ -4,7 +4,7 @@ Status: built in both repositories (branch `feat/web-widget`) and checked on a c
 the page loads, `window.open`, `top.location`, `alert`/`prompt`, camera, microphone and location are refused, `tel:`, `intent:`, `market:` and `_blank` links open nothing, the
 native bridge is not visible to the page, no referrer is sent, and the Example/Reset/Reload/refused-address buttons behave. Still open: step 0 (real chat and alerts links, to be tried
 at home), a download check, the old-Android fallback (emulator at most) and whether the login of an embedded site is kept (third-party cookies are not enabled).
-The stability part below is built in both repositories (crash guard, recommended live number with Tap to load, Keep loaded, unloading in the background); slow-page detection is not buildable (see point 4). Not yet tried on a phone: the memory-crash test and the deck coming back, the Tap-to-load queue, Keep loaded and the 30-second unload, and the numbers are provisional until measured.
+The stability part below is built in both repositories (crash guard, recommended live number with Tap to load, Keep loaded, unloading in the background); slow-page detection is not buildable (see point 4). Tried on a phone (Samsung, Android 16-class, 2026-09-30): the Tap-to-load queue, Keep loaded, the 30-second unload, and a page that eats all memory (the renderer is killed, the deck comes back, the site is named in a notice and turned off, with Turn on). Not tried: a small phone (number 1) and the numbers are provisional until measured.
 Repositories: `macro-grid` (model, renderer, editor, browser deck) and `macro-grid-client` (the phone app's own renderer copy and the Android layer).
 
 **What changed from the plan while building it**
@@ -330,8 +330,10 @@ turned off after it crashed or unloaded after it slowed the deck; and a web widg
 6. Docs: `architecture.md` (also the new `widget.state` field and the `core.web` action), the roadmap line, `CHANGELOG.md` in both repositories, and a `docs/design/` note for the action.
 7. Phone check before code (with the owner). **Busy-loop part done** (2026-09-30, Chrome on the owner's phone, not yet the app's own WebView): an
    iframe busy-loop froze the parent's animation frame for the full test window, but the parent's long-task observer reported nothing while frozen
-   — point 4 of "Stability on the phone" is decided as not buildable, see there. **Still open** (needs the owner's longer time, inside the app):
-   the memory-allocation crash test and confirming the renderer-gone handler brings the deck back.
+   — point 4 of "Stability on the phone" is decided as not buildable, see there. **Memory-crash test done** (2026-09-30, the app's own WebView): a page that allocates incompressible memory makes Android
+   kill the renderer and `didCrash()` is **false**, so the guard blamed nobody; it now counts a kill while the app is in front as the page's (`hasWindowFocus()`), a kill in the
+   background still blames nobody. The test also found that recreating the activity crashed the app (`PinnedSocketPlugin` wrote its close frame on the main thread); fixed. After both fixes the
+   deck comes back, the notice names the site and the site stays off.
 8. `macro-grid-client`: web sites in the crash guard (the `web:<host>` id, one merged live list, write-ahead with a confirmation before
    mounting), the placeholder with Turn on, Settings list; native unit tests for the rules with `web:` ids, vitest for the merged list.
    Also make the plugin widgets' own report wait for the confirmation (today it is sent without waiting).
