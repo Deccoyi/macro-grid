@@ -37,26 +37,52 @@ internal sealed class FileLoggerProvider : ILoggerProvider
 
     private void WriteLoop()
     {
-        foreach (var line in _lines.GetConsumingEnumerable())
+        StreamWriter? writer = null;
+        string? openPath = null;
+        try
         {
-            try
+            while (true)
             {
-                var path = StartDayIfNeeded();
-                if (_dayCapped) continue;
-
-                var text = line + Environment.NewLine;
-                if (_dayBytes + Encoding.UTF8.GetByteCount(text) > LogRetention.MaxFileBytes)
+                // Flush only when the queue has run dry, so a burst of lines costs one disk write, not one per line.
+                if (!_lines.TryTake(out var line))
                 {
-                    _dayCapped = true;
-                    text = $"{DateTime.Now:HH:mm:ss.fff} [WARN] FileLogger: Today's log reached its size limit; further lines are dropped until tomorrow.{Environment.NewLine}";
+                    writer?.Flush();
+                    if (!_lines.TryTake(out line, Timeout.Infinite)) break;
                 }
-                File.AppendAllText(path, text);
-                _dayBytes += Encoding.UTF8.GetByteCount(text);
+
+                try
+                {
+                    var path = StartDayIfNeeded();
+                    if (_dayCapped) continue;
+                    if (writer is null || path != openPath)
+                    {
+                        writer?.Dispose();
+                        writer = new StreamWriter(
+                            new FileStream(path, FileMode.Append, FileAccess.Write, FileShare.ReadWrite | FileShare.Delete),
+                            new UTF8Encoding(false));
+                        openPath = path;
+                    }
+
+                    var text = line + Environment.NewLine;
+                    if (_dayBytes + Encoding.UTF8.GetByteCount(text) > LogRetention.MaxFileBytes)
+                    {
+                        _dayCapped = true;
+                        text = $"{DateTime.Now:HH:mm:ss.fff} [WARN] FileLogger: Today's log reached its size limit; further lines are dropped until tomorrow.{Environment.NewLine}";
+                    }
+                    writer.Write(text);
+                    _dayBytes += Encoding.UTF8.GetByteCount(text);
+                }
+                catch (IOException)
+                {
+                    // Logging must never take the server down. The file is reopened on the next line.
+                    writer?.Dispose();
+                    writer = null;
+                }
             }
-            catch (IOException)
-            {
-                // Logging must never take the server down.
-            }
+        }
+        finally
+        {
+            try { writer?.Dispose(); } catch (IOException) { /* nothing more to flush */ }
         }
     }
 
