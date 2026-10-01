@@ -28,7 +28,7 @@ interface MenuBarProps {
 // Access-key letters (Windows mnemonic convention: Alt+letter opens the menu, and the letter is
 // underlined in the label while Alt is held) — one map per language since the underlined letter has
 // to actually occur in that language's label.
-const MNEMONICS: Record<Language, Record<string, string>> = {
+const MNEMONICS: Partial<Record<Language, Record<string, string>>> = {
   tr: { file: "D", edit: "Z", view: "G", settings: "A", plugins: "E", help: "Y" },
   en: { file: "F", edit: "E", view: "V", settings: "S", plugins: "P", help: "H" },
 };
@@ -204,7 +204,7 @@ export function MenuBar({ profile, onImportProfile, editCommands }: MenuBarProps
     { id: "plugins", label: t("menu.plugins"), items: pluginsItems },
     { id: "help", label: t("menu.help"), items: helpItems },
   ];
-  const mnemonics = MNEMONICS[lang];
+  const mnemonics = MNEMONICS[lang] ?? {};
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {

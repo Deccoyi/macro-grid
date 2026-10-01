@@ -1,3 +1,4 @@
+import { localeOf } from "../i18n/language";
 import { useEffect } from "react";
 import { useT } from "../i18n/I18nContext";
 import { useDocumentTitle } from "../i18n/useDocumentTitle";
@@ -23,7 +24,7 @@ export function UpdateWindow() {
   if (!snapshot) return <div style={{ padding: 20, fontSize: 12, color: "var(--ms-text-secondary)" }}>{t("app.loading")}</div>;
 
   const available = snapshot.available;
-  const dateFormat = lang === "en" ? "en-US" : "tr-TR";
+  const dateFormat = localeOf(lang);
   const installState = snapshot.install?.state ?? "idle";
   const busy = installState === "downloading" || installState === "starting";
 

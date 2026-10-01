@@ -1,3 +1,4 @@
+import { localeOf } from "../i18n/language";
 import { useEffect, useState } from "react";
 import QRCode from "qrcode";
 import { RefreshCw, Smartphone, Trash2 } from "lucide-react";
@@ -124,7 +125,7 @@ export function PairingWindow() {
               <Smartphone size={14} color="var(--ms-text-secondary)" />
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: 13 }}>{d.name}</div>
-                <div style={{ fontSize: 11, color: "var(--ms-text-disabled)" }}>{t("pairing.lastSeen", new Date(d.lastSeenAt).toLocaleString(lang === "en" ? "en-US" : "tr-TR"))}</div>
+                <div style={{ fontSize: 11, color: "var(--ms-text-disabled)" }}>{t("pairing.lastSeen", new Date(d.lastSeenAt).toLocaleString(localeOf(lang)))}</div>
               </div>
               <select
                 value={d.assignedProfileId ?? ""}

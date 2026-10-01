@@ -1,9 +1,11 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { api } from "../api/client";
 import type { AppPreferences, DockLayoutProfile, PreviewProfileInfo } from "../api/types";
+import type { Language } from "../i18n/language";
+import { ensurePack, refreshPackIfChanged } from "../i18n/packStore";
 
 export type Theme = "dark" | "light";
-export type Language = "tr" | "en";
+export type { Language } from "../i18n/language";
 type PreviewProfile = PreviewProfileInfo;
 
 const DEFAULTS: AppPreferences = {
@@ -115,7 +117,10 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
       channel.current = null;
     }
 
-    const onFocus = () => refetch();
+    const onFocus = () => {
+      refetch();
+      void refreshPackIfChanged(latest.current.language);
+    };
     const onVisibility = () => { if (document.visibilityState === "visible") refetch(); };
     window.addEventListener("focus", onFocus);
     document.addEventListener("visibilitychange", onVisibility);
@@ -221,6 +226,11 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
   // The page starts as lang="tr"; CSS upper-casing follows it, so an English label showed a Turkish dotted capital I ("VERSİON").
   useEffect(() => {
     document.documentElement.lang = prefs.language;
+  }, [prefs.language]);
+
+  // A language pack is fetched and checked here, once per language change; a built-in language clears it.
+  useEffect(() => {
+    void ensurePack(prefs.language);
   }, [prefs.language]);
 
   const value = useMemo(
