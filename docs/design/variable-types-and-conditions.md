@@ -143,3 +143,5 @@ saved until Apply, so it leaves no trace in the profile other than the rules.
 
 Also: a number variable's value input is marked when the text is not a number (it can still be saved), and a fresh row on a text variable starts with
 "equal" instead of "greater than".
+
+The variables a person defines themselves (see [user-variables.md](user-variables.md)) are ordinary entries of this catalog under the category "Global Variable List", with their type, so the same inputs and templates apply.

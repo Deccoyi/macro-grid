@@ -12,8 +12,10 @@ internal sealed class TrackingVariableStore(IVariableStore inner) : IVariableSto
     private readonly Lock _lock = new();
     private readonly HashSet<string> _names = [];
 
+    // The "user." names belong to the person's Global Variable List; a plugin can neither write nor remove them.
     public void Set(string name, object? value)
     {
+        if (UserVariables.IsUserName(name)) return;
         lock (_lock) _names.Add(name);
         inner.Set(name, value);
     }
@@ -22,6 +24,7 @@ internal sealed class TrackingVariableStore(IVariableStore inner) : IVariableSto
 
     public void Remove(string name)
     {
+        if (UserVariables.IsUserName(name)) return;
         lock (_lock) _names.Remove(name);
         inner.Remove(name);
     }

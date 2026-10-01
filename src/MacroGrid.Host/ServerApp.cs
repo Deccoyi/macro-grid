@@ -57,7 +57,7 @@ internal static class ServerApp
             .AddSingleton(certificates)
             .AddHostStores(dataDir)
             .AddBuiltInActions(dialogs, windows)
-            .AddVariablesAndStatus()
+            .AddVariablesAndStatus(dataDir)
             .AddPlugins(dataDir)
             .AddPluginDistribution(dataDir)
             .AddClientSessions(dataDir)

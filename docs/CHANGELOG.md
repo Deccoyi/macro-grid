@@ -4,6 +4,8 @@ New features and fixes in Macro Grid. For technical details, see [CHANGELOG-deve
 
 ## Unreleased
 ### New
+- **Your own variables:** a new "Global Variable List" in Preferences lets you define text, number and true/false variables and use them anywhere as `{user.name}`: in texts, rules and actions. You can keep a value after a restart.
+- **Set variable action:** a button can set a variable, switch it, add to it or reset it. A slider can set a number variable.
 - **Plugins can add their own widgets:** a plugin can draw a widget of its own, such as a gauge, and it appears in the Toolbox under the plugin's name. Plugin widgets run in a closed box with no network, so a broken one cannot harm the rest of the deck. If one keeps crashing the app, it is switched off and you can turn it back on.
 - **Switch off a single plugin permission:** in the Plugins window, an installed JavaScript plugin lists its permissions with a tick box each. Untick one and the plugin keeps running without it.
 - **Turn off unencrypted connections:** a new Preferences option "Allow unencrypted connections" (on by default). Turned off, other devices can only connect over the encrypted port; the browser deck and phones paired before encryption stop working.

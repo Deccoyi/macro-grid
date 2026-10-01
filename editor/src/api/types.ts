@@ -84,6 +84,33 @@ export type VariableSnapshot = Record<string, unknown>;
 /** Mirrors MacroGrid.Plugin.Abstractions.VariableType (sent as these strings). */
 export type VariableType = "text" | "number" | "boolean" | "duration" | "dateTime";
 
+/** Mirrors MacroGrid.Core.Variables.UserVariable: a variable from the Global Variable List. The name and type never change after creation. */
+export type UserVariableType = "text" | "number" | "boolean";
+
+export interface UserVariableDef {
+  name: string;
+  type: UserVariableType;
+  /** The start value; missing or null means "no value yet" (a text variable always has one). */
+  initial?: string | number | boolean | null;
+  keep: boolean;
+  description: string;
+}
+
+export interface UserVariablesResponse {
+  variables: UserVariableDef[];
+  limits: { maxCount: number; maxNameLength: number; maxDescriptionLength: number; maxTextLength: number };
+}
+
+export interface UserVariableUse {
+  profileId: string;
+  profileName: string;
+  pageId: string;
+  pageName: string;
+  widgetId: string;
+  widgetName: string;
+  spot: "text" | "dynamic" | "action" | "props";
+}
+
 export interface VariableInfo {
   name: string;
   description: string;

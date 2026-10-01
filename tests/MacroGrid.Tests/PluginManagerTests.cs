@@ -75,6 +75,12 @@ public sealed class PluginManagerTests : IAsyncLifetime
     [InlineData("", false)]
     [InlineData("-abc", false)]
     [InlineData("pluginç", false)]
+    [InlineData("user", false)]
+    [InlineData("System", false)]
+    [InlineData("core", false)]
+    [InlineData("self", false)]
+    [InlineData("user.tools", true)]
+    [InlineData("userland", true)]
     public void Plugin_id_rule(string id, bool valid) => Assert.Equal(valid, PluginManager.IsValidPluginId(id));
 
     [Fact]

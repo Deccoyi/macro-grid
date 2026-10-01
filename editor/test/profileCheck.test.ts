@@ -69,4 +69,20 @@ describe("checkProfile", () => {
     expect(d.map((x) => x.code)).toEqual(["W230", "W230", "W230"]);
     expect(new Set(d.map((x) => x.id)).size).toBe(3);
   });
+
+  it("gives a missing user variable its own code", () => {
+    const user = catalogs({ variableNames: new Set(["system.cpu", "user.count"]) });
+    expect(run([widget({ text: "{user.count} {user.gone}" })], user).map((x) => x.code)).toEqual(["W231"]);
+    expect(run([widget({ text: "{USER.Gone}" })], user).map((x) => x.code)).toEqual(["W231"]);
+  });
+
+  it("flags a Set variable action whose variable does not exist", () => {
+    const c = catalogs({ actions: [action("core.setVariable")], variableNames: new Set(["user.count"]) });
+    const d = run([widget({ actions: { press: [
+      { type: "core.setVariable", settings: { variable: "user.count", mode: "add" } },
+      { type: "core.setVariable", settings: { variable: "user.gone", mode: "reset" } },
+      { type: "core.setVariable", settings: {} },
+    ] } })], c);
+    expect(d.map((x) => `${x.code}:${x.target?.actionIndex}`)).toEqual(["E220:1"]);
+  });
 });
