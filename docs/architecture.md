@@ -157,6 +157,8 @@ A button's own state (`self.toggled`, `self.busy`, `self.pressed`, `self.lastRes
 
 The person can define variables of their own (text, number, true/false) in Preferences. `UserVariableService` publishes them into the same `VariableStore` as `user.<name>`, so every template, rule and slider works with them unchanged, and the `core.setVariable` action sets, switches, counts or resets them. The list and the values of the variables marked "keep" are saved in the data folder. See [design/user-variables.md](design/user-variables.md).
 
+**Automation rules.** `Core/Automation/` holds `AutomationStore` (the rules in `automation.json`) and `AutomationService`, a hosted loop that starts a rule's ordinary action list when a variable condition becomes true, at a time of day, or when a device connects. Starts are limited per rule and in total, a rule that keeps starting is switched off, and the lists run through `ActionDispatcher.RunListAsync` without a device or a key press unless a device started them. See [design/automation-rules.md](design/automation-rules.md).
+
 ## Custom CSS
 
 Each widget renders inside its own Shadow DOM. Its custom CSS is parsed with PostCSS and sanitized: properties that would let a widget change

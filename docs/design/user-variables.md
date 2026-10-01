@@ -31,7 +31,7 @@ Variables the person defines, kept by the server and used anywhere a variable ca
 
 It reports its outcome: a missing variable is `NotFound` (so is any name that does not start with `user.`), a wrong type or a value that does not fit is `InvalidParameter`, an empty variable setting is `NotConfigured`. Each write is atomic, so two presses at once do not lose an update. Plugin widgets cannot run `core.*` actions.
 
-There is no limit on how often a variable is written and no check for a loop (a rule that changes a variable which changes the rule again). Both belong to the automation work that comes later.
+There is no limit on how often a variable is written and no check for a loop (a rule that changes a variable which changes the rule again). Rules that write variables on their own are capped by their start limits instead; see [automation-rules.md](automation-rules.md).
 
 ## Editor
 
