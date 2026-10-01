@@ -11,11 +11,12 @@ public sealed partial class JsPlugin
           'use strict';
           const g = globalThis;
           const names = ['permissions', 'log', 'varSet', 'varGet', 'varRemove', 'varDescribe', 'registerAction',
-            'settingsPage', 'settingsGet', 'status', 'hotkey', 'type', 'pressEnd', 'http', 'httpAsync', 'widgetPost', 'widgetReply', 'diagnosticsReport', 'diagnosticsResolve', 'diagnosticsClear', 'timer', 'cancel'];
+            'settingsPage', 'settingsGet', 'status', 'hotkey', 'type', 'pressEnd', 'http', 'httpAsync', 'widgetPost', 'widgetReply', 'diagnosticsReport', 'diagnosticsResolve', 'diagnosticsClear', 'timer', 'cancel', 'actionDone'];
           const n = {};
           for (const name of names) { n[name] = g['__' + name]; delete g['__' + name]; }
 
           const actions = Object.create(null);
+          const outcomeActions = Object.create(null);
           let widgetHandler = null;
           const timers = Object.create(null);
           let nextTimer = 1;
@@ -57,6 +58,7 @@ public sealed partial class JsPlugin
               delete meta.run;
               n.registerAction(JSON.stringify(meta));
               actions[definition.type] = definition.run;
+              outcomeActions[definition.type] = definition.outcome === true;
             },
             settings: Object.freeze({
               page: (fields) => n.settingsPage(JSON.stringify(fields)),
@@ -93,15 +95,34 @@ public sealed partial class JsPlugin
           };
           Object.defineProperty(g, 'host', { value: Object.freeze(host), writable: false, configurable: false });
 
-          g.__runAction = function (type, contextJson, settingsJson) {
+          // What an action reports: { ok: false, code, message } or { ok: 'accepted', message }. Anything else is success ('').
+          const outcomeOf = (v) => {
+            if (!v || typeof v !== 'object' || (v.ok !== false && v.ok !== 'accepted')) return '';
+            const o = { ok: v.ok };
+            if (typeof v.code === 'string') o.code = v.code;
+            if (typeof v.message === 'string') o.message = v.message;
+            return JSON.stringify(o);
+          };
+          // Returns the outcome of a synchronous run (a JSON string, '' for success) or null while an 'outcome: true' promise is pending.
+          g.__runAction = function (type, contextJson, settingsJson, runId) {
             const run = actions[type];
             if (!run) throw new Error('Unknown action ' + type);
             // Keyboard input is allowed only until the action, and the promise it returns, have settled.
             let result;
             try { result = run(JSON.parse(contextJson), JSON.parse(settingsJson)); }
             catch (e) { n.pressEnd(); throw e; }
-            if (result && typeof result.then === 'function') result.then(() => n.pressEnd(), () => n.pressEnd());
-            else n.pressEnd();
+            if (result && typeof result.then === 'function') {
+              if (runId && outcomeActions[type]) {
+                result.then(
+                  (v) => { n.pressEnd(); n.actionDone(runId, outcomeOf(v)); },
+                  (e) => { n.pressEnd(); n.actionDone(runId, JSON.stringify({ ok: false, code: 'ProviderError', message: String(e && e.message ? e.message : e) })); });
+                return null;
+              }
+              result.then(() => n.pressEnd(), () => n.pressEnd());
+              return '';
+            }
+            n.pressEnd();
+            return outcomeOf(result);
           };
           g.__widgetMessage = function (id, messageJson) {
             if (!widgetHandler) { n.widgetReply(id, false, 'This plugin does not answer widget requests.'); return; }

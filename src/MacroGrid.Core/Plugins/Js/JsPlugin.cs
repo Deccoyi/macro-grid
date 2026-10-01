@@ -69,6 +69,8 @@ public sealed partial class JsPlugin : IPlugin, IPluginWidgetHandler, IDisposabl
     private Thread? _thread;
     private int _pendingTimerJobs;
     private int _pendingHttp;
+    private readonly ConcurrentDictionary<int, TaskCompletionSource<string>> _outcomeWaits = [];
+    private int _nextRunId;
     private readonly CancellationTokenSource _disposeCts = new();
     private int _consecutiveErrors;
     private volatile bool _disposed;
@@ -132,20 +134,80 @@ public sealed partial class JsPlugin : IPlugin, IPluginWidgetHandler, IDisposabl
         _initialized = true;
     }
 
-    /// <summary>Runs a registered action's function on the plugin thread and completes when it returns.</summary>
-    internal Task RunActionAsync(string type, ActionContext context, JsonObject settings, CancellationToken ct)
+    /// <summary>How many runs wait for their outcome right now (for tests).</summary>
+    internal int PendingOutcomeWaits => _outcomeWaits.Count;
+
+    /// <summary>The most async actions one plugin may have waiting for their outcome at once.</summary>
+    private const int MaxPendingOutcomes = 16;
+
+    /// <summary>The longest outcome text read back from a script (anything larger is a provider error with the default text).</summary>
+    private const int MaxOutcomeJson = 4096;
+
+    /// <summary>Runs a registered action's function on the plugin thread. A reported failure (<c>ok: false</c>) is a result here, not an
+    /// exception: it is no script fault, so it adds no Error List line and does not count towards switching the plugin off. A thrown error still does.</summary>
+    internal async Task<ActionOutcome> RunActionAsync(string type, bool waitsForOutcome, ActionContext context, JsonObject settings, CancellationToken ct)
     {
         var contextJson = JsonSerializer.Serialize(new { context.DeviceId, context.PageId, context.WidgetId, context.Value }, ProtocolJson.Options);
-        var run = Post(() =>
+        TaskCompletionSource<string>? wait = null;
+        var runId = 0;
+        var run = Post<ActionOutcome?>(() =>
         {
+            if (waitsForOutcome)
+            {
+                if (_outcomeWaits.Count >= MaxPendingOutcomes) return ActionOutcome.Failed(ActionFailureCode.Unavailable, "Too many runs are waiting.");
+                runId = Interlocked.Increment(ref _nextRunId);
+                wait = new TaskCompletionSource<string>(TaskCreationOptions.RunContinuationsAsynchronously);
+                _outcomeWaits[runId] = wait;
+            }
+
             // A person touched a device: keyboard input is allowed for this job and the continuations it starts. An action a widget's script
             // started without a real touch (ActionContext.UserGesture false) gets no press window, so it cannot type.
             _press = context.UserGesture ? new JsPressWindow(Stopwatch.GetTimestamp() + (long)(_limits.PressWindow.TotalSeconds * Stopwatch.Frequency)) : null;
-            try { Invoke("__runAction", type, contextJson, settings.ToJsonString()); }
+            string? shape;
+            try { shape = Invoke("__runAction", type, contextJson, settings.ToJsonString(), runId); }
+            catch { _outcomeWaits.TryRemove(runId, out _); throw; }
             finally { _press = null; }
-            return 0;
+
+            if (shape is null && wait is not null) return null; // an async action: its promise settles later
+            _outcomeWaits.TryRemove(runId, out _);
+            return ReadOutcome(shape);
         });
-        return run.WaitAsync(ct);
+
+        var immediate = await run.WaitAsync(ct);
+        if (immediate is not null || wait is null) return immediate ?? ActionOutcome.Success;
+
+        try { return ReadOutcome(await wait.Task.WaitAsync(_limits.ActionOutcomeTimeout, ct)); }
+        catch (TimeoutException) { return ActionOutcome.Failed(ActionFailureCode.Timeout); }
+        finally { _outcomeWaits.TryRemove(runId, out _); }
+    }
+
+    /// <summary>Reads what a script reported: null or '' is success; otherwise <c>{ ok: false | "accepted", code?, message? }</c>.</summary>
+    private static ActionOutcome ReadOutcome(string? json)
+    {
+        if (string.IsNullOrEmpty(json)) return ActionOutcome.Success;
+        if (json.Length > MaxOutcomeJson) return ActionOutcome.Failed(ActionFailureCode.ProviderError);
+        try
+        {
+            using var doc = JsonDocument.Parse(json);
+            var root = doc.RootElement;
+            var message = root.TryGetProperty("message", out var m) && m.ValueKind == JsonValueKind.String ? m.GetString() : null;
+            if (root.TryGetProperty("ok", out var ok) && ok.ValueKind == JsonValueKind.String) return ActionOutcome.Accepted(message);
+            var code = root.TryGetProperty("code", out var c) && c.ValueKind == JsonValueKind.String
+                && Enum.TryParse<ActionFailureCode>(c.GetString(), ignoreCase: true, out var parsed) && Enum.IsDefined(parsed)
+                ? parsed
+                : ActionFailureCode.ProviderError;
+            return ActionOutcome.Failed(code, message);
+        }
+        catch (JsonException)
+        {
+            return ActionOutcome.Failed(ActionFailureCode.ProviderError);
+        }
+    }
+
+    /// <summary>Called by the script when an <c>outcome: true</c> action's promise settles (on the plugin thread).</summary>
+    private void ActionDone(int runId, string json)
+    {
+        if (_outcomeWaits.TryRemove(runId, out var wait)) wait.TrySetResult(json);
     }
 
     /// <summary>How many button presses used the keyboard through this plugin today (shown in the Plugins window).</summary>
@@ -167,6 +229,8 @@ public sealed partial class JsPlugin : IPlugin, IPluginWidgetHandler, IDisposabl
             _timers.Clear();
         }
         _jobs.CompleteAdding();
+        foreach (var wait in _outcomeWaits.Values) wait.TrySetResult("""{"ok":false,"code":"Unavailable"}""");
+        _outcomeWaits.Clear();
         _disposeCts.Cancel();
         _http.Dispose();
         _disposeCts.Dispose();
@@ -240,19 +304,21 @@ public sealed partial class JsPlugin : IPlugin, IPluginWidgetHandler, IDisposabl
         engine.SetValue("__widgetReply", new Action<int, bool, string>(WidgetReply));
         engine.SetValue("__timer", new Action<int, int, bool>(StartTimer));
         engine.SetValue("__cancel", new Action<int>(CancelTimer));
+        engine.SetValue("__actionDone", new Action<int, string>(ActionDone));
         return engine;
     }
 
     /// <summary>Calls a global script function under the per-call budget and does the error accounting.</summary>
-    private void Invoke(string function, params object[] args)
+    private string? Invoke(string function, params object[] args)
     {
         try
         {
-            _engine!.Invoke(function, args);
+            var result = _engine!.Invoke(function, args);
             // Promise callbacks (an awaited async request, a .then) only run when the engine is asked to; without this a
             // settled promise would sit unnoticed until the next unrelated call.
             _engine.Advanced.ProcessTasks();
             if (_initialized) Interlocked.Exchange(ref _consecutiveErrors, 0);
+            return result.IsString() ? result.AsString() : null;
         }
         catch (Exception ex)
         {
