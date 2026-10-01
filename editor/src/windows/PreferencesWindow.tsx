@@ -7,6 +7,7 @@ import { useDocumentTitle } from "../i18n/useDocumentTitle";
 import { SectionLabel, Seg } from "../panels/fields/controls";
 import { usePreferences } from "../preferences/PreferencesContext";
 import { GlobalVariablesPage } from "./GlobalVariablesPage";
+import { LanguageSection } from "./LanguageSection";
 import { ToolWindowLayout } from "./ToolWindowLayout";
 
 type Category = "general" | "appearance" | "language" | "previewProfiles" | "profiles" | "globalVariables";
@@ -14,7 +15,7 @@ type Category = "general" | "appearance" | "language" | "previewProfiles" | "pro
 /** The whole page of the "Tercihler" tool window (see ToolWindow.cs) — a real separate, non-modal OS
  * window, not an in-page dialog. */
 export function PreferencesWindow() {
-  const { t, lang, setLang } = useT();
+  const { t } = useT();
   useDocumentTitle("preferences.title");
   const {
     theme, setTheme, previewProfiles, addPreviewProfile, removePreviewProfile, defaultProfileId, setDefaultProfileId,
@@ -119,15 +120,7 @@ export function PreferencesWindow() {
         </div>
       )}
 
-      {category === "language" && (
-        <div style={{ display: "flex", flexDirection: "column", gap: 16, maxWidth: 360 }}>
-          <SectionLabel>{t("preferences.category.language")}</SectionLabel>
-          <label className="field">
-            {t("preferences.language")}
-            <Seg value={lang} onChange={setLang} options={[{ value: "tr", label: "Türkçe" }, { value: "en", label: "English" }]} />
-          </label>
-        </div>
-      )}
+      {category === "language" && <LanguageSection />}
 
       {category === "previewProfiles" && (
         <div style={{ maxWidth: 420 }}>

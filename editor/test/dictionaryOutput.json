@@ -504,6 +504,69 @@
       "five": "Could not change the startup setting: 5",
       "words": "Could not change the startup setting: Arg1"
     },
+    "languagePack.coverage": {
+      "zero": "0 of 0 translated",
+      "one": "1 of 1 translated",
+      "two": "2 of 2 translated",
+      "five": "5 of 5 translated",
+      "words": "Arg1 of Arg2 translated"
+    },
+    "languagePack.needsReview.one": {
+      "zero": "0 row needs review",
+      "one": "1 row needs review",
+      "two": "2 row needs review",
+      "five": "5 row needs review",
+      "words": "Arg1 row needs review"
+    },
+    "languagePack.needsReview.other": {
+      "zero": "0 rows need review",
+      "one": "1 rows need review",
+      "two": "2 rows need review",
+      "five": "5 rows need review",
+      "words": "Arg1 rows need review"
+    },
+    "languagePack.removeConfirm": {
+      "zero": "Remove the pack 0? A table you exported is not affected.",
+      "one": "Remove the pack 1? A table you exported is not affected.",
+      "two": "Remove the pack 2? A table you exported is not affected.",
+      "five": "Remove the pack 5? A table you exported is not affected.",
+      "words": "Remove the pack Arg1? A table you exported is not affected."
+    },
+    "languagePack.report.title": {
+      "zero": "Import report for 0",
+      "one": "Import report for 1",
+      "two": "Import report for 2",
+      "five": "Import report for 5",
+      "words": "Import report for Arg1"
+    },
+    "languagePack.report.summary": {
+      "zero": "0 accepted, 0 left empty, 0 refused.",
+      "one": "1 accepted, 1 left empty, 1 refused.",
+      "two": "2 accepted, 2 left empty, 2 refused.",
+      "five": "5 accepted, 5 left empty, 5 refused.",
+      "words": "Arg1 accepted, Arg2 left empty, Arg3 refused."
+    },
+    "languagePack.report.row": {
+      "zero": "Line 0: 0 (0)",
+      "one": "Line 1: 1 (1)",
+      "two": "Line 2: 2 (2)",
+      "five": "Line 5: 5 (5)",
+      "words": "Line Arg1: Arg2 (Arg3)"
+    },
+    "languagePack.report.more": {
+      "zero": "…and 0 more",
+      "one": "…and 1 more",
+      "two": "…and 2 more",
+      "five": "…and 5 more",
+      "words": "…and Arg1 more"
+    },
+    "languagePack.error": {
+      "zero": "The language pack could not be saved: 0",
+      "one": "The language pack could not be saved: 1",
+      "two": "The language pack could not be saved: 2",
+      "five": "The language pack could not be saved: 5",
+      "words": "The language pack could not be saved: Arg1"
+    },
     "profile.deleteConfirm": {
       "zero": "Delete profile \"0\"?",
       "one": "Delete profile \"1\"?",
@@ -1100,6 +1163,69 @@
       "two": "Başlangıç ayarı değiştirilemedi: 2",
       "five": "Başlangıç ayarı değiştirilemedi: 5",
       "words": "Başlangıç ayarı değiştirilemedi: Arg1"
+    },
+    "languagePack.coverage": {
+      "zero": "0 satırın 0 tanesi çevrildi",
+      "one": "1 satırın 1 tanesi çevrildi",
+      "two": "2 satırın 2 tanesi çevrildi",
+      "five": "5 satırın 5 tanesi çevrildi",
+      "words": "Arg2 satırın Arg1 tanesi çevrildi"
+    },
+    "languagePack.needsReview.one": {
+      "zero": "0 satır gözden geçirilmeli",
+      "one": "1 satır gözden geçirilmeli",
+      "two": "2 satır gözden geçirilmeli",
+      "five": "5 satır gözden geçirilmeli",
+      "words": "Arg1 satır gözden geçirilmeli"
+    },
+    "languagePack.needsReview.other": {
+      "zero": "0 satır gözden geçirilmeli",
+      "one": "1 satır gözden geçirilmeli",
+      "two": "2 satır gözden geçirilmeli",
+      "five": "5 satır gözden geçirilmeli",
+      "words": "Arg1 satır gözden geçirilmeli"
+    },
+    "languagePack.removeConfirm": {
+      "zero": "0 paketi kaldırılsın mı? Dışa aktardığınız tablo etkilenmez.",
+      "one": "1 paketi kaldırılsın mı? Dışa aktardığınız tablo etkilenmez.",
+      "two": "2 paketi kaldırılsın mı? Dışa aktardığınız tablo etkilenmez.",
+      "five": "5 paketi kaldırılsın mı? Dışa aktardığınız tablo etkilenmez.",
+      "words": "Arg1 paketi kaldırılsın mı? Dışa aktardığınız tablo etkilenmez."
+    },
+    "languagePack.report.title": {
+      "zero": "0 için içe aktarma raporu",
+      "one": "1 için içe aktarma raporu",
+      "two": "2 için içe aktarma raporu",
+      "five": "5 için içe aktarma raporu",
+      "words": "Arg1 için içe aktarma raporu"
+    },
+    "languagePack.report.summary": {
+      "zero": "0 kabul edildi, 0 boş bırakıldı, 0 reddedildi.",
+      "one": "1 kabul edildi, 1 boş bırakıldı, 1 reddedildi.",
+      "two": "2 kabul edildi, 2 boş bırakıldı, 2 reddedildi.",
+      "five": "5 kabul edildi, 5 boş bırakıldı, 5 reddedildi.",
+      "words": "Arg1 kabul edildi, Arg2 boş bırakıldı, Arg3 reddedildi."
+    },
+    "languagePack.report.row": {
+      "zero": "Satır 0: 0 (0)",
+      "one": "Satır 1: 1 (1)",
+      "two": "Satır 2: 2 (2)",
+      "five": "Satır 5: 5 (5)",
+      "words": "Satır Arg1: Arg2 (Arg3)"
+    },
+    "languagePack.report.more": {
+      "zero": "…ve 0 tane daha",
+      "one": "…ve 1 tane daha",
+      "two": "…ve 2 tane daha",
+      "five": "…ve 5 tane daha",
+      "words": "…ve Arg1 tane daha"
+    },
+    "languagePack.error": {
+      "zero": "Dil paketi kaydedilemedi: 0",
+      "one": "Dil paketi kaydedilemedi: 1",
+      "two": "Dil paketi kaydedilemedi: 2",
+      "five": "Dil paketi kaydedilemedi: 5",
+      "words": "Dil paketi kaydedilemedi: Arg1"
     },
     "profile.deleteConfirm": {
       "zero": "\"0\" profili silinsin mi?",
