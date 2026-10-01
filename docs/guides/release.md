@@ -67,7 +67,8 @@ on the maintainer's PC, and `examples/third-party-release.yml` in that repositor
      (`scripts/check-vulnerabilities.ps1`, the same check CI runs), runs `scripts/publish.ps1`, writes the SBOM
      (`scripts/sbom.ps1`, `MacroGrid-Server-<version>.cdx.json`, one file merged from the .NET, editor, deck and renderer parts, attached to the release), zips the folder, builds
      `MacroGrid-Setup-<version>.exe` with Inno Setup (on every tag; the updater downloads exactly this file name) and attaches both to a **draft**
-     GitHub Release whose body is the changelog section from step 3. If the installer is missing from the draft, the app offers the release page
+     GitHub Release whose body is the changelog section from step 3. The same run also builds the plugin tool (`scripts/publish-plugin-tool.ps1`) and attaches
+     `MacroGrid-PluginTool-<version>-win-x64.zip`; the updater ignores it (it looks for the installer's exact name). If the installer is missing from the draft, the app offers the release page
      instead of "Install now".
 9. Test the installer on a clean PC (install, upgrade over the old version, uninstall), and test the update on a PC that has the previous
    version installed (see "Updating from inside the app" below). **Publishing the draft is what reaches people: every running install checks

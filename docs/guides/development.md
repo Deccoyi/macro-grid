@@ -63,6 +63,17 @@ Be careful when a test sends `widget.down` to a real server: it presses real key
 
 When you test the editor or the API by hand, use a separate test profile (**+ Profile**) instead of your real one, and delete it afterwards.
 
+## Plugin tool
+
+`tools/MacroGrid.PluginTool` is the author's command line (`validate`, `pack`, `new`, `run`; see its README). It is built on `MacroGrid.Core`, so the folder check and `run` use the loader's own rules and the real script runtime. Try it from source:
+
+```powershell
+dotnet run --project tools/MacroGrid.PluginTool -- validate path	oplugin
+scriptspublish-plugin-tool.ps1               # the shipped single-file build, into artifactsplugin-tool
+```
+
+The test doubles for `IPluginHost` live in `tests/MacroGrid.Plugin.Testing`. Add a member to `IPluginHost` and that project is the one place that has to follow.
+
 ## Data and logs
 
 The server keeps everything in `%AppData%\MacroGrid\` (profiles, paired devices, preferences, plugins, logs; see

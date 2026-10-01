@@ -21,6 +21,7 @@ New features and fixes in Macro Grid. For technical details, see [CHANGELOG-deve
 - **Quick templates in the rule editor:** on/off, low/medium/high and "grey when unavailable" in one click.
 - **An unsafe official plugin version can be switched off:** if an official plugin version turns out to be unsafe, Macro Grid stops it and tells you why. Nothing is switched off just because the list could not be loaded.
 - **A publisher can withdraw a version:** a withdrawn version cannot be installed, and if you have it you are asked to update or remove it. It keeps working until you do.
+- **A command-line tool for plugin authors (a separate download on the release page):** check, package, start and try out a JavaScript plugin.
 ### Changed
 - **Wait is now under Logic and is set in seconds.**
 - **The plugin list opens faster and works from a saved copy:** if the internet is down, you still see the last list.
@@ -33,6 +34,7 @@ New features and fixes in Macro Grid. For technical details, see [CHANGELOG-deve
 - **The Toolbox can be an A to Z list:** the menu next to "Add widget" switches between plugin groups and one plain alphabetical list, and a plugin group can be folded.
 - **The Toolbox marks the web widget with a small flask icon** instead of the word "Experimental".
 ### Fixed
+- **A plugin whose start file points outside its own folder is no longer loaded.**
 - **Tighter limits on where a JavaScript plugin can connect:** a plugin can now only reach the kind of address you approved, and never Macro Grid itself.
 
 ## 1.3.1 - 2026-09-29
