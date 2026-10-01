@@ -115,7 +115,7 @@ export function DynamizeModal({ propertyLabel, binding, variableCatalog, resultK
             </div>
           )}
 
-          <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+          {!unsupported && <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
             <Keyword muted>{t("dynamic.quick.title")}</Keyword>
             {templateKinds(resultKind).map((kind) => {
               const choices = variablesFor(kind, variableCatalog);
@@ -140,7 +140,7 @@ export function DynamizeModal({ propertyLabel, binding, variableCatalog, resultK
                 />
               );
             })}
-          </div>
+          </div>}
 
           {cases.map((c, i) => (
             <div key={i} style={{ border: "1px solid var(--ms-border)", background: "var(--ms-bg-canvas)", padding: "12px 14px", display: "flex", flexDirection: "column", gap: 9 }}>
@@ -185,7 +185,7 @@ export function DynamizeModal({ propertyLabel, binding, variableCatalog, resultK
                       onInsert={(name) => updateCase(i, (cc) => {
                         const target = cc.conditions[ci]!;
                         target.variable = name;
-                        fitConditionToVariable(target, variableCatalog.find((v) => v.name === name));
+                        fitConditionToVariable(target, variableCatalog.find((v) => v.name === name), true);
                       })}
                       renderTrigger={(open) => (
                         <button type="button" className="ghost" onClick={open} style={chipStyle}>

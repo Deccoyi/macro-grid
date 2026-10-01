@@ -44,5 +44,9 @@
 { "name": "xor of one true", "variables": { "a": 1, "b": 3 }, "condition": { "kind": "xor", "children": [ { "kind": "compare", "variable": "a", "operator": "==", "value": "1" }, { "kind": "compare", "variable": "b", "operator": "==", "value": "2" } ] }, "expected": true },
 { "name": "not of unavailable", "variables": { "v": 1 }, "condition": { "kind": "not", "children": [ { "kind": "compare", "variable": "v", "operator": "unavailable" } ] }, "expected": true },
 { "name": "not needs exactly one child", "variables": {}, "condition": { "kind": "not", "children": [] }, "expected": false },
-{ "name": "ordinary operator without value is false", "variables": { "v": 1 }, "condition": { "kind": "compare", "variable": "v", "operator": "==" }, "expected": false }
+{ "name": "ordinary operator without value is false", "variables": { "v": 1 }, "condition": { "kind": "compare", "variable": "v", "operator": "==" }, "expected": false },
+{ "name": "empty variable name is false", "variables": { "": 1 }, "condition": { "kind": "compare", "variable": "", "operator": "==", "value": "1" }, "expected": false },
+{ "name": "empty value is not a number for >", "variables": { "v": 5 }, "condition": { "kind": "compare", "variable": "v", "operator": ">", "value": "" }, "expected": false },
+{ "name": "empty value is not zero for ==", "variables": { "v": 0 }, "condition": { "kind": "compare", "variable": "v", "operator": "==", "value": "" }, "expected": false },
+{ "name": "empty between bound is false", "variables": { "v": 5 }, "condition": { "kind": "compare", "variable": "v", "operator": "between", "value": "0", "value2": "" }, "expected": false }
 ]

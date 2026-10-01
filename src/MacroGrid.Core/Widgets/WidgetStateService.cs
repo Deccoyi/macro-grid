@@ -193,6 +193,13 @@ public sealed class WidgetStateService : IHostedService, IDisposable
                 session.SentStyles[widget.Id] = style;
                 await session.SendAsync(MessageTypes.WidgetState, new WidgetStateMessage(widget.Id, Style: _layouts.ForClient(session, style)), ct);
             }
+            else if (session.SentStyles.TryGetValue(widget.Id, out var previous) && previous.Count > 0)
+            {
+                // Nothing matches now but the device still holds an old style (the page was off screen while the variable changed): the client
+                // merges state, so an empty style is what takes it back to the widget's own.
+                session.SentStyles[widget.Id] = [];
+                await session.SendAsync(MessageTypes.WidgetState, new WidgetStateMessage(widget.Id, Style: []), ct);
+            }
         }
     }
 

@@ -66,9 +66,9 @@ function evaluateComparison(node: ConditionNode, variables: Record<string, unkno
 
   if (node.operator === "between") {
     const v = toNumber(live);
-    const lo = Number(node.value);
-    const hi = Number(node.value2);
-    if (v === undefined || Number.isNaN(lo) || Number.isNaN(hi)) return false;
+    const lo = toNumber(node.value);
+    const hi = toNumber(node.value2);
+    if (v === undefined || lo === undefined || hi === undefined) return false;
     return v >= Math.min(lo, hi) && v <= Math.max(lo, hi);
   }
 
@@ -81,8 +81,8 @@ function evaluateComparison(node: ConditionNode, variables: Record<string, unkno
   }
 
   const actual = toNumber(live);
-  const expected = Number(node.value);
-  if (actual !== undefined && !Number.isNaN(expected)) {
+  const expected = toNumber(node.value);
+  if (actual !== undefined && expected !== undefined) {
     switch (node.operator) {
       case ">": return actual > expected;
       case ">=": return actual >= expected;

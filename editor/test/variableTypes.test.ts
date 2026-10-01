@@ -8,8 +8,22 @@ const info = (patch: Partial<VariableInfo>): VariableInfo => ({ name: "v", descr
 describe("fitConditionToVariable", () => {
   it("starts a fresh row on a text variable with equal instead of greater than", () => {
     const c = newCondition();
-    fitConditionToVariable(c, info({ type: "text" }));
+    fitConditionToVariable(c, info({ type: "text" }), true);
     expect(c.operator).toBe("==");
+  });
+
+  it("keeps greater than when only the operator changed on a text variable with no value yet", () => {
+    const c = newCondition();
+    fitConditionToVariable(c, info({ type: "text" }));
+    expect(c.operator).toBe(">");
+  });
+
+  it("keeps a typed non-number when only the operator changed on a number variable", () => {
+    const c = { ...newCondition(), value: "abc" };
+    fitConditionToVariable(c, info({ type: "number" }));
+    expect(c.value).toBe("abc");
+    fitConditionToVariable(c, info({ type: "number" }), true);
+    expect(c.value).toBe("");
   });
 
   it("does not touch the operator of a row that already has a value", () => {
