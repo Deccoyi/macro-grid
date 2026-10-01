@@ -9,13 +9,16 @@ import type { PluginWidgetInfo } from "../api/types";
 export function usePluginWidgets(): PluginWidgetInfo[] {
   const [list, setList] = useState<PluginWidgetInfo[]>([]);
   const refresh = useCallback(() => {
-    api.pluginWidgets().then(setList).catch(() => {});
+    api.pluginWidgets()
+      .then((next) => setList((prev) => (prev.length === next.length && prev.every((w, i) => w.plugin === next[i]!.plugin && w.widget === next[i]!.widget) ? prev : next)))
+      .catch(() => {});
   }, []);
 
   useEffect(() => {
     refresh();
     window.addEventListener("focus", refresh);
-    return () => window.removeEventListener("focus", refresh);
+    const timer = setInterval(() => { if (!document.hidden) refresh(); }, 10_000);
+    return () => { window.removeEventListener("focus", refresh); clearInterval(timer); };
   }, [refresh]);
 
   return list;

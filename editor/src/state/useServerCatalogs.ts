@@ -39,6 +39,17 @@ export function useServerCatalogs() {
     return () => window.removeEventListener("focus", refreshCatalogs);
   }, [refreshCatalogs]);
 
+  // A plugin switched off or removed from the Plugins window changes the action list; the profile check needs to see that without a focus change.
+  // Only a changed set of action types replaces the list, so nothing re-renders while it stays the same.
+  useEffect(() => {
+    const tick = () => {
+      if (document.hidden) return;
+      api.listActions().then((next) => setActions((prev) => (sameTypes(prev, next) ? prev : next))).catch(() => {});
+    };
+    const timer = setInterval(tick, 10_000);
+    return () => clearInterval(timer);
+  }, []);
+
   // Auto-poll so the canvas's dynamic-style preview (evaluateWidgetDynamicStyle) actually reacts to
   // live values like system.cpu instead of only updating when the user clicks "Refresh variables" —
   // this is a one-shot REST snapshot, not a push, since the editor isn't a real device session.
@@ -56,4 +67,8 @@ export function useServerCatalogs() {
   }, [refreshVariables]);
 
   return { variables, actions, variableCatalog, status, refreshVariables };
+}
+
+function sameTypes(a: ActionInfo[], b: ActionInfo[]): boolean {
+  return a.length === b.length && a.every((x, i) => x.type === b[i]!.type);
 }
