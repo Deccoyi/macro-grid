@@ -1,10 +1,11 @@
-import { useState, type ElementType } from "react";
-import { ChevronUp, ChevronDown, Circle, CircleDot, SlidersHorizontal, Timer, ToggleLeft, ToggleRight, X } from "lucide-react";
+import { useEffect, useRef, useState, type ElementType } from "react";
+import { CircleAlert, ChevronUp, ChevronDown, Circle, CircleDot, SlidersHorizontal, Timer, ToggleLeft, ToggleRight, X } from "lucide-react";
 import type { ActionBinding, Page, Widget, WidgetEventName } from "@macro/renderer";
 import type { ActionInfo, ProfileSummary, VariableInfo } from "../api/types";
 import { useCatalogText } from "../i18n/catalogText";
 import { useT } from "../i18n/I18nContext";
 import type { DictKey } from "../i18n/tr";
+import { useWorkspaceUi } from "../workspace/WorkspaceUiContext";
 import { ActionPicker } from "./ActionPicker";
 import { formFor } from "./actionForms/forms";
 
@@ -53,6 +54,23 @@ export function ActionEditor({ widget, actions, pages, profiles, variableCatalog
     : BUTTON_EVENTS;
   const [activeEvent, setActiveEvent] = useState<WidgetEventName>(events[0]!.event);
   const bindings = widget.actions[activeEvent] ?? [];
+
+  // "Go to widget" from the Error List: show that event, scroll the action into view and outline it once.
+  const { focusAction, setFocusAction } = useWorkspaceUi();
+  const [outlined, setOutlined] = useState<number | null>(null);
+  const rowRefs = useRef<(HTMLDivElement | null)[]>([]);
+  useEffect(() => {
+    if (!focusAction || focusAction.widgetId !== widget.id) return;
+    if (events.some((e) => e.event === focusAction.event) && activeEvent !== focusAction.event) {
+      setActiveEvent(focusAction.event as WidgetEventName);
+      return; // the rows of that event render next; this effect runs again with the right one
+    }
+    rowRefs.current[focusAction.index]?.scrollIntoView({ block: "nearest" });
+    setOutlined(focusAction.index);
+    setFocusAction(null);
+    const timer = window.setTimeout(() => setOutlined(null), 2000);
+    return () => window.clearTimeout(timer);
+  }, [focusAction, widget.id, activeEvent, events, setFocusAction]);
 
   const updateBinding = (index: number, next: Partial<ActionBinding>) => {
     const copy = bindings.map((b, i) => (i === index ? { ...b, ...next } : b));
@@ -111,14 +129,23 @@ export function ActionEditor({ widget, actions, pages, profiles, variableCatalog
         const actionInfo = actions.find((a) => a.type === binding.type);
         const Form = formFor(binding.type, actionInfo);
         return (
-          <div key={index} style={{ border: "1px solid var(--ms-border)", borderRadius: 4, padding: 8, display: "flex", flexDirection: "column", gap: 6 }}>
+          <div
+            key={index}
+            ref={(el) => { rowRefs.current[index] = el; }}
+            style={{ border: `1px solid ${outlined === index ? "var(--ms-accent)" : "var(--ms-border)"}`, outline: outlined === index ? "2px solid var(--ms-accent)" : undefined, borderRadius: 4, padding: 8, display: "flex", flexDirection: "column", gap: 6 }}
+          >
             <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
               <ActionPicker
                 actions={actions}
                 onPick={(type) => updateBinding(index, { type, settings: {} })}
                 renderTrigger={(open) => (
                   <button type="button" className="ghost" onClick={open} style={{ flex: 1, textAlign: "left", justifyContent: "flex-start" }}>
-                    {actionInfo ? catalogText.actionName(actionInfo) : binding.type}
+                    {actionInfo ? catalogText.actionName(actionInfo) : (
+                      <span title={t("action.unavailable")} style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                        <CircleAlert size={13} style={{ color: "var(--ms-danger)", flex: "0 0 auto" }} />
+                        {binding.type}
+                      </span>
+                    )}
                   </button>
                 )}
               />

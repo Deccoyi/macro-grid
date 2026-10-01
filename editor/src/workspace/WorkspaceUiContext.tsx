@@ -29,6 +29,16 @@ export interface WorkspaceUi {
     | { kind: "profile" | "profileFolder"; id: string; parentFolderId: string | null }
     | null;
   setTreeSelection: (sel: WorkspaceUi["treeSelection"]) => void;
+  /** "Go to widget" from a diagnostic line: the action ActionEditor should open, scroll to and outline once, then clear. */
+  focusAction: FocusAction | null;
+  setFocusAction: (focus: FocusAction | null) => void;
+}
+
+export interface FocusAction {
+  widgetId: string;
+  event: string;
+  /** 0-based position of the action in the event's list. */
+  index: number;
 }
 
 const WorkspaceUiContext = createContext<WorkspaceUi | null>(null);

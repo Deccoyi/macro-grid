@@ -1,8 +1,8 @@
 /** The columns of the Diagnostic Messages table, in order. The width of each is what the person dragged it to, kept per person in this window's storage. */
-export const DIAGNOSTIC_COLUMNS = ["severity", "code", "description", "source", "screen", "location"] as const;
+export const DIAGNOSTIC_COLUMNS = ["severity", "code", "description", "source", "screen", "location", "details"] as const;
 export type DiagnosticColumn = (typeof DIAGNOSTIC_COLUMNS)[number];
 
-export const DEFAULT_COLUMN_WIDTHS: Record<DiagnosticColumn, number> = { severity: 90, code: 70, description: 420, source: 150, screen: 130, location: 100 };
+export const DEFAULT_COLUMN_WIDTHS: Record<DiagnosticColumn, number> = { severity: 90, code: 70, description: 420, source: 150, screen: 130, location: 100, details: 70 };
 export const MIN_COLUMN_WIDTH = 40;
 const KEY = "macro-grid.editor.diagnosticColumns";
 

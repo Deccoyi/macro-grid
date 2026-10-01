@@ -31,6 +31,9 @@ export interface Diagnostic {
   /** How many times this same message happened; shown as "x5" when more than one. */
   count?: number;
   target?: DiagnosticTarget;
+  /** When a server line first and last happened (ISO text). */
+  firstAt?: string;
+  lastAt?: string;
   /** "server" for a line the server reported; the export leaves those out because the server adds its own. */
   origin?: "server";
 }

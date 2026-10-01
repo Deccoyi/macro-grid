@@ -5,7 +5,10 @@ import { api } from "../api/client";
 import { toExportLines } from "../diagnostics/exportLines";
 import { useDiagnostics } from "../diagnostics/DiagnosticsContext";
 import type { Diagnostic, DiagnosticSeverity } from "../diagnostics/types";
+import { useRevealWidget } from "../diagnostics/useRevealWidget";
+import { confirmRichAsync } from "../dialogs/dialogStore";
 import { useT } from "../i18n/I18nContext";
+import { DiagnosticDetails } from "./DiagnosticDetails";
 import { useEditorStateContext } from "../state/EditorStateContext";
 import { clampWidth, DIAGNOSTIC_COLUMNS, gridTemplate, loadColumnWidths, saveColumnWidths, tableMinWidth, type DiagnosticColumn } from "./diagnosticColumns";
 type Filter = "all" | DiagnosticSeverity;
@@ -19,6 +22,7 @@ export function ErrorListPanel() {
   const { t } = useT();
   const { diagnostics, clear } = useDiagnostics();
   const { profile } = useEditorStateContext();
+  const reveal = useRevealWidget();
   const [filter, setFilter] = useState<Filter>("all");
   const [query, setQuery] = useState("");
   const [widths, setWidths] = useState(loadColumnWidths);
@@ -57,6 +61,16 @@ export function ErrorListPanel() {
       setExportState("failed");
     }
     window.setTimeout(() => setExportState(null), 2500);
+  };
+
+  const showDetails = async (d: Diagnostic) => {
+    const goto = !!d.target?.widgetId && !!d.target.pageId;
+    const go = await confirmRichAsync({
+      title: t("errorList.details.title"),
+      content: <DiagnosticDetails d={d} text={textOf(d)} where={where(d, profile)} profile={profile} />,
+      confirmLabel: goto ? t("errorList.details.goto") : undefined,
+    });
+    if (go && goto && d.target) await reveal(d.target);
   };
 
   const counts = useMemo(() => {
@@ -132,7 +146,7 @@ export function ErrorListPanel() {
           {filtered.length === 0 ? (
             <div style={{ padding: "16px 10px", color: "var(--ms-text-secondary)", fontSize: 12 }}>{t("errorList.empty")}</div>
           ) : (
-            filtered.map((d) => <Row key={d.id} d={d} template={template} profile={profile} />)
+            filtered.map((d) => <Row key={d.id} d={d} template={template} profile={profile} onDetails={() => void showDetails(d)} />)
           )}
         </div>
       </div>
@@ -155,7 +169,7 @@ function where(d: Diagnostic, profile: Profile | null): { page: string; location
 
 const toolButton: React.CSSProperties = { display: "flex", alignItems: "center", gap: 5, color: "var(--ms-text-secondary)", fontSize: 11.5, background: "transparent", border: "none", cursor: "pointer" };
 
-function Row({ d, template, profile }: { d: Diagnostic; template: string; profile: Profile | null }) {
+function Row({ d, template, profile, onDetails }: { d: Diagnostic; template: string; profile: Profile | null; onDetails: () => void }) {
   const { t } = useT();
   const { page, location } = where(d, profile);
   const Icon = d.severity === "error" ? CircleAlert : d.severity === "warning" ? TriangleAlert : Info;
@@ -163,7 +177,7 @@ function Row({ d, template, profile }: { d: Diagnostic; template: string; profil
   const text = d.message ?? (d.messageKey ? t(d.messageKey, ...(d.messageArgs ?? [])) : "");
   const label = d.severity === "error" ? t("errorList.severity.error") : d.severity === "warning" ? t("errorList.severity.warning") : t("errorList.severity.info");
   return (
-    <div style={{ display: "grid", gridTemplateColumns: template, height: 24, alignItems: "center", padding: "0 10px", fontSize: 12, borderBottom: "1px solid var(--ms-bg-canvas)" }}>
+    <div onDoubleClick={onDetails} style={{ display: "grid", gridTemplateColumns: template, height: 24, alignItems: "center", padding: "0 10px", fontSize: 12, borderBottom: "1px solid var(--ms-bg-canvas)" }}>
       <span style={{ display: "flex", alignItems: "center", gap: 6, color }}><Icon size={12} strokeWidth={2.25} />{label}</span>
       <span style={{ color: "var(--ms-text-secondary)", fontFamily: "Consolas, monospace" }}>{d.code}</span>
       <span style={{ color: "var(--ms-text-primary)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={text}>
@@ -173,6 +187,7 @@ function Row({ d, template, profile }: { d: Diagnostic; template: string; profil
       <span style={{ color: "var(--ms-text-secondary)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{d.sourceName ?? t("errorList.source.editor")}</span>
       <span style={{ color: "var(--ms-text-secondary)" }}>{page}</span>
       <span style={{ color: "var(--ms-text-secondary)", fontFamily: "Consolas, monospace" }}>{location}</span>
+      <button type="button" onClick={onDetails} style={{ ...toolButton, justifySelf: "start", padding: "0 4px", textDecoration: "underline" }}>{t("errorList.col.details")}</button>
     </div>
   );
 }
