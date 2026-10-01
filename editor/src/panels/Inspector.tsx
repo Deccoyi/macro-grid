@@ -11,6 +11,7 @@ import { RangeFields } from "./fields/RangeFields";
 import { TextFields } from "./fields/TextFields";
 import { PluginWidgetFields } from "./fields/PluginWidgetFields";
 import { NameField } from "./fields/NameField";
+import { SelfPreviewField } from "./fields/SelfPreviewField";
 import { WebFields } from "./fields/WebFields";
 
 interface InspectorProps {
@@ -99,6 +100,8 @@ export function Inspector({
       </div>
 
       <NameField widget={widget} siblings={page.widgets} onRename={onRename} />
+
+      <SelfPreviewField widget={widget} />
 
       <CollapsibleSection id="appearance" label={t("fields.appearance.title")}>
         <AppearanceFields widget={widget} onChange={onChange} variableCatalog={variableCatalog} />

@@ -76,6 +76,13 @@ describe("checkProfile", () => {
     expect(run([widget({ text: "{USER.Gone}" })], user).map((x) => x.code)).toEqual(["W231"]);
   });
 
+  it("warns when a This button variable is used in an action or a slider variable, but not in the button's own text or rules", () => {
+    const self = catalogs({ variableNames: new Set(["system.cpu", "self.busy"]) });
+    expect(run([widget({ text: "{self.busy}", dynamic: { "style.background": { cases: [{ condition: { kind: "compare", variable: "self.busy", operator: "==", value: "true" }, result: "red" }] } } })], self)).toEqual([]);
+    expect(run([widget({ actions: { press: [{ type: "a.b", settings: { text: "x {self.busy}" } }] } })], self).map((x) => x.code)).toEqual(["W232"]);
+    expect(run([widget({ type: "slider", props: { valueVariable: "self.busy" } })], self).map((x) => x.code)).toEqual(["W232"]);
+  });
+
   it("flags a Set variable action whose variable does not exist", () => {
     const c = catalogs({ actions: [action("core.setVariable")], variableNames: new Set(["user.count"]) });
     const d = run([widget({ actions: { press: [

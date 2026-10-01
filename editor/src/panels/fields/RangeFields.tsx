@@ -46,7 +46,7 @@ export function RangeFields({ widget, onChange, variableCatalog }: RangeFieldsPr
         {t("fields.range.valueVariable")}
         <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
           <VariablePicker
-            catalog={variableCatalog}
+            catalog={variableCatalog.filter((v) => !v.name.toLowerCase().startsWith("self."))}
             mode="bare"
             onInsert={(name) => onChange((w) => { w.props = { ...(w.props ?? {}), valueVariable: name }; })}
             renderTrigger={(open) => (

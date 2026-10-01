@@ -5,6 +5,8 @@ import { useT } from "../i18n/I18nContext";
 import { canPlace, canPlaceExcluding, clamp, overlappingWidgets } from "./collision";
 import { evaluateWidgetDynamicStyle, evaluateWidgetDynamicText } from "./evaluateDynamic";
 import { renderPreviewText } from "./previewText";
+import { selfSample } from "./selfPreview";
+import { useSelfPreview } from "../state/selfPreviewStore";
 import { usePluginWidgetPreview } from "./usePluginWidgetPreview";
 
 interface EditorCanvasProps {
@@ -38,6 +40,7 @@ interface DragState {
 export function EditorCanvas({ page, selectedIds, onSelect, onToggleSelect, onRectChange, onContextMenu, variables, problemWidgets }: EditorCanvasProps) {
   const { t } = useT();
   const pluginPreview = usePluginWidgetPreview(page.widgets, variables);
+  const selfPreview = useSelfPreview();
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [drag, setDrag] = useState<DragState | null>(null);
   const [previewRect, setPreviewRect] = useState<{ x: number; y: number; w: number; h: number } | null>(null);
@@ -147,12 +150,14 @@ export function EditorCanvas({ page, selectedIds, onSelect, onToggleSelect, onRe
           const isSwapTarget = swapWithId === widget.id;
           const rect = isDraggingThis && previewRect ? previewRect : widget;
           const isSelected = selectedIds.includes(widget.id);
+          // The button's own state (the "This button" variables) is not in the live snapshot: draw its resting look, or the look chosen in the Inspector.
+          const widgetVariables = { ...variables, ...selfSample(selfPreview?.widgetId === widget.id ? selfPreview.state : "normal") };
           return (
             <div style={{ position: "relative", width: "100%", height: "100%" }}>
               <WidgetView
                 widget={pluginPreview.withRuntime(rect === widget ? widget : { ...widget, ...rect })}
-                liveText={renderPreviewText(evaluateWidgetDynamicText(widget, variables), variables)}
-                liveStyle={evaluateWidgetDynamicStyle(widget, variables)}
+                liveText={renderPreviewText(evaluateWidgetDynamicText(widget, widgetVariables), widgetVariables)}
+                liveStyle={evaluateWidgetDynamicStyle(widget, widgetVariables)}
                 haptics={false}
                 // The real page, as the phone will show it; the frame ignores the pointer so the widget can still be selected and dragged.
                 webInteractive={false}
