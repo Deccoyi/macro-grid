@@ -23,6 +23,7 @@ public sealed class ClientHub(
     ActionDispatcher dispatcher,
     ToggleStateStore toggles,
     WidgetStateService widgetState,
+    LastResultStore results,
     DeviceStore devices,
     PairingService pairing,
     PluginStatusRegistry statusRegistry,
@@ -357,9 +358,24 @@ public sealed class ClientHub(
     private async Task RunAsync(ClientSession session, Widget widget, string eventName, ActionContext context, string pageId)
     {
         var hasBindings = widget.Actions.TryGetValue(eventName, out var bindings) && bindings.Count > 0;
+        // The result is recorded inside the busy window, so the look goes straight from "busy" to the result.
+        async Task<IReadOnlyList<ActionFailure>> RunAndRecord()
+        {
+            var failures = await dispatcher.DispatchAsync(widget, eventName, context, CancellationToken.None);
+            results.Set(widget.Id, failures);
+            widgetState.Refresh(widget.Id);
+            return failures;
+        }
+
+        // An event with no actions leaves the last result alone, unless the dispatch itself failed.
         var errors = hasBindings
-            ? await widgetState.RunBusyAsync(session, widget.Id, () => dispatcher.DispatchAsync(widget, eventName, context, CancellationToken.None))
+            ? await widgetState.RunBusyAsync(session, widget.Id, RunAndRecord)
             : await dispatcher.DispatchAsync(widget, eventName, context, CancellationToken.None);
+        if (!hasBindings && errors.Count > 0)
+        {
+            results.Set(widget.Id, errors);
+            widgetState.Refresh(widget.Id);
+        }
         await ReportActionErrorsAsync(session, errors, pageId, widget, eventName);
     }
 

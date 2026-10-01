@@ -12,5 +12,6 @@ public sealed class LastResultStore
     public void Set(string widgetId, IReadOnlyList<ActionFailure> failures) =>
         _results[widgetId] = failures.Count == 0 ? (Variables.SelfVariables.Success, "") : (Variables.SelfVariables.Failed, failures[0].Code.ToString());
 
+    /// <summary>The recorded result of a widget's last run; empty strings until it has run.</summary>
     public (string Result, string Error) Get(string widgetId) => _results.GetValueOrDefault(widgetId, ("", ""));
 }

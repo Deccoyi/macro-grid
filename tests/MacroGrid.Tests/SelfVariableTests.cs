@@ -277,4 +277,18 @@ public sealed class SelfVariableTests : IDisposable
 
         Assert.Empty(other.Sent);
     }
+
+    [Fact]
+    public void The_last_result_is_empty_before_a_run_then_follows_each_run()
+    {
+        var results = new LastResultStore();
+        Assert.Equal(("", ""), results.Get("w"));
+
+        results.Set("w", [new ActionFailure("core.web", ActionFailureCode.NotFound, "x")]);
+        Assert.Equal(("Failed", "NotFound"), results.Get("w"));
+        Assert.Equal(("", ""), results.Get("other"));
+
+        results.Set("w", []);
+        Assert.Equal(("Success", ""), results.Get("w"));
+    }
 }
