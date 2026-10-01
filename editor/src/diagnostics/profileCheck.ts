@@ -1,5 +1,6 @@
 import type { ActionBinding, ConditionNode, Profile, Widget, WidgetEventName } from "@macro/renderer";
 import type { ActionInfo, PluginWidgetInfo, SettingField } from "../api/types";
+import { FLOW_ELSE, FLOW_END, FLOW_IF, MAX_DEPTH, isWellFormed } from "../panels/actionFlow";
 import type { Diagnostic } from "./types";
 
 /** The source id of the lines the profile check makes; every run replaces the earlier ones. */
@@ -21,6 +22,7 @@ const PROFILE_ACTION = "core.profile";
 const WEB_ACTION = "core.web";
 const SET_VARIABLE_ACTION = "core.setVariable";
 const SELF_PREFIX = "self.";
+const LOGIC_TYPES = new Set([FLOW_IF, FLOW_ELSE, FLOW_END]);
 
 /** A `{name}` / `{name|format|placeholder}` token in a text; `{{` and `}}` are literal braces. */
 export function templateVariables(text: string | undefined): string[] {
@@ -81,6 +83,10 @@ export function checkProfile(profile: Profile, catalogs: CheckCatalogs, eventLab
       }
 
       for (const [event, bindings] of Object.entries(widget.actions) as [WidgetEventName, ActionBinding[] | undefined][]) {
+        const firstLogic = (bindings ?? []).findIndex((b) => LOGIC_TYPES.has(b.type));
+        if (firstLogic >= 0 && !isWellFormed(bindings ?? [])) {
+          add({ id: `W233:${widget.id}:${event}`, severity: "warning", code: "W233", messageKey: "diag.check.W233", messageArgs: [page.name, name, eventLabel(event), String(MAX_DEPTH)], target: { ...base, event, actionIndex: firstLogic } });
+        }
         (bindings ?? []).forEach((binding, index) => {
           const target = { ...base, event, actionIndex: index };
           const args = [page.name, name, eventLabel(event), String(index + 1)];
@@ -91,6 +97,16 @@ export function checkProfile(profile: Profile, catalogs: CheckCatalogs, eventLab
           }
 
           const s = binding.settings ?? {};
+          if (info.type === FLOW_IF && s.when !== "previousFailed" && s.when !== "previousOk") {
+            const names: string[] = [];
+            if (s.condition) conditionVariables(s.condition as ConditionNode, names);
+            if (names.length === 0) add({ id: `W234:${widget.id}:${event}:${index}`, severity: "warning", code: "W234", messageKey: "diag.check.W234", messageArgs: args, target });
+            for (const v of new Set(names)) {
+              if (v.toLowerCase().startsWith(SELF_PREFIX)) {
+                add({ id: `W232:${widget.id}:${event}:${index}:${v}`, severity: "warning", code: "W232", messageKey: "diag.check.W232", messageArgs: [page.name, name, v], target });
+              } else if (!known(v)) missingVariable(v, `${widget.id}:${event}:${index}`, page.name, name, target);
+            }
+          }
           const missing = (code: string, what: string) =>
             add({ id: `E220:${widget.id}:${event}:${index}:${code}`, severity: "error", code: "E220", messageKey: "diag.check.E220", messageArgs: [...args, what], target });
           if (info.type === PAGE_ACTION && (s.mode ?? "goto") === "goto" && typeof s.pageId === "string" && s.pageId && !pageIds.has(s.pageId)) missing("page", "page");

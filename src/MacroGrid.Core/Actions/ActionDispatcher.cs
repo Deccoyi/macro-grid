@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using System.Text.Json;
 using System.Text.Json.Nodes;
 using MacroGrid.Core.Diagnostics;
 using MacroGrid.Core.Model;
@@ -59,8 +60,13 @@ public sealed class ActionDispatcher(IEnumerable<IActionHandler> handlers, ILogg
         if (!widget.Actions.TryGetValue(eventName, out var bindings) || bindings.Count == 0)
             return (IReadOnlyList<ActionFailure>?)errors ?? [];
 
+        var flow = new ActionFlow.Run();
         foreach (var binding in bindings)
         {
+            var step = flow.Next(binding.Type, () => IfMet(binding, flow));
+            if (step == FlowStep.Stop) break;
+            if (step == FlowStep.Skip) continue;
+
             if (!_handlers.TryGetValue(binding.Type, out var handler))
             {
                 logger.LogWarning("Unknown action type {Type} on widget {WidgetId}", binding.Type, widget.Id);
@@ -70,9 +76,29 @@ public sealed class ActionDispatcher(IEnumerable<IActionHandler> handlers, ILogg
             }
 
             var failure = await RunOneAsync(handler, ResolveVariables(handler, binding.Settings), context, widget.Id, cancellationToken);
+            flow.Ran(failure is not null);
             if (failure is not null) (errors ??= []).Add(failure);
         }
         return (IReadOnlyList<ActionFailure>?)errors ?? [];
+    }
+
+    /// <summary>Whether an If step is met. A missing or unreadable condition, or no variable store, counts as not met.</summary>
+    private bool IfMet(ActionBinding binding, ActionFlow.Run flow)
+    {
+        var when = binding.Settings["when"] is JsonValue w && w.TryGetValue<string>(out var text) ? text : ActionFlow.WhenCondition;
+        if (when == ActionFlow.WhenPreviousFailed) return flow.PreviousFailed;
+        if (when == ActionFlow.WhenPreviousOk) return !flow.PreviousFailed;
+        if (variables is null || binding.Settings["condition"] is not JsonObject condition) return false;
+        try
+        {
+            var node = condition.Deserialize<ConditionNode>(MacroGrid.Protocol.ProtocolJson.Options);
+            return node is not null && DynamicRuleEvaluator.Matches(node, variables);
+        }
+        catch (System.Text.Json.JsonException ex)
+        {
+            logger.LogDebug(ex, "An If step has a condition that cannot be read");
+            return false;
+        }
     }
 
     /// <summary>True when an action of this type is registered.</summary>

@@ -91,7 +91,7 @@ public sealed class DelayAction : IActionHandler, IActionDescriptor
 
     public string Type => TypeId;
     public string DisplayName => "Wait";
-    public string Category => "System";
+    public string Category => "Logic";
     public string? Description => "Waits inside a multi-action";
     public string? Icon => "clock";
     public IReadOnlyList<SettingField> Fields => [];

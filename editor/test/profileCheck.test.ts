@@ -92,4 +92,32 @@ describe("checkProfile", () => {
     ] } })], c);
     expect(d.map((x) => `${x.code}:${x.target?.actionIndex}`)).toEqual(["E220:1"]);
   });
+
+  describe("logic steps", () => {
+    const c = catalogs({ actions: [action("core.if"), action("core.else"), action("core.endIf"), action("core.stop"), action("core.setVariable")], variableNames: new Set(["user.on", "self.busy"]) });
+    const step = (type: string, settings: Record<string, unknown> = {}) => ({ type, settings });
+    const cond = (variable: string) => ({ when: "condition", condition: { kind: "compare", variable, operator: "==", value: "1" } });
+    const codes = (steps: ReturnType<typeof step>[]) => run([widget({ actions: { press: steps } })], c).map((x) => x.code);
+
+    it("accepts a well formed block", () => {
+      expect(codes([step("core.if", cond("user.on")), step("core.setVariable", { variable: "user.on" }), step("core.else"), step("core.endIf"), step("core.stop")])).toEqual([]);
+      expect(codes([step("core.if", { when: "previousFailed" }), step("core.endIf")])).toEqual([]);
+    });
+
+    it("flags a list that is not well formed once, on the first logic row", () => {
+      const found = run([widget({ actions: { press: [step("core.stop"), step("core.if", { when: "previousOk" }), step("core.else"), step("core.else")] } })], c);
+      expect(found.map((x) => `${x.code}:${x.target?.actionIndex}`)).toEqual(["W233:1"]);
+    });
+
+    it("flags an If that tests a condition and has none", () => {
+      expect(codes([step("core.if", { when: "condition" }), step("core.endIf")])).toEqual(["W234"]);
+      expect(codes([step("core.if", { when: "condition", condition: { kind: "compare", variable: "", operator: "==" } }), step("core.endIf")])).toEqual(["W234"]);
+    });
+
+    it("checks the variables of the condition", () => {
+      expect(codes([step("core.if", cond("user.gone")), step("core.endIf")])).toEqual(["W231"]);
+      expect(codes([step("core.if", cond("some.plugin")), step("core.endIf")])).toEqual(["W230"]);
+      expect(codes([step("core.if", cond("self.busy")), step("core.endIf")])).toEqual(["W232"]);
+    });
+  });
 });

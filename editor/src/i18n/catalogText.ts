@@ -21,6 +21,7 @@ const TR: Record<string, string> = {
   "category:Variables": "Değişkenler",
   "category:Global Variable List": "Genel Değişken Listesi",
   "category:This button": "Bu düğme",
+  "category:Logic": "Mantık",
 
   // ---- Built-in actions ----
   "action:core.setVolume": "Ana ses seviyesi",
@@ -45,6 +46,14 @@ const TR: Record<string, string> = {
   "actionDesc:core.openUrl": "Varsayılan tarayıcıda bir adres açar",
   "action:core.delay": "Bekle",
   "actionDesc:core.delay": "Çoklu aksiyon içinde bekler",
+  "action:core.if": "Eğer",
+  "actionDesc:core.if": "Bir koşul sağlanırsa (veya bir önceki adım başarısız olduysa) bitişine kadar olan adımları çalıştırır",
+  "action:core.else": "Değilse",
+  "actionDesc:core.else": "Eğer sağlanmadıysa çalışacak adımlar",
+  "action:core.endIf": "Bitir",
+  "actionDesc:core.endIf": "Bir Eğer bloğunu bitirir",
+  "action:core.stop": "Durdur",
+  "actionDesc:core.stop": "Aksiyon listesini burada bitirir",
   "action:core.setVariable": "Değişken ayarla",
   "actionDesc:core.setVariable": "Genel Değişken Listesi'ndeki bir değişkeni ayarlar, değiştirir, sayar veya sıfırlar",
 

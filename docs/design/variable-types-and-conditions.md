@@ -163,3 +163,5 @@ A button can change its look from its own state. Five variables are listed in th
 - A change marks only that widget for a quick re-evaluation (`WidgetStateService.Refresh`), so a press costs a few small sends and a device that is not concerned sends nothing.
 - A name that is not one of the five is unavailable. The prefix `self.` is reserved: a plugin cannot write it and cannot be installed under that id.
 - The editor draws the resting look. When a button uses these variables, the Inspector offers a "Preview state" (Normal, Pressed, Busy, On, Failed, Success) that only changes the canvas and is not saved.
+
+The condition of an If step in an action list is the same condition tree and is edited with the same editor; see [logic-steps.md](logic-steps.md).

@@ -101,13 +101,16 @@ Built-in actions and plugin actions implement the same interface, `IActionHandle
 | `core.page` | Goes to a page, the next or previous page (wrapping around), or back. |
 | `core.profile` | Switches the device to a profile. |
 | `core.web` | Shows another address in a `web` widget, goes back to its own, or reloads it, on the device that pressed the button only (`set`, `reset`, `reload`). The address follows the same rule as the widget's own. Not written to the profile, forgotten on a profile switch, a profile save or a server restart. |
-| `core.delay` | Waits (up to 60 seconds); use it between actions of a sequence. |
+| `core.delay` | Waits (up to 60 seconds); use it between actions of a sequence. Shown as "Wait" under the category Logic. |
+| `core.if`, `core.else`, `core.endIf`, `core.stop` | Logic steps of an action list, see below. |
 | `core.setVolume`, `core.setMute`, `core.toggleMute` | Master volume and mute (Windows core audio). |
 
 A **macro** is simply several actions bound to the same event; they run one after the other, and a failing action is logged and reported without
 stopping the ones after it. A failure is shown as a toast on the phone that pressed the widget and in the editor's status bar, so a stale binding
 (a button pointed at a deleted OBS scene) is never silent. If an action handler also implements `IActionDescriptor`, the editor draws its settings
 form from its `Fields`; text fields marked `AllowVariables` have their `{variables}` resolved by the server before the action runs.
+
+The list stays flat. `core.if` opens a block (its `when` setting is `condition`, `previousFailed` or `previousOk`; a condition is the same `ConditionNode` JSON a dynamic rule uses), `core.else` splits it, `core.endIf` closes it and `core.stop` ends the list. `ActionFlow` (pure) decides for each step whether to run it; `ActionDispatcher` asks it before it looks for a handler. The four types are also registered as handlers that do nothing, so the catalog knows their names. A list that does not match still runs safely (a missing End means the block goes to the end of the list, a stray Otherwise or End does nothing) and there are no loops. See [design/logic-steps.md](design/logic-steps.md).
 
 An action can also implement `IActionOutcomeHandler` and return a coded outcome (success, failed with a code and a short text, or accepted) instead of throwing; the dispatcher then calls only that method. Both ways end as an `ActionFailure` (`Code`, `Message`): the text is cleaned of control and direction characters, cut to 200 characters and, when empty, replaced by a default text for the code. The first failure is shown as the toast and the status bar item. The code is not sent to the phone.
 
