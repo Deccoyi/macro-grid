@@ -19,7 +19,7 @@ public sealed class PluginCatalogInstaller(
     private static readonly JsonSerializerOptions ManifestJson = new(JsonSerializerDefaults.Web);
 
     public async Task<PluginInstallResult> InstallAsync(
-        PluginCatalogEntry entry, PluginCatalogVersion version, string sourceUrl, bool isOfficial, CancellationToken cancellationToken)
+        PluginCatalogEntry entry, PluginCatalogVersion version, string sourceUrl, bool isOfficial, CancellationToken cancellationToken, bool hold = false)
     {
         if (version.Withdrawn)
             throw new PluginDownloadException(PluginDownloadException.Withdrawn, "This version was withdrawn by its publisher.");
@@ -61,7 +61,7 @@ public sealed class PluginCatalogInstaller(
             CrossCheck(entry, version, manifest);
 
             var origin = new PluginInstallOrigin(sourceUrl, version.Version, isOfficial ? PluginTrust.Official : PluginTrust.ThirdParty,
-                ContentsSigned: isOfficial && File.Exists(Path.Combine(stagingDir, "signature.json")));
+                Hold: hold, ContentsSigned: isOfficial && File.Exists(Path.Combine(stagingDir, "signature.json")));
             var result = await pluginManager.InstallFromFolderAsync(stagingDir, origin);
             return result;
         }
