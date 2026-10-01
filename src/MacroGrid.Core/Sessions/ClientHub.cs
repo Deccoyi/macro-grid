@@ -30,7 +30,8 @@ public sealed class ClientHub(
     AutoProfileSwitcher autoSwitcher,
     ILogger<ClientHub> logger,
     PluginLocalizer localizer,
-    PluginWidgetRouter widgetRouter)
+    PluginWidgetRouter widgetRouter,
+    ProblemList problems)
 {
     /// <summary>The server's version. It is the SDK's version on purpose: the two carry one number (docs/guides/versioning.md).</summary>
     public static string ServerVersion => PluginSdk.Version;
@@ -340,7 +341,7 @@ public sealed class ClientHub(
                 var active = toggles.Toggle(widget.Id);
                 await BroadcastToggleAsync(session.ProfileId, msg.PageId, widget.Id, active);
                 var errors = await dispatcher.DispatchAsync(widget, active ? WidgetEvents.ToggleOn : WidgetEvents.ToggleOff, context, CancellationToken.None);
-                await ReportActionErrorsAsync(session, errors);
+                await ReportActionErrorsAsync(session, errors, msg.PageId, widget, active ? WidgetEvents.ToggleOn : WidgetEvents.ToggleOff);
             });
             return;
         }
@@ -348,7 +349,7 @@ public sealed class ClientHub(
         queue.TryWrite(async () =>
         {
             var errors = await dispatcher.DispatchAsync(widget, eventName, context, CancellationToken.None);
-            await ReportActionErrorsAsync(session, errors);
+            await ReportActionErrorsAsync(session, errors, msg.PageId, widget, eventName);
         });
     }
 
@@ -358,7 +359,7 @@ public sealed class ClientHub(
     /// <summary>Surfaces a failed action both to the device that triggered it (toast, via the same "error"
     /// envelope pairing failures already use) and in the editor's status bar — a stale binding (e.g. a
     /// button pointed at a since-deleted scene of a plugin) must never fail silently.</summary>
-    private async Task ReportActionErrorsAsync(ClientSession session, IReadOnlyList<ActionFailure> errors)
+    private async Task ReportActionErrorsAsync(ClientSession session, IReadOnlyList<ActionFailure> errors, string pageId, Widget widget, string eventName)
     {
         if (errors.Count == 0)
         {
@@ -370,6 +371,15 @@ public sealed class ClientHub(
         var message = PlainText.Clean(localizer.TranslateAny(raw) ?? raw, 200); // translate first (the table matches the exact text), then clean
         statusRegistry.SetCore("actionError", message, StatusLevel.Warning, "triangle-alert", lifetime: ActionErrorStatusLifetime);
         await session.SendAsync(MessageTypes.Error, new ErrorMessage("action_failed", message));
+
+        // An action that is not there at all is also a line in the Error List (one per widget and type, counted), so it is found without a press.
+        foreach (var missing in errors.Where(e => e.Missing))
+        {
+            var pageName = session.ProfileId is null ? null : profiles.Get(session.ProfileId)?.FindPage(pageId)?.Name;
+            var line = $"{widget.Name} on page {pageName}: action '{missing.ActionType}' is not available. Its plugin may be removed or switched off.";
+            problems.Report("macro-grid", "Macro Grid", ProblemSeverity.Error, ProblemCodes.ActionMissing, line, $"{widget.Id}:{missing.ActionType}", 50,
+                new ProblemTarget(session.ProfileId ?? "", pageId, widget.Id, eventName));
+        }
     }
 
     /// <summary>A slider/knob drag commit — same dispatch as <see cref="Enqueue"/>, just carrying the live
@@ -387,7 +397,7 @@ public sealed class ClientHub(
         queue.TryWrite(async () =>
         {
             var errors = await dispatcher.DispatchAsync(widget, WidgetEvents.ValueChange, context, CancellationToken.None);
-            await ReportActionErrorsAsync(session, errors);
+            await ReportActionErrorsAsync(session, errors, msg.PageId, widget, WidgetEvents.ValueChange);
         });
     }
 

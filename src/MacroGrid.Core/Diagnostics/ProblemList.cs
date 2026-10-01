@@ -42,6 +42,8 @@ public static class ProblemCodes
     public const string WidgetEventDropped = "P142";
     /// <summary>A custom widget reported an error from its own code.</summary>
     public const string WidgetScriptError = "P143";
+    /// <summary>A press ran an action whose type is not available (its plugin was removed or is switched off). Cleared when a plugin loads.</summary>
+    public const string ActionMissing = "P131";
     /// <summary>A plugin reported a problem itself (<c>IPluginDiagnostics</c>).</summary>
     public const string PluginReported = "P150";
 }
