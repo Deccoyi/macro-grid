@@ -4,6 +4,9 @@ New features and fixes in Macro Grid. For technical details, see [CHANGELOG-deve
 
 ## Unreleased
 ### New
+- **Back up everything:** File > Back Up Everything saves your profiles, preferences, variables, phone choices, plugin settings and language packs in one file. File > Restore lets you tick what to bring back. Nothing is deleted, and passwords and phone pairings are not part of a backup.
+- **Restore points:** before a restore, before a profile is deleted or overwritten by an import, and after an update, Macro Grid keeps a copy of your data so you can go back.
+- **Importing a profile tells you about missing files:** actions that use a file which is not on this PC are listed.
 - **Your own language:** add a language to the editor with a language pack. Export a table, translate it, import it, and pick it in Preferences > Language.
 - **New plugin permissions:** a JavaScript plugin can ask to keep a small amount of its own data, to show short notices in the tray, and to keep a live connection open to one address. Each one is listed and can be switched off like the others.
 - **Action lists can now make decisions:** add an If step (with an optional Otherwise) to run steps only when a condition is met or when the step before failed, and a Stop step to end the list early.
