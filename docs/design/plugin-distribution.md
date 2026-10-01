@@ -181,10 +181,11 @@ main ─────────●──[tag]───●──[tag]
    size, following `ProfilePackage`.
 4. **Check the manifest** against the index / `plugin.json` it came from, then
    compatibility. JS permissions go through the existing approval flow.
-5. **Install** via `InstallFromFolderAsync(stagingDir)`, then delete the staging folder.
-   User files survive because `CopyDirectory` only overwrites.
+5. **Install** via `InstallFromFolderAsync(stagingDir, origin)`, then delete the staging folder.
+   When a plugin is replaced, the old version's code files are removed first (loadable files and the two signature files); its data files survive.
 6. **Record the origin** in `%AppData%\MacroGrid\plugin-installs.json`:
-   `{ "<id>": { "sourceUrl", "version", "trust" } }`. Used for badges and updates.
+   `{ "<id>": { "sourceUrl", "version", "trust", "hold"?, "contentsSigned"?, "codeFiles"? } }`. Used for badges and updates. It is written inside the install,
+   after the copy and before the first load, so the load already sees it. A folder install without an origin, and uninstall, remove the entry.
 
 Saved sources live in `%AppData%\MacroGrid\plugin-sources.json`.
 
@@ -278,3 +279,18 @@ The official source is read through `OfficialCatalog` (Core, `Plugins/Distributi
   a mirror is only used when it comes from the verified signed index and the package signature is checked afterwards.
 - **Staleness:** 14 days without a successful safety-list check adds one quiet line (`P113`); nothing is switched off because of it.
 - **Plugin id:** 1 to 64 characters of letters, digits, `.`, `-`, `_`, starting with a letter or digit, no trailing dot, no reserved device names.
+
+## 12. Catalog lifecycle, phase 2
+
+- **Offered versions:** for one plugin the server offers at most five versions: not withdrawn, not switched off by the safety list, compatible with this server, newest first
+  (`PluginCatalogChoice.MaxOffered`). The install endpoint refuses any other version (`not-offered`). The index format is unchanged and nothing is pruned, so the release files of
+  those versions must stay online.
+- **Go back:** the entry carries `previous` (the newest offered version below the installed one, with its permissions). The editor confirms and installs it with `hold` set, one step at a time.
+- **Stay on this version:** `hold` in the origin (`PUT /api/plugins/{id}/hold`, `held` in `GET /api/plugins`). A hold only stops "update available"; it is ignored when the installed version was
+  withdrawn or switched off, so a safety message is never hidden. Installing or updating without `hold` ends it.
+- **One source per plugin:** a plugin installed from one source is not updated or replaced from another (`other-source`); the other source's entry shows it as installed. Remove it first.
+- **Official JavaScript plugins are verified at every load:** a package from the official source that carries `signature.json` is recorded with `contentsSigned`. At every load the same
+  verifier as for C# plugins checks the signature, every listed file's hash, and that no other loadable file was added; a plugin that fails is *Not allowed* (`P114`, security event 1109) until
+  it is installed again. This covers files that change after install; it does not cover a package that was never signed. Data files (for example `storage.json`) are not listed in the
+  signature, so a signed package must not ship a file the plugin writes to. The safety list also reaches such a plugin when it is verified.
+- **Not built:** a warning when the files of a third-party plugin change (`codeFiles` is reserved in the origin for it).
