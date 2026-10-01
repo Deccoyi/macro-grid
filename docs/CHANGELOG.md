@@ -4,6 +4,7 @@ New features and fixes in Macro Grid. For technical details, see [CHANGELOG-deve
 
 ## Unreleased
 ### New
+- **Action lists can now make decisions:** add an If step (with an optional Otherwise) to run steps only when a condition is met or when the step before failed, and a Stop step to end the list early.
 - **A button can change its look from its own state:** while it is held, while its action is running, when it is switched on, and after its action failed. Find them under "This button" in the variable list.
 - **Your own variables:** a new "Global Variable List" in Preferences lets you define text, number and true/false variables and use them anywhere as `{user.name}`: in texts, rules and actions. You can keep a value after a restart.
 - **Set variable action:** a button can set a variable, switch it, add to it or reset it. A slider can set a number variable.
@@ -20,6 +21,7 @@ New features and fixes in Macro Grid. For technical details, see [CHANGELOG-deve
 - **An unsafe official plugin version can be switched off:** if an official plugin version turns out to be unsafe, Macro Grid stops it and tells you why. Nothing is switched off just because the list could not be loaded.
 - **A publisher can withdraw a version:** a withdrawn version cannot be installed, and if you have it you are asked to update or remove it. It keeps working until you do.
 ### Changed
+- **Wait is now under Logic and is set in seconds.**
 - **The plugin list opens faster and works from a saved copy:** if the internet is down, you still see the last list.
 - **"Check for updates automatically" also covers the plugin safety list.**
 - **A button whose plugin was removed now says so:** pressing it shows an error on the phone instead of doing nothing.
