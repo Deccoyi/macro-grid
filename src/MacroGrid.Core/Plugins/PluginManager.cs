@@ -415,6 +415,19 @@ public sealed partial class PluginManager(
     private const long MaxIconBytes = 100 * 1024;
     private static readonly string[] AllowedIconExtensions = [".svg", ".png"];
 
+    /// <summary>The absolute path of a plugin's start file, or null when the entry is empty, rooted, climbs out of the folder, resolves
+    /// outside it or names a file that does not exist. A start file in a subfolder is fine.</summary>
+    internal static string? ResolveEntryPath(string dir, string entry)
+    {
+        if (string.IsNullOrWhiteSpace(entry)) return null;
+        if (Path.IsPathRooted(entry) || entry.Contains("..") || entry.Contains(':')) return null;
+
+        var rootFull = Path.GetFullPath(dir);
+        var entryFull = Path.GetFullPath(Path.Combine(dir, entry));
+        if (!entryFull.StartsWith(rootFull + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase)) return null;
+        return File.Exists(entryFull) ? entryFull : null;
+    }
+
     private static string? ResolveIconPath(string dir, PluginManifest manifest)
     {
         if (string.IsNullOrWhiteSpace(manifest.Icon)) return null;
