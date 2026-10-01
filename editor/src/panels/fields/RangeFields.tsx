@@ -3,6 +3,7 @@ import type { VariableInfo } from "../../api/types";
 import { useT } from "../../i18n/I18nContext";
 import { VariablePicker } from "../VariablePicker";
 import type { FieldGroupProps } from "./AppearanceFields";
+import { Field, FieldGrid, NumberInput, TextInput } from "./controls";
 
 const num = (v: unknown, fallback: number) => (typeof v === "number" ? v : fallback);
 const str = (v: unknown): string | undefined => (typeof v === "string" && v ? v : undefined);
@@ -21,58 +22,51 @@ export function RangeFields({ widget, onChange, variableCatalog }: RangeFieldsPr
   const valueVariable = str(props.valueVariable);
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-      <label className="field">
-        {t("fields.range.caption")}
-        <input type="text" value={widget.text ?? ""} onChange={(e) => onChange((w) => { w.text = e.target.value; })} />
-      </label>
+    <>
+      <Field label={t("fields.range.caption")}>
+        <TextInput value={widget.text ?? ""} onChange={(v) => onChange((w) => { w.text = v; })} />
+      </Field>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
-        <label className="field">
-          {t("fields.range.min")}
-          <input type="number" value={num(props.min, 0)} onChange={(e) => setProp("min", Number(e.target.value))} />
-        </label>
-        <label className="field">
-          {t("fields.range.max")}
-          <input type="number" value={num(props.max, 100)} onChange={(e) => setProp("max", Number(e.target.value))} />
-        </label>
-        <label className="field">
-          {t("fields.range.step")}
-          <input type="number" min={0.01} value={num(props.step, 1)} onChange={(e) => setProp("step", Number(e.target.value))} />
-        </label>
-      </div>
+      <FieldGrid cols={3}>
+        <Field single label={t("fields.range.min")}>
+          <NumberInput value={num(props.min, 0)} onChange={(v) => setProp("min", v)} />
+        </Field>
+        <Field single label={t("fields.range.max")}>
+          <NumberInput value={num(props.max, 100)} onChange={(v) => setProp("max", v)} />
+        </Field>
+        <Field single label={t("fields.range.step")}>
+          <NumberInput min={0.01} value={num(props.step, 1)} onChange={(v) => setProp("step", v)} />
+        </Field>
+      </FieldGrid>
 
-      <label className="field">
-        {t("fields.range.valueVariable")}
-        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-          <VariablePicker
-            catalog={variableCatalog.filter((v) => !v.name.toLowerCase().startsWith("self."))}
-            mode="bare"
-            onInsert={(name) => onChange((w) => { w.props = { ...(w.props ?? {}), valueVariable: name }; })}
-            renderTrigger={(open) => (
-              <button type="button" className="ghost" onClick={open} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12 }}>
-                <Variable size={11} />
-                {valueVariable ?? t("fields.range.valueVariable.none")}
-              </button>
-            )}
-          />
+      <Field label={t("fields.range.valueVariable")} hint={t("fields.range.note")}>
+        <div className="pf-row">
+          <div className="grow">
+            <VariablePicker
+              catalog={variableCatalog.filter((v) => !v.name.toLowerCase().startsWith("self."))}
+              mode="bare"
+              onInsert={(name) => onChange((w) => { w.props = { ...(w.props ?? {}), valueVariable: name }; })}
+              renderTrigger={(open) => (
+                <button type="button" className="pf-ctl pf-row" onClick={open} style={{ width: "100%" }}>
+                  <Variable size={12} />
+                  <span className="pf-ellipsis">{valueVariable ?? t("fields.range.valueVariable.none")}</span>
+                </button>
+              )}
+            />
+          </div>
           {valueVariable && (
             <button
               type="button"
-              className="ghost"
+              className="ghost pf-icon-btn"
               title={t("fields.range.valueVariable.clear")}
+              aria-label={t("fields.range.valueVariable.clear")}
               onClick={() => onChange((w) => { const p = { ...(w.props ?? {}) }; delete p.valueVariable; w.props = p; })}
-              style={{ display: "flex", padding: 5 }}
             >
-              <X size={12} />
+              <X size={14} />
             </button>
           )}
         </div>
-      </label>
-
-      <p style={{ fontSize: 11, color: "var(--ms-text-secondary)", margin: 0 }}>
-        {t("fields.range.note")}
-      </p>
-    </div>
+      </Field>
+    </>
   );
 }

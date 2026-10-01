@@ -1,0 +1,304 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<title>Properties paneli</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+</head>
+<body style="margin:0;background:#1c1e22">
+
+
+<style>
+body{margin:0}
+.pp{--bg:#232529;--cv:#1c1e22;--raised:#2b2e33;--inset:#16171a;--bd:#35383e;--bds:#46494f;--tx:#e6e7ea;--tx2:#9a9ea6;--txd:#7b7f87;--ac:#d97706;--acm:rgba(217,119,6,.15);--dg:#e5584a;--wr:#facc15;font:12px/1.3 "Segoe UI",system-ui,sans-serif;color:var(--tx);background:var(--cv)}
+.pp *{box-sizing:border-box}
+.pp svg.i{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.cap{font:600 11px "Segoe UI",system-ui,sans-serif;color:var(--tx2);margin:0 0 8px;letter-spacing:.02em}
+.panel{width:320px;background:var(--bg);border:1px solid var(--bd)}
+.ph{display:flex;align-items:center;justify-content:space-between;height:36px;padding:0 12px;border-bottom:1px solid var(--bd)}
+.ph .t{font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--tx2)}
+.sec{padding:12px;border-bottom:1px solid var(--bd)}
+.sec:last-child{border-bottom:0}
+.sh{display:flex;align-items:center;gap:4px;height:28px;font:600 13px "Segoe UI",system-ui,sans-serif;background:none;border:0;padding:0;color:var(--tx);width:100%;text-align:left}
+.sh svg{color:var(--tx2)}
+.sb{display:flex;flex-direction:column;gap:12px;padding-top:8px}
+.grp{font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--txd);height:16px;display:flex;align-items:center;margin-top:4px}
+.grp:first-child{margin-top:0}
+.f{display:flex;flex-direction:column;gap:4px;min-width:0}
+.fl{display:flex;align-items:center;justify-content:space-between;gap:8px;height:18px;font-size:12px;color:var(--tx2)}
+.lt{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fa{display:inline-flex;align-items:center;gap:3px;height:18px;padding:0 5px;margin-right:-5px;border:0;border-radius:3px;background:none;color:var(--tx2);font:11px "Segoe UI",system-ui,sans-serif;cursor:pointer;flex:none}
+.fa:hover{background:var(--raised);color:var(--ac)}
+.c{display:flex;align-items:center;gap:6px;width:100%;height:28px;padding:0 8px;background:var(--inset);border:1px solid var(--bd);border-radius:4px;color:var(--tx);font:12px "Segoe UI",system-ui,sans-serif;text-align:left}
+textarea.c{height:auto;padding:6px 8px;resize:none;line-height:1.4;display:block}
+.c:focus,.c.focus{outline:none;border-color:var(--ac)}
+.c .sp{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.c .mono{font-family:ui-monospace,Consolas,monospace}
+.hint{font-size:11px;line-height:1.4;color:var(--tx2)}
+.g2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.g3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.inl{flex-direction:row;align-items:center;justify-content:space-between;gap:12px;min-height:28px}
+.ft{display:flex;flex-direction:column;gap:2px;min-width:0}
+.ln{font-size:12px;color:var(--tx)}
+.sw{width:28px;height:16px;border-radius:8px;border:0;padding:0;background:var(--bds);position:relative;flex:none;cursor:pointer}
+.sw::after{content:"";position:absolute;top:2px;left:2px;width:12px;height:12px;border-radius:50%;background:#fff}
+.sw.on{background:var(--ac)}.sw.on::after{left:14px}
+.seg{display:flex;height:28px;border:1px solid var(--bd);border-radius:4px;overflow:hidden}
+.seg button{flex:1;border:0;border-right:1px solid var(--bd);background:var(--inset);color:var(--tx2);font:11.5px "Segoe UI",system-ui,sans-serif;display:flex;align-items:center;justify-content:center;padding:0}
+.seg button:last-child{border-right:0}
+.seg button.on{background:var(--raised);color:var(--tx);box-shadow:inset 0 -2px 0 var(--ac)}
+.rng{display:flex;align-items:center;gap:8px;height:28px}
+.trk{flex:1;height:4px;border-radius:2px;background:var(--bds);position:relative}
+.trk i{position:absolute;left:0;top:0;bottom:0;border-radius:2px;background:var(--ac)}
+.trk b{position:absolute;top:-5px;width:14px;height:14px;border-radius:50%;background:var(--tx);border:2px solid var(--ac);margin-left:-7px}
+.rng .c{width:56px;flex:none;text-align:right;padding:0 6px}
+.unit{color:var(--txd);font-size:11px;flex:none}
+.sw-c{width:16px;height:16px;border-radius:3px;border:1px solid rgba(255,255,255,.18);flex:none}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;height:28px;padding:0 10px;background:var(--raised);border:1px solid var(--bd);border-radius:4px;color:var(--tx);font:12px "Segoe UI",system-ui,sans-serif;cursor:pointer;flex:none}
+.btn.full{width:100%}.btn.gh{background:none;border-color:transparent}
+.btn.dng{color:var(--dg)}
+.ib{width:28px;padding:0}
+.nest{margin-left:6px;padding-left:10px;border-left:2px solid var(--bd)}
+.note{display:flex;gap:8px;align-items:flex-start;padding:6px 8px;border-radius:4px;background:rgba(250,204,21,.08);color:var(--wr);font-size:11.5px;line-height:1.4}
+.note svg{margin-top:1px}
+.note.info{background:var(--acm);color:var(--tx)}
+.note.info svg{color:var(--ac)}
+.list{border:1px solid var(--bd);border-radius:4px}
+.lr{display:flex;align-items:center;gap:4px;height:32px;padding:0 4px;font-size:12px}
+.lr .sp{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lr+.lr,.lb+.lr{border-top:1px solid var(--bd)}
+.lb{padding:8px 8px 12px 28px;border-top:1px solid var(--bd);display:flex;flex-direction:column;gap:12px}
+.ev{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+.ev button{position:relative;aspect-ratio:1/1;background:var(--inset);border:1px solid var(--bd);border-radius:4px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;padding:6px 2px;color:var(--tx2);font:9px/1.15 "Segoe UI",system-ui,sans-serif;text-align:center}
+.ev button.on{border-color:var(--ac);background:var(--cv);color:var(--tx);font-weight:600}
+.ev button.on svg{color:var(--ac)}
+.ev button i{position:absolute;top:4px;right:4px;width:5px;height:5px;border-radius:50%;background:var(--ac)}
+.card{border:1px solid var(--bd);border-radius:4px;background:var(--bg)}
+.card .ch{display:flex;align-items:center;gap:6px;height:32px;padding:0 4px 0 8px;font-size:12px;border-bottom:1px solid var(--bd)}
+.card .cb{padding:8px;display:flex;flex-direction:column;gap:12px}
+.num{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:50%;background:var(--acm);color:var(--ac);font-size:10px;font-weight:700;flex:none}
+.id{display:flex;align-items:center;gap:8px;height:36px;min-width:0}
+.id .nm{font-size:12.5px;font-weight:600;line-height:1.3}
+.id .sub{font-size:11px;color:var(--tx2);line-height:1.3}
+.row2{display:flex;gap:6px}
+hr.h{border:0;border-top:1px solid var(--bd);margin:0}
+</style>
+
+<div class="pp" style="width: 800px; height: 2260px; padding: 32px 40px; display: flex; gap: 40px; align-items: flex-start">
+<svg width="0" height="0" style="position:absolute"><defs>
+<symbol id="cd" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+<symbol id="cr" viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></symbol>
+<symbol id="x" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
+<symbol id="eye" viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></symbol>
+<symbol id="folder" viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></symbol>
+<symbol id="bolt" viewBox="0 0 24 24"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></symbol>
+<symbol id="var" viewBox="0 0 24 24"><path d="M8 4C6 4 5 5 5 7v3c0 1-1 2-2 2 1 0 2 1 2 2v3c0 2 1 3 3 3M16 4c2 0 3 1 3 3v3c0 1 1 2 2 2-1 0-2 1-2 2v3c0 2-1 3-3 3"/></symbol>
+<symbol id="warn" viewBox="0 0 24 24"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></symbol>
+<symbol id="plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+<symbol id="refresh" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-3-6.7L21 8M21 3v5h-5"/></symbol>
+<symbol id="box" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M9 12h6M12 9v6"/></symbol>
+<symbol id="eraser" viewBox="0 0 24 24"><path d="m7 21-4-4a2 2 0 0 1 0-3L14 3a2 2 0 0 1 3 0l4 4a2 2 0 0 1 0 3L11 21zM9 9l6 6"/></symbol>
+<symbol id="dot" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/></symbol>
+<symbol id="ring" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/></symbol>
+<symbol id="timer" viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2 2M9 2h6"/></symbol>
+<symbol id="al" viewBox="0 0 24 24"><path d="M3 6h18M3 12h12M3 18h16"/></symbol>
+<symbol id="ac" viewBox="0 0 24 24"><path d="M3 6h18M7 12h10M5 18h14"/></symbol>
+<symbol id="ar" viewBox="0 0 24 24"><path d="M3 6h18M9 12h12M5 18h16"/></symbol>
+</defs></svg>
+
+<!-- PANEL A : özel widget -->
+<div>
+<div class="cap">A · Özel (plugin) widget seçili — 320 px panel</div>
+<div class="panel">
+  <div class="ph"><span class="t">Plugin widget</span><button class="btn gh dng" type="button" style="height:24px;padding:0 6px">Sil</button></div>
+
+  <div class="sec">
+    <div class="f"><div class="fl"><span class="lt">Ad</span></div><input class="c" type="text" value="Ana ses göstergesi" aria-label="Ad"></div>
+  </div>
+
+  <div class="sec">
+    <div class="id">
+      <svg class="i" style="width:20px;height:20px;color:var(--tx2)"><use href="#box"/></svg>
+      <div style="min-width:0"><div class="nm lt">Seviye göstergesi</div><div class="sub lt">Örnek Plugin</div></div>
+    </div>
+    <div class="note info" style="margin-top:8px"><svg class="i"><use href="#warn"/></svg><span>Bu plugin doğrulanmamış. Widget yalnızca kendi ayarlarını okuyabilir.</span></div>
+  </div>
+
+  <div class="sec">
+    <button class="sh" type="button"><svg class="i"><use href="#cd"/></svg>Widget seçenekleri</button>
+    <div class="sb">
+      <div class="f inl"><div class="ft"><span class="ln">Yüklü tut</span><span class="hint">Sayfa değişince widget kapanmaz.</span></div><button class="sw on" type="button" role="switch" aria-checked="true" aria-label="Yüklü tut"></button></div>
+      <div class="f inl"><div class="ft"><span class="ln">Veriyi sakla</span><span class="hint">Widget kendi verisini bu cihazda tutar.</span></div><button class="sw" type="button" role="switch" aria-checked="false" aria-label="Veriyi sakla"></button></div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <button class="sh" type="button"><svg class="i"><use href="#cd"/></svg>Widget ayarları</button>
+    <div class="sb">
+      <div class="grp">Kaynak</div>
+
+      <div class="f">
+        <div class="fl"><span class="lt">Seviye değişkeni</span></div>
+        <div class="row2"><button class="c" type="button" style="flex:1"><svg class="i" style="color:var(--ac)"><use href="#var"/></svg><span class="sp mono">audio.master</span></button><button class="btn gh ib" type="button" aria-label="Temizle"><svg class="i"><use href="#x"/></svg></button></div>
+        <span class="hint">Widget yalnızca bu değişkeni okur.</span>
+      </div>
+
+      <div class="f">
+        <div class="fl"><span class="lt">Başlık</span><button class="fa" type="button"><svg class="i"><use href="#var"/></svg>Değişken</button></div>
+        <input class="c" type="text" value="Ana ses" aria-label="Başlık">
+      </div>
+
+      <div class="f">
+        <div class="fl"><span class="lt">Cihaz</span><button class="fa" type="button" aria-label="Yenile"><svg class="i"><use href="#refresh"/></svg></button></div>
+        <div style="position:relative"><select class="c" aria-label="Cihaz" style="appearance:none;-webkit-appearance:none;padding-right:26px"><option>Hoparlör (Realtek)</option></select><svg class="i" style="position:absolute;right:8px;top:7px;color:var(--tx2);pointer-events:none"><use href="#cd"/></svg></div>
+      </div>
+
+      <div class="f">
+        <div class="fl"><span class="lt">Ses dosyası</span></div>
+        <div class="row2"><input class="c" type="text" readonly value="C:\Sesler\uyari.wav" aria-label="Ses dosyası" style="flex:1"><button class="btn" type="button">Gözat…</button></div>
+        <span class="hint">WAV veya MP3.</span>
+      </div>
+
+      <div class="grp">Görünüm</div>
+
+      <div class="g2">
+        <div class="f"><div class="fl"><span class="lt">Vurgu rengi</span><button class="fa" type="button" aria-label="Dinamik yap"><svg class="i"><use href="#bolt"/></svg></button></div><button class="c" type="button"><span class="sw-c" style="background:#0e7490"></span><span class="sp mono">#0e7490</span></button></div>
+        <div class="f"><div class="fl"><span class="lt">Yönelim</span></div><div class="seg"><button class="on" type="button">Yatay</button><button type="button">Dikey</button></div></div>
+      </div>
+
+      <div class="f"><div class="fl"><span class="lt">Yumuşatma</span></div><div class="rng"><div class="trk"><i style="width:60%"></i><b style="left:60%"></b></div><input class="c" type="text" value="0.6" aria-label="Yumuşatma değeri"></div></div>
+
+      <div class="g2">
+        <div class="f"><div class="fl"><span class="lt">Yenileme</span></div><div class="c" style="padding-right:8px"><input type="text" value="250" aria-label="Yenileme" style="flex:1;min-width:0;background:none;border:0;color:inherit;font:inherit;padding:0;outline:0"><span class="unit">ms</span></div></div>
+        <div class="f"><div class="fl"><span class="lt">İç boşluk</span></div><div class="c" style="padding-right:8px"><input type="text" value="8" aria-label="İç boşluk" style="flex:1;min-width:0;background:none;border:0;color:inherit;font:inherit;padding:0;outline:0"><span class="unit">px</span></div></div>
+      </div>
+
+      <div class="f inl"><div class="ft"><span class="ln">Değeri göster</span></div><button class="sw on" type="button" role="switch" aria-checked="true" aria-label="Değeri göster"></button></div>
+      <div class="f nest"><div class="fl"><span class="lt">Ondalık basamak</span></div><input class="c" type="text" value="1" aria-label="Ondalık basamak" style="width:96px"></div>
+
+      <div class="grp">Bağlantı</div>
+
+      <div class="f">
+        <div class="fl"><span class="lt">API anahtarı</span></div>
+        <div style="position:relative"><input class="c" type="password" value="abcdefghij" aria-label="API anahtarı" style="padding-right:30px"><button class="btn gh ib" type="button" aria-label="Göster" style="position:absolute;right:0;top:0;height:28px"><svg class="i"><use href="#eye"/></svg></button></div>
+      </div>
+
+      <div class="note"><svg class="i"><use href="#warn"/></svg><span>Anahtar değişirse plugin yeniden bağlanır.</span></div>
+
+      <div class="f"><button class="btn full" type="button">Bağlantıyı sına</button><span class="hint">Bağlandı · 12 ms</span></div>
+
+      <div class="f">
+        <div class="fl"><span class="lt">Kanallar</span><span style="display:flex;gap:2px"><button class="fa" type="button">Tümünü aç</button><button class="fa" type="button">Tümünü kapat</button></span></div>
+        <div class="list">
+          <div class="lr"><button class="btn gh ib" type="button" style="width:24px;height:24px" aria-label="Aç"><svg class="i"><use href="#cr"/></svg></button><span class="sp">Mikrofon</span><button class="btn gh ib" type="button" style="width:24px;height:24px" aria-label="Sil"><svg class="i"><use href="#x"/></svg></button></div>
+          <div class="lr"><button class="btn gh ib" type="button" style="width:24px;height:24px" aria-label="Kapat"><svg class="i"><use href="#cd"/></svg></button><span class="sp">Müzik</span><button class="btn gh ib" type="button" style="width:24px;height:24px" aria-label="Sil"><svg class="i"><use href="#x"/></svg></button></div>
+          <div class="lb">
+            <div class="f"><div class="fl"><span class="lt">Ad</span></div><input class="c" type="text" value="Müzik" aria-label="Kanal adı"></div>
+            <div class="g2">
+              <div class="f"><div class="fl"><span class="lt">Renk</span></div><button class="c" type="button"><span class="sw-c" style="background:#6d28d9"></span><span class="sp mono">#6d28d9</span></button></div>
+              <div class="f"><div class="fl"><span class="lt">Kazanç</span></div><div class="c" style="padding-right:8px"><input type="text" value="-3" aria-label="Kazanç" style="flex:1;min-width:0;background:none;border:0;color:inherit;font:inherit;padding:0;outline:0"><span class="unit">dB</span></div></div>
+            </div>
+          </div>
+          <div class="lr"><button class="btn gh ib" type="button" style="width:24px;height:24px" aria-label="Aç"><svg class="i"><use href="#cr"/></svg></button><span class="sp">Kanal 3</span><button class="btn gh ib" type="button" style="width:24px;height:24px" aria-label="Sil"><svg class="i"><use href="#x"/></svg></button></div>
+        </div>
+        <button class="btn gh" type="button" style="align-self:flex-start;height:24px;padding:0 6px;margin-left:-6px"><svg class="i"><use href="#plus"/></svg>Satır ekle</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <button class="sh" type="button"><svg class="i"><use href="#cd"/></svg>Veri</button>
+    <div class="sb"><button class="btn" type="button" style="align-self:flex-start"><svg class="i"><use href="#eraser"/></svg>Widget verisini temizle</button></div>
+  </div>
+
+  <div class="sec">
+    <button class="sh" type="button"><svg class="i"><use href="#cd"/></svg>Aksiyonlar</button>
+    <div class="sb">
+      <div class="ev">
+        <button class="on" type="button"><svg class="i" style="width:16px;height:16px"><use href="#dot"/></svg>Seviye değişti<i></i></button>
+        <button type="button"><svg class="i" style="width:16px;height:16px"><use href="#ring"/></svg>Sessize alındı</button>
+        <button type="button"><svg class="i" style="width:16px;height:16px"><use href="#timer"/></svg>Eşik aşıldı</button>
+        <button type="button"><svg class="i" style="width:16px;height:16px"><use href="#bolt"/></svg>Bağlantı koptu</button>
+      </div>
+      <div class="card">
+        <div class="ch"><span class="num">1</span><span class="lt" style="flex:1">Değişken ata</span><button class="btn gh ib" type="button" style="width:24px;height:24px" aria-label="Kaldır"><svg class="i"><use href="#x"/></svg></button></div>
+        <div class="cb">
+          <div class="f"><div class="fl"><span class="lt">Değişken</span></div><button class="c" type="button"><svg class="i" style="color:var(--ac)"><use href="#var"/></svg><span class="sp mono">ui.level</span></button></div>
+          <div class="f"><div class="fl"><span class="lt">Değer</span><button class="fa" type="button"><svg class="i"><use href="#var"/></svg>Değişken</button></div><input class="c" type="text" value="{event.value}" aria-label="Değer"></div>
+        </div>
+      </div>
+      <button class="btn gh" type="button" style="align-self:flex-start;height:24px;padding:0 6px;margin-left:-6px"><svg class="i"><use href="#plus"/></svg>Aksiyon ekle</button>
+    </div>
+  </div>
+
+  <div class="sec">
+    <button class="sh" type="button"><svg class="i"><use href="#cr"/></svg>Özel CSS</button>
+  </div>
+</div>
+</div>
+
+<!-- PANEL B : buton -->
+<div>
+<div class="cap">B · Buton widget — aynı iskelet, aynı ölçüler</div>
+<div class="panel">
+  <div class="ph"><span class="t">Buton</span><button class="btn gh dng" type="button" style="height:24px;padding:0 6px">Sil</button></div>
+  <div class="sec"><div class="f"><div class="fl"><span class="lt">Ad</span></div><input class="c" type="text" value="Mikrofonu kapat" aria-label="Ad"></div></div>
+
+  <div class="sec">
+    <button class="sh" type="button"><svg class="i"><use href="#cd"/></svg>Görünüm</button>
+    <div class="sb">
+      <div class="g2">
+        <div class="f"><div class="fl"><span class="lt">Arka plan</span><button class="fa" type="button" aria-label="Dinamik yap"><svg class="i"><use href="#bolt"/></svg></button></div><button class="c" type="button"><span class="sw-c" style="background:#b91c1c"></span><span class="sp mono">#b91c1c</span></button></div>
+        <div class="f"><div class="fl"><span class="lt">Ön plan</span><button class="fa" type="button" aria-label="Dinamik yap"><svg class="i"><use href="#bolt"/></svg></button></div><button class="c" type="button"><span class="sw-c" style="background:#ffffff"></span><span class="sp mono">#ffffff</span></button></div>
+      </div>
+      <div class="g3">
+        <div class="f"><div class="fl"><span class="lt">Kenarlık</span></div><button class="c" type="button"><span class="sw-c" style="background:transparent;border-style:dashed"></span><span class="sp mono">—</span></button></div>
+        <div class="f"><div class="fl"><span class="lt">Kalınlık</span></div><input class="c" type="text" value="0" aria-label="Kalınlık"></div>
+        <div class="f"><div class="fl"><span class="lt">Köşe</span></div><input class="c" type="text" value="8" aria-label="Köşe"></div>
+      </div>
+      <div class="f"><div class="fl"><span class="lt">Animasyon</span></div><div class="seg"><button class="on" type="button">Yok</button><button type="button">Yanıp sön</button><button type="button">Nabız</button></div></div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <button class="sh" type="button"><svg class="i"><use href="#cd"/></svg>İçerik</button>
+    <div class="sb">
+      <div class="f"><div class="fl"><span class="lt">Metin</span><button class="fa" type="button"><svg class="i"><use href="#var"/></svg>Değişken</button></div><textarea class="c" rows="2" aria-label="Metin">Mikrofon
+açık</textarea></div>
+      <div class="g2">
+        <div class="f"><div class="fl"><span class="lt">Yatay hiza</span></div><div class="seg"><button class="on" type="button"><svg class="i"><use href="#ac"/></svg></button><button type="button"><svg class="i"><use href="#al"/></svg></button><button type="button"><svg class="i"><use href="#ar"/></svg></button></div></div>
+        <div class="f"><div class="fl"><span class="lt">Dikey hiza</span></div><div class="seg"><button type="button">Üst</button><button class="on" type="button">Orta</button><button type="button">Alt</button></div></div>
+      </div>
+      <div class="g2">
+        <div class="f"><div class="fl"><span class="lt">Yazı boyu</span></div><div class="c" style="padding-right:8px"><input type="text" value="16" aria-label="Yazı boyu" style="flex:1;min-width:0;background:none;border:0;color:inherit;font:inherit;padding:0;outline:0"><span class="unit">px</span></div></div>
+        <div class="f"><div class="fl"><span class="lt">Simge boyu</span></div><div class="c" style="padding-right:8px"><input type="text" value="28" aria-label="Simge boyu" style="flex:1;min-width:0;background:none;border:0;color:inherit;font:inherit;padding:0;outline:0"><span class="unit">px</span></div></div>
+      </div>
+      <div class="f"><div class="fl"><span class="lt">Simge</span><button class="fa" type="button" aria-label="Dinamik yap"><svg class="i"><use href="#bolt"/></svg></button></div><button class="c" type="button"><svg class="i"><use href="#box"/></svg><span class="sp">Mic</span><svg class="i" style="color:var(--tx2)"><use href="#cd"/></svg></button></div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <button class="sh" type="button"><svg class="i"><use href="#cd"/></svg>Aksiyonlar</button>
+    <div class="sb">
+      <div class="ev">
+        <button class="on" type="button"><svg class="i" style="width:16px;height:16px"><use href="#dot"/></svg>Basıldı<i></i></button>
+        <button type="button"><svg class="i" style="width:16px;height:16px"><use href="#ring"/></svg>Bırakıldı</button>
+        <button type="button"><svg class="i" style="width:16px;height:16px"><use href="#timer"/></svg>Uzun bas</button>
+        <button type="button"><svg class="i" style="width:16px;height:16px"><use href="#dot"/></svg>Çift dokun</button>
+      </div>
+      <div class="card">
+        <div class="ch"><span class="num">1</span><span class="lt" style="flex:1">Mikrofonu sessize al</span><button class="btn gh ib" type="button" style="width:24px;height:24px" aria-label="Kaldır"><svg class="i"><use href="#x"/></svg></button></div>
+        <div class="cb"><div class="f"><div class="fl"><span class="lt">Cihaz</span></div><div style="position:relative"><select class="c" aria-label="Cihaz" style="appearance:none;-webkit-appearance:none;padding-right:26px"><option>Varsayılan mikrofon</option></select><svg class="i" style="position:absolute;right:8px;top:7px;color:var(--tx2);pointer-events:none"><use href="#cd"/></svg></div></div></div>
+      </div>
+      <button class="btn gh" type="button" style="align-self:flex-start;height:24px;padding:0 6px;margin-left:-6px"><svg class="i"><use href="#plus"/></svg>Aksiyon ekle</button>
+    </div>
+  </div>
+  <div class="sec"><button class="sh" type="button"><svg class="i"><use href="#cr"/></svg>Özel CSS</button></div>
+</div>
+</div>
+
+</div>
+
+
+</body>
+</html>

@@ -28,6 +28,7 @@ Where things live. Public entry points (`README.md`, `CONTRIBUTING.md`, `SECURIT
 | [guides/release.md](guides/release.md) | How a release is made: build, installer, tags. |
 | [ui/ui-guidelines.md](ui/ui-guidelines.md) | UI rules for the editor and the phone deck. |
 | [ui/color-bible.md](ui/color-bible.md) | The color system ([live preview](ui/color-bible-preview.html)). |
+| [ui/dynamize-window-anatomy.md](ui/dynamize-window-anatomy.md) | Dynamize window and Presets window: anatomy, measurements, how to add a preset ([mockups](ui/dynamize-window/)). |
 | [ui/editor-icons.md](ui/editor-icons.md) | Editor icons: format, sizes, colors by state, the full list, and the custom icons to draw ([preview](ui/editor-icons-preview.html)). |
 
 ## Where a new document goes

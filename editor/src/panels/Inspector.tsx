@@ -5,11 +5,11 @@ import { useT } from "../i18n/I18nContext";
 import { ActionEditor } from "./ActionEditor";
 import { CssEditor } from "./CssEditor";
 import { AppearanceFields } from "./fields/AppearanceFields";
-import { CollapsibleSection, Seg, SectionLabel } from "./fields/controls";
+import { CollapsibleSection, CommitTextInput, Field, FieldGrid, NumberInput, Seg } from "./fields/controls";
 import { ImageFields } from "./fields/ImageFields";
 import { RangeFields } from "./fields/RangeFields";
 import { TextFields } from "./fields/TextFields";
-import { PluginWidgetFields } from "./fields/PluginWidgetFields";
+import { PluginWidgetFields, PluginWidgetIdentity } from "./fields/PluginWidgetFields";
 import { NameField } from "./fields/NameField";
 import { SelfPreviewField } from "./fields/SelfPreviewField";
 import { WebFields } from "./fields/WebFields";
@@ -79,12 +79,12 @@ export function Inspector({
 
   if (selectedWidgets.length > 1) {
     return (
-      <div style={{ padding: 12, display: "flex", flexDirection: "column", gap: 14 }}>
-        <SectionLabel>{t("widget.selected.count", String(selectedWidgets.length))}</SectionLabel>
-        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-          <button className="ghost" onClick={onDuplicateSelected}>{t("widget.selected.duplicate")}</button>
-          <button className="ghost" onClick={onMoveCopySelected}>{t("widget.selected.moveCopy")}</button>
-          <button className="ghost" style={{ color: "var(--ms-danger)" }} onClick={onDeleteSelected}>{t("widget.selected.delete")}</button>
+      <div className="pf-section">
+        <div className="pf-body">
+          <div className="pf-group-label section-label">{t("widget.selected.count", String(selectedWidgets.length))}</div>
+          <button className="ghost pf-btn" onClick={onDuplicateSelected}>{t("widget.selected.duplicate")}</button>
+          <button className="ghost pf-btn" onClick={onMoveCopySelected}>{t("widget.selected.moveCopy")}</button>
+          <button className="ghost pf-btn pf-danger" onClick={onDeleteSelected}>{t("widget.selected.delete")}</button>
         </div>
       </div>
     );
@@ -93,29 +93,41 @@ export function Inspector({
   const widget = selectedWidgets[0]!;
 
   return (
-    <div style={{ padding: 12, display: "flex", flexDirection: "column", gap: 14, overflowY: "auto", height: "100%" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <span style={{ fontSize: 11, color: "var(--ms-text-secondary)", textTransform: "uppercase" }}>{typeLabel(widget.type, t)}</span>
-        <button className="ghost" onClick={onDelete} style={{ color: "var(--ms-danger)" }}>{t("widget.delete")}</button>
+    <>
+      <div className="pf-section head">
+        <span className="section-label">{typeLabel(widget.type, t)}</span>
+        <button className="ghost pf-btn small pf-danger" onClick={onDelete}>{t("widget.delete")}</button>
       </div>
 
-      <NameField widget={widget} siblings={page.widgets} onRename={onRename} />
+      <div className="pf-section">
+        <div className="pf-body">
+          <NameField widget={widget} siblings={page.widgets} onRename={onRename} />
+          <SelfPreviewField widget={widget} />
+        </div>
+      </div>
 
-      <SelfPreviewField widget={widget} />
+      {widget.type === "plugin-widget" && (
+        <div className="pf-section">
+          <div className="pf-body">
+            <PluginWidgetIdentity widget={widget} />
+          </div>
+        </div>
+      )}
 
-      <CollapsibleSection id="appearance" label={t("fields.appearance.title")}>
-        <AppearanceFields widget={widget} onChange={onChange} variableCatalog={variableCatalog} />
-      </CollapsibleSection>
+      <div className="pf-section">
+        <CollapsibleSection id="appearance" label={t("fields.appearance.title")}>
+          <AppearanceFields widget={widget} onChange={onChange} variableCatalog={variableCatalog} />
+        </CollapsibleSection>
+      </div>
 
-      <hr className="sep" />
-
-      <CollapsibleSection id="typeFields" label={t("fields.content.title")}>
-        {renderTypeFields(widget, onChange, variableCatalog, page.widgets.filter((w) => w.type === "web").length)}
-      </CollapsibleSection>
+      <div className="pf-section">
+        <CollapsibleSection id="typeFields" label={t("fields.content.title")}>
+          {renderTypeFields(widget, onChange, variableCatalog, page.widgets.filter((w) => w.type === "web").length)}
+        </CollapsibleSection>
+      </div>
 
       {widget.type !== "label" && (
-        <>
-          <hr className="sep" />
+        <div className="pf-section">
           <CollapsibleSection id="actions" label={t("widget.actions")}>
             <ActionEditor
               widget={widget}
@@ -131,17 +143,17 @@ export function Inspector({
               }
             />
           </CollapsibleSection>
-        </>
+        </div>
       )}
-
-      <hr className="sep" />
 
       {/* Collapsed by default (unlike the sections above) — advanced/rarely-needed, kept out of the
          way at the very bottom (see docs/ui/ui-guidelines.md); whoever wants it clicks to open it. */}
-      <CollapsibleSection id="css" label={t("css.label")} defaultCollapsed>
-        <CssEditor value={widget.customCss} onChange={(css) => onChange((w) => { w.customCss = css; })} />
-      </CollapsibleSection>
-    </div>
+      <div className="pf-section">
+        <CollapsibleSection id="css" label={t("css.label")} defaultCollapsed>
+          <CssEditor value={widget.customCss} onChange={(css) => onChange((w) => { w.customCss = css; })} />
+        </CollapsibleSection>
+      </div>
+    </>
   );
 }
 
@@ -161,78 +173,61 @@ function PageProperties({ page, onRename, onSetGrid, onSetGap, onSetPadding, onS
   const { t } = useT();
 
   return (
-    <div style={{ padding: 12, display: "flex", flexDirection: "column", gap: 14, overflowY: "auto", height: "100%" }}>
-      <SectionLabel>{t("page.properties.title")}</SectionLabel>
-
-      <label className="field">
-        {t("page.properties.name")}
-        <input
-          type="text"
-          defaultValue={page.name}
-          key={page.id}
-          onBlur={(e) => { if (e.target.value.trim() && e.target.value.trim() !== page.name) onRename(page.id, e.target.value.trim()); }}
-          onKeyDown={(e) => { if (e.key === "Enter") (e.target as HTMLInputElement).blur(); }}
-        />
-      </label>
-
-      <label className="field">
-        {t("page.properties.grid")}
-        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-          <input
-            type="number" min={1} max={24} value={page.cols}
-            onChange={(e) => onSetGrid(page.id, Number(e.target.value), page.rows)}
-          />
-          ×
-          <input
-            type="number" min={1} max={24} value={page.rows}
-            onChange={(e) => onSetGrid(page.id, page.cols, Number(e.target.value))}
-          />
-        </div>
-      </label>
-
-      <label className="field">
-        {t("page.properties.gap")}
-        <input
-          type="number" min={0} max={60} value={page.gap ?? 10}
-          onChange={(e) => onSetGap(page.id, Number(e.target.value))}
-        />
-      </label>
-
-      <label className="field">
-        {t("page.properties.padding")}
-        <input
-          type="number" min={0} max={200} value={page.padding ?? 0}
-          onChange={(e) => onSetPadding(page.id, Number(e.target.value))}
-        />
-      </label>
-
-      <label className="field">
-        {t("page.properties.alignment")}
-        <Seg
-          value={page.alignment ?? "center"}
-          onChange={(v) => onSetAlignment(page.id, v)}
-          options={[
-            { value: "start", label: t("page.properties.alignment.start") },
-            { value: "center", label: t("page.properties.alignment.center") },
-            { value: "end", label: t("page.properties.alignment.end") },
-          ]}
-        />
-      </label>
-
-      <hr className="sep" />
-
-      <div style={{ display: "flex", gap: 6 }}>
-        <button className="ghost" style={{ flex: 1 }} onClick={() => onDuplicate(page.id)}>{t("page.properties.duplicate")}</button>
-        <button
-          className="ghost"
-          style={{ flex: 1, color: "var(--ms-danger)" }}
-          disabled={!canDelete}
-          onClick={async () => { if (await confirmAsync(t("page.deleteConfirm", page.name), { title: t("page.delete"), danger: true })) onDelete(page.id); }}
-        >
-          {t("page.properties.delete")}
-        </button>
+    <>
+      <div className="pf-section head">
+        <span className="section-label">{t("page.properties.title")}</span>
       </div>
-    </div>
+
+      <div className="pf-section">
+        <div className="pf-body">
+          <Field label={t("page.properties.name")}>
+            <CommitTextInput key={page.id} value={page.name} onCommit={(v) => { if (v && v !== page.name) onRename(page.id, v); }} />
+          </Field>
+
+          <Field single label={t("page.properties.grid")}>
+            <div className="pf-row">
+              <div className="grow"><NumberInput min={1} max={24} value={page.cols} onChange={(v) => onSetGrid(page.id, v, page.rows)} /></div>
+              <span aria-hidden="true">×</span>
+              <div className="grow"><NumberInput secondary min={1} max={24} value={page.rows} onChange={(v) => onSetGrid(page.id, page.cols, v)} /></div>
+            </div>
+          </Field>
+
+          <FieldGrid cols={2}>
+            <Field single label={t("page.properties.gap")}>
+              <NumberInput min={0} max={60} unit="px" value={page.gap ?? 10} onChange={(v) => onSetGap(page.id, v)} />
+            </Field>
+            <Field single label={t("page.properties.padding")}>
+              <NumberInput min={0} max={200} unit="px" value={page.padding ?? 0} onChange={(v) => onSetPadding(page.id, v)} />
+            </Field>
+          </FieldGrid>
+
+          <Field single label={t("page.properties.alignment")}>
+            <Seg
+              value={page.alignment ?? "center"}
+              onChange={(v) => onSetAlignment(page.id, v)}
+              options={[
+                { value: "start", label: t("page.properties.alignment.start") },
+                { value: "center", label: t("page.properties.alignment.center") },
+                { value: "end", label: t("page.properties.alignment.end") },
+              ]}
+            />
+          </Field>
+        </div>
+      </div>
+
+      <div className="pf-section">
+        <FieldGrid cols={2}>
+          <button className="ghost pf-btn" onClick={() => onDuplicate(page.id)}>{t("page.properties.duplicate")}</button>
+          <button
+            className="ghost pf-btn pf-danger"
+            disabled={!canDelete}
+            onClick={async () => { if (await confirmAsync(t("page.deleteConfirm", page.name), { title: t("page.delete"), danger: true })) onDelete(page.id); }}
+          >
+            {t("page.properties.delete")}
+          </button>
+        </FieldGrid>
+      </div>
+    </>
   );
 }
 

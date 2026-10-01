@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<title>Panel responsive</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+</head>
+<body style="margin:0;background:#1c1e22">
+
+
+<style>
+body{margin:0}
+.pp{--bg:#232529;--cv:#1c1e22;--raised:#2b2e33;--inset:#16171a;--bd:#35383e;--bds:#46494f;--tx:#e6e7ea;--tx2:#9a9ea6;--txd:#7b7f87;--ac:#d97706;font:12px/1.3 "Segoe UI",system-ui,sans-serif;color:var(--tx);background:var(--cv)}
+.pp *{box-sizing:border-box}
+.pp svg.i{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.pp h1{margin:0;font:600 22px "Segoe UI",system-ui,sans-serif}
+.lead{margin:6px 0 0;color:var(--tx2);font-size:13px;line-height:1.5;max-width:900px}
+.cap{font:600 12px "Segoe UI",system-ui,sans-serif;color:var(--tx);margin:0 0 2px}
+.cap2{font-size:11px;color:var(--tx2);margin:0 0 10px;min-height:30px}
+.cq{container-type:inline-size;background:var(--bg);border:1px solid var(--bd)}
+.in{padding:12px;display:flex;flex-direction:column;gap:12px}
+.f{display:flex;flex-direction:column;gap:4px;min-width:0}
+.fl{display:flex;align-items:center;justify-content:space-between;gap:8px;height:18px;font-size:12px;color:var(--tx2)}
+.lt{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.c{display:flex;align-items:center;gap:6px;width:100%;height:28px;padding:0 8px;background:var(--inset);border:1px solid var(--bd);border-radius:4px;color:var(--tx);font:12px "Segoe UI",system-ui,sans-serif;text-align:left;min-width:0}
+.c .s{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mono{font-family:ui-monospace,Consolas,monospace}
+.nin{flex:1;min-width:0;background:none;border:0;color:inherit;font:inherit;padding:0;outline:0}
+.unit{color:var(--txd);font-size:11px;flex:none}
+.hint{font-size:11px;line-height:1.4;color:var(--tx2)}
+.g2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.g3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.sw-c{width:16px;height:16px;border-radius:3px;border:1px solid rgba(255,255,255,.18);flex:none}
+.seg{display:flex;height:28px;border:1px solid var(--bd);border-radius:4px;overflow:hidden}
+.seg button{flex:1;min-width:0;border:0;border-right:1px solid var(--bd);background:var(--inset);color:var(--tx2);font:11.5px "Segoe UI",system-ui,sans-serif;padding:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.seg button:last-child{border-right:0}
+.seg button.on{background:var(--raised);color:var(--tx);box-shadow:inset 0 -2px 0 var(--ac)}
+.inl{flex-direction:row;align-items:center;justify-content:space-between;gap:12px;min-height:28px}
+.ln{font-size:12px;color:var(--tx)}
+.sw{width:28px;height:16px;border-radius:8px;border:0;padding:0;background:var(--ac);position:relative;flex:none}
+.sw::after{content:"";position:absolute;top:2px;left:14px;width:12px;height:12px;border-radius:50%;background:#fff}
+.rng{display:flex;align-items:center;gap:8px;height:28px}
+.trk{flex:1;height:4px;border-radius:2px;background:var(--bds);position:relative}
+.trk i{position:absolute;left:0;top:0;bottom:0;border-radius:2px;background:var(--ac)}
+.trk b{position:absolute;top:-5px;width:14px;height:14px;border-radius:50%;background:var(--tx);border:2px solid var(--ac);margin-left:-7px}
+.rng .c{width:56px;flex:none;text-align:right;padding:0 6px}
+@container (max-width:239px){.g2,.g3{grid-template-columns:minmax(0,1fr)}}
+@container (min-width:240px) and (max-width:299px){.g3{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@container (min-width:400px){
+.g2,.g3{grid-template-columns:minmax(0,1fr)}
+.lv{display:grid;grid-template-columns:120px minmax(0,1fr);column-gap:8px;align-items:center}
+.lv .hint{grid-column:2}
+}
+</style>
+
+<div class="pp" style="width: 1160px; height: 760px; padding: 40px; display: flex; flex-direction: column; gap: 24px">
+<svg width="0" height="0" style="position:absolute"><defs>
+<symbol id="cd" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+</defs></svg>
+<div>
+<h1>Responsive davranış</h1>
+<p class="lead">Panel yeniden boyutlandırılabilir. Yerleşim pencereye değil panelin kendi genişliğine göre değişir (<span class="mono" style="color:var(--ac)">container-type: inline-size</span> + <span class="mono" style="color:var(--ac)">@container</span>). Aşağıdaki üç panel aynı alan listesidir; her biri gerçek kapsayıcı sorgusuyla çiziliyor, yani tahtayı yeniden boyutlandırınca değil, panel genişliğine göre uyum sağlıyor.</p>
+</div>
+
+<div style="display:flex;gap:40px;align-items:flex-start">
+
+<div style="width:240px"><div class="cap">Kompakt · 240 px</div><div class="cap2">Tüm gridler tek sütun; kenar boşluğu 12 kalır.</div>
+<div class="cq"><div class="in">
+<div class="f lv"><div class="fl"><span class="lt">Ad</span></div><input class="c" type="text" value="Mikrofonu kapat" aria-label="Ad"></div>
+<div class="g3">
+<div class="f"><div class="fl"><span class="lt">Arka plan</span></div><button class="c" type="button"><span class="sw-c" style="background:#b91c1c"></span><span class="s mono">#b91c1c</span></button></div>
+<div class="f"><div class="fl"><span class="lt">Kalınlık</span></div><div class="c"><input class="nin" type="text" value="2" aria-label="Kalınlık"><span class="unit">px</span></div></div>
+<div class="f"><div class="fl"><span class="lt">Köşe</span></div><div class="c"><input class="nin" type="text" value="8" aria-label="Köşe"><span class="unit">px</span></div></div>
+</div>
+<div class="f lv"><div class="fl"><span class="lt">Animasyon</span></div><div class="seg"><button class="on" type="button">Yok</button><button type="button">Yanıp sön</button><button type="button">Nabız</button></div></div>
+<div class="f inl"><span class="ln lt">Değeri göster</span><button class="sw" type="button" role="switch" aria-checked="true" aria-label="Değeri göster"></button></div>
+<div class="f"><div class="fl"><span class="lt">Yumuşatma</span></div><div class="rng"><div class="trk"><i style="width:60%"></i><b style="left:60%"></b></div><input class="c" type="text" value="0.6" aria-label="Değer"></div></div>
+</div></div></div>
+
+<div style="width:320px"><div class="cap">Varsayılan · 320 px</div><div class="cap2">Referans ölçü. 3'lü ve 2'li gridler olduğu gibi.</div>
+<div class="cq"><div class="in">
+<div class="f lv"><div class="fl"><span class="lt">Ad</span></div><input class="c" type="text" value="Mikrofonu kapat" aria-label="Ad"></div>
+<div class="g3">
+<div class="f"><div class="fl"><span class="lt">Arka plan</span></div><button class="c" type="button"><span class="sw-c" style="background:#b91c1c"></span><span class="s mono">#b91c1c</span></button></div>
+<div class="f"><div class="fl"><span class="lt">Kalınlık</span></div><div class="c"><input class="nin" type="text" value="2" aria-label="Kalınlık"><span class="unit">px</span></div></div>
+<div class="f"><div class="fl"><span class="lt">Köşe</span></div><div class="c"><input class="nin" type="text" value="8" aria-label="Köşe"><span class="unit">px</span></div></div>
+</div>
+<div class="f lv"><div class="fl"><span class="lt">Animasyon</span></div><div class="seg"><button class="on" type="button">Yok</button><button type="button">Yanıp sön</button><button type="button">Nabız</button></div></div>
+<div class="f inl"><span class="ln lt">Değeri göster</span><button class="sw" type="button" role="switch" aria-checked="true" aria-label="Değeri göster"></button></div>
+<div class="f"><div class="fl"><span class="lt">Yumuşatma</span></div><div class="rng"><div class="trk"><i style="width:60%"></i><b style="left:60%"></b></div><input class="c" type="text" value="0.6" aria-label="Değer"></div></div>
+</div></div></div>
+
+<div style="width:440px"><div class="cap">Geniş · 400 px ve üstü (burada 440)</div><div class="cap2">Tek değerli alanlar Etiket | Değer satırı olur: etiket 120 px sütun, kontrol kalanı doldurur. Gridler tek sütun.</div>
+<div class="cq"><div class="in">
+<div class="f lv"><div class="fl"><span class="lt">Ad</span></div><input class="c" type="text" value="Mikrofonu kapat" aria-label="Ad"></div>
+<div class="g3">
+<div class="f lv"><div class="fl"><span class="lt">Arka plan</span></div><button class="c" type="button"><span class="sw-c" style="background:#b91c1c"></span><span class="s mono">#b91c1c</span></button></div>
+<div class="f lv"><div class="fl"><span class="lt">Kalınlık</span></div><div class="c"><input class="nin" type="text" value="2" aria-label="Kalınlık"><span class="unit">px</span></div></div>
+<div class="f lv"><div class="fl"><span class="lt">Köşe</span></div><div class="c"><input class="nin" type="text" value="8" aria-label="Köşe"><span class="unit">px</span></div></div>
+</div>
+<div class="f lv"><div class="fl"><span class="lt">Animasyon</span></div><div class="seg"><button class="on" type="button">Yok</button><button type="button">Yanıp sön</button><button type="button">Nabız</button></div></div>
+<div class="f inl"><span class="ln lt">Değeri göster</span><button class="sw" type="button" role="switch" aria-checked="true" aria-label="Değeri göster"></button></div>
+<div class="f lv"><div class="fl"><span class="lt">Yumuşatma</span></div><div class="rng"><div class="trk"><i style="width:60%"></i><b style="left:60%"></b></div><input class="c" type="text" value="0.6" aria-label="Değer"></div></div>
+</div></div></div>
+
+</div>
+</div>
+
+
+</body>
+</html>

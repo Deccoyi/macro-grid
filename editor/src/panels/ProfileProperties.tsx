@@ -2,7 +2,7 @@ import type { AppMatch } from "@macro/renderer";
 import { confirmAsync } from "../dialogs/dialogStore";
 import { useT } from "../i18n/I18nContext";
 import { AppMatchesEditor } from "./AppMatchesEditor";
-import { SectionLabel } from "./fields/controls";
+import { CommitTextInput, Field } from "./fields/controls";
 
 interface ProfilePropertiesProps {
   target: { id: string; name: string };
@@ -24,37 +24,34 @@ export function ProfileProperties({ target, isCurrent, appMatches, onAppMatchesC
   const { t } = useT();
 
   return (
-    <div style={{ padding: 12, display: "flex", flexDirection: "column", gap: 14, overflowY: "auto", height: "100%" }}>
-      <SectionLabel>{t("profile.properties.title")}</SectionLabel>
+    <>
+      <div className="pf-section head">
+        <span className="section-label">{t("profile.properties.title")}</span>
+      </div>
 
-      <label className="field">
-        {t("profile.properties.name")}
-        <input
-          type="text"
-          defaultValue={target.name}
-          key={target.id}
-          disabled={!isCurrent}
-          onBlur={(e) => { const v = e.target.value.trim(); if (v && v !== target.name) onRename(v); }}
-          onKeyDown={(e) => { if (e.key === "Enter") (e.target as HTMLInputElement).blur(); }}
-        />
-      </label>
+      <div className="pf-section">
+        <div className="pf-body">
+          <Field label={t("profile.properties.name")}>
+            <CommitTextInput key={target.id} value={target.name} disabled={!isCurrent} onCommit={(v) => { if (v && v !== target.name) onRename(v); }} />
+          </Field>
 
-      {isCurrent ? (
-        <AppMatchesEditor matches={appMatches} onChange={onAppMatchesChange} />
-      ) : (
-        <p style={{ fontSize: 11.5, color: "var(--ms-text-secondary)" }}>{t("profile.properties.switching")}</p>
-      )}
+          {isCurrent ? (
+            <AppMatchesEditor matches={appMatches} onChange={onAppMatchesChange} />
+          ) : (
+            <p className="pf-hint">{t("profile.properties.switching")}</p>
+          )}
+        </div>
+      </div>
 
-      <hr className="sep" />
-
-      <button
-        className="ghost"
-        style={{ color: "var(--ms-danger)" }}
-        disabled={!isCurrent || !canDelete}
-        onClick={async () => { if (await confirmAsync(t("profile.deleteConfirm", target.name), { title: t("profile.delete"), danger: true })) onDelete(); }}
-      >
-        {t("profile.properties.delete")}
-      </button>
-    </div>
+      <div className="pf-section">
+        <button
+          className="ghost pf-btn pf-danger"
+          disabled={!isCurrent || !canDelete}
+          onClick={async () => { if (await confirmAsync(t("profile.deleteConfirm", target.name), { title: t("profile.delete"), danger: true })) onDelete(); }}
+        >
+          {t("profile.properties.delete")}
+        </button>
+      </div>
+    </>
   );
 }

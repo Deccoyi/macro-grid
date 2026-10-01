@@ -77,10 +77,103 @@ desktop-style dialog (`confirmAsync` in `editor/src/dialogs/dialogStore.ts`), ne
   common properties when several items are selected, its own independent scrolling, keyboard support (Enter, Escape, F2). Every widget type shows
   the same order: Appearance, the type-specific fields, Actions. Use the shared controls in `editor/src/panels/fields/controls.tsx`
   (`SectionLabel`, `ColorField`, `Seg`) instead of raw `<select>` elements and card boxes.
+  The exact measurements, layouts and responsive rules for every field are in
+  [Properties panel field system](#properties-panel-field-system) below; they apply to widget properties, page properties, plugin widget
+  settings and every schema-driven form (`SchemaForm`).
 - **Drawers** are not a default: use an existing persistent panel instead. When one is needed it does not cover the screen and behaves like part
   of the desktop panel.
 - **Forms:** compact, aligned, inline validation and inline editing, no giant inputs.
+- **Dynamic-value rules (Dynamize window) and its presets:** the layout, measurements and extension steps are in
+  [dynamize-window-anatomy.md](dynamize-window-anatomy.md), with the mockups in [dynamize-window/](dynamize-window/). Read it before changing
+  `DynamizeModal.tsx`, `ConditionEditor.tsx` or `quickTemplates.ts`, or before adding a preset.
 - **Animation:** minimal and functional. No decorative micro-interactions.
+
+## Properties panel field system
+
+One system draws every field in the Properties panel, so a new widget, a new plugin setting or a new field kind never needs its own spacing.
+All numbers are CSS px and live as tokens in `theme.css`; never write a literal gap, height or padding in a component. Colors are the existing
+`--ms-*` variables.
+
+### Tokens
+
+| Token | Value | Meaning |
+|---|---|---|
+| `--pf-pad` | 12 | Padding of a section on all four sides. Sections run edge to edge; the divider between them is a 1 px `--ms-border` line (no `hr.sep`, no outer gap). |
+| `--pf-section-head` | 28 | Height of a collapsible section header (13 px, weight 600). 8 px between the header and the body. |
+| `--pf-gap-field` | 12 | Vertical gap between two fields. The only vertical gap between fields, everywhere. |
+| `--pf-gap-col` | 8 | Gap between fields placed side by side. |
+| `--pf-label-h` | 18 | Height of the label row (12 px, `--ms-text-secondary`). Label text on the left, small actions on the right (Add variable, Make dynamic, Refresh), each 18 px high. |
+| `--pf-ctl-h` | 28 | Height of every single-line control: text, number, select, color, segmented, button, file row, variable picker. Horizontal padding 8. Only a multi-line text area is taller. |
+| `--pf-radius` | 4 | Radius of every control, list and note. |
+| label to control / control to hint | 4 / 4 | Hint text is 11 px, line height 1.4, at most two lines. |
+| group label | 16 high, 4 extra above | Small caps label (10.5 px) that splits a long section into groups. No extra space above the first group. Keep a group to six fields at most. |
+| indent for a dependent field (`visibleWhen`) | 6 + 2 + 10 | 6 px left margin, a 2 px `--ms-border` guide line, 10 px padding. |
+
+Anatomy of one stacked field, top to bottom: label row 18, 4, control 28, 4, hint (only if present), then 12 to the next field.
+
+### Layout per field kind
+
+Every field is `stacked` (label row above the control), `inline` (label left, control right, 28 px row) or `block` (no label).
+
+| Kind | Layout | Can share a grid row | Notes |
+|---|---|---|---|
+| `Text`, `Password` | stacked | no | "Add variable" in the label row. Password eye button sits inside the input, right, 28x28. |
+| `Number` | stacked | yes (2 or 3 per row) | Unit (`px`, `ms`) inside the input on the right, dimmed. |
+| `Slider` | stacked | no | Track grows, then a 56 px editable value box. |
+| `Bool` | inline | no | Label left, small toggle (28x16) right. A description goes under the label. |
+| `Select` | stacked | yes (2 per row) | Native select with a chevron. Refresh icon in the label row when options load dynamically. |
+| `Segmented` | stacked | yes (2 per row, three options at most) | Selected segment has a 2 px accent line at the bottom. More than three options or long labels: use `Select`. |
+| `Color` | stacked | yes (2 or 3 per row) | Swatch plus mono hex, palette in a portal popover. |
+| `File` | stacked | no | Read-only path (grows) and a Browse button, 6 px apart. |
+| `Variable` | stacked | no | Picker button (grows) and a 28x28 clear button at the end of the row. |
+| `List` | stacked | no | Row header 32 px (chevron, title, remove); an open row has 8 px padding, 12 px between its fields, and is indented 28 px on the left. "Add row" is a ghost button. |
+| `Button` | block | no | Full width, 28 px. The result text goes below as a hint; errors in `--ms-danger`. |
+| `Notice` | block | no | Icon and text, 11.5 px, warning tone, no label. At most two notices at a time. |
+
+Consecutive fields that can share a row fill a grid in order. A short field never sits alone in a half-empty row unless the next field cannot
+share one.
+
+### Responsive behavior
+
+The panel is resizable, so it never assumes a width. The panel root sets `container-type: inline-size`, and layout reacts to the panel width, not
+the window width (use `@container`, never `@media`).
+
+| Panel width | Behavior |
+|---|---|
+| under 240 | Compact: every grid is one column, section padding stays 12. |
+| 240 to 299 | Three-column grids become two columns; two-column grids stay. |
+| 300 to 399 | Default (the 320 reference): grids as defined above. |
+| 400 and wider | Wide: single-value fields (`Number`, `Select`, `Color`, `Segmented`) switch to `Label | Value` rows: label in a fixed 120 px column, control fills the rest, 28 px row. Grids collapse to one column of such rows. |
+
+Rules that keep every width working: grid children get `min-width: 0`; labels are one line and cut with an ellipsis (set `title` to the full
+text, never wrap to two lines); controls fill their cell (`width: 100%`), never a fixed width, except the dependent-field input (96 px) and the
+slider value box (56 px); the panel scrolls vertically on its own and never horizontally; popovers are portaled to `<body>`, positioned from the
+trigger rect and flipped to stay inside the window.
+
+### Sections and actions
+
+- Order for every widget: Name, identity and notices, Appearance, Content or widget settings, Data, Actions, Custom CSS (collapsed).
+- Notices sit in the identity section or directly above the field they explain.
+- The make-dynamic bolt icon is the last item of the label row; filled accent when bound.
+- Event cells are always four columns, square, 6 px apart; more events than four wrap to the next row.
+- An action card has a 32 px header (number, name, remove), an 8 px padded body and 12 px between its fields; cards are 8 px apart. "Add action" is a
+  24 px ghost button, left aligned with a negative 6 px margin so its text lines up with the fields.
+- Disabled controls use 50 percent opacity and explain why in the hint. An invalid value gets a `--ms-danger` border and a hint line in
+  `--ms-danger`. Focus keeps the accent border.
+
+### Local tokens and rows inside a container
+
+- A window may define a local layout token when it has a column no other screen has (for example the keyword column in the Dynamize window,
+  `--dz-keyword-w`). Prefix it with the window's short name, define it in that window's own stylesheet and list it in that window's design doc. Heights, radii,
+  gaps and paddings are never local: use the `--pf-*` tokens.
+- Cards (32 px header, 8 px body padding) are for standalone items such as an action. Repeated rows inside one container (conditions in a
+  rule, rows in a table) are hairline-separated rows with no card of their own, so there are never cards inside cards.
+
+### Building fields
+
+Use the shared components in `editor/src/panels/fields/controls.tsx`: `Field` (label row, action slot, hint, error), `FieldGrid` (`cols` 2 or 3),
+`Switch`, `NumberInput` (with `unit`), `RangeInput`, `ColorField`, `Seg`, `SectionLabel`, `CollapsibleSection`. Do not write
+`display: grid`, `gap`, `padding` or heights inline in a panel component. If a layout is missing, add it to the shared set first.
 
 ## The phone app and browser deck
 
