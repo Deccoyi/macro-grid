@@ -200,4 +200,81 @@ public sealed class SelfVariableTests : IDisposable
 
         Assert.Equal("#ff0000", (string?)Assert.Single(socket.Sent).Data!["style"]!["background"]);
     }
+
+    [Fact]
+    public async Task A_fast_action_never_becomes_busy()
+    {
+        var (service, _, _, _, sessions) = Make(RedWhen("w", "self.busy", "true"));
+        using var _ = service;
+        service.BusyDelay = TimeSpan.FromMilliseconds(300);
+        var socket = new TestSocket();
+        var session = Identified(socket);
+        sessions.Add(session);
+
+        var result = await service.RunBusyAsync(session, "w", () => Task.FromResult(5));
+        await service.FlushAsync();
+
+        Assert.Equal(5, result);
+        Assert.Empty(socket.Sent);
+    }
+
+    [Fact]
+    public async Task A_slow_action_shows_busy_once_and_the_resting_look_when_it_ends()
+    {
+        var (service, _, _, _, sessions) = Make(RedWhen("w", "self.busy", "true"));
+        using var _ = service;
+        service.BusyDelay = TimeSpan.FromMilliseconds(30);
+        var socket = new TestSocket();
+        var session = Identified(socket);
+        sessions.Add(session);
+        var release = new TaskCompletionSource();
+
+        var run = service.RunBusyAsync(session, "w", async () => { await release.Task; return 1; });
+        await Task.Delay(150);
+        Assert.True(session.Busy.ContainsKey("w"));
+        await service.FlushAsync();
+        Assert.Equal("#ff0000", (string?)Assert.Single(socket.Sent).Data!["style"]!["background"]);
+
+        release.SetResult();
+        await run;
+        Assert.False(session.Busy.ContainsKey("w"));
+        await service.FlushAsync();
+        Assert.Equal(2, socket.Sent.Count);
+        Assert.Empty(Assert.IsType<System.Text.Json.Nodes.JsonObject>(socket.Sent[1].Data!["style"]));
+    }
+
+    [Fact]
+    public async Task Busy_is_cleared_when_the_work_throws()
+    {
+        var (service, _, _, _, sessions) = Make(RedWhen("w", "self.busy", "true"));
+        using var _ = service;
+        service.BusyDelay = TimeSpan.FromMilliseconds(20);
+        var session = Identified(new TestSocket());
+        sessions.Add(session);
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() => service.RunBusyAsync<int>(session, "w", async () =>
+        {
+            await Task.Delay(100);
+            throw new InvalidOperationException();
+        }));
+
+        Assert.False(session.Busy.ContainsKey("w"));
+    }
+
+    [Fact]
+    public async Task Busy_is_not_shown_on_another_device()
+    {
+        var (service, _, _, _, sessions) = Make(RedWhen("w", "self.busy", "true"));
+        using var _ = service;
+        service.BusyDelay = TimeSpan.FromMilliseconds(20);
+        var other = new TestSocket();
+        var session = Identified(new TestSocket());
+        sessions.Add(session);
+        sessions.Add(Identified(other));
+
+        await service.RunBusyAsync(session, "w", async () => { await Task.Delay(100); return 1; });
+        await service.FlushAsync();
+
+        Assert.Empty(other.Sent);
+    }
 }

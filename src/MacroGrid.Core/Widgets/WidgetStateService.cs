@@ -43,6 +43,9 @@ public sealed class WidgetStateService : IHostedService, IDisposable
     /// <summary>A client that does not take a frame for this long is dropped, so it cannot hold up the others; a phone reconnects by itself.</summary>
     internal TimeSpan SendTimeout { get; set; } = TimeSpan.FromSeconds(10);
 
+    /// <summary>How long a button's actions must run before <c>self.busy</c> turns on, so a quick action never flashes.</summary>
+    internal TimeSpan BusyDelay { get; set; } = TimeSpan.FromMilliseconds(150);
+
     public WidgetStateService(VariableStore variables, SessionRegistry sessions, ProfileStore profiles, ToggleStateStore toggles, LayoutSender layouts, WebViewState webViews, ILogger<WidgetStateService> logger,
         PluginWidgetCatalog? pluginWidgets = null, LastResultStore? results = null)
     {
@@ -267,6 +270,31 @@ public sealed class WidgetStateService : IHostedService, IDisposable
     {
         lock (_dirtyLock) _dirtyWidgets.Add((session?.Id, widgetId));
         _ = FlushOnceAsync();
+    }
+
+    /// <summary>Runs a button's action list. If it takes longer than <see cref="BusyDelay"/>, <c>self.busy</c> is on for that device until it ends.</summary>
+    public async Task<T> RunBusyAsync<T>(ClientSession session, string widgetId, Func<Task<T>> work)
+    {
+        var task = work();
+        var marked = false;
+        try
+        {
+            if (await Task.WhenAny(task, Task.Delay(BusyDelay)) != task)
+            {
+                marked = true;
+                session.Busy[widgetId] = true;
+                Refresh(widgetId, session);
+            }
+            return await task;
+        }
+        finally
+        {
+            if (marked)
+            {
+                session.Busy.TryRemove(widgetId, out _);
+                Refresh(widgetId, session);
+            }
+        }
     }
 
     private void OnVariableChanged(string name)

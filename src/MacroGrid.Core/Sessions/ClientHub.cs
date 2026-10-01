@@ -341,17 +341,26 @@ public sealed class ClientHub(
                 var active = toggles.Toggle(widget.Id);
                 await BroadcastToggleAsync(session.ProfileId, msg.PageId, widget.Id, active);
                 widgetState.Refresh(widget.Id); // self.toggled changed: every device showing this button re-evaluates its look
-                var errors = await dispatcher.DispatchAsync(widget, active ? WidgetEvents.ToggleOn : WidgetEvents.ToggleOff, context, CancellationToken.None);
-                await ReportActionErrorsAsync(session, errors, msg.PageId, widget, active ? WidgetEvents.ToggleOn : WidgetEvents.ToggleOff);
+                await RunAsync(session, widget, active ? WidgetEvents.ToggleOn : WidgetEvents.ToggleOff, context, msg.PageId);
             });
             return;
         }
 
         queue.TryWrite(async () =>
         {
-            var errors = await dispatcher.DispatchAsync(widget, eventName, context, CancellationToken.None);
-            await ReportActionErrorsAsync(session, errors, msg.PageId, widget, eventName);
+            await RunAsync(session, widget, eventName, context, msg.PageId);
         });
+    }
+
+    /// <summary>Runs one event's action list and reports its failures. A list that takes a while makes the button busy on this device.
+    /// A release with no actions is still dispatched, because it also ends the "while held" actions of the press.</summary>
+    private async Task RunAsync(ClientSession session, Widget widget, string eventName, ActionContext context, string pageId)
+    {
+        var hasBindings = widget.Actions.TryGetValue(eventName, out var bindings) && bindings.Count > 0;
+        var errors = hasBindings
+            ? await widgetState.RunBusyAsync(session, widget.Id, () => dispatcher.DispatchAsync(widget, eventName, context, CancellationToken.None))
+            : await dispatcher.DispatchAsync(widget, eventName, context, CancellationToken.None);
+        await ReportActionErrorsAsync(session, errors, pageId, widget, eventName);
     }
 
     /// <summary>How long a failed action stays in the status bar if nothing else clears it.</summary>
@@ -397,8 +406,7 @@ public sealed class ClientHub(
         var context = new ActionContext(session.DeviceId!, msg.PageId, msg.WidgetId, device, Value: msg.Value);
         queue.TryWrite(async () =>
         {
-            var errors = await dispatcher.DispatchAsync(widget, WidgetEvents.ValueChange, context, CancellationToken.None);
-            await ReportActionErrorsAsync(session, errors, msg.PageId, widget, WidgetEvents.ValueChange);
+            await RunAsync(session, widget, WidgetEvents.ValueChange, context, msg.PageId);
         });
     }
 
