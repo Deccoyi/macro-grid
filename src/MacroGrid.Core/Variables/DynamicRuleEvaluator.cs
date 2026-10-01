@@ -46,7 +46,7 @@ public static class DynamicRuleEvaluator
 
     private static bool EvaluateComparison(ConditionNode node, IVariableStore variables)
     {
-        if (node.Variable is null || node.Operator is null) return false;
+        if (string.IsNullOrEmpty(node.Variable) || node.Operator is null) return false;
         var liveValue = variables.Get(node.Variable);
 
         // These two read only whether there is a value, so they come before the value checks below.

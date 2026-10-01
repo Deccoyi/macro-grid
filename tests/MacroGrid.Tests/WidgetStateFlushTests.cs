@@ -130,4 +130,47 @@ public sealed class WidgetStateFlushTests : IDisposable
         await service.FlushAsync();
         Assert.Equal(2, socket.Sent.Count);
     }
+
+    [Fact]
+    public async Task Coming_back_to_a_page_clears_a_style_that_no_rule_matches_any_more()
+    {
+        var profiles = new ProfileStore(_dir);
+        var page = new Page
+        {
+            Id = "a",
+            Widgets =
+            [
+                new Widget
+                {
+                    Id = "w",
+                    Dynamic = new Dictionary<string, DynamicBinding>
+                    {
+                        ["style.background"] = new DynamicBinding
+                        {
+                            Cases = [new DynamicCase(new ConditionNode { Variable = "test.on", Operator = "==", Value = "true" }, "#ff0000")],
+                        },
+                    },
+                },
+            ],
+        };
+        profiles.Save(new Profile { Id = "p", Name = "P", Pages = [page] });
+
+        var variables = new VariableStore();
+        var socket = new TestSocket(hangs: false);
+        var session = Identified(socket);
+        using var service = new WidgetStateService(variables, new SessionRegistry(), profiles, new ToggleStateStore(), new LayoutSender(new AssetStore()),
+            new WebViewState(), NullLogger<WidgetStateService>.Instance);
+
+        variables.Set("test.on", true);
+        await service.SendInitialAsync(session, page, default);
+        Assert.Equal("#ff0000", (string?)Assert.Single(socket.Sent).Data!["style"]!["background"]);
+
+        // The device is on another page while the variable changes, so no flush reaches this page; then it comes back.
+        variables.Set("test.on", false);
+        await service.SendInitialAsync(session, page, default);
+        Assert.Empty(Assert.IsType<System.Text.Json.Nodes.JsonObject>(socket.Sent[1].Data!["style"]));
+
+        await service.SendInitialAsync(session, page, default);
+        Assert.Equal(2, socket.Sent.Count);
+    }
 }

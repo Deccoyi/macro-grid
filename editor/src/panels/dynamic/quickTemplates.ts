@@ -29,8 +29,8 @@ export function variablesFor(kind: TemplateKind, catalog: VariableInfo[]): Varia
   return catalog;
 }
 
-function result(resultKind: ResultKind, color: string, word: string): string {
-  if (typeof resultKind === "object") return resultKind.select[0]?.value ?? "";
+function result(resultKind: ResultKind, color: string, word: string, selectIndex = 0): string {
+  if (typeof resultKind === "object") return (resultKind.select[selectIndex] ?? resultKind.select[0])?.value ?? "";
   if (resultKind === "color") return color;
   return resultKind === "text" ? word : "";
 }
@@ -44,7 +44,7 @@ export function buildTemplate(kind: TemplateKind, variable: VariableInfo, result
   const name = variable.name;
   switch (kind) {
     case "onOff":
-      return [rule(name, "==", "true", result(resultKind, COLORS.on, words.on)), rule(name, "==", "false", result(resultKind, COLORS.off, words.off))];
+      return [rule(name, "==", "true", result(resultKind, COLORS.on, words.on)), rule(name, "==", "false", result(resultKind, COLORS.off, words.off, 1))];
     case "thresholds":
       return [
         rule(name, ">=", "80", result(resultKind, COLORS.high, words.high)),

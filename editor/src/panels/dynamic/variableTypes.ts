@@ -32,19 +32,19 @@ export function normalizeBoolText(value: string): string {
   return value;
 }
 
-/** After picking another variable, drop an operator or value the new variable's type cannot use. */
-export function fitConditionToVariable(condition: EditCondition, info: VariableInfo | undefined): void {
+/** Drop an operator or value the variable's type cannot use. `picked` is true when the variable was just chosen (not when only the operator changed): only then is a typed value discarded or a fresh row's operator reset. */
+export function fitConditionToVariable(condition: EditCondition, info: VariableInfo | undefined, picked = false): void {
   if (isValueless(condition.operator)) return;
   const input = valueInputFor(info);
-  // A text variable on a fresh row (nothing typed yet) starts with "equal": ordering means nothing for text.
-  if (info?.type === "text" && input.kind === "free" && condition.value === "" && condition.operator === ">") condition.operator = "==";
+  // A text variable picked on a fresh row (nothing typed yet) starts with "equal": ordering means nothing for text.
+  if (picked && info?.type === "text" && input.kind === "free" && condition.value === "" && condition.operator === ">") condition.operator = "==";
   if (!allowsOrdering(input) && condition.operator !== "==" && condition.operator !== "!=") condition.operator = "==";
   if (input.kind === "boolean") {
     const normalized = normalizeBoolText(condition.value);
     condition.value = normalized === "true" || normalized === "false" ? normalized : "true";
   } else if (input.kind === "choice") {
     if (!input.values.includes(condition.value)) condition.value = input.values[0]!;
-  } else if (info?.type === "number" && condition.value !== "" && Number.isNaN(Number(condition.value))) {
+  } else if (picked && info?.type === "number" && condition.value !== "" && Number.isNaN(Number(condition.value))) {
     condition.value = "";
   }
 }

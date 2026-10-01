@@ -41,10 +41,11 @@ describe("quick templates", () => {
     expect(firstResult(rules, { n: 10 })).toBe("#15803d");
   });
 
-  it("uses the words for a text result, nothing for an icon and the first option for a choice", () => {
+  it("uses the words for a text result, nothing for an icon and the first option for a choice (the second for off)", () => {
     expect(buildTemplate("onOff", info("b", "boolean"), "text", words).map((r) => r.result)).toEqual(["On", "Off"]);
     expect(buildTemplate("onOff", info("b", "boolean"), "icon", words).map((r) => r.result)).toEqual(["", ""]);
     expect(buildTemplate("onOff", info("b", "boolean"), { select: [{ value: "pulse", label: "Pulse" }] }, words).map((r) => r.result)).toEqual(["pulse", "pulse"]);
+    expect(buildTemplate("onOff", info("b", "boolean"), { select: [{ value: "pulse", label: "Pulse" }, { value: "none", label: "None" }] }, words).map((r) => r.result)).toEqual(["pulse", "none"]);
   });
 
   it("grey when unavailable matches only a variable without a value", () => {

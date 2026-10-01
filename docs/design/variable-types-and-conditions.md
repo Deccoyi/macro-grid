@@ -129,7 +129,8 @@ old style. A shared case table, `tests/shared/dynamic-rule-cases.json`, is read 
 
 A text can also show a placeholder while a variable is unavailable: `{name|format|placeholder}`, for example `CPU {system.cpu|0|--} %`.
 `{name||n/a}` keeps the default format. The placeholder is plain text (it is never read for `{}` tokens again), may contain `|`, and is cut at
-64 characters. Without a placeholder an unavailable variable shows nothing, as before.
+64 characters. Without a placeholder an unavailable variable shows nothing, as before. The same syntax applies to action settings that
+contain variables.
 
 ## Quick templates
 

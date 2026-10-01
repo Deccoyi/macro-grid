@@ -1,5 +1,6 @@
 using MacroGrid.Core.Model;
 using MacroGrid.Core.Variables;
+using MacroGrid.Protocol;
 
 namespace MacroGrid.Tests;
 
@@ -285,7 +286,7 @@ public class DynamicRuleEvaluatorTests
             };
             store.Set(variable.Name, value);
         }
-        var condition = System.Text.Json.JsonSerializer.Deserialize<ConditionNode>(item.GetProperty("condition").GetRawText(), new System.Text.Json.JsonSerializerOptions(System.Text.Json.JsonSerializerDefaults.Web))!;
+        var condition = System.Text.Json.JsonSerializer.Deserialize<ConditionNode>(item.GetProperty("condition").GetRawText(), ProtocolJson.Options)!;
 
         Assert.Equal(item.GetProperty("expected").GetBoolean(), Matches(condition, store));
     }
