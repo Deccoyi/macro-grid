@@ -250,3 +250,23 @@ private sealed class OutcomeHandler(Func<Task<ActionOutcome>> run) : IActionHand
         Assert.Single(plain.Calls);
     }
 }
+
+public class RunListTests
+{
+    [Fact]
+    public async Task A_list_runs_without_a_widget_and_a_failing_step_does_not_stop_the_next()
+    {
+        var plain = new PlainHandler();
+        var dispatcher = new ActionDispatcher([plain, new PageAction()], NullLogger<ActionDispatcher>.Instance);
+        var context = new ActionContext("", "", "", new NoDeviceController()) { UserGesture = false };
+
+        var failures = await dispatcher.RunListAsync(
+            [new ActionBinding(PageAction.TypeId, PageAction.Next()), new ActionBinding(plain.Type, []), new ActionBinding("nope.missing", [])],
+            context, "rule:r1", default);
+
+        Assert.Equal(["execute"], plain.Calls);
+        Assert.Equal(2, failures.Count);
+        Assert.Contains("needs a device", failures[0].Message);
+        Assert.True(failures[1].Missing);
+    }
+}
