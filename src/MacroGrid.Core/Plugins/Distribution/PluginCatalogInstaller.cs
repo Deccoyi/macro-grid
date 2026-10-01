@@ -21,6 +21,9 @@ public sealed class PluginCatalogInstaller(
     public async Task<PluginInstallResult> InstallAsync(
         PluginCatalogEntry entry, PluginCatalogVersion version, string sourceUrl, bool isOfficial, CancellationToken cancellationToken)
     {
+        if (version.Withdrawn)
+            throw new PluginDownloadException(PluginDownloadException.Withdrawn, "This version was withdrawn by its publisher.");
+
         // Only the official source may ship C# code, and that is decided before anything is downloaded.
         if (!isOfficial && string.Equals(entry.Kind, "csharp", StringComparison.OrdinalIgnoreCase))
             throw new PluginDownloadException(PluginDownloadException.Refused, "Only official C# plugins can be installed.");

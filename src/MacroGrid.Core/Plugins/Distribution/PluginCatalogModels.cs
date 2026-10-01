@@ -5,6 +5,8 @@ namespace MacroGrid.Core.Plugins.Distribution;
 /// a direct link. Field names match the JSON (camelCase) documented in the plugin repository's
 /// website/reference/source-index.md.
 /// </summary>
+/// <param name="Withdrawn">The publisher took this version back: it cannot be installed any more, an installed copy keeps running and shows a warning.</param>
+/// <param name="Urls">Optional list of download addresses; <paramref name="Url"/> is the first one.</param>
 /// <param name="MacroGrid">The oldest Macro Grid the version runs on ("1.3.0"). Older index entries carry
 /// <paramref name="SdkVersion"/> and <paramref name="MinServerVersion"/> instead; see <see cref="Plugins.PluginCompatibility"/>.</param>
 public sealed record PluginCatalogVersion(
@@ -17,7 +19,13 @@ public sealed record PluginCatalogVersion(
     string Sha256,
     long Size,
     IReadOnlyList<string>? Permissions,
-    string? Signature);
+    string? Signature,
+    bool Withdrawn = false,
+    IReadOnlyList<string>? Urls = null)
+{
+    /// <summary>Every address the package can be fetched from, in the order to try them (at most 3). Just <see cref="Url"/> when the index gives no list.</summary>
+    public IReadOnlyList<string> Addresses => Urls is { Count: > 0 } ? Urls : [Url];
+}
 
 public sealed record PluginCatalogEntry(
     string Id,

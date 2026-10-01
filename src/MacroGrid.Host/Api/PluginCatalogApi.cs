@@ -222,14 +222,9 @@ internal static class PluginCatalogApi
         var installed = plugins.Plugins.FirstOrDefault(p => p.Id == entry.Id);
         var origin = origins.Get(entry.Id);
 
-        var compatible = entry.Versions
-            .Where(v => PluginCompatibility.Check(ClientHub.ServerVersion, v.MinMacroGrid, v.MacroGrid, v.SdkVersion).Compatible)
-            .OrderByDescending(v => v.Version, Comparer<string>.Create(SemVer.CompareVersionStrings))
-            .FirstOrDefault();
-        var latest = entry.Versions.OrderByDescending(v => v.Version, Comparer<string>.Create(SemVer.CompareVersionStrings)).FirstOrDefault();
-        var incompatibleReason = compatible is null && latest is not null
-            ? PluginCompatibility.Check(ClientHub.ServerVersion, latest.MinMacroGrid, latest.MacroGrid, latest.SdkVersion).Reason
-            : null;
+        var choice = PluginCatalogChoice.Choose(entry, ClientHub.ServerVersion, installed?.Version);
+        var compatible = choice.Installable;
+        var latest = choice.Latest;
 
         return new
         {
@@ -245,7 +240,9 @@ internal static class PluginCatalogApi
             latestVersion = latest?.Version,
             installableVersion = compatible?.Version,
             compatible = compatible is not null,
-            incompatibleReason,
+            incompatibleReason = choice.IncompatibleReason,
+            withdrawn = choice.Withdrawn,
+            installedWithdrawn = choice.InstalledWithdrawn,
             permissions = compatible?.Permissions ?? latest?.Permissions ?? [],
             installed = installed is not null,
             installedVersion = installed?.Version,

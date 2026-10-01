@@ -52,6 +52,7 @@ function GetButton({ entry, busy, onGet, large = false }: { entry: PluginCatalog
   const { t } = useT();
   const pad = large ? "6px 26px" : "3px 14px";
   const font = large ? 13 : 11.5;
+  if (entry.withdrawn) return <span style={{ fontSize: 11, color: "var(--ms-warning, #facc15)", flexShrink: 0 }}>{t("plugins.discover.withdrawn")}</span>;
   if (!entry.compatible) return <span style={{ fontSize: 11, color: "var(--ms-warning, #facc15)", flexShrink: 0 }}>{t("plugins.discover.incompatibleShort")}</span>;
   if (entry.installed && !entry.updateAvailable) {
     return <span style={{ fontSize: font, color: "var(--ms-text-disabled)", flexShrink: 0, padding: pad }}>{t("plugins.discover.installed")}</span>;
@@ -587,10 +588,15 @@ export function PluginsWindow() {
             </>
           )}
 
-          {!selectedEntry.compatible && (
+          {selectedEntry.withdrawn ? (
+            <div style={{ fontSize: 12, color: "var(--ms-warning, #facc15)", marginBottom: 14 }}>{t("plugins.withdrawn.note")}</div>
+          ) : !selectedEntry.compatible && (
             <div style={{ fontSize: 12, color: "var(--ms-warning, #facc15)", marginBottom: 14 }}>
               {selectedEntry.incompatibleReason ?? t("plugins.discover.incompatible")}
             </div>
+          )}
+          {selectedEntry.installedWithdrawn && !selectedEntry.withdrawn && (
+            <div style={{ fontSize: 12, color: "var(--ms-warning, #facc15)", marginBottom: 14 }}>{t("plugins.withdrawn.installedNote")}</div>
           )}
 
           <SectionLabel>{t("plugins.discover.permissionsLabel")}</SectionLabel>
