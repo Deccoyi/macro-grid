@@ -55,6 +55,12 @@ public static class ProblemCodes
     public const string ActionMissing = "P131";
     /// <summary>A plugin reported a problem itself (<c>IPluginDiagnostics</c>).</summary>
     public const string PluginReported = "P150";
+    /// <summary>A step of an automation rule failed. Cleared when the rule next runs without a failure.</summary>
+    public const string AutomationStepFailed = "P160";
+    /// <summary>An automation rule was started too often and some starts were dropped.</summary>
+    public const string AutomationDropped = "P161";
+    /// <summary>An automation rule kept starting too often and was switched off.</summary>
+    public const string AutomationSwitchedOff = "P162";
 }
 
 /// <summary>

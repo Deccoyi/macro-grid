@@ -190,6 +190,7 @@ internal static class ServiceRegistration
         services.AddHostedSingleton<WidgetStateService>();
         services.AddSingleton<IActiveWindowSource, ForegroundWindowMonitor>();
         services.AddHostedSingleton<AutoProfileSwitcher>();
+        services.AddHostedSingleton<MacroGrid.Core.Automation.AutomationService>();
         services.AddSingleton<ClientHub>();
         return services;
     }

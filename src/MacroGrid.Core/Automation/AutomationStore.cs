@@ -78,7 +78,7 @@ public sealed partial class AutomationStore
         var ids = new HashSet<string>(StringComparer.Ordinal);
         foreach (var rule in rules)
         {
-            var label = string.IsNullOrWhiteSpace(rule.Name) ? rule.Id : rule.Name;
+            var label = string.IsNullOrWhiteSpace(rule.Name) ? rule.Id ?? "" : rule.Name;
             if (!IdPattern().IsMatch(rule.Id ?? "")) { error = "A rule has an invalid id."; return false; }
             if (!ids.Add(rule.Id!)) { error = $"The id '{rule.Id}' is used twice."; return false; }
             if (rule.Actions is null || rule.Actions.Count > AutomationLimits.MaxSteps) { error = $"'{label}' can have at most {AutomationLimits.MaxSteps} steps."; return false; }
