@@ -65,6 +65,10 @@ internal static class WebViewEnvironment
     // The folder that worked once, reused by every later window so they all share one browser environment.
     private static string? _workingFolder;
 
+    // Windows that share one user data folder must create their environment with identical options, or WebView2 refuses the later ones
+    // (0x8007139F). The language is therefore fixed by the first window of a run; switching the editor language later does not need it.
+    private static string? _browserLanguage;
+
     /// <summary>Creates a WebView2 control inside <paramref name="host"/> and navigates it to <paramref name="url"/>. With
     /// <paramref name="followDocumentTitle"/> the window title tracks the page's document title.
     /// Call it from the UI thread. Shows an error dialog when no user data folder works.</summary>
@@ -83,7 +87,7 @@ internal static class WebViewEnvironment
                 host.Controls.Add(view);
                 var environment = await CoreWebView2Environment.CreateAsync(
                     browserExecutableFolder: null, userDataFolder: folder,
-                    options: new CoreWebView2EnvironmentOptions { Language = HostText.Language == "tr" ? "tr-TR" : "en-US" });
+                    options: new CoreWebView2EnvironmentOptions { Language = _browserLanguage ??= HostText.Language == "tr" ? "tr-TR" : "en-US" });
                 await view.EnsureCoreWebView2Async(environment);
                 // The editor sets document.title from the language preference, so the native title bar follows it.
                 if (followDocumentTitle)
