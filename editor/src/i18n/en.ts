@@ -543,6 +543,8 @@ export const en: Record<DictKey, string | ((...args: string[]) => string)> = {
   "dynamic.operator.==": "equal",
   "dynamic.operator.!=": "not equal",
   "dynamic.operator.between": "between",
+  "dynamic.operator.unavailable": "is unavailable",
+  "dynamic.operator.available": "is available",
   "dynamic.value.placeholder": "50 or text",
   "dynamic.value.hint": "No quotes: type 50 for a number, or live directly for text.",
   "dynamic.bool.true": "On (true)",

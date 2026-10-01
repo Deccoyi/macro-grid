@@ -202,4 +202,91 @@ public class DynamicRuleEvaluatorTests
         Assert.Equal("match", DynamicRuleEvaluator.Evaluate(binding, StoreWith("v", 1.0)));
         Assert.Null(DynamicRuleEvaluator.Evaluate(binding, StoreWith("v", 2.0)));
     }
+
+    private static bool Matches(ConditionNode node, VariableStore store) =>
+        DynamicRuleEvaluator.Evaluate(new DynamicBinding { Cases = [new DynamicCase(node, "match")] }, store) == "match";
+
+    [Fact]
+    public void A_variable_that_was_never_set_removed_or_set_to_null_is_unavailable()
+    {
+        var never = new VariableStore();
+        var removed = StoreWith("v", 5);
+        removed.Remove("v");
+        var nulled = StoreWith("v", null);
+
+        foreach (var store in new[] { never, removed, nulled })
+        {
+            Assert.True(Matches(Compare("v", DynamicOperators.IsUnavailable, ""), store));
+            Assert.False(Matches(Compare("v", DynamicOperators.IsAvailable, ""), store));
+        }
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData(0)]
+    [InlineData(false)]
+    [InlineData("x")]
+    public void An_empty_text_zero_and_false_are_available_values(object value)
+    {
+        var store = StoreWith("v", value);
+
+        Assert.True(Matches(Compare("v", DynamicOperators.IsAvailable, ""), store));
+        Assert.False(Matches(Compare("v", DynamicOperators.IsUnavailable, ""), store));
+    }
+
+    [Fact]
+    public void Availability_comparisons_ignore_the_value_fields_and_work_under_not()
+    {
+        var node = new ConditionNode { Kind = ConditionKinds.Compare, Variable = "v", Operator = DynamicOperators.IsUnavailable, Value = "junk", Value2 = "junk" };
+
+        Assert.True(Matches(node, new VariableStore()));
+        Assert.True(Matches(new ConditionNode { Kind = ConditionKinds.Compare, Variable = "v", Operator = DynamicOperators.IsUnavailable }, new VariableStore()));
+        Assert.True(Matches(Combine(ConditionKinds.Not, Compare("v", DynamicOperators.IsUnavailable, "")), StoreWith("v", 1)));
+    }
+
+    [Theory]
+    [InlineData("==", "x", false)]
+    [InlineData("!=", "x", true)]
+    [InlineData(">", "1", false)]
+    [InlineData("<", "1", false)]
+    [InlineData("between", "1", false)]
+    public void The_older_comparisons_keep_their_result_for_a_variable_without_a_value(string op, string value, bool expected)
+    {
+        Assert.Equal(expected, Matches(Compare("v", op, value, "9"), new VariableStore()));
+    }
+
+    /// <summary>The same table is read by the editor preview tests (editor/test/evaluateDynamic.test.ts), so the two evaluators cannot drift apart.</summary>
+    public static IEnumerable<object[]> SharedCases()
+    {
+        var path = Path.Combine(AppContext.BaseDirectory, "shared", "dynamic-rule-cases.json");
+        using var doc = System.Text.Json.JsonDocument.Parse(File.ReadAllText(path));
+        foreach (var item in doc.RootElement.EnumerateArray())
+            yield return [item.GetProperty("name").GetString()!];
+    }
+
+    [Theory]
+    [MemberData(nameof(SharedCases))]
+    public void Matches_the_shared_rule_case_table(string name)
+    {
+        var path = Path.Combine(AppContext.BaseDirectory, "shared", "dynamic-rule-cases.json");
+        using var doc = System.Text.Json.JsonDocument.Parse(File.ReadAllText(path));
+        var item = doc.RootElement.EnumerateArray().Single(e => e.GetProperty("name").GetString() == name);
+
+        var store = new VariableStore();
+        foreach (var variable in item.GetProperty("variables").EnumerateObject())
+        {
+            object? value = variable.Value.ValueKind switch
+            {
+                System.Text.Json.JsonValueKind.Number => variable.Value.GetDouble(),
+                System.Text.Json.JsonValueKind.String => variable.Value.GetString(),
+                System.Text.Json.JsonValueKind.True => true,
+                System.Text.Json.JsonValueKind.False => false,
+                _ => null,
+            };
+            store.Set(variable.Name, value);
+        }
+        var condition = System.Text.Json.JsonSerializer.Deserialize<ConditionNode>(item.GetProperty("condition").GetRawText(), new System.Text.Json.JsonSerializerOptions(System.Text.Json.JsonSerializerDefaults.Web))!;
+
+        Assert.Equal(item.GetProperty("expected").GetBoolean(), Matches(condition, store));
+    }
 }

@@ -301,8 +301,11 @@ public sealed class WidgetStateService : IHostedService, IDisposable
             if (widget.Dynamic.Count > 0 && BindingsDependOn(widget.Dynamic.Values, dirty))
             {
                 var resolved = ResolveDynamicStyle(widget);
-                if (resolved is not null && StyleChanged(session.SentStyles.GetValueOrDefault(widget.Id), resolved))
+                var previous = session.SentStyles.GetValueOrDefault(widget.Id);
+                if (resolved is not null && StyleChanged(previous, resolved))
                     style = resolved;
+                else if (resolved is null && previous is { Count: > 0 })
+                    style = []; // no rule matches any more and there is no default: the client merges state, so tell it to drop the old style
             }
 
             double? value = null;

@@ -140,7 +140,7 @@ Each catalog entry (`VariableInfo`) carries a `Type`: `text` (the default, also 
 the variable picker and picks the value input of a condition from it: a true/false choice for a boolean, a list for `Values`, free input
 otherwise (with the unit as a suffix for a number). Booleans and fixed values only offer `==` and `!=`.
 
-In a condition a boolean matches `true` / `false` and `1` / `0` alike, case-insensitively; other operators never match it. The template words
+In a condition a boolean matches `true` / `false` and `1` / `0` alike, case-insensitively; other operators never match it. `unavailable` / `available` test only whether the variable has a value (never set, removed or `null` means unavailable). The template words
 (`On` / `Off`, `Açık` / `Kapalı`) are display only and do not match. A number is compared numerically and anything else as text, case-insensitively.
 
 ## Custom CSS

@@ -51,6 +51,11 @@ new VariableInfo("myplugin.state", "State", "{myplugin.state}", "My plugin") { V
 
 `Type` defaults to `Text`; `Unit` and `Values` are optional.
 
+## Variables that are not available
+
+When the thing a variable shows is not there (a lost connection, a closed app), call `Set(name, null)` or `Remove(name)` instead of leaving the last value or
+writing zero. A rule can then react with the "is unavailable" comparison, for example to grey out a button.
+
 ## Security
 
 Report a vulnerability in the SDK privately, as described in the server's

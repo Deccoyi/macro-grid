@@ -44,7 +44,7 @@ function evaluateBinding(binding: DynamicBinding, variables: Record<string, unkn
   return binding.default;
 }
 
-function evaluateNode(node: ConditionNode, variables: Record<string, unknown>): boolean {
+export function evaluateNode(node: ConditionNode, variables: Record<string, unknown>): boolean {
   switch (node.kind) {
     case "and": return (node.children?.length ?? 0) > 0 && node.children!.every((c) => evaluateNode(c, variables));
     case "or": return (node.children ?? []).some((c) => evaluateNode(c, variables));
@@ -55,8 +55,14 @@ function evaluateNode(node: ConditionNode, variables: Record<string, unknown>): 
 }
 
 function evaluateComparison(node: ConditionNode, variables: Record<string, unknown>): boolean {
-  if (!node.variable || !node.operator || node.value === undefined) return false;
+  if (!node.variable || !node.operator) return false;
   const live = variables[node.variable];
+
+  // These two read only whether there is a value, so they come before the value checks below.
+  if (node.operator === "unavailable") return live === undefined || live === null;
+  if (node.operator === "available") return live !== undefined && live !== null;
+
+  if (node.value === undefined) return false;
 
   if (node.operator === "between") {
     const v = toNumber(live);

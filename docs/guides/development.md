@@ -87,6 +87,6 @@ The server keeps everything in `%AppData%\MacroGrid\` (profiles, paired devices,
 - **UI text** goes through `editor/src/i18n/tr.ts` and `en.ts`, never hard-coded in components. Some server strings (the tray menu and a few
   native dialogs) are not translated yet.
 - **The editor's copy of the rule evaluator** (`editor/src/grid/evaluateDynamic.ts`) only drives the live preview. The server's
-  `DynamicRuleEvaluator` is what really runs. If one changes, change the other.
+  `DynamicRuleEvaluator` is what really runs. If one changes, change the other, and add a row to `tests/shared/dynamic-rule-cases.json`, which both evaluators are tested against.
 - **The renderer exists twice:** here (`packages/renderer`, used by the editor and the browser deck) and in the client repository (used by the
   phone app). The two are deliberately independent. A widget-rendering change that both need must be made in both.

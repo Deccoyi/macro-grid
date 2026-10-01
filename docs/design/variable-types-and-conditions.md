@@ -113,3 +113,16 @@ In `DynamizeModal.tsx` (condition row) and `VariablePicker.tsx`:
 - Manual: dynamize a widget's color on `system.audio.muted`, confirm the editor offers a true/false select, mute/unmute and watch the preview
   and the phone change.
 - Load an old profile with a `== true` rule and one from a plugin without type info; both must behave as before.
+
+## Unavailable variables
+
+A variable is **unavailable** when the store has no value for it: it was never set, was removed (a plugin that is switched off or removed loses its
+variables), or was set to `null`. An empty text, `0` and `false` are values, not unavailable. A rule can test this with two comparisons that take
+no value: `unavailable` and `available`. They are offered for every variable type, and the editor then hides the value input.
+
+Every older comparison keeps its result for a variable without a value (`==` false, `!=` true, ordering and `between` false); profiles in use
+depend on it. A plugin that is loaded but has lost its source should set its variables to `null` (or remove them) instead of leaving the last
+value or writing zero.
+
+The phone merges widget state, so when no rule matches any more and the binding has no default, the server sends one empty `style` to drop the
+old style. A shared case table, `tests/shared/dynamic-rule-cases.json`, is read by both the server tests and the editor preview tests.

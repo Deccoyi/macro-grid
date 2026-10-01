@@ -78,4 +78,56 @@ public sealed class WidgetStateFlushTests : IDisposable
         var message = Assert.Single(healthy.Sent);
         Assert.Equal(MessageTypes.WidgetState, message.Type);
     }
+
+    [Fact]
+    public async Task A_dynamic_style_is_cleared_once_when_no_rule_matches_any_more_and_there_is_no_default()
+    {
+        var profiles = new ProfileStore(_dir);
+        profiles.Save(new Profile
+        {
+            Id = "p",
+            Name = "P",
+            Pages = [new Page
+            {
+                Id = "a",
+                Widgets =
+                [
+                    new Widget
+                    {
+                        Id = "w",
+                        Dynamic = new Dictionary<string, DynamicBinding>
+                        {
+                            ["style.background"] = new DynamicBinding
+                            {
+                                Cases = [new DynamicCase(new ConditionNode { Variable = "test.on", Operator = "==", Value = "true" }, "#ff0000")],
+                            },
+                        },
+                    },
+                ],
+            }],
+        });
+
+        var variables = new VariableStore();
+        var sessions = new SessionRegistry();
+        var socket = new TestSocket(hangs: false);
+        sessions.Add(Identified(socket));
+        using var service = new WidgetStateService(variables, sessions, profiles, new ToggleStateStore(), new LayoutSender(new AssetStore()),
+            new WebViewState(), NullLogger<WidgetStateService>.Instance);
+
+        variables.Set("test.on", true);
+        await service.FlushAsync();
+        var first = Assert.Single(socket.Sent);
+        Assert.Equal("#ff0000", (string?)first.Data!["style"]!["background"]);
+
+        variables.Set("test.on", false);
+        await service.FlushAsync();
+        Assert.Equal(2, socket.Sent.Count);
+        var cleared = Assert.IsType<System.Text.Json.Nodes.JsonObject>(socket.Sent[1].Data!["style"]);
+        Assert.Empty(cleared);
+
+        variables.Set("test.on", false);
+        variables.Set("test.on", null);
+        await service.FlushAsync();
+        Assert.Equal(2, socket.Sent.Count);
+    }
 }

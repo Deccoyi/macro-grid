@@ -38,7 +38,8 @@ export interface WidgetStyle {
 export type WidgetEventName = "press" | "release" | "longPress" | "doubleTap" | "toggleOn" | "toggleOff" | "valueChange";
 
 export type ConditionKind = "compare" | "and" | "or" | "xor" | "not";
-export type CompareOperator = ">" | ">=" | "<" | "<=" | "==" | "!=" | "between";
+/** "unavailable" and "available" take no value: they test whether the variable has a value at all (never set, removed or null means unavailable). */
+export type CompareOperator = ">" | ">=" | "<" | "<=" | "==" | "!=" | "between" | "unavailable" | "available";
 
 /**
  * A boolean condition tree: a single comparison (kind "compare") or a combinator over children
