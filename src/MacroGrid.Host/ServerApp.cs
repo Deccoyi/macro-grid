@@ -20,7 +20,7 @@ internal static class ServerApp
 #if DEBUG
         int.TryParse(Environment.GetEnvironmentVariable("MACROGRID_PORT"), out var devPort) ? devPort :
 #endif
-        9820;
+        MacroGrid.Core.ServerPorts.Default;
 
     /// <summary><c>wss://</c>/<c>https://</c>, next to the plain <see cref="Port"/>. A Kestrel listener is either plain or
     /// TLS, not both, so a second port is the only way to add TLS without breaking clients that only speak plain.</summary>

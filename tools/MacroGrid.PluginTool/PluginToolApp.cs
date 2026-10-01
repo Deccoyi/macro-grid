@@ -17,6 +17,8 @@ public static partial class PluginToolApp
           validate <folder>     check a plugin folder (nothing is run)
           pack <folder> [--out dir]   check, then write <id>-<version>.zip and its .sha256
           new <id> [--name text] [--out dir]   start a new JavaScript plugin in <dir>/<id>
+          run <folder> [--action type] [--settings json] [--value n] [--deny permission] [--seconds n] [--data dir]
+                                start the plugin for real, run an action once and show variables and status
         """;
 
     public static int Run(string[] args, TextWriter output, TextWriter error)
@@ -34,6 +36,7 @@ public static partial class PluginToolApp
                 "validate" => Validate(args[1..], output, error),
                 "pack" => Pack(args[1..], output, error),
                 "new" => New(args[1..], output, error),
+                "run" => RunPlugin(args[1..], output, error),
                 _ => UsageError($"Unknown command '{args[0]}'", error),
             };
         }
