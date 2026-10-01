@@ -39,10 +39,12 @@ export function GlobalVariablesPage() {
 
   const remove = async (v: UserVariableDef) => {
     const uses = await api.userVariableUsage(v.name).catch(() => []);
+    const ruleUses = await api.automationUsage(v.name).catch(() => []);
     const { lines, more } = usageSummary(uses);
-    const message = uses.length === 0
+    const rulesLine = ruleUses.length === 0 ? "" : `\n${t("globalVariables.delete.rules", ruleUses.map((r) => r.name).join(", "))}`;
+    const message = uses.length === 0 && ruleUses.length === 0
       ? t("globalVariables.delete.confirm", v.name)
-      : `${tn("globalVariables.delete.used", uses.length, v.name)}\n${lines.join("\n")}${more > 0 ? `\n${t("globalVariables.delete.more", String(more))}` : ""}`;
+      : `${tn("globalVariables.delete.used", uses.length + ruleUses.length, v.name)}\n${lines.join("\n")}${more > 0 ? `\n${t("globalVariables.delete.more", String(more))}` : ""}${rulesLine}`;
     if (await confirmAsync(message, { danger: true })) await save((list ?? []).filter((x) => x.name !== v.name));
   };
 

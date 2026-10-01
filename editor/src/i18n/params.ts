@@ -5,7 +5,19 @@ import type { DictKey } from "./tr";
  * first name with `a`, the second with `b`. A string is written with `{name}` where a value goes; see format.ts. A key that is not
  * listed takes no values.
  */
-export const PARAMS: Partial<Record<DictKey, readonly string[]>> = {  "action.logic.steps.one": ["n"],
+export const PARAMS: Partial<Record<DictKey, readonly string[]>> = {
+  "automation.count": ["count","max"],
+  "automation.newName": ["n"],
+  "automation.delete.confirm": ["name"],
+  "automation.full": ["max"],
+  "automation.steps.limit": ["max"],
+  "automation.summary.variable": ["condition"],
+  "automation.summary.time": ["time","days"],
+  "automation.summary.device": ["device"],
+  "automation.last.ok": ["time"],
+  "automation.last.refused": ["time"],
+  "automation.last.failed": ["time","message"],
+  "action.logic.steps.one": ["n"],
   "action.logic.steps.other": ["n"],
   "consent.http": ["target"],
   "consent.thirdParty": ["repo"],
@@ -32,7 +44,8 @@ export const PARAMS: Partial<Record<DictKey, readonly string[]>> = {  "action.l
   "fields.web.manyOnPage": ["count", "max"],  "folder.deleteConfirm.one": ["count"],
   "folder.deleteConfirm.other": ["count"],
   "globalVariables.delete.confirm": ["name"],
-  "globalVariables.delete.more": ["count"],  "globalVariables.delete.used.one": ["count", "name"],
+  "globalVariables.delete.more": ["count"],
+  "globalVariables.delete.rules": ["names"],  "globalVariables.delete.used.one": ["count", "name"],
   "globalVariables.delete.used.other": ["count", "name"],
   "globalVariables.full": ["max"],
   "globalVariables.name.tooLong": ["max"],
