@@ -15,6 +15,7 @@ const catalogs = (over: Partial<CheckCatalogs> = {}): CheckCatalogs => ({
     { key: "mode", label: "Mode", kind: "Select", options: [{ value: "x", label: "X" }] },
     { key: "level", label: "Level", kind: "Number", min: 0, max: 10 },
     { key: "text", label: "Text", kind: "Text", allowVariables: true },
+    { key: "wait", label: "Wait", kind: "Duration", min: 100, max: 5000 },
   ] })],
   variableNames: new Set(["system.cpu"]), liveVariableNames: new Set(["live.one"]), pluginWidgets: [], profileIds: new Set(["p1", "p2"]), ...over,
 });
@@ -58,6 +59,11 @@ describe("checkProfile", () => {
   it("flags invalid settings of a described action but not empty ones", () => {
     const d = run([widget({ actions: { press: [{ type: "a.b", settings: { mode: "bad", level: 11 } }, { type: "a.b", settings: {} }] } })]);
     expect(d.map((x) => `${x.code}:${x.id.split(":").pop()}`)).toEqual(["W221:mode", "W221:level"]);
+  });
+
+  it("holds a duration to its range in milliseconds", () => {
+    const d = run([widget({ actions: { press: [{ type: "a.b", settings: { wait: 50 } }, { type: "a.b", settings: { wait: 6000 } }, { type: "a.b", settings: { wait: 2000 } }] } })]);
+    expect(d.map((x) => `${x.code}:${x.id.split(":").pop()}`)).toEqual(["W221:wait", "W221:wait"]);
   });
 
   it("flags variables nobody provides, in text, rules and action text", () => {

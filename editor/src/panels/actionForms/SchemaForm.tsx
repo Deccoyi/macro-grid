@@ -5,6 +5,7 @@ import type { OptionsResult, SettingField, SettingOption, VariableInfo } from ".
 import { useT } from "../../i18n/I18nContext";
 import { VariablePicker } from "../VariablePicker";
 import { HotkeyCapture } from "./HotkeyCapture";
+import { clampDuration, joinDuration, splitDuration, type DurationUnit } from "./duration";
 import { ColorField, Seg } from "../fields/controls";
 
 interface SchemaFormProps {
@@ -199,6 +200,10 @@ function SchemaFieldRow({
     );
   }
 
+  if (field.kind === "Duration") {
+    return <DurationField field={field} value={value} onChange={onChange} />;
+  }
+
   if (field.kind === "Bool") {
     return (
       <label className="field" style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
@@ -309,6 +314,56 @@ function SchemaFieldRow({
         placeholder={field.placeholder ?? undefined}
         onChange={(e) => onChange(e.target.value)}
       />
+      {field.description && <FieldHint text={field.description} />}
+    </label>
+  );
+}
+
+/** The stored value is whole milliseconds; the person types it in the unit they choose. The typed text is kept as typed ("1." must not turn into "1"). */
+function DurationField({ field, value, onChange }: { field: SettingField; value: unknown; onChange: (v: unknown) => void }) {
+  const { t } = useT();
+  const stored = typeof value === "number" && Number.isFinite(value) ? value : typeof field.default === "number" ? field.default : field.min ?? 0;
+  const [unit, setUnit] = useState<DurationUnit>(() => splitDuration(stored).unit);
+  const [text, setText] = useState(() => String(splitDuration(stored).amount));
+  const factor = { ms: 1, s: 1000, min: 60000 }[unit];
+
+  useEffect(() => {
+    // Something else changed the stored value: show it, unless the text already means it.
+    setText((current) => (joinDuration(Number(current), unit) === stored ? current : String(stored / factor)));
+  }, [stored, unit, factor]);
+
+  const pickUnit = (next: DurationUnit) => {
+    setUnit(next);
+    setText(String(stored / { ms: 1, s: 1000, min: 60000 }[next]));
+  };
+
+  return (
+    <label className="field">
+      {field.label}
+      <div style={{ display: "flex", gap: 6 }}>
+        <input
+          type="number"
+          style={{ flex: 1 }}
+          min={field.min != null ? field.min / factor : undefined}
+          max={field.max != null ? field.max / factor : undefined}
+          step={unit === "ms" ? field.step ?? undefined : "any"}
+          value={text}
+          onChange={(e) => {
+            setText(e.target.value);
+            const amount = Number(e.target.value);
+            if (e.target.value !== "" && Number.isFinite(amount)) onChange(joinDuration(amount, unit));
+          }}
+          onBlur={() => {
+            const clamped = clampDuration(stored, field.min, field.max);
+            if (clamped !== stored) onChange(clamped);
+          }}
+        />
+        <select value={unit} onChange={(e) => pickUnit(e.target.value as DurationUnit)} aria-label={field.label}>
+          <option value="ms">{t("schemaForm.duration.ms")}</option>
+          <option value="s">{t("schemaForm.duration.s")}</option>
+          <option value="min">{t("schemaForm.duration.min")}</option>
+        </select>
+      </div>
       {field.description && <FieldHint text={field.description} />}
     </label>
   );

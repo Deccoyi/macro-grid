@@ -38,3 +38,25 @@ describe("Hotkey field", () => {
     expect(onChange).toHaveBeenCalledWith({ k: "ctrl+shift+s" });
   });
 });
+
+describe("Duration field", () => {
+  const field: SettingField = { key: "d", label: "Wait", kind: "Duration", min: 0, max: 5000 };
+
+  it("saves milliseconds for the unit typed in, and keeps the stored value when the unit changes", () => {
+    const { onChange, container } = draw([field], { d: 1000 });
+    const number = container.querySelector("input")!;
+    const unit = container.querySelector("select")!;
+    expect((unit as HTMLSelectElement).value).toBe("s");
+    fireEvent.change(number, { target: { value: "2" } });
+    expect(onChange).toHaveBeenLastCalledWith({ d: 2000 });
+    fireEvent.change(unit, { target: { value: "ms" } });
+    expect(onChange).toHaveBeenCalledTimes(1);
+    expect(number.value).toBe("1000");
+  });
+
+  it("clamps to the maximum when the box loses focus", () => {
+    const { onChange, container } = draw([field], { d: 6000 });
+    fireEvent.blur(container.querySelector("input")!);
+    expect(onChange).toHaveBeenCalledWith({ d: 5000 });
+  });
+});
