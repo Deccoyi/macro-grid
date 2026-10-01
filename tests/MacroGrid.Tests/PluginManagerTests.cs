@@ -310,6 +310,20 @@ public sealed class PluginManagerTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task A_loaded_plugin_can_report_an_action_outcome()
+    {
+        await _manager.StartAsync(CancellationToken.None);
+        await _manager.InstallFromFolderAsync(NewStubSource());
+        var context = new ActionContext("d", "p", "w", null!);
+
+        Assert.Null(await _dispatcher.RunAsync("stub.action", new() { ["value"] = "ok" }, context, default));
+        var failure = await _dispatcher.RunAsync("stub.action", new() { ["value"] = "missing" }, context, default);
+
+        Assert.Equal(ActionFailureCode.NotFound, failure!.Code);
+        Assert.Equal("No such item.", failure.Message);
+    }
+
+    [Fact]
     public async Task Install_loads_the_plugin_immediately_without_a_restart()
     {
         await _manager.StartAsync(CancellationToken.None);

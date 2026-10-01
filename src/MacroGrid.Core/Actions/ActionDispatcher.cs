@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 using System.Text.Json.Nodes;
+using MacroGrid.Core.Diagnostics;
 using MacroGrid.Core.Model;
 using MacroGrid.Core.Variables;
 using MacroGrid.Plugin.Abstractions;
@@ -26,13 +27,13 @@ public sealed class ActionDispatcher(IEnumerable<IActionHandler> handlers, ILogg
 
     /// <summary>
     /// Runs the actions bound to <paramref name="eventName"/> sequentially.
-    /// A failing action is logged and does not stop the following ones; its message is collected so the
+    /// A failing action (an exception, or an outcome of kind Failed) is logged and does not stop the following ones; it is collected so the
     /// caller can surface it too (editor status bar, a toast on the device that pressed the widget) —
     /// a stale binding should be visibly wrong, never a silent no-op.
     /// </summary>
-    public async Task<IReadOnlyList<string>> DispatchAsync(Widget widget, string eventName, ActionContext context, CancellationToken cancellationToken)
+    public async Task<IReadOnlyList<ActionFailure>> DispatchAsync(Widget widget, string eventName, ActionContext context, CancellationToken cancellationToken)
     {
-        List<string>? errors = null;
+        List<ActionFailure>? errors = null;
 
         // A press handler that implements IReleaseAwareAction (e.g. "play while held") learns about the
         // release here, before this event's own bindings run — same widget, same press-time settings.
@@ -50,13 +51,13 @@ public sealed class ActionDispatcher(IEnumerable<IActionHandler> handlers, ILogg
                 catch (Exception ex) when (ex is not OperationCanceledException)
                 {
                     logger.LogError(ex, "Release of action {Type} failed on widget {WidgetId}", binding.Type, widget.Id);
-                    (errors ??= []).Add(ex.Message);
+                    (errors ??= []).Add(Failure(binding.Type, ActionFailureCode.ProviderError, ex.Message));
                 }
             }
         }
 
         if (!widget.Actions.TryGetValue(eventName, out var bindings) || bindings.Count == 0)
-            return (IReadOnlyList<string>?)errors ?? [];
+            return (IReadOnlyList<ActionFailure>?)errors ?? [];
 
         foreach (var binding in bindings)
         {
@@ -66,38 +67,81 @@ public sealed class ActionDispatcher(IEnumerable<IActionHandler> handlers, ILogg
                 continue;
             }
 
-            try
-            {
-                await handler.ExecuteAsync(context, ResolveVariables(handler, binding.Settings), cancellationToken);
-            }
-            catch (Exception ex) when (ex is not OperationCanceledException)
-            {
-                logger.LogError(ex, "Action {Type} failed on widget {WidgetId}", binding.Type, widget.Id);
-                (errors ??= []).Add(ex.Message);
-            }
+            var failure = await RunOneAsync(handler, ResolveVariables(handler, binding.Settings), context, widget.Id, cancellationToken);
+            if (failure is not null) (errors ??= []).Add(failure);
         }
-        return (IReadOnlyList<string>?)errors ?? [];
+        return (IReadOnlyList<ActionFailure>?)errors ?? [];
     }
 
     /// <summary>True when an action of this type is registered.</summary>
     public bool Has(string type) => _handlers.ContainsKey(type);
 
     /// <summary>Runs one registered action directly with the given settings (a plugin widget's <c>macroGrid.run</c>), not through a widget's bindings.
-    /// Returns null when it ran, otherwise a short message: unknown type or the action's own error.</summary>
-    public async Task<string?> RunAsync(string type, JsonObject settings, ActionContext context, CancellationToken cancellationToken)
+    /// Returns null when it ran, otherwise the failure: unknown type or the action's own error.</summary>
+    public async Task<ActionFailure?> RunAsync(string type, JsonObject settings, ActionContext context, CancellationToken cancellationToken)
     {
-        if (!_handlers.TryGetValue(type, out var handler)) return $"Unknown action '{type}'";
+        if (!_handlers.TryGetValue(type, out var handler)) return Failure(type, ActionFailureCode.NotFound, $"Unknown action '{type}'");
+        return await RunOneAsync(handler, ResolveVariables(handler, settings), context, null, cancellationToken);
+    }
+
+    /// <summary>Runs one handler. A handler with <see cref="IActionOutcomeHandler"/> is asked only for its outcome (never also for
+    /// <c>ExecuteAsync</c>); an older handler succeeds unless it throws. A reported failure is a warning in the log, not an error with a stack.</summary>
+    private async Task<ActionFailure?> RunOneAsync(IActionHandler handler, JsonObject settings, ActionContext context, string? widgetId, CancellationToken cancellationToken)
+    {
         try
         {
-            await handler.ExecuteAsync(context, ResolveVariables(handler, settings), cancellationToken);
-            return null;
+            if (handler is not IActionOutcomeHandler withOutcome)
+            {
+                await handler.ExecuteAsync(context, settings, cancellationToken);
+                return null;
+            }
+
+            var outcome = await withOutcome.ExecuteWithOutcomeAsync(context, settings, cancellationToken);
+            switch (outcome?.Kind)
+            {
+                case ActionOutcomeKind.Success:
+                    return null;
+                case ActionOutcomeKind.Accepted:
+                    logger.LogDebug("Action {Type} was accepted: {Message}", handler.Type, outcome.Message);
+                    return null;
+                case ActionOutcomeKind.Failed:
+                    var code = outcome.Code ?? ActionFailureCode.ProviderError;
+                    logger.LogWarning("Action {Type} on widget {WidgetId} reported {Code}: {Message}", handler.Type, widgetId, code, outcome.Message);
+                    return Failure(handler.Type, code, outcome.Message);
+                default:
+                    logger.LogWarning("Action {Type} returned no outcome", handler.Type);
+                    return Failure(handler.Type, ActionFailureCode.ProviderError, null);
+            }
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
-            logger.LogError(ex, "Action {Type} failed when a widget ran it", type);
-            return ex.Message;
+            logger.LogError(ex, "Action {Type} failed on widget {WidgetId}", handler.Type, widgetId);
+            return Failure(handler.Type, ActionFailureCode.ProviderError, ex.Message);
         }
     }
+
+    /// <summary>Longest failure text kept (it is shown on another device).</summary>
+    private const int MaxFailureMessage = 200;
+
+    private static ActionFailure Failure(string type, ActionFailureCode code, string? message)
+    {
+        var clean = PlainText.Clean(message, MaxFailureMessage);
+        return new ActionFailure(type, code, clean.Length > 0 ? clean : DefaultText(code));
+    }
+
+    /// <summary>The host has no translation table of its own, so these stay English like the pairing texts.</summary>
+    private static string DefaultText(ActionFailureCode code) => code switch
+    {
+        ActionFailureCode.NotConfigured => "This action is not set up yet.",
+        ActionFailureCode.NotConnected => "Not connected.",
+        ActionFailureCode.PermissionDenied => "Not allowed.",
+        ActionFailureCode.ProviderRejected => "The other side refused the request.",
+        ActionFailureCode.InvalidParameter => "A setting of this action is not valid.",
+        ActionFailureCode.NotFound => "The target was not found.",
+        ActionFailureCode.Timeout => "No answer in time.",
+        ActionFailureCode.Unavailable => "Not available right now.",
+        _ => "The other side reported an error.",
+    };
 
     /// <summary>
     /// For every field the handler declares with <see cref="SettingField.AllowVariables"/>, replaces the

@@ -328,15 +328,15 @@ public sealed class PluginWidgetRouter : IHostedService, IDisposable
         using var timeout = CancellationTokenSource.CreateLinkedTokenSource(ct);
         timeout.CancelAfter(RunTimeout);
         var context = new ActionContext(session.DeviceId!, message.PageId, widget.Id, device) { UserGesture = message.UserGesture };
-        var error = await _dispatcher.RunAsync(action!, (JsonObject)settings.DeepClone(), context, timeout.Token);
-        if (error is null)
+        var failure = await _dispatcher.RunAsync(action!, (JsonObject)settings.DeepClone(), context, timeout.Token);
+        if (failure is null)
         {
             await ReplyAsync(session, message, ok: true);
             return;
         }
         _problems.Report(info.PluginId, info.PluginName, ProblemSeverity.Warning, ProblemCodes.WidgetCallFailed,
-            $"Widget '{info.Widget.Manifest.Id}' ran '{action}' and it failed: {error}");
-        await ReplyAsync(session, message, ok: false, error: "failed", text: Short(error));
+            $"Widget '{info.Widget.Manifest.Id}' ran '{action}' and it failed: {failure.Message}");
+        await ReplyAsync(session, message, ok: false, error: "failed", text: Short(failure.Message));
     }
 
     private async Task SubscribeAsync(ClientSession session, Widget widget, PluginWidgetInfo info, JsonNode? data)

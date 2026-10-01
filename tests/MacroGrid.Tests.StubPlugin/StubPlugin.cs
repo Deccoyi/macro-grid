@@ -41,7 +41,7 @@ public sealed class StubPlugin : IPlugin, IPluginTreeProvider, IPluginTreeItemSe
     }
 }
 
-public sealed class StubAction : IActionHandler, IActionDescriptor
+public sealed class StubAction : IActionHandler, IActionDescriptor, IActionOutcomeHandler
 {
     public string Type => "stub.action";
     public string DisplayName => "Stub aksiyon";
@@ -51,6 +51,10 @@ public sealed class StubAction : IActionHandler, IActionDescriptor
     public IReadOnlyList<SettingField> Fields => [new SettingField("value", "Value", SettingFieldKind.Text)];
 
     public Task ExecuteAsync(ActionContext context, JsonObject settings, CancellationToken cancellationToken) => Task.CompletedTask;
+
+    /// <summary>Reports a failure when the "value" setting is "missing", so a test can see an outcome cross a real assembly load.</summary>
+    public Task<ActionOutcome> ExecuteWithOutcomeAsync(ActionContext context, JsonObject settings, CancellationToken cancellationToken) =>
+        Task.FromResult(settings["value"]?.GetValue<string>() == "missing" ? ActionOutcome.Failed(ActionFailureCode.NotFound, "No such item.") : ActionOutcome.Success);
 }
 
 public sealed class StubSettingsPage : IPluginSettingsPage
