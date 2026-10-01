@@ -127,4 +127,27 @@ public sealed class PluginToolTests : IDisposable
     [Fact]
     public void Pack_with_an_unknown_option_is_a_usage_error() =>
         Assert.Equal(PluginToolApp.Usage, Run("pack", GoodPlugin(), "--zip", "x").Code);
+
+    [Fact]
+    public void New_creates_a_plugin_that_validates_without_errors()
+    {
+        var result = Run("new", "my-first", "--name", "My \"first\" plugin", "--out", _root);
+
+        Assert.Equal(PluginToolApp.Ok, result.Code);
+        var dir = Path.Combine(_root, "my-first");
+        Assert.True(File.Exists(Path.Combine(dir, "index.js")));
+        Assert.Contains("my-first.bump", File.ReadAllText(Path.Combine(dir, "index.js")));
+        Assert.Equal(0, Run("validate", dir).Code);
+    }
+
+    [Fact]
+    public void New_refuses_a_bad_id_and_a_folder_that_is_in_use()
+    {
+        Assert.Equal(PluginToolApp.Failed, Run("new", "bad id", "--out", _root).Code);
+
+        Assert.Equal(PluginToolApp.Ok, Run("new", "twice", "--out", _root).Code);
+        var second = Run("new", "twice", "--out", _root);
+        Assert.Equal(PluginToolApp.Failed, second.Code);
+        Assert.Contains("already exists", second.Err);
+    }
 }
