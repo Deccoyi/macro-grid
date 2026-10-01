@@ -1,158 +1,11 @@
 {
   "en": {
-    "layoutProfiles.deleteConfirm": {
-      "zero": "Delete layout \"0\"?",
-      "one": "Delete layout \"1\"?",
-      "two": "Delete layout \"2\"?",
-      "five": "Delete layout \"5\"?",
-      "words": "Delete layout \"Arg1\"?"
-    },
-    "menu.help.version": {
-      "zero": "Version 0",
-      "one": "Version 1",
-      "two": "Version 2",
-      "five": "Version 5",
-      "words": "Version Arg1"
-    },
-    "preferences.autostart.failed": {
-      "zero": "Could not change the startup setting: 0",
-      "one": "Could not change the startup setting: 1",
-      "two": "Could not change the startup setting: 2",
-      "five": "Could not change the startup setting: 5",
-      "words": "Could not change the startup setting: Arg1"
-    },
-    "globalVariables.delete.confirm": {
-      "zero": "Delete the variable \"0\"?",
-      "one": "Delete the variable \"1\"?",
-      "two": "Delete the variable \"2\"?",
-      "five": "Delete the variable \"5\"?",
-      "words": "Delete the variable \"Arg1\"?"
-    },
-    "globalVariables.delete.used": {
-      "zero": "\"0\" is used in 0 place(s). Delete it anyway? Those places will show nothing until you fix them.",
-      "one": "\"1\" is used in 1 place(s). Delete it anyway? Those places will show nothing until you fix them.",
-      "two": "\"2\" is used in 2 place(s). Delete it anyway? Those places will show nothing until you fix them.",
-      "five": "\"5\" is used in 5 place(s). Delete it anyway? Those places will show nothing until you fix them.",
-      "words": "\"Arg1\" is used in Arg2 place(s). Delete it anyway? Those places will show nothing until you fix them."
-    },
-    "globalVariables.delete.more": {
-      "zero": "…and 0 more",
-      "one": "…and 1 more",
-      "two": "…and 2 more",
-      "five": "…and 5 more",
-      "words": "…and Arg1 more"
-    },
-    "globalVariables.name.tooLong": {
-      "zero": "At most 0 characters.",
-      "one": "At most 1 characters.",
-      "two": "At most 2 characters.",
-      "five": "At most 5 characters.",
-      "words": "At most Arg1 characters."
-    },
-    "globalVariables.full": {
-      "zero": "The list is full (0 variables).",
-      "one": "The list is full (1 variables).",
-      "two": "The list is full (2 variables).",
-      "five": "The list is full (5 variables).",
-      "words": "The list is full (Arg1 variables)."
-    },
-    "plugins.discover.by": {
-      "zero": "by 0",
-      "one": "by 1",
-      "two": "by 2",
-      "five": "by 5",
-      "words": "by Arg1"
-    },
-    "plugins.discover.info.permissionsCount": {
-      "zero": "0 permissions",
-      "one": "1 permissions",
-      "two": "2 permissions",
-      "five": "5 permissions",
-      "words": "Arg1 permissions"
-    },
-    "plugins.discover.installSuccess": {
-      "zero": "0 installed.",
-      "one": "1 installed.",
-      "two": "2 installed.",
-      "five": "5 installed.",
-      "words": "Arg1 installed."
-    },
-    "plugins.discover.installFailed": {
-      "zero": "0 could not be installed: 0",
-      "one": "1 could not be installed: 1",
-      "two": "2 could not be installed: 2",
-      "five": "5 could not be installed: 5",
-      "words": "Arg1 could not be installed: Arg2"
-    },
-    "plugins.discover.source.addFailed": {
-      "zero": "Could not add that source: 0",
-      "one": "Could not add that source: 1",
-      "two": "Could not add that source: 2",
-      "five": "Could not add that source: 5",
-      "words": "Could not add that source: Arg1"
-    },
-    "plugins.discover.source.removeConfirm": {
-      "zero": "Remove \"0\" as a plugin source? Anything already installed from it is not affected.",
-      "one": "Remove \"1\" as a plugin source? Anything already installed from it is not affected.",
-      "two": "Remove \"2\" as a plugin source? Anything already installed from it is not affected.",
-      "five": "Remove \"5\" as a plugin source? Anything already installed from it is not affected.",
-      "words": "Remove \"Arg1\" as a plugin source? Anything already installed from it is not affected."
-    },
-    "plugins.discover.link.failed": {
-      "zero": "Could not install from that link: 0",
-      "one": "Could not install from that link: 1",
-      "two": "Could not install from that link: 2",
-      "five": "Could not install from that link: 5",
-      "words": "Could not install from that link: Arg1"
-    },
-    "plugins.discover.link.isSource": {
-      "zero": "0 publishes several plugins (a macrogrid-index.json), not one. Add it as a source instead?",
-      "one": "1 publishes several plugins (a macrogrid-index.json), not one. Add it as a source instead?",
-      "two": "2 publishes several plugins (a macrogrid-index.json), not one. Add it as a source instead?",
-      "five": "5 publishes several plugins (a macrogrid-index.json), not one. Add it as a source instead?",
-      "words": "Arg1 publishes several plugins (a macrogrid-index.json), not one. Add it as a source instead?"
-    },
-    "status.pluginUpdates": {
-      "zero": "0 plugin update(s) needed",
-      "one": "1 plugin update(s) needed",
-      "two": "2 plugin update(s) needed",
-      "five": "5 plugin update(s) needed",
-      "words": "Arg1 plugin update(s) needed"
-    },
-    "plugins.keyboardUses": {
-      "zero": "Used the keyboard 0 times today",
-      "one": "Used the keyboard once today",
-      "two": "Used the keyboard 2 times today",
-      "five": "Used the keyboard 5 times today",
-      "words": "Used the keyboard Arg1 times today"
-    },
-    "plugins.install.success": {
-      "zero": "0 installed.",
-      "one": "1 installed.",
-      "two": "2 installed.",
-      "five": "5 installed.",
-      "words": "Arg1 installed."
-    },
-    "plugins.install.failed": {
-      "zero": "0 was copied but could not be loaded: 0",
-      "one": "1 was copied but could not be loaded: 1",
-      "two": "2 was copied but could not be loaded: 2",
-      "five": "5 was copied but could not be loaded: 5",
-      "words": "Arg1 was copied but could not be loaded: Arg2"
-    },
-    "plugins.install.folder.failed": {
-      "zero": "Could not read that folder: 0",
-      "one": "Could not read that folder: 1",
-      "two": "Could not read that folder: 2",
-      "five": "Could not read that folder: 5",
-      "words": "Could not read that folder: Arg1"
-    },
-    "consent.thirdParty": {
-      "zero": "From 0, not the official source. Install it only if you trust the author.",
-      "one": "From 1, not the official source. Install it only if you trust the author.",
-      "two": "From 2, not the official source. Install it only if you trust the author.",
-      "five": "From 5, not the official source. Install it only if you trust the author.",
-      "words": "From Arg1, not the official source. Install it only if you trust the author."
+    "action.logic.steps": {
+      "zero": "0 step(s)",
+      "one": "1 step(s)",
+      "two": "2 step(s)",
+      "five": "5 step(s)",
+      "words": "Arg1 step(s)"
     },
     "consent.http": {
       "zero": "Send web requests to 0",
@@ -161,6 +14,13 @@
       "five": "Send web requests to 5",
       "words": "Send web requests to Arg1"
     },
+    "consent.thirdParty": {
+      "zero": "From 0, not the official source. Install it only if you trust the author.",
+      "one": "From 1, not the official source. Install it only if you trust the author.",
+      "two": "From 2, not the official source. Install it only if you trust the author.",
+      "five": "From 5, not the official source. Install it only if you trust the author.",
+      "words": "From Arg1, not the official source. Install it only if you trust the author."
+    },
     "consent.ws": {
       "zero": "Keep a live connection open to 0",
       "one": "Keep a live connection open to 1",
@@ -168,131 +28,33 @@
       "five": "Keep a live connection open to 5",
       "words": "Keep a live connection open to Arg1"
     },
-    "plugins.permissions.title": {
-      "zero": "Permissions (0)",
-      "one": "Permissions (1)",
-      "two": "Permissions (2)",
-      "five": "Permissions (5)",
-      "words": "Permissions (Arg1)"
+    "ctx.widget.delete": {
+      "zero": "Delete 0",
+      "one": "Delete 1",
+      "two": "Delete 2",
+      "five": "Delete 5",
+      "words": "Delete Arg1"
     },
-    "plugins.approve.success": {
-      "zero": "0 enabled.",
-      "one": "1 enabled.",
-      "two": "2 enabled.",
-      "five": "5 enabled.",
-      "words": "Arg1 enabled."
+    "ctx.widget.duplicate": {
+      "zero": "Duplicate 0",
+      "one": "Duplicate 1",
+      "two": "Duplicate 2",
+      "five": "Duplicate 5",
+      "words": "Duplicate Arg1"
     },
-    "plugins.permission.http.local": {
-      "zero": "Send web requests to 0 on this computer",
-      "one": "Send web requests to 1 on this computer",
-      "two": "Send web requests to 2 on this computer",
-      "five": "Send web requests to 5 on this computer",
-      "words": "Send web requests to Arg1 on this computer"
+    "ctx.widget.labelMulti": {
+      "zero": "0 widgets",
+      "one": "1 widgets",
+      "two": "2 widgets",
+      "five": "5 widgets",
+      "words": "Arg1 widgets"
     },
-    "plugins.permission.http.lan": {
-      "zero": "Send web requests to 0 on your local network",
-      "one": "Send web requests to 1 on your local network",
-      "two": "Send web requests to 2 on your local network",
-      "five": "Send web requests to 5 on your local network",
-      "words": "Send web requests to Arg1 on your local network"
-    },
-    "plugins.permission.http.internet": {
-      "zero": "Send web requests to 0 on the internet (it can send data out of your network)",
-      "one": "Send web requests to 1 on the internet (it can send data out of your network)",
-      "two": "Send web requests to 2 on the internet (it can send data out of your network)",
-      "five": "Send web requests to 5 on the internet (it can send data out of your network)",
-      "words": "Send web requests to Arg1 on the internet (it can send data out of your network)"
-    },
-    "plugins.permission.ws.local": {
-      "zero": "Keep a live connection open to 0 on this computer",
-      "one": "Keep a live connection open to 1 on this computer",
-      "two": "Keep a live connection open to 2 on this computer",
-      "five": "Keep a live connection open to 5 on this computer",
-      "words": "Keep a live connection open to Arg1 on this computer"
-    },
-    "plugins.permission.ws.lan": {
-      "zero": "Keep a live connection open to 0 on your local network",
-      "one": "Keep a live connection open to 1 on your local network",
-      "two": "Keep a live connection open to 2 on your local network",
-      "five": "Keep a live connection open to 5 on your local network",
-      "words": "Keep a live connection open to Arg1 on your local network"
-    },
-    "plugins.permission.ws.internet": {
-      "zero": "Keep a live connection open to 0 on the internet (it can send data out of your network)",
-      "one": "Keep a live connection open to 1 on the internet (it can send data out of your network)",
-      "two": "Keep a live connection open to 2 on the internet (it can send data out of your network)",
-      "five": "Keep a live connection open to 5 on the internet (it can send data out of your network)",
-      "words": "Keep a live connection open to Arg1 on the internet (it can send data out of your network)"
-    },
-    "plugins.permission.unknown": {
-      "zero": "0",
-      "one": "1",
-      "two": "2",
-      "five": "5",
-      "words": "Arg1"
-    },
-    "plugins.reload.success": {
-      "zero": "0 reloaded.",
-      "one": "1 reloaded.",
-      "two": "2 reloaded.",
-      "five": "5 reloaded.",
-      "words": "Arg1 reloaded."
-    },
-    "plugins.uninstall.confirm": {
-      "zero": "Remove \"0\"? The plugin folder will be deleted — this can't be undone.",
-      "one": "Remove \"1\"? The plugin folder will be deleted — this can't be undone.",
-      "two": "Remove \"2\"? The plugin folder will be deleted — this can't be undone.",
-      "five": "Remove \"5\"? The plugin folder will be deleted — this can't be undone.",
-      "words": "Remove \"Arg1\"? The plugin folder will be deleted — this can't be undone."
-    },
-    "plugins.uninstall.success": {
-      "zero": "0 removed.",
-      "one": "1 removed.",
-      "two": "2 removed.",
-      "five": "5 removed.",
-      "words": "Arg1 removed."
-    },
-    "plugins.uninstall.pending": {
-      "zero": "0 was turned off, but a file is still in use so its folder couldn't be deleted yet; the server will delete it on the next start.",
-      "one": "1 was turned off, but a file is still in use so its folder couldn't be deleted yet; the server will delete it on the next start.",
-      "two": "2 was turned off, but a file is still in use so its folder couldn't be deleted yet; the server will delete it on the next start.",
-      "five": "5 was turned off, but a file is still in use so its folder couldn't be deleted yet; the server will delete it on the next start.",
-      "words": "Arg1 was turned off, but a file is still in use so its folder couldn't be deleted yet; the server will delete it on the next start."
-    },
-    "update.available": {
-      "zero": "Version 0 is available",
-      "one": "Version 1 is available",
-      "two": "Version 2 is available",
-      "five": "Version 5 is available",
-      "words": "Version Arg1 is available"
-    },
-    "update.current": {
-      "zero": "Current version: 0",
-      "one": "Current version: 1",
-      "two": "Current version: 2",
-      "five": "Current version: 5",
-      "words": "Current version: Arg1"
-    },
-    "update.release": {
-      "zero": "Version 0",
-      "one": "Version 1",
-      "two": "Version 2",
-      "five": "Version 5",
-      "words": "Version Arg1"
-    },
-    "update.downloading": {
-      "zero": "Downloading… 0%",
-      "one": "Downloading… 1%",
-      "two": "Downloading… 2%",
-      "five": "Downloading… 5%",
-      "words": "Downloading… Arg1%"
-    },
-    "diag.save.total": {
-      "zero": "Saved. This profile has 0 plugin widgets on 0 page(s).",
-      "one": "Saved. This profile has 1 plugin widgets on 1 page(s).",
-      "two": "Saved. This profile has 2 plugin widgets on 2 page(s).",
-      "five": "Saved. This profile has 5 plugin widgets on 5 page(s).",
-      "words": "Saved. This profile has Arg1 plugin widgets on Arg2 page(s)."
+    "ctx.widget.moveCopy": {
+      "zero": "Move/copy 0 to another page/profile…",
+      "one": "Move/copy 1 to another page/profile…",
+      "two": "Move/copy 2 to another page/profile…",
+      "five": "Move/copy 5 to another page/profile…",
+      "words": "Move/copy Arg1 to another page/profile…"
     },
     "diag.check.E210": {
       "zero": "Page \"0\", 0, 0 event: action 0 (0) is not available. Its plugin may be removed or switched off.",
@@ -322,6 +84,27 @@
       "five": "Page \"5\", 5, 5 event: action 5, setting \"5\" is not valid (5).",
       "words": "Page \"Arg1\", Arg2, Arg3 event: action Arg4, setting \"Arg5\" is not valid (Arg6)."
     },
+    "diag.check.W230": {
+      "zero": "Page \"0\", 0: the variable \"0\" is not provided by any plugin right now.",
+      "one": "Page \"1\", 1: the variable \"1\" is not provided by any plugin right now.",
+      "two": "Page \"2\", 2: the variable \"2\" is not provided by any plugin right now.",
+      "five": "Page \"5\", 5: the variable \"5\" is not provided by any plugin right now.",
+      "words": "Page \"Arg1\", Arg2: the variable \"Arg3\" is not provided by any plugin right now."
+    },
+    "diag.check.W231": {
+      "zero": "Page \"0\", 0: the variable \"0\" is not in the Global Variable List.",
+      "one": "Page \"1\", 1: the variable \"1\" is not in the Global Variable List.",
+      "two": "Page \"2\", 2: the variable \"2\" is not in the Global Variable List.",
+      "five": "Page \"5\", 5: the variable \"5\" is not in the Global Variable List.",
+      "words": "Page \"Arg1\", Arg2: the variable \"Arg3\" is not in the Global Variable List."
+    },
+    "diag.check.W232": {
+      "zero": "Page \"0\", 0: \"0\" works only in the button's own text and rules.",
+      "one": "Page \"1\", 1: \"1\" works only in the button's own text and rules.",
+      "two": "Page \"2\", 2: \"2\" works only in the button's own text and rules.",
+      "five": "Page \"5\", 5: \"5\" works only in the button's own text and rules.",
+      "words": "Page \"Arg1\", Arg2: \"Arg3\" works only in the button's own text and rules."
+    },
     "diag.check.W233": {
       "zero": "Page \"0\", 0, 0: the If, Otherwise and End steps do not match, or they are nested more than 0 deep.",
       "one": "Page \"1\", 1, 1: the If, Otherwise and End steps do not match, or they are nested more than 1 deep.",
@@ -335,27 +118,6 @@
       "two": "Page \"2\", 2, 2, step 2: the If has no condition to test.",
       "five": "Page \"5\", 5, 5, step 5: the If has no condition to test.",
       "words": "Page \"Arg1\", Arg2, Arg3, step Arg4: the If has no condition to test."
-    },
-    "diag.check.W232": {
-      "zero": "Page \"0\", 0: \"0\" works only in the button's own text and rules.",
-      "one": "Page \"1\", 1: \"1\" works only in the button's own text and rules.",
-      "two": "Page \"2\", 2: \"2\" works only in the button's own text and rules.",
-      "five": "Page \"5\", 5: \"5\" works only in the button's own text and rules.",
-      "words": "Page \"Arg1\", Arg2: \"Arg3\" works only in the button's own text and rules."
-    },
-    "diag.check.W231": {
-      "zero": "Page \"0\", 0: the variable \"0\" is not in the Global Variable List.",
-      "one": "Page \"1\", 1: the variable \"1\" is not in the Global Variable List.",
-      "two": "Page \"2\", 2: the variable \"2\" is not in the Global Variable List.",
-      "five": "Page \"5\", 5: the variable \"5\" is not in the Global Variable List.",
-      "words": "Page \"Arg1\", Arg2: the variable \"Arg3\" is not in the Global Variable List."
-    },
-    "diag.check.W230": {
-      "zero": "Page \"0\", 0: the variable \"0\" is not provided by any plugin right now.",
-      "one": "Page \"1\", 1: the variable \"1\" is not provided by any plugin right now.",
-      "two": "Page \"2\", 2: the variable \"2\" is not provided by any plugin right now.",
-      "five": "Page \"5\", 5: the variable \"5\" is not provided by any plugin right now.",
-      "words": "Page \"Arg1\", Arg2: the variable \"Arg3\" is not provided by any plugin right now."
     },
     "diag.save.page": {
       "zero": "Page \"0\": 0 plugin widgets. Up to 0 are recommended at the same time; the right number depends on the device that shows the page.",
@@ -378,145 +140,12 @@
       "five": "Page \"5\": 5 widgets of \"5\", a plugin that is not verified. Up to 5 of such a plugin are recommended at the same time.",
       "words": "Page \"Arg1\": Arg2 widgets of \"Arg3\", a plugin that is not verified. Up to Arg4 of such a plugin are recommended at the same time."
     },
-    "profile.deleteConfirm": {
-      "zero": "Delete profile \"0\"?",
-      "one": "Delete profile \"1\"?",
-      "two": "Delete profile \"2\"?",
-      "five": "Delete profile \"5\"?",
-      "words": "Delete profile \"Arg1\"?"
-    },
-    "folder.deleteConfirm": {
-      "zero": "This folder contains 0 items.",
-      "one": "This folder contains 1 items.",
-      "two": "This folder contains 2 items.",
-      "five": "This folder contains 5 items.",
-      "words": "This folder contains Arg1 items."
-    },
-    "page.deleteConfirm": {
-      "zero": "Delete page \"0\"?",
-      "one": "Delete page \"1\"?",
-      "two": "Delete page \"2\"?",
-      "five": "Delete page \"5\"?",
-      "words": "Delete page \"Arg1\"?"
-    },
-    "widget.selected.count": {
-      "zero": "0 widgets selected",
-      "one": "1 widgets selected",
-      "two": "2 widgets selected",
-      "five": "5 widgets selected",
-      "words": "Arg1 widgets selected"
-    },
-    "palette.results": {
-      "zero": "0 found",
-      "one": "1 found",
-      "two": "2 found",
-      "five": "5 found",
-      "words": "Arg1 found"
-    },
-    "ctx.widget.duplicate": {
-      "zero": "Duplicate 0",
-      "one": "Duplicate 1",
-      "two": "Duplicate 2",
-      "five": "Duplicate 5",
-      "words": "Duplicate arg1"
-    },
-    "ctx.widget.moveCopy": {
-      "zero": "Move/copy 0 to another page/profile…",
-      "one": "Move/copy 1 to another page/profile…",
-      "two": "Move/copy 2 to another page/profile…",
-      "five": "Move/copy 5 to another page/profile…",
-      "words": "Move/copy arg1 to another page/profile…"
-    },
-    "ctx.widget.delete": {
-      "zero": "Delete 0",
-      "one": "Delete 1",
-      "two": "Delete 2",
-      "five": "Delete 5",
-      "words": "Delete arg1"
-    },
-    "ctx.widget.labelMulti": {
-      "zero": "0 widgets",
-      "one": "1 widgets",
-      "two": "2 widgets",
-      "five": "5 widgets",
-      "words": "Arg1 widgets"
-    },
-    "moveCopy.widgetsTitle": {
-      "zero": "Move/copy 0 widget(s)",
-      "one": "Move/copy 1 widget(s)",
-      "two": "Move/copy 2 widget(s)",
-      "five": "Move/copy 5 widget(s)",
-      "words": "Move/copy Arg1 widget(s)"
-    },
-    "profile.importConflict": {
-      "zero": "A profile named \"0\" already exists. Overwrite the existing profile, or import this one under a new name?",
-      "one": "A profile named \"1\" already exists. Overwrite the existing profile, or import this one under a new name?",
-      "two": "A profile named \"2\" already exists. Overwrite the existing profile, or import this one under a new name?",
-      "five": "A profile named \"5\" already exists. Overwrite the existing profile, or import this one under a new name?",
-      "words": "A profile named \"Arg1\" already exists. Overwrite the existing profile, or import this one under a new name?"
-    },
-    "importWeb.count": {
-      "zero": "0 sites",
-      "one": "1 site",
-      "two": "2 sites",
-      "five": "5 sites",
-      "words": "Arg1 sites"
-    },
-    "profile.importMissing": {
-      "zero": "This profile needs plugins that are not installed: 0. Install them from the Plugins window and its buttons will work.\n\nActions with no provider on this server: 0.",
-      "one": "This profile needs plugins that are not installed: 1. Install them from the Plugins window and its buttons will work.\n\nActions with no provider on this server: 1.",
-      "two": "This profile needs plugins that are not installed: 2. Install them from the Plugins window and its buttons will work.\n\nActions with no provider on this server: 2.",
-      "five": "This profile needs plugins that are not installed: 5. Install them from the Plugins window and its buttons will work.\n\nActions with no provider on this server: 5.",
-      "words": "This profile needs plugins that are not installed: Arg1. Install them from the Plugins window and its buttons will work.\n\nActions with no provider on this server: Arg2."
-    },
-    "pairing.lastSeen": {
-      "zero": "Last seen: 0",
-      "one": "Last seen: 1",
-      "two": "Last seen: 2",
-      "five": "Last seen: 5",
-      "words": "Last seen: Arg1"
-    },
-    "action.logic.steps": {
-      "zero": "0 step(s)",
-      "one": "1 step(s)",
-      "two": "2 step(s)",
-      "five": "5 step(s)",
-      "words": "Arg1 step(s)"
-    },
-    "schemaForm.untitledRow": {
-      "zero": "Item 0",
-      "one": "Item 1",
-      "two": "Item 2",
-      "five": "Item 5",
-      "words": "Item Arg1"
-    },
-    "icon.searchPlaceholder": {
-      "zero": "Search 0 icons… (e.g. \"volume\", \"play\")",
-      "one": "Search 1 icons… (e.g. \"volume\", \"play\")",
-      "two": "Search 2 icons… (e.g. \"volume\", \"play\")",
-      "five": "Search 5 icons… (e.g. \"volume\", \"play\")",
-      "words": "Search Arg1 icons… (e.g. \"volume\", \"play\")"
-    },
-    "fields.web.manyOnPage": {
-      "zero": "This page has 0 web widgets. A phone is recommended to run 0 at most at once (a small one 1); the rest wait with a \"Tap to load\" button.",
-      "one": "This page has 1 web widgets. A phone is recommended to run 1 at most at once (a small one 1); the rest wait with a \"Tap to load\" button.",
-      "two": "This page has 2 web widgets. A phone is recommended to run 2 at most at once (a small one 1); the rest wait with a \"Tap to load\" button.",
-      "five": "This page has 5 web widgets. A phone is recommended to run 5 at most at once (a small one 1); the rest wait with a \"Tap to load\" button.",
-      "words": "This page has Arg1 web widgets. A phone is recommended to run Arg2 at most at once (a small one 1); the rest wait with a \"Tap to load\" button."
-    },
-    "state.defaultPageName": {
-      "zero": "Page 0",
-      "one": "Page 1",
-      "two": "Page 2",
-      "five": "Page 5",
-      "words": "Page Arg1"
-    },
-    "edit.undoLabel": {
-      "zero": "Undo 0",
-      "one": "Undo 1",
-      "two": "Undo 2",
-      "five": "Undo 5",
-      "words": "Undo Arg1"
+    "diag.save.total": {
+      "zero": "Saved. This profile has 0 plugin widgets on 0 page(s).",
+      "one": "Saved. This profile has 1 plugin widgets on 1 page(s).",
+      "two": "Saved. This profile has 2 plugin widgets on 2 page(s).",
+      "five": "Saved. This profile has 5 plugin widgets on 5 page(s).",
+      "words": "Saved. This profile has Arg1 plugin widgets on Arg2 page(s)."
     },
     "edit.redoLabel": {
       "zero": "Redo 0",
@@ -525,238 +154,236 @@
       "five": "Redo 5",
       "words": "Redo Arg1"
     },
-    "undo.pastePartial": {
-      "zero": "Pasted 0 of 0 widgets; the rest did not fit.",
-      "one": "Pasted 1 of 1 widgets; the rest did not fit.",
-      "two": "Pasted 2 of 2 widgets; the rest did not fit.",
-      "five": "Pasted 5 of 5 widgets; the rest did not fit.",
-      "words": "Pasted Arg1 of Arg2 widgets; the rest did not fit."
-    }
-  },
-  "tr": {
-    "layoutProfiles.deleteConfirm": {
-      "zero": "\"0\" yerleşimi silinsin mi?",
-      "one": "\"1\" yerleşimi silinsin mi?",
-      "two": "\"2\" yerleşimi silinsin mi?",
-      "five": "\"5\" yerleşimi silinsin mi?",
-      "words": "\"Arg1\" yerleşimi silinsin mi?"
+    "edit.undoLabel": {
+      "zero": "Undo 0",
+      "one": "Undo 1",
+      "two": "Undo 2",
+      "five": "Undo 5",
+      "words": "Undo Arg1"
     },
-    "menu.help.version": {
-      "zero": "Sürüm 0",
-      "one": "Sürüm 1",
-      "two": "Sürüm 2",
-      "five": "Sürüm 5",
-      "words": "Sürüm Arg1"
+    "fields.web.manyOnPage": {
+      "zero": "This page has 0 web widgets. A phone is recommended to run 0 at most at once (a small one 1); the rest wait with a \"Tap to load\" button.",
+      "one": "This page has 1 web widgets. A phone is recommended to run 1 at most at once (a small one 1); the rest wait with a \"Tap to load\" button.",
+      "two": "This page has 2 web widgets. A phone is recommended to run 2 at most at once (a small one 1); the rest wait with a \"Tap to load\" button.",
+      "five": "This page has 5 web widgets. A phone is recommended to run 5 at most at once (a small one 1); the rest wait with a \"Tap to load\" button.",
+      "words": "This page has Arg1 web widgets. A phone is recommended to run Arg2 at most at once (a small one 1); the rest wait with a \"Tap to load\" button."
     },
-    "preferences.autostart.failed": {
-      "zero": "Başlangıç ayarı değiştirilemedi: 0",
-      "one": "Başlangıç ayarı değiştirilemedi: 1",
-      "two": "Başlangıç ayarı değiştirilemedi: 2",
-      "five": "Başlangıç ayarı değiştirilemedi: 5",
-      "words": "Başlangıç ayarı değiştirilemedi: Arg1"
+    "folder.deleteConfirm": {
+      "zero": "This folder contains 0 items.",
+      "one": "This folder contains 1 items.",
+      "two": "This folder contains 2 items.",
+      "five": "This folder contains 5 items.",
+      "words": "This folder contains Arg1 items."
     },
     "globalVariables.delete.confirm": {
-      "zero": "\"0\" değişkeni silinsin mi?",
-      "one": "\"1\" değişkeni silinsin mi?",
-      "two": "\"2\" değişkeni silinsin mi?",
-      "five": "\"5\" değişkeni silinsin mi?",
-      "words": "\"Arg1\" değişkeni silinsin mi?"
-    },
-    "globalVariables.delete.used": {
-      "zero": "\"0\" 0 yerde kullanılıyor. Yine de silinsin mi? Siz düzeltene kadar bu yerler boş görünür.",
-      "one": "\"1\" 1 yerde kullanılıyor. Yine de silinsin mi? Siz düzeltene kadar bu yerler boş görünür.",
-      "two": "\"2\" 2 yerde kullanılıyor. Yine de silinsin mi? Siz düzeltene kadar bu yerler boş görünür.",
-      "five": "\"5\" 5 yerde kullanılıyor. Yine de silinsin mi? Siz düzeltene kadar bu yerler boş görünür.",
-      "words": "\"Arg1\" Arg2 yerde kullanılıyor. Yine de silinsin mi? Siz düzeltene kadar bu yerler boş görünür."
+      "zero": "Delete the variable \"0\"?",
+      "one": "Delete the variable \"1\"?",
+      "two": "Delete the variable \"2\"?",
+      "five": "Delete the variable \"5\"?",
+      "words": "Delete the variable \"Arg1\"?"
     },
     "globalVariables.delete.more": {
-      "zero": "…ve 0 yer daha",
-      "one": "…ve 1 yer daha",
-      "two": "…ve 2 yer daha",
-      "five": "…ve 5 yer daha",
-      "words": "…ve Arg1 yer daha"
+      "zero": "…and 0 more",
+      "one": "…and 1 more",
+      "two": "…and 2 more",
+      "five": "…and 5 more",
+      "words": "…and Arg1 more"
     },
-    "globalVariables.name.tooLong": {
-      "zero": "En fazla 0 karakter.",
-      "one": "En fazla 1 karakter.",
-      "two": "En fazla 2 karakter.",
-      "five": "En fazla 5 karakter.",
-      "words": "En fazla Arg1 karakter."
+    "globalVariables.delete.used": {
+      "zero": "\"0\" is used in 0 place(s). Delete it anyway? Those places will show nothing until you fix them.",
+      "one": "\"1\" is used in 1 place(s). Delete it anyway? Those places will show nothing until you fix them.",
+      "two": "\"2\" is used in 2 place(s). Delete it anyway? Those places will show nothing until you fix them.",
+      "five": "\"5\" is used in 5 place(s). Delete it anyway? Those places will show nothing until you fix them.",
+      "words": "\"Arg1\" is used in Arg2 place(s). Delete it anyway? Those places will show nothing until you fix them."
     },
     "globalVariables.full": {
-      "zero": "Liste dolu (0 değişken).",
-      "one": "Liste dolu (1 değişken).",
-      "two": "Liste dolu (2 değişken).",
-      "five": "Liste dolu (5 değişken).",
-      "words": "Liste dolu (Arg1 değişken)."
+      "zero": "The list is full (0 variables).",
+      "one": "The list is full (1 variables).",
+      "two": "The list is full (2 variables).",
+      "five": "The list is full (5 variables).",
+      "words": "The list is full (Arg1 variables)."
     },
-    "plugins.discover.by": {
-      "zero": "Yazar: 0",
-      "one": "Yazar: 1",
-      "two": "Yazar: 2",
-      "five": "Yazar: 5",
-      "words": "Yazar: Arg1"
+    "globalVariables.name.tooLong": {
+      "zero": "At most 0 characters.",
+      "one": "At most 1 characters.",
+      "two": "At most 2 characters.",
+      "five": "At most 5 characters.",
+      "words": "At most Arg1 characters."
     },
-    "plugins.discover.info.permissionsCount": {
-      "zero": "0 izin",
-      "one": "1 izin",
-      "two": "2 izin",
-      "five": "5 izin",
-      "words": "Arg1 izin"
+    "icon.searchPlaceholder": {
+      "zero": "Search 0 icons… (e.g. \"volume\", \"play\")",
+      "one": "Search 1 icons… (e.g. \"volume\", \"play\")",
+      "two": "Search 2 icons… (e.g. \"volume\", \"play\")",
+      "five": "Search 5 icons… (e.g. \"volume\", \"play\")",
+      "words": "Search Arg1 icons… (e.g. \"volume\", \"play\")"
     },
-    "plugins.discover.installSuccess": {
-      "zero": "0 yüklendi.",
-      "one": "1 yüklendi.",
-      "two": "2 yüklendi.",
-      "five": "5 yüklendi.",
-      "words": "Arg1 yüklendi."
+    "importWeb.count": {
+      "zero": "0 sites",
+      "one": "1 sites",
+      "two": "2 sites",
+      "five": "5 sites",
+      "words": "Arg1 sites"
     },
-    "plugins.discover.installFailed": {
-      "zero": "0 yüklenemedi: 0",
-      "one": "1 yüklenemedi: 1",
-      "two": "2 yüklenemedi: 2",
-      "five": "5 yüklenemedi: 5",
-      "words": "Arg1 yüklenemedi: Arg2"
+    "layoutProfiles.deleteConfirm": {
+      "zero": "Delete layout \"0\"?",
+      "one": "Delete layout \"1\"?",
+      "two": "Delete layout \"2\"?",
+      "five": "Delete layout \"5\"?",
+      "words": "Delete layout \"Arg1\"?"
     },
-    "plugins.discover.source.addFailed": {
-      "zero": "Bu kaynak eklenemedi: 0",
-      "one": "Bu kaynak eklenemedi: 1",
-      "two": "Bu kaynak eklenemedi: 2",
-      "five": "Bu kaynak eklenemedi: 5",
-      "words": "Bu kaynak eklenemedi: Arg1"
+    "menu.help.version": {
+      "zero": "Version 0",
+      "one": "Version 1",
+      "two": "Version 2",
+      "five": "Version 5",
+      "words": "Version Arg1"
     },
-    "plugins.discover.source.removeConfirm": {
-      "zero": "\"0\" eklenti kaynağı olarak kaldırılsın mı? Ondan yüklenmiş olanlar etkilenmez.",
-      "one": "\"1\" eklenti kaynağı olarak kaldırılsın mı? Ondan yüklenmiş olanlar etkilenmez.",
-      "two": "\"2\" eklenti kaynağı olarak kaldırılsın mı? Ondan yüklenmiş olanlar etkilenmez.",
-      "five": "\"5\" eklenti kaynağı olarak kaldırılsın mı? Ondan yüklenmiş olanlar etkilenmez.",
-      "words": "\"Arg1\" eklenti kaynağı olarak kaldırılsın mı? Ondan yüklenmiş olanlar etkilenmez."
+    "moveCopy.widgetsTitle": {
+      "zero": "Move/copy 0 widget(s)",
+      "one": "Move/copy 1 widget(s)",
+      "two": "Move/copy 2 widget(s)",
+      "five": "Move/copy 5 widget(s)",
+      "words": "Move/copy Arg1 widget(s)"
     },
-    "plugins.discover.link.failed": {
-      "zero": "Bu bağlantıdan yüklenemedi: 0",
-      "one": "Bu bağlantıdan yüklenemedi: 1",
-      "two": "Bu bağlantıdan yüklenemedi: 2",
-      "five": "Bu bağlantıdan yüklenemedi: 5",
-      "words": "Bu bağlantıdan yüklenemedi: Arg1"
+    "page.deleteConfirm": {
+      "zero": "Delete page \"0\"?",
+      "one": "Delete page \"1\"?",
+      "two": "Delete page \"2\"?",
+      "five": "Delete page \"5\"?",
+      "words": "Delete page \"Arg1\"?"
     },
-    "plugins.discover.link.isSource": {
-      "zero": "0 tek değil, birden fazla eklenti yayınlıyor (bir macrogrid-index.json). Bunun yerine kaynak olarak eklensin mi?",
-      "one": "1 tek değil, birden fazla eklenti yayınlıyor (bir macrogrid-index.json). Bunun yerine kaynak olarak eklensin mi?",
-      "two": "2 tek değil, birden fazla eklenti yayınlıyor (bir macrogrid-index.json). Bunun yerine kaynak olarak eklensin mi?",
-      "five": "5 tek değil, birden fazla eklenti yayınlıyor (bir macrogrid-index.json). Bunun yerine kaynak olarak eklensin mi?",
-      "words": "Arg1 tek değil, birden fazla eklenti yayınlıyor (bir macrogrid-index.json). Bunun yerine kaynak olarak eklensin mi?"
+    "pairing.lastSeen": {
+      "zero": "Last seen: 0",
+      "one": "Last seen: 1",
+      "two": "Last seen: 2",
+      "five": "Last seen: 5",
+      "words": "Last seen: Arg1"
     },
-    "status.pluginUpdates": {
-      "zero": "0 eklenti için güncelleme gerekli",
-      "one": "1 eklenti için güncelleme gerekli",
-      "two": "2 eklenti için güncelleme gerekli",
-      "five": "5 eklenti için güncelleme gerekli",
-      "words": "Arg1 eklenti için güncelleme gerekli"
+    "palette.results": {
+      "zero": "0 found",
+      "one": "1 found",
+      "two": "2 found",
+      "five": "5 found",
+      "words": "Arg1 found"
     },
-    "plugins.keyboardUses": {
-      "zero": "Bugün klavyeyi 0 kez kullandı",
-      "one": "Bugün klavyeyi bir kez kullandı",
-      "two": "Bugün klavyeyi 2 kez kullandı",
-      "five": "Bugün klavyeyi 5 kez kullandı",
-      "words": "Bugün klavyeyi Arg1 kez kullandı"
-    },
-    "plugins.install.success": {
-      "zero": "0 yüklendi.",
-      "one": "1 yüklendi.",
-      "two": "2 yüklendi.",
-      "five": "5 yüklendi.",
-      "words": "Arg1 yüklendi."
-    },
-    "plugins.install.failed": {
-      "zero": "0 kopyalandı ama yüklenemedi: 0",
-      "one": "1 kopyalandı ama yüklenemedi: 1",
-      "two": "2 kopyalandı ama yüklenemedi: 2",
-      "five": "5 kopyalandı ama yüklenemedi: 5",
-      "words": "Arg1 kopyalandı ama yüklenemedi: Arg2"
-    },
-    "plugins.install.folder.failed": {
-      "zero": "Bu klasör okunamadı: 0",
-      "one": "Bu klasör okunamadı: 1",
-      "two": "Bu klasör okunamadı: 2",
-      "five": "Bu klasör okunamadı: 5",
-      "words": "Bu klasör okunamadı: Arg1"
-    },
-    "consent.thirdParty": {
-      "zero": "0 kaynağından, resmi kaynak değil. Sadece yazarına güveniyorsan yükle.",
-      "one": "1 kaynağından, resmi kaynak değil. Sadece yazarına güveniyorsan yükle.",
-      "two": "2 kaynağından, resmi kaynak değil. Sadece yazarına güveniyorsan yükle.",
-      "five": "5 kaynağından, resmi kaynak değil. Sadece yazarına güveniyorsan yükle.",
-      "words": "Arg1 kaynağından, resmi kaynak değil. Sadece yazarına güveniyorsan yükle."
-    },
-    "consent.http": {
-      "zero": "0 adresine web isteği gönderir",
-      "one": "1 adresine web isteği gönderir",
-      "two": "2 adresine web isteği gönderir",
-      "five": "5 adresine web isteği gönderir",
-      "words": "Arg1 adresine web isteği gönderir"
-    },
-    "consent.ws": {
-      "zero": "0 adresine canlı bir bağlantı açık tutar",
-      "one": "1 adresine canlı bir bağlantı açık tutar",
-      "two": "2 adresine canlı bir bağlantı açık tutar",
-      "five": "5 adresine canlı bir bağlantı açık tutar",
-      "words": "Arg1 adresine canlı bir bağlantı açık tutar"
-    },
-    "plugins.permissions.title": {
-      "zero": "İzinler (0)",
-      "one": "İzinler (1)",
-      "two": "İzinler (2)",
-      "five": "İzinler (5)",
-      "words": "İzinler (Arg1)"
+    "profile.importConflict": {
+      "zero": "A profile named \"0\" already exists. Overwrite the existing profile, or import this one under a new name?",
+      "one": "A profile named \"1\" already exists. Overwrite the existing profile, or import this one under a new name?",
+      "two": "A profile named \"2\" already exists. Overwrite the existing profile, or import this one under a new name?",
+      "five": "A profile named \"5\" already exists. Overwrite the existing profile, or import this one under a new name?",
+      "words": "A profile named \"Arg1\" already exists. Overwrite the existing profile, or import this one under a new name?"
     },
     "plugins.approve.success": {
-      "zero": "0 etkinleştirildi.",
-      "one": "1 etkinleştirildi.",
-      "two": "2 etkinleştirildi.",
-      "five": "5 etkinleştirildi.",
-      "words": "Arg1 etkinleştirildi."
+      "zero": "0 enabled.",
+      "one": "1 enabled.",
+      "two": "2 enabled.",
+      "five": "5 enabled.",
+      "words": "Arg1 enabled."
     },
-    "plugins.permission.http.local": {
-      "zero": "Bu bilgisayardaki 0 adresine web istekleri göndermek",
-      "one": "Bu bilgisayardaki 1 adresine web istekleri göndermek",
-      "two": "Bu bilgisayardaki 2 adresine web istekleri göndermek",
-      "five": "Bu bilgisayardaki 5 adresine web istekleri göndermek",
-      "words": "Bu bilgisayardaki Arg1 adresine web istekleri göndermek"
+    "plugins.discover.by": {
+      "zero": "by 0",
+      "one": "by 1",
+      "two": "by 2",
+      "five": "by 5",
+      "words": "by Arg1"
     },
-    "plugins.permission.http.lan": {
-      "zero": "Yerel ağınızdaki 0 adresine web istekleri göndermek",
-      "one": "Yerel ağınızdaki 1 adresine web istekleri göndermek",
-      "two": "Yerel ağınızdaki 2 adresine web istekleri göndermek",
-      "five": "Yerel ağınızdaki 5 adresine web istekleri göndermek",
-      "words": "Yerel ağınızdaki Arg1 adresine web istekleri göndermek"
+    "plugins.discover.info.permissionsCount": {
+      "zero": "0 permissions",
+      "one": "1 permissions",
+      "two": "2 permissions",
+      "five": "5 permissions",
+      "words": "Arg1 permissions"
+    },
+    "plugins.discover.installFailed": {
+      "zero": "0 could not be installed: 0",
+      "one": "1 could not be installed: 1",
+      "two": "2 could not be installed: 2",
+      "five": "5 could not be installed: 5",
+      "words": "Arg1 could not be installed: Arg2"
+    },
+    "plugins.discover.installSuccess": {
+      "zero": "0 installed.",
+      "one": "1 installed.",
+      "two": "2 installed.",
+      "five": "5 installed.",
+      "words": "Arg1 installed."
+    },
+    "plugins.discover.link.failed": {
+      "zero": "Could not install from that link: 0",
+      "one": "Could not install from that link: 1",
+      "two": "Could not install from that link: 2",
+      "five": "Could not install from that link: 5",
+      "words": "Could not install from that link: Arg1"
+    },
+    "plugins.discover.link.isSource": {
+      "zero": "0 publishes several plugins (a macrogrid-index.json), not one. Add it as a source instead?",
+      "one": "1 publishes several plugins (a macrogrid-index.json), not one. Add it as a source instead?",
+      "two": "2 publishes several plugins (a macrogrid-index.json), not one. Add it as a source instead?",
+      "five": "5 publishes several plugins (a macrogrid-index.json), not one. Add it as a source instead?",
+      "words": "Arg1 publishes several plugins (a macrogrid-index.json), not one. Add it as a source instead?"
+    },
+    "plugins.discover.source.addFailed": {
+      "zero": "Could not add that source: 0",
+      "one": "Could not add that source: 1",
+      "two": "Could not add that source: 2",
+      "five": "Could not add that source: 5",
+      "words": "Could not add that source: Arg1"
+    },
+    "plugins.discover.source.removeConfirm": {
+      "zero": "Remove \"0\" as a plugin source? Anything already installed from it is not affected.",
+      "one": "Remove \"1\" as a plugin source? Anything already installed from it is not affected.",
+      "two": "Remove \"2\" as a plugin source? Anything already installed from it is not affected.",
+      "five": "Remove \"5\" as a plugin source? Anything already installed from it is not affected.",
+      "words": "Remove \"Arg1\" as a plugin source? Anything already installed from it is not affected."
+    },
+    "plugins.install.failed": {
+      "zero": "0 was copied but could not be loaded: 0",
+      "one": "1 was copied but could not be loaded: 1",
+      "two": "2 was copied but could not be loaded: 2",
+      "five": "5 was copied but could not be loaded: 5",
+      "words": "Arg1 was copied but could not be loaded: Arg2"
+    },
+    "plugins.install.folder.failed": {
+      "zero": "Could not read that folder: 0",
+      "one": "Could not read that folder: 1",
+      "two": "Could not read that folder: 2",
+      "five": "Could not read that folder: 5",
+      "words": "Could not read that folder: Arg1"
+    },
+    "plugins.install.success": {
+      "zero": "0 installed.",
+      "one": "1 installed.",
+      "two": "2 installed.",
+      "five": "5 installed.",
+      "words": "Arg1 installed."
+    },
+    "plugins.keyboardUses": {
+      "zero": "Used the keyboard 0 times today",
+      "one": "Used the keyboard 1 times today",
+      "two": "Used the keyboard 2 times today",
+      "five": "Used the keyboard 5 times today",
+      "words": "Used the keyboard Arg1 times today"
     },
     "plugins.permission.http.internet": {
-      "zero": "İnternetteki 0 adresine web istekleri göndermek (ağınızın dışına veri gönderebilir)",
-      "one": "İnternetteki 1 adresine web istekleri göndermek (ağınızın dışına veri gönderebilir)",
-      "two": "İnternetteki 2 adresine web istekleri göndermek (ağınızın dışına veri gönderebilir)",
-      "five": "İnternetteki 5 adresine web istekleri göndermek (ağınızın dışına veri gönderebilir)",
-      "words": "İnternetteki Arg1 adresine web istekleri göndermek (ağınızın dışına veri gönderebilir)"
+      "zero": "Send web requests to 0 on the internet (it can send data out of your network)",
+      "one": "Send web requests to 1 on the internet (it can send data out of your network)",
+      "two": "Send web requests to 2 on the internet (it can send data out of your network)",
+      "five": "Send web requests to 5 on the internet (it can send data out of your network)",
+      "words": "Send web requests to Arg1 on the internet (it can send data out of your network)"
     },
-    "plugins.permission.ws.local": {
-      "zero": "Bu bilgisayarda 0 adresine canlı bir bağlantı açık tutar",
-      "one": "Bu bilgisayarda 1 adresine canlı bir bağlantı açık tutar",
-      "two": "Bu bilgisayarda 2 adresine canlı bir bağlantı açık tutar",
-      "five": "Bu bilgisayarda 5 adresine canlı bir bağlantı açık tutar",
-      "words": "Bu bilgisayarda Arg1 adresine canlı bir bağlantı açık tutar"
+    "plugins.permission.http.lan": {
+      "zero": "Send web requests to 0 on your local network",
+      "one": "Send web requests to 1 on your local network",
+      "two": "Send web requests to 2 on your local network",
+      "five": "Send web requests to 5 on your local network",
+      "words": "Send web requests to Arg1 on your local network"
     },
-    "plugins.permission.ws.lan": {
-      "zero": "Yerel ağında 0 adresine canlı bir bağlantı açık tutar",
-      "one": "Yerel ağında 1 adresine canlı bir bağlantı açık tutar",
-      "two": "Yerel ağında 2 adresine canlı bir bağlantı açık tutar",
-      "five": "Yerel ağında 5 adresine canlı bir bağlantı açık tutar",
-      "words": "Yerel ağında Arg1 adresine canlı bir bağlantı açık tutar"
-    },
-    "plugins.permission.ws.internet": {
-      "zero": "İnternette 0 adresine canlı bir bağlantı açık tutar (verini ağının dışına gönderebilir)",
-      "one": "İnternette 1 adresine canlı bir bağlantı açık tutar (verini ağının dışına gönderebilir)",
-      "two": "İnternette 2 adresine canlı bir bağlantı açık tutar (verini ağının dışına gönderebilir)",
-      "five": "İnternette 5 adresine canlı bir bağlantı açık tutar (verini ağının dışına gönderebilir)",
-      "words": "İnternette Arg1 adresine canlı bir bağlantı açık tutar (verini ağının dışına gönderebilir)"
+    "plugins.permission.http.local": {
+      "zero": "Send web requests to 0 on this computer",
+      "one": "Send web requests to 1 on this computer",
+      "two": "Send web requests to 2 on this computer",
+      "five": "Send web requests to 5 on this computer",
+      "words": "Send web requests to Arg1 on this computer"
     },
     "plugins.permission.unknown": {
       "zero": "0",
@@ -765,68 +392,210 @@
       "five": "5",
       "words": "Arg1"
     },
+    "plugins.permission.ws.internet": {
+      "zero": "Keep a live connection open to 0 on the internet (it can send data out of your network)",
+      "one": "Keep a live connection open to 1 on the internet (it can send data out of your network)",
+      "two": "Keep a live connection open to 2 on the internet (it can send data out of your network)",
+      "five": "Keep a live connection open to 5 on the internet (it can send data out of your network)",
+      "words": "Keep a live connection open to Arg1 on the internet (it can send data out of your network)"
+    },
+    "plugins.permission.ws.lan": {
+      "zero": "Keep a live connection open to 0 on your local network",
+      "one": "Keep a live connection open to 1 on your local network",
+      "two": "Keep a live connection open to 2 on your local network",
+      "five": "Keep a live connection open to 5 on your local network",
+      "words": "Keep a live connection open to Arg1 on your local network"
+    },
+    "plugins.permission.ws.local": {
+      "zero": "Keep a live connection open to 0 on this computer",
+      "one": "Keep a live connection open to 1 on this computer",
+      "two": "Keep a live connection open to 2 on this computer",
+      "five": "Keep a live connection open to 5 on this computer",
+      "words": "Keep a live connection open to Arg1 on this computer"
+    },
+    "plugins.permissions.title": {
+      "zero": "Permissions (0)",
+      "one": "Permissions (1)",
+      "two": "Permissions (2)",
+      "five": "Permissions (5)",
+      "words": "Permissions (Arg1)"
+    },
     "plugins.reload.success": {
-      "zero": "0 yeniden yüklendi.",
-      "one": "1 yeniden yüklendi.",
-      "two": "2 yeniden yüklendi.",
-      "five": "5 yeniden yüklendi.",
-      "words": "Arg1 yeniden yüklendi."
+      "zero": "0 reloaded.",
+      "one": "1 reloaded.",
+      "two": "2 reloaded.",
+      "five": "5 reloaded.",
+      "words": "Arg1 reloaded."
     },
     "plugins.uninstall.confirm": {
-      "zero": "\"0\" kaldırılsın mı? Plugin klasörü silinir, bu geri alınamaz.",
-      "one": "\"1\" kaldırılsın mı? Plugin klasörü silinir, bu geri alınamaz.",
-      "two": "\"2\" kaldırılsın mı? Plugin klasörü silinir, bu geri alınamaz.",
-      "five": "\"5\" kaldırılsın mı? Plugin klasörü silinir, bu geri alınamaz.",
-      "words": "\"Arg1\" kaldırılsın mı? Plugin klasörü silinir, bu geri alınamaz."
-    },
-    "plugins.uninstall.success": {
-      "zero": "0 kaldırıldı.",
-      "one": "1 kaldırıldı.",
-      "two": "2 kaldırıldı.",
-      "five": "5 kaldırıldı.",
-      "words": "Arg1 kaldırıldı."
+      "zero": "Remove \"0\"? The plugin folder will be deleted — this can't be undone.",
+      "one": "Remove \"1\"? The plugin folder will be deleted — this can't be undone.",
+      "two": "Remove \"2\"? The plugin folder will be deleted — this can't be undone.",
+      "five": "Remove \"5\"? The plugin folder will be deleted — this can't be undone.",
+      "words": "Remove \"Arg1\"? The plugin folder will be deleted — this can't be undone."
     },
     "plugins.uninstall.pending": {
-      "zero": "0 devre dışı bırakıldı ama bir dosyası kullanımda olduğu için klasörü hemen silinemedi; sunucu bir sonraki açılışta silecek.",
-      "one": "1 devre dışı bırakıldı ama bir dosyası kullanımda olduğu için klasörü hemen silinemedi; sunucu bir sonraki açılışta silecek.",
-      "two": "2 devre dışı bırakıldı ama bir dosyası kullanımda olduğu için klasörü hemen silinemedi; sunucu bir sonraki açılışta silecek.",
-      "five": "5 devre dışı bırakıldı ama bir dosyası kullanımda olduğu için klasörü hemen silinemedi; sunucu bir sonraki açılışta silecek.",
-      "words": "Arg1 devre dışı bırakıldı ama bir dosyası kullanımda olduğu için klasörü hemen silinemedi; sunucu bir sonraki açılışta silecek."
+      "zero": "0 was turned off, but a file is still in use so its folder couldn't be deleted yet; the server will delete it on the next start.",
+      "one": "1 was turned off, but a file is still in use so its folder couldn't be deleted yet; the server will delete it on the next start.",
+      "two": "2 was turned off, but a file is still in use so its folder couldn't be deleted yet; the server will delete it on the next start.",
+      "five": "5 was turned off, but a file is still in use so its folder couldn't be deleted yet; the server will delete it on the next start.",
+      "words": "Arg1 was turned off, but a file is still in use so its folder couldn't be deleted yet; the server will delete it on the next start."
+    },
+    "plugins.uninstall.success": {
+      "zero": "0 removed.",
+      "one": "1 removed.",
+      "two": "2 removed.",
+      "five": "5 removed.",
+      "words": "Arg1 removed."
+    },
+    "preferences.autostart.failed": {
+      "zero": "Could not change the startup setting: 0",
+      "one": "Could not change the startup setting: 1",
+      "two": "Could not change the startup setting: 2",
+      "five": "Could not change the startup setting: 5",
+      "words": "Could not change the startup setting: Arg1"
+    },
+    "profile.deleteConfirm": {
+      "zero": "Delete profile \"0\"?",
+      "one": "Delete profile \"1\"?",
+      "two": "Delete profile \"2\"?",
+      "five": "Delete profile \"5\"?",
+      "words": "Delete profile \"Arg1\"?"
+    },
+    "profile.importMissing.actions": {
+      "zero": "Actions with no provider on this server: 0.",
+      "one": "Actions with no provider on this server: 1.",
+      "two": "Actions with no provider on this server: 2.",
+      "five": "Actions with no provider on this server: 5.",
+      "words": "Actions with no provider on this server: Arg1."
+    },
+    "profile.importMissing.plugins": {
+      "zero": "This profile needs plugins that are not installed: 0. Install them from the Plugins window and its buttons will work.",
+      "one": "This profile needs plugins that are not installed: 1. Install them from the Plugins window and its buttons will work.",
+      "two": "This profile needs plugins that are not installed: 2. Install them from the Plugins window and its buttons will work.",
+      "five": "This profile needs plugins that are not installed: 5. Install them from the Plugins window and its buttons will work.",
+      "words": "This profile needs plugins that are not installed: Arg1. Install them from the Plugins window and its buttons will work."
+    },
+    "schemaForm.untitledRow": {
+      "zero": "Item 0",
+      "one": "Item 1",
+      "two": "Item 2",
+      "five": "Item 5",
+      "words": "Item Arg1"
+    },
+    "state.defaultPageName": {
+      "zero": "Page 0",
+      "one": "Page 1",
+      "two": "Page 2",
+      "five": "Page 5",
+      "words": "Page Arg1"
+    },
+    "status.pluginUpdates": {
+      "zero": "0 plugin update(s) needed",
+      "one": "1 plugin update(s) needed",
+      "two": "2 plugin update(s) needed",
+      "five": "5 plugin update(s) needed",
+      "words": "Arg1 plugin update(s) needed"
+    },
+    "undo.pastePartial": {
+      "zero": "Pasted 0 of 0 widgets; the rest did not fit.",
+      "one": "Pasted 1 of 1 widgets; the rest did not fit.",
+      "two": "Pasted 2 of 2 widgets; the rest did not fit.",
+      "five": "Pasted 5 of 5 widgets; the rest did not fit.",
+      "words": "Pasted Arg1 of Arg2 widgets; the rest did not fit."
     },
     "update.available": {
-      "zero": "0 sürümü hazır",
-      "one": "1 sürümü hazır",
-      "two": "2 sürümü hazır",
-      "five": "5 sürümü hazır",
-      "words": "Arg1 sürümü hazır"
+      "zero": "Version 0 is available",
+      "one": "Version 1 is available",
+      "two": "Version 2 is available",
+      "five": "Version 5 is available",
+      "words": "Version Arg1 is available"
     },
     "update.current": {
-      "zero": "Şu anki sürüm: 0",
-      "one": "Şu anki sürüm: 1",
-      "two": "Şu anki sürüm: 2",
-      "five": "Şu anki sürüm: 5",
-      "words": "Şu anki sürüm: Arg1"
-    },
-    "update.release": {
-      "zero": "Sürüm 0",
-      "one": "Sürüm 1",
-      "two": "Sürüm 2",
-      "five": "Sürüm 5",
-      "words": "Sürüm Arg1"
+      "zero": "Current version: 0",
+      "one": "Current version: 1",
+      "two": "Current version: 2",
+      "five": "Current version: 5",
+      "words": "Current version: Arg1"
     },
     "update.downloading": {
-      "zero": "İndiriliyor… %0",
-      "one": "İndiriliyor… %1",
-      "two": "İndiriliyor… %2",
-      "five": "İndiriliyor… %5",
-      "words": "İndiriliyor… %Arg1"
+      "zero": "Downloading… 0%",
+      "one": "Downloading… 1%",
+      "two": "Downloading… 2%",
+      "five": "Downloading… 5%",
+      "words": "Downloading… Arg1%"
     },
-    "diag.save.total": {
-      "zero": "Kaydedildi. Bu profilde 0 sayfada 0 plugin widget'ı var.",
-      "one": "Kaydedildi. Bu profilde 1 sayfada 1 plugin widget'ı var.",
-      "two": "Kaydedildi. Bu profilde 2 sayfada 2 plugin widget'ı var.",
-      "five": "Kaydedildi. Bu profilde 5 sayfada 5 plugin widget'ı var.",
-      "words": "Kaydedildi. Bu profilde Arg2 sayfada Arg1 plugin widget'ı var."
+    "update.release": {
+      "zero": "Version 0",
+      "one": "Version 1",
+      "two": "Version 2",
+      "five": "Version 5",
+      "words": "Version Arg1"
+    },
+    "widget.selected.count": {
+      "zero": "0 widgets selected",
+      "one": "1 widgets selected",
+      "two": "2 widgets selected",
+      "five": "5 widgets selected",
+      "words": "Arg1 widgets selected"
+    }
+  },
+  "tr": {
+    "action.logic.steps": {
+      "zero": "0 adım",
+      "one": "1 adım",
+      "two": "2 adım",
+      "five": "5 adım",
+      "words": "Arg1 adım"
+    },
+    "consent.http": {
+      "zero": "0 adresine web isteği gönderir",
+      "one": "1 adresine web isteği gönderir",
+      "two": "2 adresine web isteği gönderir",
+      "five": "5 adresine web isteği gönderir",
+      "words": "Arg1 adresine web isteği gönderir"
+    },
+    "consent.thirdParty": {
+      "zero": "0 kaynağından, resmi kaynak değil. Sadece yazarına güveniyorsan yükle.",
+      "one": "1 kaynağından, resmi kaynak değil. Sadece yazarına güveniyorsan yükle.",
+      "two": "2 kaynağından, resmi kaynak değil. Sadece yazarına güveniyorsan yükle.",
+      "five": "5 kaynağından, resmi kaynak değil. Sadece yazarına güveniyorsan yükle.",
+      "words": "Arg1 kaynağından, resmi kaynak değil. Sadece yazarına güveniyorsan yükle."
+    },
+    "consent.ws": {
+      "zero": "0 adresine canlı bir bağlantı açık tutar",
+      "one": "1 adresine canlı bir bağlantı açık tutar",
+      "two": "2 adresine canlı bir bağlantı açık tutar",
+      "five": "5 adresine canlı bir bağlantı açık tutar",
+      "words": "Arg1 adresine canlı bir bağlantı açık tutar"
+    },
+    "ctx.widget.delete": {
+      "zero": "0 sil",
+      "one": "1 sil",
+      "two": "2 sil",
+      "five": "5 sil",
+      "words": "Arg1 sil"
+    },
+    "ctx.widget.duplicate": {
+      "zero": "0 çoğalt",
+      "one": "1 çoğalt",
+      "two": "2 çoğalt",
+      "five": "5 çoğalt",
+      "words": "Arg1 çoğalt"
+    },
+    "ctx.widget.labelMulti": {
+      "zero": "0 widget",
+      "one": "1 widget",
+      "two": "2 widget",
+      "five": "5 widget",
+      "words": "Arg1 widget"
+    },
+    "ctx.widget.moveCopy": {
+      "zero": "0 başka sayfaya/profile taşı-kopyala…",
+      "one": "1 başka sayfaya/profile taşı-kopyala…",
+      "two": "2 başka sayfaya/profile taşı-kopyala…",
+      "five": "5 başka sayfaya/profile taşı-kopyala…",
+      "words": "Arg1 başka sayfaya/profile taşı-kopyala…"
     },
     "diag.check.E210": {
       "zero": "\"0\" sayfası, 0, 0 olayı: 0. eylem (0) kullanılamıyor. Plugin'i kaldırılmış veya kapatılmış olabilir.",
@@ -856,6 +625,27 @@
       "five": "\"5\" sayfası, 5, 5 olayı: 5. eylemin \"5\" ayarı geçerli değil (5).",
       "words": "\"Arg1\" sayfası, Arg2, Arg3 olayı: Arg4. eylemin \"Arg5\" ayarı geçerli değil (Arg6)."
     },
+    "diag.check.W230": {
+      "zero": "\"0\" sayfası, 0: \"0\" değişkenini şu anda hiçbir plugin sağlamıyor.",
+      "one": "\"1\" sayfası, 1: \"1\" değişkenini şu anda hiçbir plugin sağlamıyor.",
+      "two": "\"2\" sayfası, 2: \"2\" değişkenini şu anda hiçbir plugin sağlamıyor.",
+      "five": "\"5\" sayfası, 5: \"5\" değişkenini şu anda hiçbir plugin sağlamıyor.",
+      "words": "\"Arg1\" sayfası, Arg2: \"Arg3\" değişkenini şu anda hiçbir plugin sağlamıyor."
+    },
+    "diag.check.W231": {
+      "zero": "\"0\" sayfası, 0: \"0\" değişkeni Genel Değişken Listesi'nde yok.",
+      "one": "\"1\" sayfası, 1: \"1\" değişkeni Genel Değişken Listesi'nde yok.",
+      "two": "\"2\" sayfası, 2: \"2\" değişkeni Genel Değişken Listesi'nde yok.",
+      "five": "\"5\" sayfası, 5: \"5\" değişkeni Genel Değişken Listesi'nde yok.",
+      "words": "\"Arg1\" sayfası, Arg2: \"Arg3\" değişkeni Genel Değişken Listesi'nde yok."
+    },
+    "diag.check.W232": {
+      "zero": "\"0\" sayfası, 0: \"0\" yalnızca düğmenin kendi metninde ve kurallarında çalışır.",
+      "one": "\"1\" sayfası, 1: \"1\" yalnızca düğmenin kendi metninde ve kurallarında çalışır.",
+      "two": "\"2\" sayfası, 2: \"2\" yalnızca düğmenin kendi metninde ve kurallarında çalışır.",
+      "five": "\"5\" sayfası, 5: \"5\" yalnızca düğmenin kendi metninde ve kurallarında çalışır.",
+      "words": "\"Arg1\" sayfası, Arg2: \"Arg3\" yalnızca düğmenin kendi metninde ve kurallarında çalışır."
+    },
     "diag.check.W233": {
       "zero": "\"0\" sayfası, 0, 0: Eğer, Değilse ve Bitir adımları birbirini tutmuyor ya da 0 seviyeden fazla iç içe.",
       "one": "\"1\" sayfası, 1, 1: Eğer, Değilse ve Bitir adımları birbirini tutmuyor ya da 1 seviyeden fazla iç içe.",
@@ -869,27 +659,6 @@
       "two": "\"2\" sayfası, 2, 2, 2. adım: Eğer'in sınayacağı bir koşul yok.",
       "five": "\"5\" sayfası, 5, 5, 5. adım: Eğer'in sınayacağı bir koşul yok.",
       "words": "\"Arg1\" sayfası, Arg2, Arg3, Arg4. adım: Eğer'in sınayacağı bir koşul yok."
-    },
-    "diag.check.W232": {
-      "zero": "\"0\" sayfası, 0: \"0\" yalnızca düğmenin kendi metninde ve kurallarında çalışır.",
-      "one": "\"1\" sayfası, 1: \"1\" yalnızca düğmenin kendi metninde ve kurallarında çalışır.",
-      "two": "\"2\" sayfası, 2: \"2\" yalnızca düğmenin kendi metninde ve kurallarında çalışır.",
-      "five": "\"5\" sayfası, 5: \"5\" yalnızca düğmenin kendi metninde ve kurallarında çalışır.",
-      "words": "\"Arg1\" sayfası, Arg2: \"Arg3\" yalnızca düğmenin kendi metninde ve kurallarında çalışır."
-    },
-    "diag.check.W231": {
-      "zero": "\"0\" sayfası, 0: \"0\" değişkeni Genel Değişken Listesi'nde yok.",
-      "one": "\"1\" sayfası, 1: \"1\" değişkeni Genel Değişken Listesi'nde yok.",
-      "two": "\"2\" sayfası, 2: \"2\" değişkeni Genel Değişken Listesi'nde yok.",
-      "five": "\"5\" sayfası, 5: \"5\" değişkeni Genel Değişken Listesi'nde yok.",
-      "words": "\"Arg1\" sayfası, Arg2: \"Arg3\" değişkeni Genel Değişken Listesi'nde yok."
-    },
-    "diag.check.W230": {
-      "zero": "\"0\" sayfası, 0: \"0\" değişkenini şu anda hiçbir plugin sağlamıyor.",
-      "one": "\"1\" sayfası, 1: \"1\" değişkenini şu anda hiçbir plugin sağlamıyor.",
-      "two": "\"2\" sayfası, 2: \"2\" değişkenini şu anda hiçbir plugin sağlamıyor.",
-      "five": "\"5\" sayfası, 5: \"5\" değişkenini şu anda hiçbir plugin sağlamıyor.",
-      "words": "\"Arg1\" sayfası, Arg2: \"Arg3\" değişkenini şu anda hiçbir plugin sağlamıyor."
     },
     "diag.save.page": {
       "zero": "\"0\" sayfası: 0 plugin widget'ı. Aynı anda en fazla 0 önerilir; doğru sayı sayfayı gösteren cihaza göre değişir.",
@@ -912,145 +681,12 @@
       "five": "\"5\" sayfası: doğrulanmamış \"5\" plugin'inin 5 widget'ı var. Böyle bir plugin için aynı anda en fazla 5 önerilir.",
       "words": "\"Arg1\" sayfası: doğrulanmamış \"Arg3\" plugin'inin Arg2 widget'ı var. Böyle bir plugin için aynı anda en fazla Arg4 önerilir."
     },
-    "profile.deleteConfirm": {
-      "zero": "\"0\" profili silinsin mi?",
-      "one": "\"1\" profili silinsin mi?",
-      "two": "\"2\" profili silinsin mi?",
-      "five": "\"5\" profili silinsin mi?",
-      "words": "\"Arg1\" profili silinsin mi?"
-    },
-    "folder.deleteConfirm": {
-      "zero": "Bu klasör 0 öğe içeriyor.",
-      "one": "Bu klasör 1 öğe içeriyor.",
-      "two": "Bu klasör 2 öğe içeriyor.",
-      "five": "Bu klasör 5 öğe içeriyor.",
-      "words": "Bu klasör Arg1 öğe içeriyor."
-    },
-    "page.deleteConfirm": {
-      "zero": "\"0\" sayfası silinsin mi?",
-      "one": "\"1\" sayfası silinsin mi?",
-      "two": "\"2\" sayfası silinsin mi?",
-      "five": "\"5\" sayfası silinsin mi?",
-      "words": "\"Arg1\" sayfası silinsin mi?"
-    },
-    "widget.selected.count": {
-      "zero": "0 widget seçili",
-      "one": "1 widget seçili",
-      "two": "2 widget seçili",
-      "five": "5 widget seçili",
-      "words": "Arg1 widget seçili"
-    },
-    "palette.results": {
-      "zero": "0 bulundu",
-      "one": "1 bulundu",
-      "two": "2 bulundu",
-      "five": "5 bulundu",
-      "words": "Arg1 bulundu"
-    },
-    "ctx.widget.duplicate": {
-      "zero": "0 çoğalt",
-      "one": "1 çoğalt",
-      "two": "2 çoğalt",
-      "five": "5 çoğalt",
-      "words": "Arg1 çoğalt"
-    },
-    "ctx.widget.moveCopy": {
-      "zero": "0 başka sayfaya/profile taşı-kopyala…",
-      "one": "1 başka sayfaya/profile taşı-kopyala…",
-      "two": "2 başka sayfaya/profile taşı-kopyala…",
-      "five": "5 başka sayfaya/profile taşı-kopyala…",
-      "words": "Arg1 başka sayfaya/profile taşı-kopyala…"
-    },
-    "ctx.widget.delete": {
-      "zero": "0 sil",
-      "one": "1 sil",
-      "two": "2 sil",
-      "five": "5 sil",
-      "words": "Arg1 sil"
-    },
-    "ctx.widget.labelMulti": {
-      "zero": "0 widget",
-      "one": "1 widget",
-      "two": "2 widget",
-      "five": "5 widget",
-      "words": "Arg1 widget"
-    },
-    "moveCopy.widgetsTitle": {
-      "zero": "0 widget'ı taşı/kopyala",
-      "one": "1 widget'ı taşı/kopyala",
-      "two": "2 widget'ı taşı/kopyala",
-      "five": "5 widget'ı taşı/kopyala",
-      "words": "Arg1 widget'ı taşı/kopyala"
-    },
-    "profile.importConflict": {
-      "zero": "\"0\" isimli bir profil zaten var. Mevcut profilin üzerine yazılsın mı, yoksa içe aktarılan profil yeni bir adla mı eklensin?",
-      "one": "\"1\" isimli bir profil zaten var. Mevcut profilin üzerine yazılsın mı, yoksa içe aktarılan profil yeni bir adla mı eklensin?",
-      "two": "\"2\" isimli bir profil zaten var. Mevcut profilin üzerine yazılsın mı, yoksa içe aktarılan profil yeni bir adla mı eklensin?",
-      "five": "\"5\" isimli bir profil zaten var. Mevcut profilin üzerine yazılsın mı, yoksa içe aktarılan profil yeni bir adla mı eklensin?",
-      "words": "\"Arg1\" isimli bir profil zaten var. Mevcut profilin üzerine yazılsın mı, yoksa içe aktarılan profil yeni bir adla mı eklensin?"
-    },
-    "importWeb.count": {
-      "zero": "0 site",
-      "one": "1 site",
-      "two": "2 site",
-      "five": "5 site",
-      "words": "Arg1 site"
-    },
-    "profile.importMissing": {
-      "zero": "Bu profil yüklü olmayan eklentilere ihtiyaç duyuyor: 0. Eklentiler penceresinden kurunca düğmeleri çalışır.\n\nBu sunucuda karşılığı olmayan aksiyonlar: 0.",
-      "one": "Bu profil yüklü olmayan eklentilere ihtiyaç duyuyor: 1. Eklentiler penceresinden kurunca düğmeleri çalışır.\n\nBu sunucuda karşılığı olmayan aksiyonlar: 1.",
-      "two": "Bu profil yüklü olmayan eklentilere ihtiyaç duyuyor: 2. Eklentiler penceresinden kurunca düğmeleri çalışır.\n\nBu sunucuda karşılığı olmayan aksiyonlar: 2.",
-      "five": "Bu profil yüklü olmayan eklentilere ihtiyaç duyuyor: 5. Eklentiler penceresinden kurunca düğmeleri çalışır.\n\nBu sunucuda karşılığı olmayan aksiyonlar: 5.",
-      "words": "Bu profil yüklü olmayan eklentilere ihtiyaç duyuyor: Arg1. Eklentiler penceresinden kurunca düğmeleri çalışır.\n\nBu sunucuda karşılığı olmayan aksiyonlar: Arg2."
-    },
-    "pairing.lastSeen": {
-      "zero": "Son görülme: 0",
-      "one": "Son görülme: 1",
-      "two": "Son görülme: 2",
-      "five": "Son görülme: 5",
-      "words": "Son görülme: Arg1"
-    },
-    "action.logic.steps": {
-      "zero": "0 adım",
-      "one": "1 adım",
-      "two": "2 adım",
-      "five": "5 adım",
-      "words": "Arg1 adım"
-    },
-    "schemaForm.untitledRow": {
-      "zero": "0. öğe",
-      "one": "1. öğe",
-      "two": "2. öğe",
-      "five": "5. öğe",
-      "words": "Arg1. öğe"
-    },
-    "icon.searchPlaceholder": {
-      "zero": "0 ikon içinde ara… (İngilizce, örn. \"volume\", \"play\")",
-      "one": "1 ikon içinde ara… (İngilizce, örn. \"volume\", \"play\")",
-      "two": "2 ikon içinde ara… (İngilizce, örn. \"volume\", \"play\")",
-      "five": "5 ikon içinde ara… (İngilizce, örn. \"volume\", \"play\")",
-      "words": "Arg1 ikon içinde ara… (İngilizce, örn. \"volume\", \"play\")"
-    },
-    "fields.web.manyOnPage": {
-      "zero": "Bu sayfada 0 web widget'ı var. Bir telefonun aynı anda en fazla 0 tanesini çalıştırması önerilir (küçük telefonlarda 1); fazlası \"Yüklemek için dokun\" düğmesiyle bekler.",
-      "one": "Bu sayfada 1 web widget'ı var. Bir telefonun aynı anda en fazla 1 tanesini çalıştırması önerilir (küçük telefonlarda 1); fazlası \"Yüklemek için dokun\" düğmesiyle bekler.",
-      "two": "Bu sayfada 2 web widget'ı var. Bir telefonun aynı anda en fazla 2 tanesini çalıştırması önerilir (küçük telefonlarda 1); fazlası \"Yüklemek için dokun\" düğmesiyle bekler.",
-      "five": "Bu sayfada 5 web widget'ı var. Bir telefonun aynı anda en fazla 5 tanesini çalıştırması önerilir (küçük telefonlarda 1); fazlası \"Yüklemek için dokun\" düğmesiyle bekler.",
-      "words": "Bu sayfada Arg1 web widget'ı var. Bir telefonun aynı anda en fazla Arg2 tanesini çalıştırması önerilir (küçük telefonlarda 1); fazlası \"Yüklemek için dokun\" düğmesiyle bekler."
-    },
-    "state.defaultPageName": {
-      "zero": "Sayfa 0",
-      "one": "Sayfa 1",
-      "two": "Sayfa 2",
-      "five": "Sayfa 5",
-      "words": "Sayfa Arg1"
-    },
-    "edit.undoLabel": {
-      "zero": "0 işlemini geri al",
-      "one": "1 işlemini geri al",
-      "two": "2 işlemini geri al",
-      "five": "5 işlemini geri al",
-      "words": "Arg1 işlemini geri al"
+    "diag.save.total": {
+      "zero": "Kaydedildi. Bu profilde 0 sayfada 0 plugin widget'ı var.",
+      "one": "Kaydedildi. Bu profilde 1 sayfada 1 plugin widget'ı var.",
+      "two": "Kaydedildi. Bu profilde 2 sayfada 2 plugin widget'ı var.",
+      "five": "Kaydedildi. Bu profilde 5 sayfada 5 plugin widget'ı var.",
+      "words": "Kaydedildi. Bu profilde Arg2 sayfada Arg1 plugin widget'ı var."
     },
     "edit.redoLabel": {
       "zero": "0 işlemini yinele",
@@ -1059,12 +695,390 @@
       "five": "5 işlemini yinele",
       "words": "Arg1 işlemini yinele"
     },
+    "edit.undoLabel": {
+      "zero": "0 işlemini geri al",
+      "one": "1 işlemini geri al",
+      "two": "2 işlemini geri al",
+      "five": "5 işlemini geri al",
+      "words": "Arg1 işlemini geri al"
+    },
+    "fields.web.manyOnPage": {
+      "zero": "Bu sayfada 0 web widget'ı var. Bir telefonun aynı anda en fazla 0 tanesini çalıştırması önerilir (küçük telefonlarda 1); fazlası \"Yüklemek için dokun\" düğmesiyle bekler.",
+      "one": "Bu sayfada 1 web widget'ı var. Bir telefonun aynı anda en fazla 1 tanesini çalıştırması önerilir (küçük telefonlarda 1); fazlası \"Yüklemek için dokun\" düğmesiyle bekler.",
+      "two": "Bu sayfada 2 web widget'ı var. Bir telefonun aynı anda en fazla 2 tanesini çalıştırması önerilir (küçük telefonlarda 1); fazlası \"Yüklemek için dokun\" düğmesiyle bekler.",
+      "five": "Bu sayfada 5 web widget'ı var. Bir telefonun aynı anda en fazla 5 tanesini çalıştırması önerilir (küçük telefonlarda 1); fazlası \"Yüklemek için dokun\" düğmesiyle bekler.",
+      "words": "Bu sayfada Arg1 web widget'ı var. Bir telefonun aynı anda en fazla Arg2 tanesini çalıştırması önerilir (küçük telefonlarda 1); fazlası \"Yüklemek için dokun\" düğmesiyle bekler."
+    },
+    "folder.deleteConfirm": {
+      "zero": "Bu klasör 0 öğe içeriyor.",
+      "one": "Bu klasör 1 öğe içeriyor.",
+      "two": "Bu klasör 2 öğe içeriyor.",
+      "five": "Bu klasör 5 öğe içeriyor.",
+      "words": "Bu klasör Arg1 öğe içeriyor."
+    },
+    "globalVariables.delete.confirm": {
+      "zero": "\"0\" değişkeni silinsin mi?",
+      "one": "\"1\" değişkeni silinsin mi?",
+      "two": "\"2\" değişkeni silinsin mi?",
+      "five": "\"5\" değişkeni silinsin mi?",
+      "words": "\"Arg1\" değişkeni silinsin mi?"
+    },
+    "globalVariables.delete.more": {
+      "zero": "…ve 0 yer daha",
+      "one": "…ve 1 yer daha",
+      "two": "…ve 2 yer daha",
+      "five": "…ve 5 yer daha",
+      "words": "…ve Arg1 yer daha"
+    },
+    "globalVariables.delete.used": {
+      "zero": "\"0\" 0 yerde kullanılıyor. Yine de silinsin mi? Siz düzeltene kadar bu yerler boş görünür.",
+      "one": "\"1\" 1 yerde kullanılıyor. Yine de silinsin mi? Siz düzeltene kadar bu yerler boş görünür.",
+      "two": "\"2\" 2 yerde kullanılıyor. Yine de silinsin mi? Siz düzeltene kadar bu yerler boş görünür.",
+      "five": "\"5\" 5 yerde kullanılıyor. Yine de silinsin mi? Siz düzeltene kadar bu yerler boş görünür.",
+      "words": "\"Arg1\" Arg2 yerde kullanılıyor. Yine de silinsin mi? Siz düzeltene kadar bu yerler boş görünür."
+    },
+    "globalVariables.full": {
+      "zero": "Liste dolu (0 değişken).",
+      "one": "Liste dolu (1 değişken).",
+      "two": "Liste dolu (2 değişken).",
+      "five": "Liste dolu (5 değişken).",
+      "words": "Liste dolu (Arg1 değişken)."
+    },
+    "globalVariables.name.tooLong": {
+      "zero": "En fazla 0 karakter.",
+      "one": "En fazla 1 karakter.",
+      "two": "En fazla 2 karakter.",
+      "five": "En fazla 5 karakter.",
+      "words": "En fazla Arg1 karakter."
+    },
+    "icon.searchPlaceholder": {
+      "zero": "0 ikon içinde ara… (İngilizce, örn. \"volume\", \"play\")",
+      "one": "1 ikon içinde ara… (İngilizce, örn. \"volume\", \"play\")",
+      "two": "2 ikon içinde ara… (İngilizce, örn. \"volume\", \"play\")",
+      "five": "5 ikon içinde ara… (İngilizce, örn. \"volume\", \"play\")",
+      "words": "Arg1 ikon içinde ara… (İngilizce, örn. \"volume\", \"play\")"
+    },
+    "importWeb.count": {
+      "zero": "0 site",
+      "one": "1 site",
+      "two": "2 site",
+      "five": "5 site",
+      "words": "Arg1 site"
+    },
+    "layoutProfiles.deleteConfirm": {
+      "zero": "\"0\" yerleşimi silinsin mi?",
+      "one": "\"1\" yerleşimi silinsin mi?",
+      "two": "\"2\" yerleşimi silinsin mi?",
+      "five": "\"5\" yerleşimi silinsin mi?",
+      "words": "\"Arg1\" yerleşimi silinsin mi?"
+    },
+    "menu.help.version": {
+      "zero": "Sürüm 0",
+      "one": "Sürüm 1",
+      "two": "Sürüm 2",
+      "five": "Sürüm 5",
+      "words": "Sürüm Arg1"
+    },
+    "moveCopy.widgetsTitle": {
+      "zero": "0 widget'ı taşı/kopyala",
+      "one": "1 widget'ı taşı/kopyala",
+      "two": "2 widget'ı taşı/kopyala",
+      "five": "5 widget'ı taşı/kopyala",
+      "words": "Arg1 widget'ı taşı/kopyala"
+    },
+    "page.deleteConfirm": {
+      "zero": "\"0\" sayfası silinsin mi?",
+      "one": "\"1\" sayfası silinsin mi?",
+      "two": "\"2\" sayfası silinsin mi?",
+      "five": "\"5\" sayfası silinsin mi?",
+      "words": "\"Arg1\" sayfası silinsin mi?"
+    },
+    "pairing.lastSeen": {
+      "zero": "Son görülme: 0",
+      "one": "Son görülme: 1",
+      "two": "Son görülme: 2",
+      "five": "Son görülme: 5",
+      "words": "Son görülme: Arg1"
+    },
+    "palette.results": {
+      "zero": "0 bulundu",
+      "one": "1 bulundu",
+      "two": "2 bulundu",
+      "five": "5 bulundu",
+      "words": "Arg1 bulundu"
+    },
+    "profile.importConflict": {
+      "zero": "\"0\" isimli bir profil zaten var. Mevcut profilin üzerine yazılsın mı, yoksa içe aktarılan profil yeni bir adla mı eklensin?",
+      "one": "\"1\" isimli bir profil zaten var. Mevcut profilin üzerine yazılsın mı, yoksa içe aktarılan profil yeni bir adla mı eklensin?",
+      "two": "\"2\" isimli bir profil zaten var. Mevcut profilin üzerine yazılsın mı, yoksa içe aktarılan profil yeni bir adla mı eklensin?",
+      "five": "\"5\" isimli bir profil zaten var. Mevcut profilin üzerine yazılsın mı, yoksa içe aktarılan profil yeni bir adla mı eklensin?",
+      "words": "\"Arg1\" isimli bir profil zaten var. Mevcut profilin üzerine yazılsın mı, yoksa içe aktarılan profil yeni bir adla mı eklensin?"
+    },
+    "plugins.approve.success": {
+      "zero": "0 etkinleştirildi.",
+      "one": "1 etkinleştirildi.",
+      "two": "2 etkinleştirildi.",
+      "five": "5 etkinleştirildi.",
+      "words": "Arg1 etkinleştirildi."
+    },
+    "plugins.discover.by": {
+      "zero": "Yazar: 0",
+      "one": "Yazar: 1",
+      "two": "Yazar: 2",
+      "five": "Yazar: 5",
+      "words": "Yazar: Arg1"
+    },
+    "plugins.discover.info.permissionsCount": {
+      "zero": "0 izin",
+      "one": "1 izin",
+      "two": "2 izin",
+      "five": "5 izin",
+      "words": "Arg1 izin"
+    },
+    "plugins.discover.installFailed": {
+      "zero": "0 yüklenemedi: 0",
+      "one": "1 yüklenemedi: 1",
+      "two": "2 yüklenemedi: 2",
+      "five": "5 yüklenemedi: 5",
+      "words": "Arg1 yüklenemedi: Arg2"
+    },
+    "plugins.discover.installSuccess": {
+      "zero": "0 yüklendi.",
+      "one": "1 yüklendi.",
+      "two": "2 yüklendi.",
+      "five": "5 yüklendi.",
+      "words": "Arg1 yüklendi."
+    },
+    "plugins.discover.link.failed": {
+      "zero": "Bu bağlantıdan yüklenemedi: 0",
+      "one": "Bu bağlantıdan yüklenemedi: 1",
+      "two": "Bu bağlantıdan yüklenemedi: 2",
+      "five": "Bu bağlantıdan yüklenemedi: 5",
+      "words": "Bu bağlantıdan yüklenemedi: Arg1"
+    },
+    "plugins.discover.link.isSource": {
+      "zero": "0 tek değil, birden fazla eklenti yayınlıyor (bir macrogrid-index.json). Bunun yerine kaynak olarak eklensin mi?",
+      "one": "1 tek değil, birden fazla eklenti yayınlıyor (bir macrogrid-index.json). Bunun yerine kaynak olarak eklensin mi?",
+      "two": "2 tek değil, birden fazla eklenti yayınlıyor (bir macrogrid-index.json). Bunun yerine kaynak olarak eklensin mi?",
+      "five": "5 tek değil, birden fazla eklenti yayınlıyor (bir macrogrid-index.json). Bunun yerine kaynak olarak eklensin mi?",
+      "words": "Arg1 tek değil, birden fazla eklenti yayınlıyor (bir macrogrid-index.json). Bunun yerine kaynak olarak eklensin mi?"
+    },
+    "plugins.discover.source.addFailed": {
+      "zero": "Bu kaynak eklenemedi: 0",
+      "one": "Bu kaynak eklenemedi: 1",
+      "two": "Bu kaynak eklenemedi: 2",
+      "five": "Bu kaynak eklenemedi: 5",
+      "words": "Bu kaynak eklenemedi: Arg1"
+    },
+    "plugins.discover.source.removeConfirm": {
+      "zero": "\"0\" eklenti kaynağı olarak kaldırılsın mı? Ondan yüklenmiş olanlar etkilenmez.",
+      "one": "\"1\" eklenti kaynağı olarak kaldırılsın mı? Ondan yüklenmiş olanlar etkilenmez.",
+      "two": "\"2\" eklenti kaynağı olarak kaldırılsın mı? Ondan yüklenmiş olanlar etkilenmez.",
+      "five": "\"5\" eklenti kaynağı olarak kaldırılsın mı? Ondan yüklenmiş olanlar etkilenmez.",
+      "words": "\"Arg1\" eklenti kaynağı olarak kaldırılsın mı? Ondan yüklenmiş olanlar etkilenmez."
+    },
+    "plugins.install.failed": {
+      "zero": "0 kopyalandı ama yüklenemedi: 0",
+      "one": "1 kopyalandı ama yüklenemedi: 1",
+      "two": "2 kopyalandı ama yüklenemedi: 2",
+      "five": "5 kopyalandı ama yüklenemedi: 5",
+      "words": "Arg1 kopyalandı ama yüklenemedi: Arg2"
+    },
+    "plugins.install.folder.failed": {
+      "zero": "Bu klasör okunamadı: 0",
+      "one": "Bu klasör okunamadı: 1",
+      "two": "Bu klasör okunamadı: 2",
+      "five": "Bu klasör okunamadı: 5",
+      "words": "Bu klasör okunamadı: Arg1"
+    },
+    "plugins.install.success": {
+      "zero": "0 yüklendi.",
+      "one": "1 yüklendi.",
+      "two": "2 yüklendi.",
+      "five": "5 yüklendi.",
+      "words": "Arg1 yüklendi."
+    },
+    "plugins.keyboardUses": {
+      "zero": "Bugün klavyeyi 0 kez kullandı",
+      "one": "Bugün klavyeyi 1 kez kullandı",
+      "two": "Bugün klavyeyi 2 kez kullandı",
+      "five": "Bugün klavyeyi 5 kez kullandı",
+      "words": "Bugün klavyeyi Arg1 kez kullandı"
+    },
+    "plugins.permission.http.internet": {
+      "zero": "İnternetteki 0 adresine web istekleri göndermek (ağınızın dışına veri gönderebilir)",
+      "one": "İnternetteki 1 adresine web istekleri göndermek (ağınızın dışına veri gönderebilir)",
+      "two": "İnternetteki 2 adresine web istekleri göndermek (ağınızın dışına veri gönderebilir)",
+      "five": "İnternetteki 5 adresine web istekleri göndermek (ağınızın dışına veri gönderebilir)",
+      "words": "İnternetteki Arg1 adresine web istekleri göndermek (ağınızın dışına veri gönderebilir)"
+    },
+    "plugins.permission.http.lan": {
+      "zero": "Yerel ağınızdaki 0 adresine web istekleri göndermek",
+      "one": "Yerel ağınızdaki 1 adresine web istekleri göndermek",
+      "two": "Yerel ağınızdaki 2 adresine web istekleri göndermek",
+      "five": "Yerel ağınızdaki 5 adresine web istekleri göndermek",
+      "words": "Yerel ağınızdaki Arg1 adresine web istekleri göndermek"
+    },
+    "plugins.permission.http.local": {
+      "zero": "Bu bilgisayardaki 0 adresine web istekleri göndermek",
+      "one": "Bu bilgisayardaki 1 adresine web istekleri göndermek",
+      "two": "Bu bilgisayardaki 2 adresine web istekleri göndermek",
+      "five": "Bu bilgisayardaki 5 adresine web istekleri göndermek",
+      "words": "Bu bilgisayardaki Arg1 adresine web istekleri göndermek"
+    },
+    "plugins.permission.unknown": {
+      "zero": "0",
+      "one": "1",
+      "two": "2",
+      "five": "5",
+      "words": "Arg1"
+    },
+    "plugins.permission.ws.internet": {
+      "zero": "İnternette 0 adresine canlı bir bağlantı açık tutar (verini ağının dışına gönderebilir)",
+      "one": "İnternette 1 adresine canlı bir bağlantı açık tutar (verini ağının dışına gönderebilir)",
+      "two": "İnternette 2 adresine canlı bir bağlantı açık tutar (verini ağının dışına gönderebilir)",
+      "five": "İnternette 5 adresine canlı bir bağlantı açık tutar (verini ağının dışına gönderebilir)",
+      "words": "İnternette Arg1 adresine canlı bir bağlantı açık tutar (verini ağının dışına gönderebilir)"
+    },
+    "plugins.permission.ws.lan": {
+      "zero": "Yerel ağında 0 adresine canlı bir bağlantı açık tutar",
+      "one": "Yerel ağında 1 adresine canlı bir bağlantı açık tutar",
+      "two": "Yerel ağında 2 adresine canlı bir bağlantı açık tutar",
+      "five": "Yerel ağında 5 adresine canlı bir bağlantı açık tutar",
+      "words": "Yerel ağında Arg1 adresine canlı bir bağlantı açık tutar"
+    },
+    "plugins.permission.ws.local": {
+      "zero": "Bu bilgisayarda 0 adresine canlı bir bağlantı açık tutar",
+      "one": "Bu bilgisayarda 1 adresine canlı bir bağlantı açık tutar",
+      "two": "Bu bilgisayarda 2 adresine canlı bir bağlantı açık tutar",
+      "five": "Bu bilgisayarda 5 adresine canlı bir bağlantı açık tutar",
+      "words": "Bu bilgisayarda Arg1 adresine canlı bir bağlantı açık tutar"
+    },
+    "plugins.permissions.title": {
+      "zero": "İzinler (0)",
+      "one": "İzinler (1)",
+      "two": "İzinler (2)",
+      "five": "İzinler (5)",
+      "words": "İzinler (Arg1)"
+    },
+    "plugins.reload.success": {
+      "zero": "0 yeniden yüklendi.",
+      "one": "1 yeniden yüklendi.",
+      "two": "2 yeniden yüklendi.",
+      "five": "5 yeniden yüklendi.",
+      "words": "Arg1 yeniden yüklendi."
+    },
+    "plugins.uninstall.confirm": {
+      "zero": "\"0\" kaldırılsın mı? Plugin klasörü silinir, bu geri alınamaz.",
+      "one": "\"1\" kaldırılsın mı? Plugin klasörü silinir, bu geri alınamaz.",
+      "two": "\"2\" kaldırılsın mı? Plugin klasörü silinir, bu geri alınamaz.",
+      "five": "\"5\" kaldırılsın mı? Plugin klasörü silinir, bu geri alınamaz.",
+      "words": "\"Arg1\" kaldırılsın mı? Plugin klasörü silinir, bu geri alınamaz."
+    },
+    "plugins.uninstall.pending": {
+      "zero": "0 devre dışı bırakıldı ama bir dosyası kullanımda olduğu için klasörü hemen silinemedi; sunucu bir sonraki açılışta silecek.",
+      "one": "1 devre dışı bırakıldı ama bir dosyası kullanımda olduğu için klasörü hemen silinemedi; sunucu bir sonraki açılışta silecek.",
+      "two": "2 devre dışı bırakıldı ama bir dosyası kullanımda olduğu için klasörü hemen silinemedi; sunucu bir sonraki açılışta silecek.",
+      "five": "5 devre dışı bırakıldı ama bir dosyası kullanımda olduğu için klasörü hemen silinemedi; sunucu bir sonraki açılışta silecek.",
+      "words": "Arg1 devre dışı bırakıldı ama bir dosyası kullanımda olduğu için klasörü hemen silinemedi; sunucu bir sonraki açılışta silecek."
+    },
+    "plugins.uninstall.success": {
+      "zero": "0 kaldırıldı.",
+      "one": "1 kaldırıldı.",
+      "two": "2 kaldırıldı.",
+      "five": "5 kaldırıldı.",
+      "words": "Arg1 kaldırıldı."
+    },
+    "preferences.autostart.failed": {
+      "zero": "Başlangıç ayarı değiştirilemedi: 0",
+      "one": "Başlangıç ayarı değiştirilemedi: 1",
+      "two": "Başlangıç ayarı değiştirilemedi: 2",
+      "five": "Başlangıç ayarı değiştirilemedi: 5",
+      "words": "Başlangıç ayarı değiştirilemedi: Arg1"
+    },
+    "profile.deleteConfirm": {
+      "zero": "\"0\" profili silinsin mi?",
+      "one": "\"1\" profili silinsin mi?",
+      "two": "\"2\" profili silinsin mi?",
+      "five": "\"5\" profili silinsin mi?",
+      "words": "\"Arg1\" profili silinsin mi?"
+    },
+    "profile.importMissing.actions": {
+      "zero": "Bu sunucuda karşılığı olmayan aksiyonlar: 0.",
+      "one": "Bu sunucuda karşılığı olmayan aksiyonlar: 1.",
+      "two": "Bu sunucuda karşılığı olmayan aksiyonlar: 2.",
+      "five": "Bu sunucuda karşılığı olmayan aksiyonlar: 5.",
+      "words": "Bu sunucuda karşılığı olmayan aksiyonlar: Arg1."
+    },
+    "profile.importMissing.plugins": {
+      "zero": "Bu profil yüklü olmayan eklentilere ihtiyaç duyuyor: 0. Eklentiler penceresinden kurunca düğmeleri çalışır.",
+      "one": "Bu profil yüklü olmayan eklentilere ihtiyaç duyuyor: 1. Eklentiler penceresinden kurunca düğmeleri çalışır.",
+      "two": "Bu profil yüklü olmayan eklentilere ihtiyaç duyuyor: 2. Eklentiler penceresinden kurunca düğmeleri çalışır.",
+      "five": "Bu profil yüklü olmayan eklentilere ihtiyaç duyuyor: 5. Eklentiler penceresinden kurunca düğmeleri çalışır.",
+      "words": "Bu profil yüklü olmayan eklentilere ihtiyaç duyuyor: Arg1. Eklentiler penceresinden kurunca düğmeleri çalışır."
+    },
+    "schemaForm.untitledRow": {
+      "zero": "0. öğe",
+      "one": "1. öğe",
+      "two": "2. öğe",
+      "five": "5. öğe",
+      "words": "Arg1. öğe"
+    },
+    "state.defaultPageName": {
+      "zero": "Sayfa 0",
+      "one": "Sayfa 1",
+      "two": "Sayfa 2",
+      "five": "Sayfa 5",
+      "words": "Sayfa Arg1"
+    },
+    "status.pluginUpdates": {
+      "zero": "0 eklenti için güncelleme gerekli",
+      "one": "1 eklenti için güncelleme gerekli",
+      "two": "2 eklenti için güncelleme gerekli",
+      "five": "5 eklenti için güncelleme gerekli",
+      "words": "Arg1 eklenti için güncelleme gerekli"
+    },
     "undo.pastePartial": {
       "zero": "0 widget'tan 0 tanesi yapıştırıldı; kalanı sığmadı.",
       "one": "1 widget'tan 1 tanesi yapıştırıldı; kalanı sığmadı.",
       "two": "2 widget'tan 2 tanesi yapıştırıldı; kalanı sığmadı.",
       "five": "5 widget'tan 5 tanesi yapıştırıldı; kalanı sığmadı.",
       "words": "Arg2 widget'tan Arg1 tanesi yapıştırıldı; kalanı sığmadı."
+    },
+    "update.available": {
+      "zero": "0 sürümü hazır",
+      "one": "1 sürümü hazır",
+      "two": "2 sürümü hazır",
+      "five": "5 sürümü hazır",
+      "words": "Arg1 sürümü hazır"
+    },
+    "update.current": {
+      "zero": "Şu anki sürüm: 0",
+      "one": "Şu anki sürüm: 1",
+      "two": "Şu anki sürüm: 2",
+      "five": "Şu anki sürüm: 5",
+      "words": "Şu anki sürüm: Arg1"
+    },
+    "update.downloading": {
+      "zero": "İndiriliyor… %0",
+      "one": "İndiriliyor… %1",
+      "two": "İndiriliyor… %2",
+      "five": "İndiriliyor… %5",
+      "words": "İndiriliyor… %Arg1"
+    },
+    "update.release": {
+      "zero": "Sürüm 0",
+      "one": "Sürüm 1",
+      "two": "Sürüm 2",
+      "five": "Sürüm 5",
+      "words": "Sürüm Arg1"
+    },
+    "widget.selected.count": {
+      "zero": "0 widget seçili",
+      "one": "1 widget seçili",
+      "two": "2 widget seçili",
+      "five": "5 widget seçili",
+      "words": "Arg1 widget seçili"
     }
   }
 }

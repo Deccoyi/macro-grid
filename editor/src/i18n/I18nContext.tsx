@@ -1,11 +1,12 @@
 import { useCallback, useMemo } from "react";
 import { usePreferences } from "../preferences/PreferencesContext";
 import { en } from "./en";
+import { format } from "./format";
+import { PARAMS } from "./params";
 import { tr, type DictKey } from "./tr";
 
 export type Language = "tr" | "en";
-type Dict = Record<DictKey, string | ((...args: string[]) => string)>;
-const DICTS: Record<Language, Dict> = { tr, en };
+const DICTS: Record<Language, Record<DictKey, string>> = { tr, en };
 
 /** The one hook every component uses for both reading translated strings (t) and, rarely, the raw
  * language code (lang) or switching it (setLang, only the Preferences panel does). The language itself
@@ -15,8 +16,9 @@ export function useT() {
 
   const t = useCallback(
     (key: DictKey, ...args: string[]): string => {
+      const names = PARAMS[key];
       const value = DICTS[language][key];
-      return typeof value === "function" ? (value as (...a: string[]) => string)(...args) : value;
+      return names ? format(value, names, args) : value;
     },
     [language],
   );

@@ -106,7 +106,11 @@ export function MenuBar({ profile, onImportProfile, editCommands }: MenuBarProps
     const covered = new Set(result.missingPlugins?.flatMap((p) => p.actionTypes) ?? []);
     const unknown = (result.unknownActionTypes ?? []).filter((type) => !covered.has(type));
     if (missing.length > 0 || unknown.length > 0) {
-      await alertAsync(t("profile.importMissing", missing.join(", "), unknown.join(", ")), { title: t("profile.importMissingTitle") });
+      const paragraphs = [
+        missing.length > 0 && t("profile.importMissing.plugins", missing.join(", ")),
+        unknown.length > 0 && t("profile.importMissing.actions", unknown.join(", ")),
+      ].filter(Boolean);
+      await alertAsync(paragraphs.join("\n\n"), { title: t("profile.importMissingTitle") });
     }
   };
 
