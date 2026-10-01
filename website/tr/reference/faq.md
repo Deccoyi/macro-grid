@@ -7,7 +7,7 @@ Sunucu için Windows 10 veya 11 gerekir. Telefon uygulaması şimdilik yalnızca
 Hayır. Her gün kullandığınız her şey yerel ağınızda kalır ve hesap gerekmez. Macro Grid'in kendiliğinden yaptığı tek şey, yeni bir sürüm var mı diye yaklaşık altı saatte bir github.com'a bakmaktır. Sizinle ya da bilgisayarınızla ilgili hiçbir bilgi göndermez ve siz "Şimdi kur"a basmadan hiçbir şey kurmaz. İstemezseniz Tercihler > Genel bölümündeki "Güncellemeleri otomatik denetle" seçeneğini kapatın; tepsi menüsünden yine elle denetleyebilirsiniz.
 
 ## Bulut senkronizasyonu var mı?
-Hayır. Taşımak için bir profili `.msprofile` dosyasına dışa aktarın.
+Hayır. Taşımak için bir profili `.mgprofile` dosyasına dışa aktarın.
 
 ## Aynı anda birkaç telefon bağlanabilir mi?
 Evet. Eşleşmiş her cihaz kendi profilini açabilir.

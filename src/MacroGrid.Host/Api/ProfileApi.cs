@@ -77,10 +77,10 @@ internal static class ProfileApi
             return profiles.Delete(id) ? Results.NoContent() : ApiResults.BadRequest("The last profile cannot be deleted.");
         });
 
-        // .msprofile (a zip with the profile and a manifest naming the plugins it needs) or a plain profile JSON file.
+        // .mgprofile (or an older .msprofile) (a zip with the profile and a manifest naming the plugins it needs) or a plain profile JSON file.
         api.MapPost("/browse/import-profile", async (IUiDialogService dialogs, PluginManager plugins, ActionDispatcher dispatcher, PluginWidgetCatalog widgetCatalog) =>
         {
-            var (path, bytes) = await dialogs.OpenFileAsync("Import shared profile", "Macro Grid profile (*.msprofile;*.json)|*.msprofile;*.json");
+            var (path, bytes) = await dialogs.OpenFileAsync("Import shared profile", "Macro Grid profile (*.mgprofile;*.msprofile;*.json)|*.mgprofile;*.msprofile;*.json");
             if (bytes is null) return Results.Json(new { path = (string?)null });
 
             ProfilePackageContent package;
@@ -105,7 +105,7 @@ internal static class ProfileApi
             var invalid = Path.GetInvalidFileNameChars();
             var fileName = string.Concat(profile.Name.Select(c => invalid.Contains(c) ? '_' : c)).Trim();
             var path = await dialogs.SaveFileAsync("Share profile", (fileName.Length > 0 ? fileName : "profile") + ProfilePackage.Extension,
-                "Macro Grid profile (*.msprofile)|*.msprofile", "msprofile", ProfilePackage.Write(profile, manifest));
+                "Macro Grid profile (*.mgprofile)|*.mgprofile", "mgprofile", ProfilePackage.Write(profile, manifest));
             return Results.Json(new { path });
         });
 

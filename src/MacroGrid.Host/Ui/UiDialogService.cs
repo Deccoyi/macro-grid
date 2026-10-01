@@ -10,7 +10,7 @@ public interface IUiDialogService
     /// <returns>The chosen path, or null if the user canceled.</returns>
     Task<string?> BrowseForExecutableAsync();
 
-    /// <param name="filter">A WinForms file filter, e.g. <c>"Profile (*.msprofile)|*.msprofile"</c>.</param>
+    /// <param name="filter">A WinForms file filter, e.g. <c>"Profile (*.mgprofile)|*.mgprofile"</c>.</param>
     /// <returns>The chosen file's path and bytes, or (null, null) if the user canceled.</returns>
     Task<(string? Path, byte[]? Content)> OpenFileAsync(string title, string filter);
 

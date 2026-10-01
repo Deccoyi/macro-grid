@@ -464,7 +464,7 @@ export interface UpdateInstallStatus {
 
 export type UpdateCheckOutcome = "available" | "upToDate" | "failed";
 
-/** A plugin a packaged profile needs (from the manifest of a .msprofile file). */
+/** A plugin a packaged profile needs (from the manifest of a .mgprofile file). */
 interface PackagePluginRef {
   id: string;
   name: string;

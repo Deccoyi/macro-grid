@@ -46,8 +46,8 @@ Klasörler yalnızca düzenleyici içindir. Bir cihaz, sayfalar ve profiller kla
 
 ## Dışa ve içe aktarma
 
-- **Dosya → Profili Dışa Aktar (.msprofile)** geçerli profili tek bir dosyaya kaydeder.
-- **Dosya → Profili İçe Aktar (.msprofile / .json)…** bir profil yükler. Aynı adlı bir profil varsa **Üzerine yaz** ya da **Adı değiştir** seçeneğini seçersiniz.
+- **Dosya → Profili Dışa Aktar (.mgprofile)** geçerli profili tek bir dosyaya kaydeder.
+- **Dosya → Profili İçe Aktar (.mgprofile / .json)…** bir profil yükler. Aynı adlı bir profil varsa **Üzerine yaz** ya da **Adı değiştir** seçeneğini seçersiniz.
 - İçe aktarılan profil sahip olmadığınız bir eklenti kullanıyorsa Düzenleyici hangisi olduğunu listeler; eklentiyi kurunca düğmeler çalışır.
 
 Bir deck'i yedeklemenin ya da başkasıyla paylaşmanın en kolay yolu budur.

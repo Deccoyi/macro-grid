@@ -22,4 +22,4 @@ Everything is in `%AppData%\MacroGrid\`. Open it from the tray icon menu.
 | `plugin-permissions.json` | Permissions you approved for JavaScript plugins |
 | `logs\` | Logs. Attach them when you report a problem. |
 
-Exported profiles are single `.msprofile` files. Import also accepts `.json`.
+Exported profiles are single `.mgprofile` files. Import also accepts `.json`.

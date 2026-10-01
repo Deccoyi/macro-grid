@@ -51,7 +51,7 @@ This repository is the **server and editor**. The three parts are versioned inde
 - **Several devices and profiles.** Each paired device can show a different profile, and a device can follow the active window on the PC (a media player
   comes to the front, the deck switches to its profile).
 - **Plugins.** OBS control, icon packs and your own, in C# or in sandboxed JavaScript; installed and reloaded without a restart.
-- **Profile files.** Export a profile as a single `.msprofile` file and import it elsewhere.
+- **Profile files.** Export a profile as a single `.mgprofile` file and import it elsewhere.
 - **Browser deck.** Any browser on the network can act as a deck at `http://<PC address>:9820/deck/`.
 
 All communication stays on your local network.

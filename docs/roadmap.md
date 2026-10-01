@@ -8,7 +8,7 @@ Where the project stands. The server and the SDK are at 1.0.0 and under active d
   URLs, page and profile switching, delays, volume), live variables (`system.*`), text templates with formats, toggles, sliders and knobs with a
   two-way value, dynamic rules for colors, animation, icon and text.
 - **Editor:** profiles and pages, drag-and-drop widget design with snapping and overlap checks, a style panel, custom CSS with sanitizer warnings, action
-  assignment (press, long press, double tap), variable insertion, live preview, device list, plugin list, `.msprofile` export and import, preferences (language,
+  assignment (press, long press, double tap), variable insertion, live preview, device list, plugin list, `.mgprofile` export and import, preferences (language,
   theme, default profile, start with Windows and what a start does: tray only or open the editor window), automatic profile switching rules, settings windows
   that block the editor while open, a Help window with the disclaimer, the user agreement and all bundled license texts.
 - **Docking workspace and hierarchy tree:** dockable, tabbed, floating and auto-hide tool windows, page tabs, a remembered layout

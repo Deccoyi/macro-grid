@@ -7,7 +7,7 @@ The server needs Windows 10 or 11. The phone app is Android only for now; any de
 No. Everything you use every day stays on your local network, and there is no account. The one thing Macro Grid does on its own is check github.com, about every six hours, to see whether a newer version exists. It sends nothing about you or your computer, and it installs nothing until you click "Install now". If you would rather it did not, switch it off in Preferences > General ("Check for updates automatically"); you can still check by hand from the tray menu.
 
 ## Is there a cloud sync?
-No. Export a profile to a `.msprofile` file to move it.
+No. Export a profile to a `.mgprofile` file to move it.
 
 ## Can several phones connect at once?
 Yes. Each paired device can open its own profile.

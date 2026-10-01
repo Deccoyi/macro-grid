@@ -310,11 +310,11 @@ export const api = {
   exportLanguageCsvDialog: (fileName: string, text: string): Promise<{ path: string | null }> =>
     send("POST", "/api/browse/export-language-csv", { fileName, text }),
 
-  /** Shows a native "Open" dialog on the server's desktop and reads the chosen .msprofile (or plain profile JSON)
+  /** Shows a native "Open" dialog on the server's desktop and reads the chosen .mgprofile (or plain profile JSON)
    * file; the server validates it and reports which plugins it needs that are missing. */
   importProfileDialog: (): Promise<ImportProfileResult> => send("POST", "/api/browse/import-profile"),
 
-  /** Shows a native "Save As" dialog on the server's desktop and writes the profile there as a .msprofile
+  /** Shows a native "Save As" dialog on the server's desktop and writes the profile there as a .mgprofile
    * package (the profile plus a manifest naming the plugins it needs). */
   /** Saves a full backup (a .mgbackup file) where the person chooses. */
   exportBackup: (): Promise<{ path: string | null }> => send("POST", "/api/backup/export"),

@@ -21,7 +21,7 @@ public sealed record ProfilePackageManifest(
 public sealed record ProfilePackageContent(Profile Profile, ProfilePackageManifest? Manifest);
 
 /// <summary>
-/// The <c>.msprofile</c> file: a zip holding <c>manifest.json</c> (format version, who exported it, which plugins
+/// The <c>.mgprofile</c> file (older <c>.msprofile</c> files are still read): a zip holding <c>manifest.json</c> (format version, who exported it, which plugins
 /// the profile's actions need) and <c>profile.json</c> (the profile itself). Icons and images are stored inside
 /// <c>profile.json</c> as the <c>data:</c> values the profile already holds, so a package is self-contained and
 /// needs no separate asset entries. Reading is defensive: only the two known entries are read, with a size cap,
@@ -31,7 +31,9 @@ public sealed record ProfilePackageContent(Profile Profile, ProfilePackageManife
 public static class ProfilePackage
 {
     public const int CurrentFormatVersion = 1;
-    public const string Extension = ".msprofile";
+    public const string Extension = ".mgprofile";
+    /// <summary>The extension used before 1.0 naming was settled; such files are still read.</summary>
+    public const string LegacyExtension = ".msprofile";
     private const string ManifestEntry = "manifest.json";
     private const string ProfileEntry = "profile.json";
     private const long MaxEntryBytes = 64 * 1024 * 1024;
