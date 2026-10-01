@@ -170,7 +170,6 @@ internal static class ServiceRegistration
         services.AddSingleton(sp => new PluginCatalogInstaller(
             sp.GetRequiredService<PluginPackageDownloader>(),
             sp.GetRequiredService<PluginManager>(),
-            sp.GetRequiredService<PluginInstallOriginStore>(),
             Path.Combine(dataDir, "plugins-staging"),
             sp.GetRequiredService<OfficialCatalog>()));
         return services;
