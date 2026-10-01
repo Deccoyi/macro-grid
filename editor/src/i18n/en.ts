@@ -546,6 +546,7 @@ export const en: Record<DictKey, string | ((...args: string[]) => string)> = {
   "dynamic.operator.unavailable": "is unavailable",
   "dynamic.operator.available": "is available",
   "dynamic.value.placeholder": "50 or text",
+  "dynamic.value.notNumber": "This variable is a number; the text typed here is not one.",
   "dynamic.value.hint": "No quotes: type 50 for a number, or live directly for text.",
   "dynamic.bool.true": "On (true)",
   "dynamic.bool.false": "Off (false)",

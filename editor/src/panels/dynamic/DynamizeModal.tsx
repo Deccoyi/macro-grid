@@ -9,7 +9,7 @@ import type { DictKey } from "../../i18n/tr";
 import { VariablePicker } from "../VariablePicker";
 import { combinatorOf, fromConditionNode, isValueless, newCase, newCondition, toConditionNode, type EditCase, type EditCondition } from "./conditionEditing";
 import { useBackdropClose } from "../../components/useBackdropClose";
-import { allowsOrdering, fitConditionToVariable, normalizeBoolText, valueInputFor, type ValueInput } from "./variableTypes";
+import { allowsOrdering, fitConditionToVariable, isInvalidNumber, normalizeBoolText, valueInputFor, type ValueInput } from "./variableTypes";
 
 const OPERATOR_KEYS: Record<EditCondition["operator"], DictKey> = {
   ">": "dynamic.operator.>",
@@ -105,7 +105,8 @@ export function DynamizeModal({ propertyLabel, binding, variableCatalog, resultK
               <Keyword>{i === 0 ? t("dynamic.if") : t("dynamic.elseIf")}</Keyword>
 
               {c.conditions.map((cond, ci) => {
-                const valueInput = valueInputFor(variableCatalog.find((v) => v.name === cond.variable));
+                const variableInfo = variableCatalog.find((v) => v.name === cond.variable);
+                const valueInput = valueInputFor(variableInfo);
                 const operators = (Object.keys(OPERATOR_KEYS) as EditCondition["operator"][])
                   .filter((op) => allowsOrdering(valueInput) || op === "==" || op === "!=" || isValueless(op) || op === cond.operator);
                 const setValue = (field: "value" | "value2") => (v: string) => updateCase(i, (cc) => { cc.conditions[ci]![field] = v; });
@@ -166,7 +167,7 @@ export function DynamizeModal({ propertyLabel, binding, variableCatalog, resultK
                       ))}
                     </select>
 
-                    {!isValueless(cond.operator) && <ConditionValue value={cond.value} onChange={setValue("value")} input={valueInput} />}
+                    {!isValueless(cond.operator) && <ConditionValue value={cond.value} onChange={setValue("value")} input={valueInput} invalid={isInvalidNumber(variableInfo, cond.value)} />}
                     {cond.operator === "between" && (
                       <>
                         <span style={{ color: "var(--ms-text-disabled)", fontSize: 12 }}>–</span>
@@ -254,7 +255,7 @@ function Keyword({ children, muted }: { children: string; muted?: boolean }) {
 
 /** The compared value of a condition: a true/false select for a boolean, a select of the declared values,
  * or free input (with the unit as a suffix for a number). A stored value outside the choices stays visible. */
-function ConditionValue({ value, onChange, input }: { value: string; onChange: (v: string) => void; input: ValueInput }) {
+function ConditionValue({ value, onChange, input, invalid }: { value: string; onChange: (v: string) => void; input: ValueInput; invalid?: boolean }) {
   const { t } = useT();
   if (input.kind !== "free") {
     const current = input.kind === "boolean" ? normalizeBoolText(value) : value;
@@ -280,8 +281,9 @@ function ConditionValue({ value, onChange, input }: { value: string; onChange: (
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={input.unit ? `50 ${input.unit}` : t("dynamic.value.placeholder")}
-        title={t("dynamic.value.hint")}
-        style={{ width: 108, textAlign: "center", fontFamily: "ui-monospace, monospace" }}
+        title={invalid ? t("dynamic.value.notNumber") : t("dynamic.value.hint")}
+        aria-invalid={invalid || undefined}
+        style={{ width: 108, textAlign: "center", fontFamily: "ui-monospace, monospace", ...(invalid ? { borderColor: "var(--ms-danger)" } : null) }}
       />
       {input.unit && <span style={{ fontSize: 12, color: "var(--ms-text-secondary)" }}>{input.unit}</span>}
     </span>
