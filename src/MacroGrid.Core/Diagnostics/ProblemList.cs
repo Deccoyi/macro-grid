@@ -135,16 +135,8 @@ public sealed class ProblemList
         Changed?.Invoke();
     }
 
-    private static bool IsInvisibleFormat(char c) =>
-        c is >= '\u200B' and <= '\u200F' or >= '\u202A' and <= '\u202E' or >= '\u2066' and <= '\u2069' or '\uFEFF';
-
     /// <summary>Removes every line of one source and code (a plugin clearing what it reported).</summary>
     public void ClearCode(string source, string code) => Resolve(source, code);
 
-    private static string Clean(string message)
-    {
-        // Control characters, bidirectional overrides and zero-width characters could reorder or hide text in the list.
-        var chars = message.Where(c => !char.IsControl(c) && !IsInvisibleFormat(c)).Take(MaxMessageLength).ToArray();
-        return new string(chars);
-    }
+    private static string Clean(string message) => PlainText.Clean(message, MaxMessageLength);
 }
