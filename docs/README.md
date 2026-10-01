@@ -29,6 +29,7 @@ Where things live. Public entry points (`README.md`, `CONTRIBUTING.md`, `SECURIT
 | [ui/ui-guidelines.md](ui/ui-guidelines.md) | UI rules for the editor and the phone deck. |
 | [ui/color-bible.md](ui/color-bible.md) | The color system ([live preview](ui/color-bible-preview.html)). |
 | [ui/properties-panel-mockups/](ui/properties-panel-mockups/index.html) | Properties panel mockups: panels, field-kind catalog, measurements spec, responsive tiers. Rules are in ui-guidelines.md. |
+| [ui/settings-window-design.md](ui/settings-window-design.md) | Settings window design: shell, General, Global variable list, Automation, states, tokens. Mockups in [ui/settings-window-mockups/](ui/settings-window-mockups/index.html). |
 | [ui/dynamize-window-anatomy.md](ui/dynamize-window-anatomy.md) | Dynamize window and Presets window: anatomy, measurements, how to add a preset ([mockups](ui/dynamize-window/)). |
 | [ui/editor-icons.md](ui/editor-icons.md) | Editor icons: format, sizes, colors by state, the full list, and the custom icons to draw ([preview](ui/editor-icons-preview.html)). |
 

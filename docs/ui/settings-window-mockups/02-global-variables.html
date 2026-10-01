@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ayarlar: Genel değişken listesi</title>
+<style>
+body{margin:0}
+.w{--bg:#232529;--cv:#1c1e22;--raised:#2b2e33;--inset:#16171a;--bd:#35383e;--bds:#46494f;--tx:#e6e7ea;--tx2:#9a9ea6;--txd:#7b7f87;--ac:#d97706;--acm:rgba(217,119,6,.15);--dg:#e5584a;--wr:#facc15;--ok:#3f9142;font:12px/1.3 "Segoe UI",system-ui,sans-serif;color:var(--tx);background:var(--cv);width:960px;height:700px;display:grid;grid-template-columns:188px minmax(0,1fr);overflow:hidden}
+.w *{box-sizing:border-box}
+.w svg.i{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.nav{background:var(--bg);border-right:1px solid var(--bd);padding:12px 8px;display:flex;flex-direction:column;gap:2px}
+.ng{font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--txd);height:16px;display:flex;align-items:center;padding:0 10px;margin-top:12px;margin-bottom:2px}
+.ng:first-child{margin-top:0}
+.ni{display:flex;align-items:center;gap:8px;height:28px;padding:0 10px;border:0;border-radius:4px;background:none;color:var(--tx2);font:13px "Segoe UI",system-ui,sans-serif;text-align:left;width:100%;cursor:pointer}
+.ni:hover{background:var(--raised);color:var(--tx)}
+.ni.on{background:var(--raised);color:var(--tx);box-shadow:inset 2px 0 0 var(--ac)}
+.main{overflow:hidden;padding:24px 32px;min-width:0}
+.page{max-width:760px}
+h1{margin:0;font:600 16px/1.3 "Segoe UI",system-ui,sans-serif}
+.lead{margin:4px 0 0;font-size:12px;line-height:1.4;color:var(--tx2);max-width:640px}
+.bar{display:flex;align-items:center;justify-content:space-between;margin-top:20px;height:28px}
+.cnt{font-size:11px;color:var(--tx2)}
+.th,.tr{display:grid;grid-template-columns:minmax(0,1fr) 104px 160px 56px 28px;column-gap:8px;align-items:center}
+.th{height:24px;font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--txd);border-bottom:1px solid var(--bd)}
+.lst{border-top:0}
+.tr{padding:8px 0 6px;border-bottom:1px solid var(--bd);row-gap:2px}
+.nm{height:28px;display:flex;align-items:center;font:12px ui-monospace,Consolas,monospace;color:var(--tx);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.nm i{font-style:normal;color:var(--txd)}
+.ty{font-size:12px;color:var(--tx2)}
+.c{display:block;width:100%;height:28px;padding:0 8px;background:var(--inset);border:1px solid var(--bd);border-radius:4px;color:var(--tx);font:12px "Segoe UI",system-ui,sans-serif;text-align:left}
+.c:hover{border-color:var(--bds)}
+.c:focus{outline:none;border-color:var(--ac)}
+.c.bad{border-color:var(--dg)}
+.c::placeholder{color:var(--txd)}
+.sel{position:relative;min-width:0}
+.sel svg{position:absolute;right:8px;top:7px;color:var(--tx2);pointer-events:none}
+select.c{appearance:none;padding-right:26px}
+.sw{width:28px;height:16px;border-radius:8px;border:0;padding:0;background:var(--bds);position:relative;flex:none;cursor:pointer}
+.sw::after{content:"";position:absolute;top:2px;left:2px;width:12px;height:12px;border-radius:50%;background:#fff}
+.sw.on{background:var(--ac)}.sw.on::after{left:14px}
+.kp{display:flex;justify-content:center}
+.ib{width:28px;height:28px;padding:0;display:inline-flex;align-items:center;justify-content:center;border:0;border-radius:4px;background:none;color:var(--tx2);cursor:pointer}
+.ib:hover{background:var(--raised);color:var(--dg)}
+.ds{grid-column:1/-1;height:20px;padding:0 4px;margin-left:-4px;width:calc(100% + 4px);border:1px solid transparent;border-radius:3px;background:none;color:var(--tx2);font:11px "Segoe UI",system-ui,sans-serif}
+.ds:hover{background:var(--inset)}
+.ds:focus{outline:none;border-color:var(--ac);background:var(--inset)}
+.ds::placeholder{color:var(--txd)}
+.hint{grid-column:1/-1;font-size:11px;line-height:1.4;color:var(--dg)}
+.add{display:grid;grid-template-columns:minmax(0,1fr) 160px auto;gap:8px;margin-top:16px;align-items:center}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;height:28px;padding:0 12px;background:var(--raised);border:1px solid var(--bd);border-radius:4px;color:var(--tx);font:12px "Segoe UI",system-ui,sans-serif;cursor:pointer;flex:none}
+.btn:hover{background:var(--inset);border-color:var(--bds)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+
+body{background:#101114;padding:24px}</style>
+</head>
+<body>
+
+<div class="w">
+<svg width="0" height="0" style="position:absolute"><defs>
+<symbol id="sl" viewBox="0 0 24 24"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></symbol>
+<symbol id="su" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></symbol>
+<symbol id="gl" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></symbol>
+<symbol id="ph" viewBox="0 0 24 24"><rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/></symbol>
+<symbol id="us" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></symbol>
+<symbol id="br" viewBox="0 0 24 24"><path d="M8 3c-2 0-3 1-3 3v3c0 1.5-1 3-3 3 2 0 3 1.5 3 3v3c0 2 1 3 3 3M16 3c2 0 3 1 3 3v3c0 1.5 1 3 3 3-2 0-3 1.5-3 3v3c0 2-1 3-3 3"/></symbol>
+<symbol id="zp" viewBox="0 0 24 24"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></symbol>
+<symbol id="cd" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+<symbol id="tr" viewBox="0 0 24 24"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></symbol>
+</defs></svg>
+
+<nav class="nav" aria-label="Ayar kategorileri">
+<div class="ng">Uygulama</div>
+<button class="ni" type="button"><svg class="i"><use href="#sl"/></svg>Genel</button>
+<button class="ni" type="button"><svg class="i"><use href="#su"/></svg>Görünüm</button>
+<button class="ni" type="button"><svg class="i"><use href="#gl"/></svg>Dil</button>
+<div class="ng">Cihazlar ve profiller</div>
+<button class="ni" type="button"><svg class="i"><use href="#ph"/></svg>Önizleme profilleri</button>
+<button class="ni" type="button"><svg class="i"><use href="#us"/></svg>Profiller</button>
+<div class="ng">Veri ve kurallar</div>
+<button class="ni on" type="button" aria-current="page"><svg class="i"><use href="#br"/></svg>Genel değişken listesi</button>
+<button class="ni" type="button"><svg class="i"><use href="#zp"/></svg>Otomasyon</button>
+</nav>
+
+<main class="main"><div class="page">
+<h1>Genel değişken listesi</h1>
+<p class="lead">Burada tanımladığınız değişkenleri her yerde {user.ad} olarak kullanabilirsiniz: bir metinde, bir kuralda veya bir aksiyonda. "Değişken ayarla" aksiyonu onları değiştirir.</p>
+
+<div class="bar"><span class="cnt">4 / 200 değişken</span></div>
+
+<div role="table" aria-label="Genel değişkenler" style="margin-top:8px">
+<div class="th" role="row"><span>Ad</span><span>Tür</span><span>Başlangıç değeri</span><span style="text-align:center">Sakla</span><span></span></div>
+<div class="lst">
+
+<div class="tr" role="row"><div class="nm"><i>user.</i>sayac</div><div class="ty">Sayı</div><input class="c" type="text" value="0" aria-label="Başlangıç değeri"><div class="kp"><button class="sw on" type="button" role="switch" aria-checked="true" aria-label="Sakla" title="Yeniden başlatınca değeri korur. Aksi halde başlangıç değerinden yeniden başlar."></button></div><button class="ib" type="button" aria-label="Değişkeni sil"><svg class="i"><use href="#tr"/></svg></button><input class="ds" type="text" value="Toplam buton basışı" aria-label="Açıklama" placeholder="Açıklama (isteğe bağlı)"></div>
+
+<div class="tr" role="row"><div class="nm"><i>user.</i>sahne</div><div class="ty">Metin</div><input class="c" type="text" value="Giriş" aria-label="Başlangıç değeri"><div class="kp"><button class="sw on" type="button" role="switch" aria-checked="true" aria-label="Sakla"></button></div><button class="ib" type="button" aria-label="Değişkeni sil"><svg class="i"><use href="#tr"/></svg></button><input class="ds" type="text" value="Aktif OBS sahnesi" aria-label="Açıklama" placeholder="Açıklama (isteğe bağlı)"></div>
+
+<div class="tr" role="row"><div class="nm"><i>user.</i>sessiz</div><div class="ty">Doğru / Yanlış</div><div class="sel"><select class="c" aria-label="Başlangıç değeri"><option>Yanlış</option><option>Doğru</option><option>Değer yok</option></select><svg class="i"><use href="#cd"/></svg></div><div class="kp"><button class="sw" type="button" role="switch" aria-checked="false" aria-label="Sakla"></button></div><button class="ib" type="button" aria-label="Değişkeni sil"><svg class="i"><use href="#tr"/></svg></button><input class="ds" type="text" value="" aria-label="Açıklama" placeholder="Açıklama (isteğe bağlı)"></div>
+
+<div class="tr" role="row"><div class="nm"><i>user.</i>hedef</div><div class="ty">Sayı</div><input class="c bad" type="text" value="abc" aria-label="Başlangıç değeri" aria-invalid="true"><div class="kp"><button class="sw on" type="button" role="switch" aria-checked="true" aria-label="Sakla"></button></div><button class="ib" type="button" aria-label="Değişkeni sil"><svg class="i"><use href="#tr"/></svg></button><input class="ds" type="text" value="Günlük hedef" aria-label="Açıklama" placeholder="Açıklama (isteğe bağlı)"><div class="hint" role="alert">Bu başlangıç değeri türe uymuyor.</div></div>
+
+</div>
+</div>
+
+<div class="add">
+<input class="c" type="text" placeholder="Ad" aria-label="Yeni değişken adı">
+<div class="sel"><select class="c" aria-label="Tür"><option>Sayı</option><option>Metin</option><option>Doğru / Yanlış</option></select><svg class="i"><use href="#cd"/></svg></div>
+<button class="btn" type="button" disabled>Değişken ekle</button>
+</div>
+</div></main>
+</div>
+</body>
+</html>
