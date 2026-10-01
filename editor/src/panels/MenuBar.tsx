@@ -28,7 +28,7 @@ interface MenuBarProps {
 // Access-key letters (Windows mnemonic convention: Alt+letter opens the menu, and the letter is
 // underlined in the label while Alt is held) — one map per language since the underlined letter has
 // to actually occur in that language's label.
-const MNEMONICS: Record<Language, Record<string, string>> = {
+const MNEMONICS: Partial<Record<Language, Record<string, string>>> = {
   tr: { file: "D", edit: "Z", view: "G", settings: "A", plugins: "E", help: "Y" },
   en: { file: "F", edit: "E", view: "V", settings: "S", plugins: "P", help: "H" },
 };
@@ -53,7 +53,7 @@ function mnemonicLabel(label: string, letter: string | undefined, show: boolean)
  * as real separate OS windows (ToolWindow.cs) rather than in-page modals; only File's import/export use
  * native Open/Save dialogs on the server's desktop instead of browser download/upload. */
 export function MenuBar({ profile, onImportProfile, editCommands }: MenuBarProps) {
-  const { t, lang } = useT();
+  const { t, tn, lang } = useT();
   const serverVersion = useServerVersion();
   const pluginUpdates = usePluginUpdateCount();
   const workspace = useWorkspace();
@@ -106,7 +106,11 @@ export function MenuBar({ profile, onImportProfile, editCommands }: MenuBarProps
     const covered = new Set(result.missingPlugins?.flatMap((p) => p.actionTypes) ?? []);
     const unknown = (result.unknownActionTypes ?? []).filter((type) => !covered.has(type));
     if (missing.length > 0 || unknown.length > 0) {
-      await alertAsync(t("profile.importMissing", missing.join(", "), unknown.join(", ")), { title: t("profile.importMissingTitle") });
+      const paragraphs = [
+        missing.length > 0 && t("profile.importMissing.plugins", missing.join(", ")),
+        unknown.length > 0 && t("profile.importMissing.actions", unknown.join(", ")),
+      ].filter(Boolean);
+      await alertAsync(paragraphs.join("\n\n"), { title: t("profile.importMissingTitle") });
     }
   };
 
@@ -200,7 +204,7 @@ export function MenuBar({ profile, onImportProfile, editCommands }: MenuBarProps
     { id: "plugins", label: t("menu.plugins"), items: pluginsItems },
     { id: "help", label: t("menu.help"), items: helpItems },
   ];
-  const mnemonics = MNEMONICS[lang];
+  const mnemonics = MNEMONICS[lang] ?? {};
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -239,7 +243,7 @@ export function MenuBar({ profile, onImportProfile, editCommands }: MenuBarProps
           onMouseEnter={() => { if (openMenu && openMenu.id !== m.id) open(m.id); }}
         >
           {mnemonicLabel(m.label, mnemonics[m.id], mnemonicsVisible)}
-          {m.id === "plugins" && pluginUpdates > 0 && <span className="menu-bar-dot" title={t("status.pluginUpdates", String(pluginUpdates))} />}
+          {m.id === "plugins" && pluginUpdates > 0 && <span className="menu-bar-dot" title={tn("status.pluginUpdates", pluginUpdates)} />}
         </button>
       ))}
 

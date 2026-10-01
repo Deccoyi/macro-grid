@@ -407,7 +407,8 @@ export interface DockLayoutProfile {
  * cache or a different WebView profile. */
 export interface AppPreferences {
   theme: "dark" | "light";
-  language: "tr" | "en";
+  /** "tr" or "en", or the tag of an installed language pack. */
+  language: string;
   previewProfiles: PreviewProfileInfo[];
   collapsedInspectorSections: Record<string, boolean>;
   /** Notes the person closed with "do not show again", by id. */
@@ -505,4 +506,19 @@ export interface PluginWidgetInfo {
   /** False for a plugin that is not verified (every JavaScript plugin). */
   verified: boolean;
   settings?: SettingField[] | null;
+}
+
+/** One installed language pack as GET /api/languages lists it. */
+export interface LanguagePackInfo {
+  tag: string;
+  name: string;
+  version: number;
+}
+
+/** The stored file of a language pack (docs/design/language-packs.md). The server checks the container; the editor checks every string. */
+export interface LanguagePackFile {
+  meta: { format: number; tag: string; name: string; version: number; appVersion?: string };
+  strings: Record<string, string>;
+  /** A short hash of the English text each row was translated from, to find rows that need review. */
+  sources?: Record<string, string>;
 }

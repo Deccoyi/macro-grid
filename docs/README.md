@@ -15,7 +15,7 @@ Where things live. Public entry points (`README.md`, `CONTRIBUTING.md`, `SECURIT
 | File | What it is |
 |---|---|
 | [architecture.md](architecture.md) | How the parts fit together: data model, WebSocket protocol, actions, variables, plugins, security model. |
-| [design/](design/) | One design note per bigger feature (automatic profile switching, layout patches and assets, the JavaScript plugin runtime, custom plugin widgets, variable types, the Global Variable List, logic steps in action lists, automatic updates, the user agreement acceptance, diagnostics and repair), and the [security risk assessment](design/security-risk-assessment.md). |
+| [design/](design/) | One design note per bigger feature (automatic profile switching, layout patches and assets, the JavaScript plugin runtime, custom plugin widgets, variable types, the Global Variable List, logic steps in action lists, automatic updates, the user agreement acceptance, diagnostics and repair, language packs), and the [security risk assessment](design/security-risk-assessment.md). |
 | [plans/](plans/) | Designs of features that are planned and **not implemented yet**, with the priority order in [plans/README.md](plans/README.md). Move a plan to `design/` when the feature ships and is still useful as a reference (see the end of this page). |
 
 ## Working on the code

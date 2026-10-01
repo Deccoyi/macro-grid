@@ -6,6 +6,8 @@ import type {
   AppPreferences,
   ExportProfileResult,
   ImportProfileResult,
+  LanguagePackFile,
+  LanguagePackInfo,
   OptionsResult,
   IconPackInfo,
   PairedDeviceInfo,
@@ -288,6 +290,23 @@ export const api = {
   setAutostart: (enabled: boolean): Promise<{ enabled: boolean }> => send("PUT", "/api/system/autostart", { enabled }),
 
   savePreferences: (preferences: AppPreferences): Promise<void> => send("PUT", "/api/preferences", preferences),
+
+  /** Installed language packs (tag, name, version). */
+  listLanguagePacks: (): Promise<LanguagePackInfo[]> => get("/api/languages"),
+
+  getLanguagePack: (tag: string): Promise<LanguagePackFile> => get(`/api/languages/${encodeURIComponent(tag)}`),
+
+  /** Stores a pack (the server checks the tag, size and shape only). */
+  saveLanguagePack: (tag: string, pack: LanguagePackFile): Promise<void> => send("PUT", `/api/languages/${encodeURIComponent(tag)}`, pack),
+
+  deleteLanguagePack: (tag: string): Promise<void> => send("DELETE", `/api/languages/${encodeURIComponent(tag)}`),
+
+  /** Shows a native "Open" dialog and reads the chosen CSV table as text (null path: cancelled). */
+  importLanguageCsvDialog: (): Promise<{ path: string | null; text?: string }> => send("POST", "/api/browse/import-language-csv"),
+
+  /** Shows a native "Save As" dialog and writes the table there as UTF-8 CSV. */
+  exportLanguageCsvDialog: (fileName: string, text: string): Promise<{ path: string | null }> =>
+    send("POST", "/api/browse/export-language-csv", { fileName, text }),
 
   /** Shows a native "Open" dialog on the server's desktop and reads the chosen .msprofile (or plain profile JSON)
    * file; the server validates it and reports which plugins it needs that are missing. */

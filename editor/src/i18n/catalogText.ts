@@ -2,7 +2,7 @@ import { useCallback, useMemo } from "react";
 import type { ActionInfo, VariableInfo } from "../api/types";
 import { usePreferences } from "../preferences/PreferencesContext";
 
-type Language = "tr" | "en";
+import type { Language } from "./language";
 
 /** Localized text for what the server (and plugins) describe: action names/descriptions, variable
  * descriptions and category names. The server only sends one language-neutral (English) text; this is
@@ -75,11 +75,12 @@ const TR: Record<string, string> = {
 
 };
 
-const TEXTS: Record<Language, Record<string, string>> = { tr: TR, en: {} };
+const NONE: Record<string, string> = {};
+const TEXTS: Record<Language, Record<string, string>> = { tr: TR, en: NONE };
 
 export function useCatalogText() {
   const { language } = usePreferences();
-  const table = TEXTS[language];
+  const table = TEXTS[language] ?? NONE;
 
   const lookup = useCallback((key: string, fallback: string) => table[key] ?? fallback, [table]);
 

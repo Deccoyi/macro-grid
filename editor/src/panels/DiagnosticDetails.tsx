@@ -1,3 +1,4 @@
+import { localeOf } from "../i18n/language";
 import type { Profile } from "@macro/renderer";
 import { useT } from "../i18n/I18nContext";
 import type { DictKey } from "../i18n/tr";
@@ -8,7 +9,7 @@ export function DiagnosticDetails({ d, text, where, profile }: { d: Diagnostic; 
   const { t, lang } = useT();
   const help = t(`errorHelp.${d.code}` as DictKey);
   const exists = !d.target?.widgetId || !!profile?.pages.some((p) => p.widgets.some((w) => w.id === d.target?.widgetId));
-  const time = (iso?: string) => (iso ? new Date(iso).toLocaleString(lang) : null);
+  const time = (iso?: string) => (iso ? new Date(iso).toLocaleString(localeOf(lang)) : null);
   const rows: [string, string | null][] = [
     [t("errorList.details.severity"), t(`errorList.severity.${d.severity}` as DictKey)],
     [t("errorList.col.code"), d.code],

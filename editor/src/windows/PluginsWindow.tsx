@@ -104,7 +104,7 @@ function PluginAvatar({ id, name, size = 36, iconUrl }: { id: string; name: stri
  * window. Lists what MacroGrid.Core.Plugins.PluginManager found under plugins/, and lets the user
  * install (from a folder), reload or remove a plugin. All of it takes effect immediately — no restart. */
 export function PluginsWindow() {
-  const { t } = useT();
+  const { t, tn } = useT();
   useDocumentTitle("plugins.title");
   const [category, setCategory] = useState<Category>("installed");
   const [plugins, setPlugins] = useState<PluginInfo[] | null>(null);
@@ -453,7 +453,7 @@ export function PluginsWindow() {
                   {p.detail && <div style={{ fontSize: 11, color: "var(--ms-text-secondary)", marginTop: 2 }}>{p.detail}</div>}
                   {p.withdrawn && <div style={{ fontSize: 11, color: "var(--ms-warning, #facc15)", marginTop: 2 }}>{t("plugins.withdrawn.installedNote")}</div>}
                   {(p.keyboardUsesToday ?? 0) > 0 && (
-                    <div style={{ fontSize: 11, color: "var(--ms-text-secondary)", marginTop: 2 }}>{t("plugins.keyboardUses", String(p.keyboardUsesToday ?? 0))}</div>
+                    <div style={{ fontSize: 11, color: "var(--ms-text-secondary)", marginTop: 2 }}>{tn("plugins.keyboardUses", p.keyboardUsesToday ?? 0)}</div>
                   )}
                   {p.status === "Loaded" && (p.permissions?.length ?? 0) > 0 && (
                     <details style={{ marginTop: 4 }}>
@@ -561,7 +561,7 @@ export function PluginsWindow() {
             <InfoCell label={t("plugins.discover.info.type")} value={selectedEntry.kind === "js" ? t("plugins.discover.kind.js") : t("plugins.discover.kind.native")} />
             <InfoCell label={t("plugins.discover.info.source")} value={t(`plugins.badge.${catalogOfficial ? "official" : "thirdParty"}`)} />
             {selectedEntry.category && <InfoCell label={t("plugins.discover.info.category")} value={selectedEntry.category} />}
-            <InfoCell label={t("plugins.discover.info.access")} value={selectedEntry.kind === "js" ? t("plugins.discover.info.permissionsCount", String(selectedEntry.permissions.length)) : t("plugins.discover.info.fullAccess")} />
+            <InfoCell label={t("plugins.discover.info.access")} value={selectedEntry.kind === "js" ? tn("plugins.discover.info.permissionsCount", selectedEntry.permissions.length) : t("plugins.discover.info.fullAccess")} />
           </div>
 
           {(selectedEntry.tags?.length ?? 0) > 0 && (

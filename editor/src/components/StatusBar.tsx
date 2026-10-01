@@ -4,6 +4,8 @@ import { Circle } from "lucide-react";
 import { api } from "../api/client";
 import type { StatusEntry, StatusLevel } from "../api/types";
 import { useT } from "../i18n/I18nContext";
+import { isBuiltIn } from "../i18n/language";
+import { usePack } from "../i18n/packStore";
 import { useStatusNotice } from "../state/statusNotice";
 import { usePluginUpdateCount } from "../state/pluginUpdates";
 
@@ -50,13 +52,29 @@ function StatusChip({ entry, onClick }: { entry: StatusEntry; onClick?: () => vo
 }
 
 /**
+ * The fixed mark of a language pack and the one-click way back to English. Its words are deliberately not in the dictionaries: a pack
+ * must not be able to change or hide them.
+ */
+function LanguagePackMark() {
+  const { lang, setLang } = useT();
+  const pack = usePack();
+  if (isBuiltIn(lang)) return null;
+  return (
+    <span style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11.5, padding: "0 6px", color: "var(--ms-warning, #facc15)" }}>
+      <span>{`Unofficial language pack: ${pack?.tag === lang ? pack.name : lang}`}</span>
+      <button type="button" className="ghost" style={{ fontSize: 11.5, padding: "0 6px" }} onClick={() => setLang("en")}>English</button>
+    </span>
+  );
+}
+
+/**
  * Window-wide status bar — the last row of App.tsx's root grid. Core items (server version, connected
  * device count) sit on the left; plugin-owned items (see IPluginHost.CreateStatusItem, e.g. a connection state)
  * on the right. Clicking a plugin item opens that plugin's settings window; a plugin
  * with no registered IPluginSettingsPage just shows an empty window (see PluginSettingsWindow.tsx).
  */
 export function StatusBar({ items }: { items: StatusEntry[] }) {
-  const { t } = useT();
+  const { t, tn } = useT();
   const notice = useStatusNotice();
   const pluginUpdates = usePluginUpdateCount();
   const core = items.filter((i) => i.pluginId === "core");
@@ -70,12 +88,13 @@ export function StatusBar({ items }: { items: StatusEntry[] }) {
       }}
     >
       <div style={{ display: "flex", alignItems: "center" }}>
+        <LanguagePackMark />
         {core.map((entry) => (
           <StatusChip key={entry.id} entry={entry} onClick={entry.id === "update" ? () => api.openToolWindow("update") : undefined} />
         ))}
         {pluginUpdates > 0 && (
           <StatusChip
-            entry={{ id: "plugin-updates", pluginId: "core", text: t("status.pluginUpdates", String(pluginUpdates)), level: "Warning", updatedAt: "" }}
+            entry={{ id: "plugin-updates", pluginId: "core", text: tn("status.pluginUpdates", pluginUpdates), level: "Warning", updatedAt: "" }}
             onClick={() => api.openToolWindow("plugins")}
           />
         )}
