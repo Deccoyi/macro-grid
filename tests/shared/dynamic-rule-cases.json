@@ -48,5 +48,8 @@
 { "name": "empty variable name is false", "variables": { "": 1 }, "condition": { "kind": "compare", "variable": "", "operator": "==", "value": "1" }, "expected": false },
 { "name": "empty value is not a number for >", "variables": { "v": 5 }, "condition": { "kind": "compare", "variable": "v", "operator": ">", "value": "" }, "expected": false },
 { "name": "empty value is not zero for ==", "variables": { "v": 0 }, "condition": { "kind": "compare", "variable": "v", "operator": "==", "value": "" }, "expected": false },
-{ "name": "empty between bound is false", "variables": { "v": 5 }, "condition": { "kind": "compare", "variable": "v", "operator": "between", "value": "0", "value2": "" }, "expected": false }
+{ "name": "empty between bound is false", "variables": { "v": 5 }, "condition": { "kind": "compare", "variable": "v", "operator": "between", "value": "0", "value2": "" }, "expected": false },
+{ "name": "self.busy true", "variables": { "self.busy": true }, "condition": { "kind": "compare", "variable": "self.busy", "operator": "==", "value": "true" }, "expected": true },
+{ "name": "self.lastResult Failed", "variables": { "self.lastResult": "Failed" }, "condition": { "kind": "compare", "variable": "self.lastResult", "operator": "==", "value": "Failed" }, "expected": true },
+{ "name": "self.lastResult empty is not Failed", "variables": { "self.lastResult": "" }, "condition": { "kind": "compare", "variable": "self.lastResult", "operator": "==", "value": "Failed" }, "expected": false }
 ]

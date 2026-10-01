@@ -2,6 +2,7 @@ using MacroGrid.Core.Model;
 using MacroGrid.Core.Plugins.Widgets;
 using MacroGrid.Core.Profiles;
 using MacroGrid.Core.Variables;
+using MacroGrid.Plugin.Abstractions;
 using MacroGrid.Protocol;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -33,6 +34,8 @@ public sealed class WidgetStateService : IHostedService, IDisposable
     private readonly WebViewState _webViews;
     private readonly ILogger<WidgetStateService> _logger;
     private readonly HashSet<string> _dirtyVariables = [];
+    private readonly HashSet<(string? SessionId, string WidgetId)> _dirtyWidgets = [];
+    private readonly LastResultStore? _results;
     private readonly Lock _dirtyLock = new();
     private Timer? _timer;
     private int _flushing;
@@ -41,8 +44,9 @@ public sealed class WidgetStateService : IHostedService, IDisposable
     internal TimeSpan SendTimeout { get; set; } = TimeSpan.FromSeconds(10);
 
     public WidgetStateService(VariableStore variables, SessionRegistry sessions, ProfileStore profiles, ToggleStateStore toggles, LayoutSender layouts, WebViewState webViews, ILogger<WidgetStateService> logger,
-        PluginWidgetCatalog? pluginWidgets = null)
+        PluginWidgetCatalog? pluginWidgets = null, LastResultStore? results = null)
     {
+        _results = results;
         _variables = variables;
         _sessions = sessions;
         _profiles = profiles;
@@ -162,7 +166,8 @@ public sealed class WidgetStateService : IHostedService, IDisposable
     {
         foreach (var widget in page.Widgets)
         {
-            var text = DynamicText.Resolve(widget, _variables);
+            var scope = ScopeFor(session, widget);
+            var text = DynamicText.Resolve(widget, scope);
             if (text is not null)
             {
                 session.SentTexts[widget.Id] = text;
@@ -187,7 +192,7 @@ public sealed class WidgetStateService : IHostedService, IDisposable
                 await session.SendAsync(MessageTypes.WidgetState, new WidgetStateMessage(widget.Id, Value: value), ct);
             }
 
-            var style = ResolveDynamicStyle(widget);
+            var style = ResolveDynamicStyle(widget, scope);
             if (style is not null)
             {
                 session.SentStyles[widget.Id] = style;
@@ -224,7 +229,7 @@ public sealed class WidgetStateService : IHostedService, IDisposable
     }
 
     /// <returns>Only the properties whose binding currently produced a value (matched a case, or hit the binding's default); null if the widget has no dynamized properties at all.</returns>
-    private Dictionary<string, string>? ResolveDynamicStyle(Widget widget)
+    private Dictionary<string, string>? ResolveDynamicStyle(Widget widget, IVariableStore variables)
     {
         if (widget.Dynamic.Count == 0) return null;
 
@@ -232,7 +237,7 @@ public sealed class WidgetStateService : IHostedService, IDisposable
         foreach (var (propertyPath, binding) in widget.Dynamic)
         {
             if (!DynamizableProperties.TryGetValue(propertyPath, out var styleKey)) continue;
-            var value = DynamicRuleEvaluator.Evaluate(binding, _variables);
+            var value = DynamicRuleEvaluator.Evaluate(binding, variables);
             if (value is null) continue; // no case matched and no default: leave the widget's own static value alone
             resolved ??= [];
             resolved[styleKey] = value;
@@ -251,6 +256,17 @@ public sealed class WidgetStateService : IHostedService, IDisposable
             if (!previous.TryGetValue(key, out var prevValue) || prevValue != value) return true;
         }
         return false;
+    }
+
+    /// <summary>The store a widget is evaluated against for one device: the shared one plus the widget's own <c>self.*</c> state.</summary>
+    private SelfVariableScope ScopeFor(ClientSession session, Widget widget) => new(_variables, session, widget, _toggles, _results);
+
+    /// <summary>Tells the flush that one widget's own state (<c>self.*</c>) changed, so it is evaluated again at once. With no session, every device
+    /// showing it is updated; with one, only that device.</summary>
+    public void Refresh(string widgetId, ClientSession? session = null)
+    {
+        lock (_dirtyLock) _dirtyWidgets.Add((session?.Id, widgetId));
+        _ = FlushOnceAsync();
     }
 
     private void OnVariableChanged(string name)
@@ -276,38 +292,45 @@ public sealed class WidgetStateService : IHostedService, IDisposable
     internal async Task FlushAsync()
     {
         HashSet<string> dirty;
+        HashSet<(string? SessionId, string WidgetId)> marks;
         lock (_dirtyLock)
         {
-            if (_dirtyVariables.Count == 0) return;
+            if (_dirtyVariables.Count == 0 && _dirtyWidgets.Count == 0) return;
             dirty = [.. _dirtyVariables];
+            marks = [.. _dirtyWidgets];
             _dirtyVariables.Clear();
+            _dirtyWidgets.Clear();
         }
 
         // Each client is served on its own, so one that is slow to take frames does not delay the rest.
         var sessions = _sessions.All;
         if (sessions.Count == 1)
-            await FlushSessionAsync(sessions.First(), dirty);
+            await FlushSessionAsync(sessions.First(), dirty, marks);
         else
-            await Task.WhenAll(sessions.Select(s => FlushSessionAsync(s, dirty)));
+            await Task.WhenAll(sessions.Select(s => FlushSessionAsync(s, dirty, marks)));
     }
 
-    private async Task FlushSessionAsync(ClientSession session, HashSet<string> dirty)
+    private async Task FlushSessionAsync(ClientSession session, HashSet<string> dirty, HashSet<(string? SessionId, string WidgetId)> marks)
     {
         if (!session.IsIdentified || session.ProfileId is null || session.PageId is null) return;
+        var marked = marks.Where(m => m.SessionId is null || m.SessionId == session.Id).Select(m => m.WidgetId).ToHashSet();
+        if (dirty.Count == 0 && marked.Count == 0) return;
         var page = _profiles.Get(session.ProfileId)?.FindPage(session.PageId);
         if (page is null) return;
 
         foreach (var widget in page.Widgets)
         {
+            var forced = marked.Contains(widget.Id);
+            var scope = ScopeFor(session, widget);
             string? text = null;
-            if (DynamicText.Dependencies(widget).Any(dirty.Contains) && DynamicText.Resolve(widget, _variables) is { } rendered
+            if ((forced || DynamicText.Dependencies(widget).Any(dirty.Contains)) && DynamicText.Resolve(widget, scope) is { } rendered
                 && (!session.SentTexts.TryGetValue(widget.Id, out var prevText) || prevText != rendered))
                 text = rendered;
 
             Dictionary<string, string>? style = null;
-            if (widget.Dynamic.Count > 0 && BindingsDependOn(widget.Dynamic.Values, dirty))
+            if (widget.Dynamic.Count > 0 && (forced || BindingsDependOn(widget.Dynamic.Values, dirty)))
             {
-                var resolved = ResolveDynamicStyle(widget);
+                var resolved = ResolveDynamicStyle(widget, scope);
                 var previous = session.SentStyles.GetValueOrDefault(widget.Id);
                 if (resolved is not null && StyleChanged(previous, resolved))
                     style = resolved;

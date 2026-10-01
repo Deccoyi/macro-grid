@@ -197,10 +197,17 @@ public sealed class UserVariableService : IVariableCatalogSource, IHostedService
         _store.Set(UserVariables.Prefix + def.Name, value);
     }
 
+    /// <summary>The delayed save: a disk problem must not crash the server; the values are written again on the next change or when the server stops.</summary>
+    private void TryFlushValues()
+    {
+        try { FlushValues(); }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { }
+    }
+
     private void ScheduleValueSave()
     {
         _saveTimer?.Dispose();
-        _saveTimer = _clock.CreateTimer(_ => FlushValues(), null, SaveDelay, Timeout.InfiniteTimeSpan);
+        _saveTimer = _clock.CreateTimer(_ => TryFlushValues(), null, SaveDelay, Timeout.InfiniteTimeSpan);
     }
 
     private void Load()
