@@ -4,7 +4,7 @@ import { networkTargetScope, type HttpTargetScope } from "./httpTarget";
 
 /** What the approval screens show for one permission string: a kind (picks the icon) and the sentence. One place, so the install consent and the plugin list never disagree. */
 export interface PermissionLabel {
-  kind: "variables" | "actions" | "input" | "storage" | "notify" | "widget" | "http" | "unknown";
+  kind: "variables" | "actions" | "input" | "storage" | "notify" | "widget" | "http" | "ws" | "unknown";
   /** The sentence for the plugin list. */
   text: string;
   /** The longer sentence the install consent shows, when it differs. */
@@ -29,6 +29,11 @@ export function permissionLabel(permission: string, t: Translate): PermissionLab
     const target = permission.slice(5);
     const scope = networkTargetScope(target);
     return { kind: "http", scope, text: t(`plugins.permission.http.${scope}` as DictKey, target), consentText: t("consent.http", target) };
+  }
+  if (permission.startsWith("ws:")) {
+    const target = permission.slice(3);
+    const scope = networkTargetScope(target);
+    return { kind: "ws", scope, text: t(`plugins.permission.ws.${scope}` as DictKey, target), consentText: t("consent.ws", target) };
   }
   const text = t("plugins.permission.unknown", permission);
   return { kind: "unknown", text, consentText: text };

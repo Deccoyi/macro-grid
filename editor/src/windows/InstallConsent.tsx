@@ -99,7 +99,7 @@ function PermissionRow({ permission }: { permission: string }) {
   if (label.kind === "input") return <Row icon={<Keyboard size={14} />}>{label.text}</Row>;
   if (label.kind === "notify") return <Row icon={<Bell size={14} />}>{label.text}</Row>;
   if (label.kind === "storage") return <Row icon={<HardDrive size={14} />}>{label.text}</Row>;
-  if (label.kind === "http" && label.scope) {
+  if ((label.kind === "http" || label.kind === "ws") && label.scope) {
     return (
       <Row icon={<Globe size={14} />} chip={{ text: t(`consent.scope.${label.scope}`), color: SCOPE_COLOR[label.scope] }}>
         {label.consentText}

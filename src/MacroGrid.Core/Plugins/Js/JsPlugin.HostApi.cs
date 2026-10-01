@@ -253,7 +253,12 @@ public sealed partial class JsPlugin
     }
 
     /// <summary>The text of a failed request: the refusal's own words when the network guard stopped it, else the framework's.</summary>
-    private static string DescribeFailure(Exception ex) => (ex.InnerException as NetworkRefusedException ?? ex as NetworkRefusedException)?.Message ?? ex.Message;
+    private static string DescribeFailure(Exception ex)
+    {
+        for (var e = ex; e is not null; e = e.InnerException)
+            if (e is NetworkRefusedException refused) return refused.Message;
+        return ex.Message;
+    }
 
     private string Http(string method, string url, string body, string headersJson)
     {

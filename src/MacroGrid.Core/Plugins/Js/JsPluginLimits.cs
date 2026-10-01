@@ -15,7 +15,15 @@ public sealed record JsPluginLimits(
     int MaxHttpResponseBytes,
     int MaxConsecutiveErrors,
     TimeSpan PressWindow,
-    TimeSpan ActionOutcomeTimeout)
+    TimeSpan ActionOutcomeTimeout,
+    int MaxSockets,
+    int MaxWsConnectsPerMinute,
+    TimeSpan WsConnectTimeout,
+    int MaxWsMessageBytes,
+    int MaxWsIncomingPerSecond,
+    int MaxWsOutgoingPerSecond,
+    int MaxWsOutgoingWaiting,
+    TimeSpan WsPing)
 {
     public static JsPluginLimits Default { get; } = new(
         CallTimeout: TimeSpan.FromSeconds(2),
@@ -31,5 +39,14 @@ public sealed record JsPluginLimits(
         // request before it types, short enough that a press cannot be reused for input later.
         PressWindow: TimeSpan.FromSeconds(5),
         // How long the host waits for an async action registered with 'outcome: true' before it reports a timeout.
-        ActionOutcomeTimeout: TimeSpan.FromSeconds(10));
+        ActionOutcomeTimeout: TimeSpan.FromSeconds(10),
+        // Web sockets (permission ws:host:port).
+        MaxSockets: 2,
+        MaxWsConnectsPerMinute: 10,
+        WsConnectTimeout: TimeSpan.FromSeconds(10),
+        MaxWsMessageBytes: 64 * 1024,
+        MaxWsIncomingPerSecond: 50,
+        MaxWsOutgoingPerSecond: 20,
+        MaxWsOutgoingWaiting: 32,
+        WsPing: TimeSpan.FromSeconds(30));
 }

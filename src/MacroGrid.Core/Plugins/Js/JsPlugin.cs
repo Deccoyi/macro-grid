@@ -43,6 +43,7 @@ public sealed partial class JsPlugin : IPlugin, IPluginWidgetHandler, IDisposabl
     private readonly ILogger _logger;
     private readonly ProblemList? _problems;
     private readonly PluginNotifications? _notifications;
+    private readonly JsNetworkPolicy _network;
     // The last message a refused key press put on the problem list; a script that does not catch it fails the whole call with the same text, which must not be listed twice.
     private volatile string? _lastReported;
     private readonly Action<string> _onFaulted;
@@ -94,6 +95,7 @@ public sealed partial class JsPlugin : IPlugin, IPluginWidgetHandler, IDisposabl
         PluginNotifications? notifications = null)
     {
         _notifications = notifications;
+        _network = network ?? JsNetworkPolicy.None;
         _problems = problems;
         _windows = windows;
         _isElevated = isElevated ?? JsInputPolicy.ServerIsElevated;
@@ -106,7 +108,7 @@ public sealed partial class JsPlugin : IPlugin, IPluginWidgetHandler, IDisposabl
         _onFaulted = onFaulted;
         _limits = limits ?? JsPluginLimits.Default;
         // Redirects and the system proxy are off and the connection is made by the network guard: an approved request may only reach the kind of address that was approved.
-        _http = new HttpClient(JsNetworkGuard.CreateHandler(network ?? JsNetworkPolicy.None, ReportNetworkRefused)) { Timeout = _limits.HttpTimeout };
+        _http = new HttpClient(JsNetworkGuard.CreateHandler(_network, ReportNetworkRefused)) { Timeout = _limits.HttpTimeout };
     }
 
     public void Initialize(IPluginHost host)
@@ -237,6 +239,7 @@ public sealed partial class JsPlugin : IPlugin, IPluginWidgetHandler, IDisposabl
         foreach (var wait in _outcomeWaits.Values) wait.TrySetResult("""{"ok":false,"code":"Unavailable"}""");
         _outcomeWaits.Clear();
         _disposeCts.Cancel();
+        CloseAllSockets();
         _http.Dispose();
         _disposeCts.Dispose();
         _storage?.Dispose();
@@ -308,6 +311,9 @@ public sealed partial class JsPlugin : IPlugin, IPluginWidgetHandler, IDisposabl
         engine.SetValue("__storageRemove", new Action<string>(StorageRemove));
         engine.SetValue("__storageKeys", new Func<string>(StorageKeys));
         engine.SetValue("__notify", new Action<string>(Notify));
+        engine.SetValue("__wsConnect", new Action<int, string, string, string>(WsConnect));
+        engine.SetValue("__wsSend", new Action<int, string>(WsSend));
+        engine.SetValue("__wsClose", new Action<int>(WsClose));
         engine.SetValue("__widgetPost", new Action<string>(WidgetPost));
         engine.SetValue("__diagnosticsReport", new Action<string, string, string?>(DiagnosticsReport));
         engine.SetValue("__diagnosticsClear", new Action(() => _host!.Diagnostics.Clear()));
