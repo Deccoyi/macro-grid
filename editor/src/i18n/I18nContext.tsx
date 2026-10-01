@@ -1,5 +1,6 @@
 import { useCallback, useMemo } from "react";
 import { usePreferences } from "../preferences/PreferencesContext";
+import { isCritical } from "./critical";
 import { en } from "./en";
 import { format } from "./format";
 import { isBuiltIn, localeOf, type Language } from "./language";
@@ -22,6 +23,7 @@ function pluralCategory(language: Language, count: number): string {
 }
 
 /** A replaced value inside a pack's text is wrapped in direction isolates, so a value in another script cannot reorder the words around it. */
+const ISOLATES = /[\u2068\u2069]/g;
 const isolate = (value: string) => `\u2068${value}\u2069`;
 
 /** The one hook every component uses for both reading translated strings (t, tn for a text that depends on a number) and, rarely, the raw
@@ -43,9 +45,17 @@ export function useT() {
 
   const t = useCallback(
     (key: DictKey, ...args: string[]): string => {
-      const value = raw(key) ?? en[key];
       const names = PARAMS[key];
-      return names ? format(value, names, args, isBuiltIn(language) ? undefined : isolate) : value;
+      const fill = (value: string, wrap?: (v: string) => string) => (names ? format(value, names, args, wrap) : value);
+      const translated = raw(key);
+      if (translated === undefined) return fill(en[key]);
+      if (isBuiltIn(language)) return fill(translated);
+
+      // A pack's text for a permission, import or removal screen carries the English text next to it.
+      const text = fill(translated, isolate);
+      if (!isCritical(key)) return text;
+      const english = fill(en[key]);
+      return text.replace(ISOLATES, "") === english ? text : `${text} (${english})`;
     },
     [language, raw],
   );

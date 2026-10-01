@@ -156,12 +156,12 @@ describe("t with a language pack", () => {
   });
 
   it("uses the pack's text and falls back to English for a key it lacks", async () => {
-    server.pack = pack({ "app.loading": "Laden…", "consent.http": "Senden an {target}" });
+    server.pack = pack({ "app.loading": "Laden…", "diag.save.total": "{pages} / {count}" });
     const { result } = renderHook(() => useT(), { wrapper });
 
     await waitFor(() => expect(result.current.t("app.loading")).toBe("Laden…"));
     expect(result.current.t("app.title")).toBe(en["app.title"]);
-    expect(result.current.t("consent.http", "example.com")).toBe("Senden an ⁨example.com⁩");
+    expect(result.current.t("diag.save.total", "a", "b")).toContain("⁨");
   });
 
   it("keeps a hostile text as text", async () => {
@@ -178,6 +178,14 @@ describe("t with a language pack", () => {
     await waitFor(() => expect(result.current.tn("status.pluginUpdates", 1)).toContain("Update"));
     expect(result.current.tn("status.pluginUpdates", 1)).toBe("⁨1⁩ Update");
     expect(result.current.tn("status.pluginUpdates", 3)).toBe("⁨3⁩ Updates");
+  });
+
+  it("keeps the English text next to a pack's text on a permission screen only", async () => {
+    server.pack = pack({ "consent.http": "Senden an {target}", "app.loading": "Laden…" });
+    const { result } = renderHook(() => useT(), { wrapper });
+
+    await waitFor(() => expect(result.current.t("app.loading")).toBe("Laden…"));
+    expect(result.current.t("consent.http", "example.com")).toBe("Senden an ⁨example.com⁩ (Send web requests to example.com)");
   });
 
   it("leaves the built-in languages exactly as they are", async () => {
