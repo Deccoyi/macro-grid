@@ -102,6 +102,8 @@ All numbers are CSS px and live as tokens in `theme.css`; never write a literal 
 
 **Settings window.** Pages in the Settings window (General, Global variable list, Automation, ...) follow the same field system; layout, tokens and mockups are in [settings-window-design.md](settings-window-design.md).
 
+**Variable picker.** The "Add variable" window follows [variable-picker-design.md](variable-picker-design.md).
+
 ### Tokens
 
 | Token | Value | Meaning |
