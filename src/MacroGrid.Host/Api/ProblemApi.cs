@@ -1,4 +1,8 @@
+using MacroGrid.Core.Devices;
 using MacroGrid.Core.Diagnostics;
+using MacroGrid.Core.Profiles;
+using MacroGrid.Core.Sessions;
+using MacroGrid.Host.Ui;
 using Microsoft.AspNetCore.Routing;
 
 namespace MacroGrid.Host.Api;
@@ -24,6 +28,28 @@ internal static class ProblemApi
             return Results.NoContent();
         });
 
+        // The Error List as a redacted JSON document: the editor sends its own lines (as text), the server adds its own. "text" answers with the
+        // document (the editor puts it on the clipboard), "file" shows the Save dialog.
+        api.MapPost("/problems/export", async (HttpRequest request, ProblemList problems, DeviceStore devices, IUiDialogService dialogs) =>
+        {
+            if (request.ContentLength > ProblemExport.MaxBodyBytes) return ApiResults.BadRequest("The list is too big to export.");
+            var (valid, body) = await ApiResults.ReadJsonAsync<ProblemExportRequest>(request);
+            if (!valid || body is null) return ApiResults.InvalidJson();
+            var lines = body.Lines ?? [];
+            if (ProblemExport.Refusal(lines.Count) is { } refusal) return ApiResults.BadRequest(refusal);
+
+            var redactor = new Redactor(RedactionContext.ForThisPc(ProfileStore.DefaultDataDir, devices.All.Select(d => d.Name)));
+            var now = DateTimeOffset.Now;
+            var text = ProblemExport.Build(lines, problems.Snapshot(), redactor, now, ClientHub.ServerVersion);
+            if (body.To != "file") return Results.Json(new { text });
+
+            var path = await dialogs.SaveFileAsync("Export Error List", $"macro-grid-problems-{now:yyyyMMdd-HHmm}.json",
+                "JSON file (*.json)|*.json", "json", System.Text.Encoding.UTF8.GetBytes(text));
+            return Results.Json(new { path });
+        });
+
         return api;
     }
+
+    private sealed record ProblemExportRequest(string? To, List<ExportLine>? Lines);
 }

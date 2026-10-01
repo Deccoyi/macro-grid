@@ -3,7 +3,9 @@ import type { Profile } from "@macro/renderer";
 import { api } from "../api/client";
 import { commandItem } from "../commands/commandItem";
 import type { Command } from "../commands/types";
-import { alertAsync, choiceAsync, confirmAsync, promptAsync } from "../dialogs/dialogStore";
+import { alertAsync, choiceAsync, confirmAsync, confirmRichAsync, promptAsync } from "../dialogs/dialogStore";
+import { LogExportContent } from "../dialogs/LogExportContent";
+import { showStatusNotice } from "../state/statusNotice";
 import { usePreferences } from "../preferences/PreferencesContext";
 import { clearWebUrls, collectWebSites } from "../state/webUrls";
 import { WebImportConsent } from "../windows/WebImportConsent";
@@ -176,6 +178,18 @@ export function MenuBar({ profile, onImportProfile, editCommands }: MenuBarProps
     { label: t("menu.help.about"), onSelect: () => api.openToolWindow("help", "about") },
     { label: t("menu.help.agreement"), onSelect: () => api.openToolWindow("help", "agreement") },
     { label: t("menu.help.licenses"), onSelect: () => api.openToolWindow("help", "licenses") },
+    {
+      label: t("menu.help.exportLogs"),
+      onSelect: async () => {
+        if (!(await confirmRichAsync({ title: t("logExport.title"), content: <LogExportContent />, confirmLabel: t("logExport.save") }))) return;
+        try {
+          const result = await api.exportLogs();
+          if (result.path) showStatusNotice("logExport.saved");
+        } catch {
+          showStatusNotice("logExport.saveFailed");
+        }
+      },
+    },
   ];
 
   const menus: { id: string; label: string; items: ContextMenuEntry[] }[] = [
