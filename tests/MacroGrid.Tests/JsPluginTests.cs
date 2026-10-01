@@ -222,6 +222,27 @@ public sealed class JsPluginTests : IDisposable
         Assert.Null(page.Load()["stolen"]);
     }
 
+    [Fact]
+    public void The_hotkey_duration_and_multi_select_kinds_load_in_an_action_and_a_settings_page()
+    {
+        var fields = "[{ key: 'k', label: 'K', kind: 'Hotkey' }, { key: 'd', label: 'D', kind: 'Duration', default: 1500, min: 100 }, { key: 'm', label: 'M', kind: 'MultiSelect', options: [{ value: 'a', label: 'A' }], default: ['a'] }]";
+        var (_, host) = Start($"host.registerAction({{ type: 't.kinds', name: 'Kinds', fields: {fields}, run() {{}} }}); host.settings.page({fields});");
+
+        var kinds = Assert.IsAssignableFrom<IActionDescriptor>(host.Actions.Single(a => a.Type == "t.kinds")).Fields.Select(f => f.Kind).ToArray();
+        Assert.Equal([SettingFieldKind.Hotkey, SettingFieldKind.Duration, SettingFieldKind.MultiSelect], kinds);
+        var stored = host.SettingsPage!.Load();
+        Assert.Equal(1500, stored["d"]!.GetValue<int>());
+        Assert.Equal("a", stored["m"]!.AsArray()[0]!.GetValue<string>());
+    }
+
+    [Fact]
+    public void A_field_kind_the_server_cannot_read_is_an_error_the_script_can_catch()
+    {
+        Start("try { host.settings.page([{ key: 'a', label: 'A', kind: 'Nope' }]); } catch (e) { host.variables.set('t.err', e.message); }");
+
+        Assert.Contains("A field of settings.page could not be read", (string)_variables.Get("t.err")!);
+    }
+
     /// <summary>A local server that answers every request with <c>hello</c> after <paramref name="delayMs"/> ms.</summary>
     private static (HttpListener Listener, int Port) SlowServer(int delayMs)
     {

@@ -60,10 +60,23 @@ public sealed partial class JsPlugin
         return name;
     }
 
+    /// <summary>A definition the server cannot read (a misspelt kind, a kind from a newer server) becomes an error the script can catch, with the serializer's own text.</summary>
+    private static T? ReadDefinition<T>(string json, string call)
+    {
+        try
+        {
+            return JsonSerializer.Deserialize<T>(json, ProtocolJson.Options);
+        }
+        catch (JsonException ex)
+        {
+            throw new JsHostException($"A field of {call} could not be read: {ex.Message}");
+        }
+    }
+
     private void RegisterAction(string json)
     {
         Require(JsPermissions.Actions);
-        var meta = JsonSerializer.Deserialize<JsActionMeta>(json, ProtocolJson.Options)
+        var meta = ReadDefinition<JsActionMeta>(json, "registerAction")
             ?? throw new JsHostException("registerAction needs a definition.");
         if (string.IsNullOrWhiteSpace(meta.Type) || !meta.Type.StartsWith(_manifest.Id + ".", StringComparison.Ordinal))
             throw new JsHostException($"Action types must start with '{_manifest.Id}.'.");
@@ -109,7 +122,7 @@ public sealed partial class JsPlugin
 
     private void SettingsPage(string json)
     {
-        var fields = JsonSerializer.Deserialize<SettingField[]>(json, ProtocolJson.Options)
+        var fields = ReadDefinition<SettingField[]>(json, "settings.page")
             ?? throw new JsHostException("settings.page needs a list of fields.");
         _settingsPage = new JsSettingsPage(_host!.DataDirectory, fields);
     }
