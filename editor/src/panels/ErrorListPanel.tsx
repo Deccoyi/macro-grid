@@ -1,5 +1,7 @@
 import { useMemo, useRef, useState } from "react";
-import { CircleAlert, Eraser, Info, Search, TriangleAlert } from "lucide-react";
+import { CircleAlert, Copy, Eraser, Info, Save, Search, TriangleAlert } from "lucide-react";
+import { api } from "../api/client";
+import { toExportLines } from "../diagnostics/exportLines";
 import { useDiagnostics } from "../diagnostics/DiagnosticsContext";
 import type { Diagnostic, DiagnosticSeverity } from "../diagnostics/types";
 import { useT } from "../i18n/I18nContext";
@@ -18,6 +20,7 @@ export function ErrorListPanel() {
   const [query, setQuery] = useState("");
   const [widths, setWidths] = useState(loadColumnWidths);
   const template = gridTemplate(widths);
+  const [exportState, setExportState] = useState<"copied" | "saved" | "failed" | null>(null);
   const drag = useRef<{ column: DiagnosticColumn; startX: number; startWidth: number } | null>(null);
 
   const startDrag = (column: DiagnosticColumn) => (e: React.PointerEvent<HTMLSpanElement>) => {
@@ -35,6 +38,22 @@ export function ErrorListPanel() {
     if (!drag.current) return;
     drag.current = null;
     saveColumnWidths(widths);
+  };
+
+  const textOf = (d: Diagnostic) => d.message ?? (d.messageKey ? t(d.messageKey, ...(d.messageArgs ?? [])) : "");
+  const runExport = async (to: "text" | "file") => {
+    try {
+      const result = await api.exportProblems(to, toExportLines(diagnostics, textOf, t("errorList.source.editor")));
+      if (to === "text") {
+        await navigator.clipboard.writeText(result.text ?? "");
+        setExportState("copied");
+      } else {
+        setExportState(result.path ? "saved" : null);
+      }
+    } catch {
+      setExportState("failed");
+    }
+    window.setTimeout(() => setExportState(null), 2500);
   };
 
   const counts = useMemo(() => {
@@ -71,9 +90,18 @@ export function ErrorListPanel() {
           <SegButton active={filter === "warning"} onClick={() => setFilter("warning")}><TriangleAlert size={10} strokeWidth={2.5} /> {counts.warning}</SegButton>
           <SegButton active={filter === "info"} onClick={() => setFilter("info")} last><Info size={10} strokeWidth={2.5} /> {counts.info}</SegButton>
         </div>
+        <span style={{ marginLeft: "auto", fontSize: 11.5, color: exportState === "failed" ? "var(--ms-danger)" : "var(--ms-text-secondary)" }} role="status">
+          {exportState === "copied" ? t("errorList.copied") : exportState === "saved" ? t("errorList.saved") : exportState === "failed" ? t("errorList.exportFailed") : ""}
+        </span>
+        <button onClick={() => void runExport("text")} title={t("errorList.exportNote")} style={toolButton}>
+          <Copy size={12} strokeWidth={1.75} /> {t("errorList.copy")}
+        </button>
+        <button onClick={() => void runExport("file")} title={t("errorList.exportNote")} style={toolButton}>
+          <Save size={12} strokeWidth={1.75} /> {t("errorList.save")}
+        </button>
         <button
           onClick={() => clear()}
-          style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 5, color: "var(--ms-text-secondary)", fontSize: 11.5, background: "transparent", border: "none", cursor: "pointer" }}
+          style={{ display: "flex", alignItems: "center", gap: 5, color: "var(--ms-text-secondary)", fontSize: 11.5, background: "transparent", border: "none", cursor: "pointer" }}
         >
           <Eraser size={12} strokeWidth={1.75} /> {t("errorList.clear")}
         </button>
@@ -108,6 +136,8 @@ export function ErrorListPanel() {
     </div>
   );
 }
+
+const toolButton: React.CSSProperties = { display: "flex", alignItems: "center", gap: 5, color: "var(--ms-text-secondary)", fontSize: 11.5, background: "transparent", border: "none", cursor: "pointer" };
 
 function Row({ d, template }: { d: Diagnostic; template: string }) {
   const { t } = useT();

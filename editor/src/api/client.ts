@@ -1,3 +1,4 @@
+import type { ExportLine } from "../diagnostics/exportLines";
 import type { PluginWidgetRuntimeInfo, Profile } from "@macro/renderer";
 import type {
   ServerProblem,
@@ -236,6 +237,9 @@ export const api = {
   /** Discover tab: browses a source's plugins (today, only `"official"`) — fetched fresh every time the tab
    * opens or is refreshed, never in the background. */
   fetchProblems: (): Promise<{ version: number; problems: ServerProblem[] }> => get("/api/problems"),
+  /** The Error List as redacted JSON: `to: "text"` answers the document, `to: "file"` shows the Save dialog and answers the path (null when cancelled). */
+  exportProblems: (to: "text" | "file", lines: ExportLine[]): Promise<{ text?: string; path?: string | null }> =>
+    send("POST", "/api/problems/export", { to, lines }),
   clearProblems: (source?: string): Promise<void> =>
     send("POST", source ? `/api/problems/clear?source=${encodeURIComponent(source)}` : "/api/problems/clear"),
 

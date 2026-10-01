@@ -15,7 +15,12 @@ public sealed record RedactionContext(
     string? DataFolder = null,
     string? UserName = null,
     string? MachineName = null,
-    IReadOnlyList<string>? DeviceNames = null);
+    IReadOnlyList<string>? DeviceNames = null)
+{
+    /// <summary>The context of this PC: the real user profile folder, user name and PC name, with the given data folder and device names.</summary>
+    public static RedactionContext ForThisPc(string dataDir, IEnumerable<string> deviceNames) => new(
+        Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), dataDir, Environment.UserName, Environment.MachineName, deviceNames.ToList());
+}
 
 /// <summary>
 /// Removes personal details from one line of text before it is exported (the Error List export and the log export). Best effort: it
