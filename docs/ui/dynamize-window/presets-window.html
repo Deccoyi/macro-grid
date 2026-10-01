@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Presets window</title>
+<style>
+
+body{margin:0}
+.root{--bg:#1c1e22;--surface:#232529;--raised:#2b2e33;--inset:#16171a;--line:#35383e;--line2:#46494f;--tx:#e6e7ea;--tx2:#9a9ea6;--tx3:#5b5e64;--acc:#d97706;--acc2:#f59e0b;--accon:#1c1e22;--danger:#e0604f}
+.root *{box-sizing:border-box}
+.root svg{flex-shrink:0;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.root button{font:inherit;color:inherit;cursor:pointer}
+.root :focus-visible{outline:1.5px solid var(--acc);outline-offset:1px}
+.win{display:flex;flex-direction:column;background:var(--surface);border:1px solid var(--line2);height:100%}
+.title{display:flex;align-items:center;gap:10px;height:48px;padding:0 10px 0 14px;border-bottom:1px solid var(--line);flex:none}
+.tico{display:flex;align-items:center;justify-content:center;width:26px;height:26px;background:rgba(217,119,6,.15);color:var(--acc2)}
+.ib{display:flex;align-items:center;justify-content:center;width:24px;height:24px;padding:0;background:transparent;border:1px solid transparent;border-radius:4px;color:var(--tx2)}
+.ib:hover{background:var(--raised);color:var(--tx)}
+.body{display:grid;grid-template-columns:230px minmax(0,1fr);flex:1;min-height:0}
+.side{display:flex;flex-direction:column;border-right:1px solid var(--line);background:var(--bg);min-height:0}
+.search{position:relative;padding:10px;border-bottom:1px solid var(--line)}
+.search svg{position:absolute;left:19px;top:19px;color:var(--tx2)}
+.fld{height:28px;width:100%;padding:0 8px 0 26px;background:var(--inset);border:1px solid var(--line);border-radius:4px;font:inherit;font-size:12px;color:var(--tx)}
+.fld:focus{outline:none;border-color:var(--acc)}
+.grp{padding:10px 12px 4px;font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--tx2)}
+.item{display:flex;align-items:center;gap:8px;width:calc(100% - 8px);margin:0 4px;height:30px;padding:0 8px;background:transparent;border:1px solid transparent;border-radius:4px;text-align:left;color:var(--tx)}
+.item svg{color:var(--tx2)}
+.item:hover{background:var(--raised)}
+.item.on{background:var(--surface);border-color:var(--acc)}
+.item.on svg{color:var(--acc)}
+.item.dis{color:var(--tx3);cursor:default}
+.item.dis svg{color:var(--tx3)}
+.item.dis:hover{background:transparent}
+.item .n{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.item .c{font-size:11px;color:var(--tx2)}
+.main{display:flex;flex-direction:column;gap:14px;padding:16px 18px;min-width:0;overflow:hidden}
+.sub{font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--tx2)}
+.chip{display:flex;align-items:center;gap:6px;height:28px;padding:0 8px;background:var(--inset);border:1px solid var(--line);border-radius:4px;font-family:ui-monospace,monospace;font-size:12px;color:var(--tx);text-align:left}
+.chip svg{color:var(--tx2)}
+.chip:hover{border-color:var(--line2)}
+.tbl{display:flex;flex-direction:column;gap:1px;padding:1px;background:var(--line);border-radius:4px}
+.tr{display:grid;grid-template-columns:24px minmax(0,1fr) 110px;align-items:center;gap:8px;height:30px;padding:0 10px;background:var(--bg);font-size:12px}
+.tr:first-child{border-radius:3px 3px 0 0}.tr:last-child{border-radius:0 0 3px 3px}
+.tr .no{color:var(--tx3);font-family:ui-monospace,monospace}
+.tr .cond{font-family:ui-monospace,monospace;color:var(--tx);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tr .cond em{font-style:normal;color:var(--tx2)}
+.tr .res{display:flex;align-items:center;gap:7px;font-family:ui-monospace,monospace;color:var(--tx2)}
+.tr .res i{width:13px;height:13px;border-radius:3px;border:1px solid rgba(255,255,255,.18)}
+.foot{display:flex;align-items:center;gap:8px;padding:10px 14px;border-top:1px solid var(--line);flex:none}
+.btn{height:28px;padding:0 14px;border-radius:4px;border:1px solid var(--line);background:var(--raised);font-size:13px;color:var(--tx)}
+.btn:hover{border-color:var(--line2)}
+.btn.ghost{background:transparent;border-color:transparent}
+.btn.ghost:hover{background:var(--raised)}
+.btn.primary{background:var(--acc);border-color:var(--acc);color:var(--accon);font-weight:600}
+.btn.primary:hover{background:var(--acc2);border-color:var(--acc2)}
+
+html,body{margin:0;background:#1c1e22}
+</style>
+</head>
+<body>
+
+
+<div class="root" style="width: 720px; height: 540px; padding: 24px; background: #1c1e22; color: #e6e7ea; font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; font-size: 13px; line-height: 1.35;">
+<div class="win">
+
+  <div class="title">
+    <span class="tico"><svg width="14" height="14" viewBox="0 0 24 24"><path d="M12 3 2 8l10 5 10-5-10-5zM2 13l10 5 10-5M2 17.5l10 5 10-5"/></svg></span>
+    <div style="display: flex; flex-direction: column; gap: 1px; min-width: 0">
+      <span style="font-size: 14px; font-weight: 600">Presets</span>
+      <span style="font-size: 12px; color: #9a9ea6">Ready-made rule sets for Background color</span>
+    </div>
+    <span style="flex: 1"></span>
+    <button type="button" class="ib" aria-label="Close"><svg width="16" height="16" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+  </div>
+
+  <div class="body">
+    <div class="side">
+      <div class="search">
+        <svg width="13" height="13" viewBox="0 0 24 24"><path d="M11 3a8 8 0 1 0 0 16 8 8 0 0 0 0-16zM21 21l-4.3-4.3"/></svg>
+        <input class="fld" type="text" placeholder="Search presets" aria-label="Search presets">
+      </div>
+      <div style="overflow: hidden; padding-bottom: 8px">
+        <div class="grp">Boolean variable</div>
+        <button type="button" class="item"><svg width="14" height="14" viewBox="0 0 24 24"><path d="M16 5H8a7 7 0 0 0 0 14h8a7 7 0 0 0 0-14zM16 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/></svg><span class="n">On / Off</span><span class="c">2 rules</span></button>
+        <div class="grp">Number variable</div>
+        <button type="button" class="item on" aria-current="true"><svg width="14" height="14" viewBox="0 0 24 24"><path d="m12 14 4-4M3.34 19a10 10 0 1 1 17.32 0"/></svg><span class="n">Low / Medium / High</span><span class="c">3 rules</span></button>
+        <div class="grp">Any variable</div>
+        <button type="button" class="item"><svg width="14" height="14" viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zM4.9 4.9l14.2 14.2"/></svg><span class="n">Grey when unavailable</span><span class="c">1 rule</span></button>
+      </div>
+    </div>
+
+    <div class="main">
+      <div style="display: flex; flex-direction: column; gap: 3px">
+        <span style="font-size: 14px; font-weight: 600">Low / Medium / High</span>
+        <span style="font-size: 12px; color: #9a9ea6">Colors a number by range. Needs a number variable.</span>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 6px">
+        <span class="sub">Variable</span>
+        <div style="display: flex; align-items: center; gap: 8px">
+          <button type="button" class="chip" style="width: 260px" aria-label="Variable"><svg width="12" height="12" viewBox="0 0 24 24"><path d="M8 3H7a2 2 0 0 0-2 2v5a2 2 0 0 1-2 2 2 2 0 0 1 2 2v5a2 2 0 0 0 2 2h1M16 21h1a2 2 0 0 0 2-2v-5a2 2 0 0 1 2-2 2 2 0 0 1-2-2V5a2 2 0 0 0-2-2h-1"/></svg>vars.system_cpu_usage</button>
+          <span style="font-size: 12px; color: #9a9ea6">number · %</span>
+        </div>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 6px">
+        <span class="sub">Adds these rules, checked in this order</span>
+        <div class="tbl">
+          <div class="tr"><span class="no">1</span><span class="cond"><em>vars.system_cpu_usage</em> &gt;= 80</span><span class="res"><i style="background: #b91c1c"></i>#b91c1c</span></div>
+          <div class="tr"><span class="no">2</span><span class="cond"><em>vars.system_cpu_usage</em> &gt;= 50</span><span class="res"><i style="background: #b45309"></i>#b45309</span></div>
+          <div class="tr"><span class="no">3</span><span class="cond"><em>vars.system_cpu_usage</em> &lt; 50</span><span class="res"><i style="background: #15803d"></i>#15803d</span></div>
+        </div>
+        <span style="font-size: 11px; color: #9a9ea6">Added after your existing rules. You can edit every rule afterwards.</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="foot">
+    <span style="font-size: 11px; color: #9a9ea6">The list grows as presets are added.</span>
+    <span style="flex: 1"></span>
+    <button type="button" class="btn ghost">Cancel</button>
+    <button type="button" class="btn primary">Add 3 rules</button>
+  </div>
+</div>
+</div>
+
+</body>
+</html>

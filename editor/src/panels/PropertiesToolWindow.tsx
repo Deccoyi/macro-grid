@@ -12,6 +12,15 @@ import { ProfileProperties } from "./ProfileProperties";
  * and docs/design/plugins-tool-window.md — the two tool windows share this through a module-level store
  * rather than a context, since neither is an ancestor of the other). */
 export function PropertiesToolWindow() {
+  // The size container the field system reacts to (see theme.css, the @container rules); it also owns the vertical scrolling.
+  return (
+    <div className="pf-root">
+      <PropertiesContent />
+    </div>
+  );
+}
+
+function PropertiesContent() {
   const state = useEditorStateContext();
   const profileTree = useProfileTreeContext();
   const { openMoveCopyForWidgets, profilePropertiesTarget } = useWorkspaceUi();

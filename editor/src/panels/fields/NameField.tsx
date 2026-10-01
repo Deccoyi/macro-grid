@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import type { Widget } from "@macro/renderer";
 import { useT } from "../../i18n/I18nContext";
 import { normalizeWidgetName } from "../../state/widgetNames";
+import { Field, TextInput } from "./controls";
 
 /** The widget's instance name, at the top of its properties. It commits on blur or Enter; an empty or taken name shows a line under the field and
  * the old name comes back. */
@@ -23,18 +24,15 @@ export function NameField({ widget, siblings, onRename }: { widget: Widget; sibl
   };
 
   return (
-    <label className="field">
-      {t("fields.name.label")}
-      <input
-        type="text"
-        value={text}
-        maxLength={64}
-        onChange={(e) => { setText(e.target.value); setError(null); }}
-        onBlur={commit}
-        onKeyDown={(e) => { if (e.key === "Enter") e.currentTarget.blur(); if (e.key === "Escape") { setText(widget.name ?? ""); setError(null); } }}
-      />
-      {error && <span role="alert" style={{ fontSize: 11, color: "var(--ms-danger)" }}>{t(error === "empty" ? "fields.name.empty" : "fields.name.taken")}</span>}
-      {widget.type === "web" && !error && <span style={{ fontSize: 11, color: "var(--ms-text-disabled)" }}>{t("fields.web.nameHint")}</span>}
-    </label>
+    <Field
+      label={t("fields.name.label")}
+      error={error ? t(error === "empty" ? "fields.name.empty" : "fields.name.taken") : undefined}
+      hint={widget.type === "web" && !error ? t("fields.web.nameHint") : undefined}
+    >
+      {/* Commit on blur or Enter, Escape restores. */}
+      <div onBlur={commit} onKeyDown={(e) => { if (e.key === "Enter") (e.target as HTMLElement).blur(); if (e.key === "Escape") { setText(widget.name ?? ""); setError(null); } }}>
+        <TextInput value={text} maxLength={64} onChange={(v) => { setText(v); setError(null); }} />
+      </div>
+    </Field>
   );
 }

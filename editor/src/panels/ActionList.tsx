@@ -86,8 +86,8 @@ export function ActionList({ bindings, actions, pages, profiles, variableCatalog
   const replaceable = addable.filter((a) => a.type !== FLOW_IF);
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-      {bindings.length === 0 && <div style={{ color: "var(--ms-text-secondary)", fontSize: 12 }}>{t("action.none")}</div>}
+    <div className="pf-cards">
+      {bindings.length === 0 && <p className="pf-hint">{t("action.none")}</p>}
 
       {rows.map((row) => {
         const { index } = row;
@@ -96,9 +96,8 @@ export function ActionList({ bindings, actions, pages, profiles, variableCatalog
         const actionInfo = actions.find((a) => a.type === binding.type);
         const Form = formFor(binding.type, actionInfo);
         const frame = {
-          border: `1px solid ${outlined === index ? "var(--ms-accent)" : "var(--ms-border)"}`,
+          borderColor: outlined === index ? "var(--ms-accent)" : undefined,
           outline: outlined === index ? "2px solid var(--ms-accent)" : undefined,
-          borderRadius: 4,
           marginLeft: row.depth * 16,
         };
         const setRef = (el: HTMLDivElement | null) => { rowRefs.current[index] = el; };
@@ -113,7 +112,7 @@ export function ActionList({ bindings, actions, pages, profiles, variableCatalog
         }
         if (row.kind === "else") {
           return (
-            <div key={index} ref={setRef} style={{ ...frame, padding: "4px 8px", display: "flex", alignItems: "center", gap: 6, background: "var(--ms-bg-inset)" }}>
+            <div key={index} ref={setRef} className="pf-card" style={{ ...frame, padding: "4px 8px", display: "flex", alignItems: "center", gap: 6, background: "var(--ms-bg-inset)" }}>
               <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: ".04em", textTransform: "uppercase", color: "var(--ms-text-secondary)" }}>{t("action.logic.else")}</span>
               <div style={{ flex: 1 }} />
               <button className="ghost" onClick={() => removeBinding(index)} title={t("action.remove")}><X size={13} /></button>
@@ -140,16 +139,17 @@ export function ActionList({ bindings, actions, pages, profiles, variableCatalog
         );
 
         return (
-          <div key={index} ref={setRef} style={{ ...frame, padding: 8, display: "flex", flexDirection: "column", gap: 6 }}>
-            <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+          <div key={index} ref={setRef} className="pf-card" style={frame}>
+            <div className="pf-card-head">
+              <span className="pf-card-num" aria-hidden="true">{index + 1}</span>
               <ActionPicker
                 actions={replaceable}
                 onPick={(type) => updateBinding(index, { type, settings: {} })}
                 renderTrigger={(open) => (
-                  <button type="button" className="ghost" onClick={open} style={{ flex: 1, textAlign: "left", justifyContent: "flex-start" }}>
+                  <button type="button" className="ghost grow pf-card-name" onClick={open}>
                     {actionInfo ? catalogText.actionName(actionInfo) : (
-                      <span title={t("action.unavailable")} style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                        <CircleAlert size={13} style={{ color: "var(--ms-danger)", flex: "0 0 auto" }} />
+                      <span title={t("action.unavailable")} className="pf-row">
+                        <CircleAlert size={13} className="pf-danger" />
                         {binding.type}
                       </span>
                     )}
@@ -158,18 +158,24 @@ export function ActionList({ bindings, actions, pages, profiles, variableCatalog
               />
               {bindings.length > 1 && (
                 <>
-                  <button className="ghost" onClick={() => move(index, -1)} disabled={moveRow(bindings, index, -1) === bindings} title={t("action.moveUp")}><ChevronUp size={14} /></button>
-                  <button className="ghost" onClick={() => move(index, 1)} disabled={moveRow(bindings, index, 1) === bindings} title={t("action.moveDown")}><ChevronDown size={14} /></button>
+                  <button className="ghost pf-icon-btn small" onClick={() => move(index, -1)} disabled={moveRow(bindings, index, -1) === bindings} title={t("action.moveUp")} aria-label={t("action.moveUp")}><ChevronUp size={14} /></button>
+                  <button className="ghost pf-icon-btn small" onClick={() => move(index, 1)} disabled={moveRow(bindings, index, 1) === bindings} title={t("action.moveDown")} aria-label={t("action.moveDown")}><ChevronDown size={14} /></button>
                 </>
               )}
-              <button className="ghost" onClick={() => removeBinding(index)} title={t("action.remove")}><X size={14} /></button>
+              <button className="ghost pf-icon-btn small" onClick={() => removeBinding(index)} title={t("action.remove")} aria-label={t("action.remove")}><X size={14} /></button>
             </div>
-            <Form binding={binding} pages={pages} profiles={profiles} actionInfo={actionInfo} variableCatalog={withoutSelf(variableCatalog)} onChange={(settings) => updateBinding(index, { settings })} />
+            <div className="pf-card-body">
+              <Form binding={binding} pages={pages} profiles={profiles} actionInfo={actionInfo} variableCatalog={withoutSelf(variableCatalog)} onChange={(settings) => updateBinding(index, { settings })} />
+            </div>
           </div>
         );
       })}
 
-      <ActionPicker actions={addable} onPick={addBinding} />
+      <ActionPicker
+        actions={addable}
+        onPick={addBinding}
+        renderTrigger={(open) => <button type="button" className="ghost pf-btn small" onClick={open} disabled={addable.length === 0}>{t("action.add")}</button>}
+      />
     </div>
   );
 }
@@ -197,7 +203,7 @@ function IfRow({ row, binding, bindings, collapsed, frame, setRef, variableCatal
   const stepCount = row.endIndex === undefined ? 0 : bindings.slice(row.index + 1, row.endIndex).filter((b) => b.type !== FLOW_IF && b.type !== FLOW_ELSE && b.type !== FLOW_END).length;
   const summary = when === "condition" ? summarizeCondition(binding.settings.condition as ConditionNode | undefined, t) : t(`action.logic.when.${when}`);
   return (
-    <div ref={setRef} style={{ ...frame, padding: 8, display: "flex", flexDirection: "column", gap: 8, background: "var(--ms-bg-canvas)" }}>
+    <div ref={setRef} className="pf-card" style={{ ...frame, padding: 8, display: "flex", flexDirection: "column", gap: 8, background: "var(--ms-bg-canvas)" }}>
       <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
         <button className="ghost" onClick={onToggle} title={t(collapsed ? "action.logic.expand" : "action.logic.collapse")} aria-expanded={!collapsed} style={{ display: "flex", padding: 4 }}>
           {collapsed ? <ChevronRight size={14} /> : <ChevronDown size={14} />}

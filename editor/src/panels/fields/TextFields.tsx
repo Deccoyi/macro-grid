@@ -1,5 +1,5 @@
-import { useRef } from "react";
-import { AlignCenter, AlignLeft, AlignRight, AlignVerticalJustifyCenter, AlignVerticalJustifyEnd, AlignVerticalJustifyStart } from "lucide-react";
+import { forwardRef, useRef } from "react";
+import { AlignCenter, AlignLeft, AlignRight, AlignVerticalJustifyCenter, AlignVerticalJustifyEnd, AlignVerticalJustifyStart, Variable } from "lucide-react";
 import type { Align, IconPosition, VAlign, WidgetStyle } from "@macro/renderer";
 import type { VariableInfo } from "../../api/types";
 import { useT } from "../../i18n/I18nContext";
@@ -7,13 +7,19 @@ import { IconPicker, iconToDataUri } from "../IconPicker";
 import { DynamicFieldLabel } from "../dynamic/DynamicFieldLabel";
 import { VariablePicker } from "../VariablePicker";
 import type { FieldGroupProps } from "./AppearanceFields";
-import { ColorField, Seg } from "./controls";
+import { ColorField, Field, FieldGrid, NumberInput, SelectInput, Seg, useFieldId } from "./controls";
 
 interface TextFieldsProps extends FieldGroupProps {
   variableCatalog: VariableInfo[];
   /** Set false to hide the icon picker (image widgets show their own picture instead). */
   showIcon?: boolean;
 }
+
+/** The multi-line text of a button, labelled by the nearest Field. */
+const TextArea = forwardRef<HTMLTextAreaElement, { value: string; onChange: (v: string) => void; placeholder?: string }>(function TextArea({ value, onChange, placeholder }, ref) {
+  const id = useFieldId();
+  return <textarea ref={ref} id={id} rows={2} value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} />;
+});
 
 /** Text content + how it's laid out: for button/toggle/label, whose whole point is showing text. */
 export function TextFields({ widget, onChange, variableCatalog, showIcon = true }: TextFieldsProps) {
@@ -44,34 +50,30 @@ export function TextFields({ widget, onChange, variableCatalog, showIcon = true 
   };
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-      <div className="field">
-        <div style={{ display: "flex", alignItems: "center" }}>
-          <span style={{ flex: 1 }}>
+    <>
+      <Field
+        label={t("fields.text.label")}
+        action={
+          <>
+            <VariablePicker
+              catalog={variableCatalog}
+              onInsert={insertVariable}
+              renderTrigger={(open) => (
+                <button type="button" className="ghost" onClick={open}>
+                  <Variable size={12} />
+                  {t("variable.add")}
+                </button>
+              )}
+            />
             <DynamicFieldLabel label={t("fields.text.label")} propertyKey="text" widget={widget} variableCatalog={variableCatalog} onChange={onChange} resultKind="text" />
-          </span>
-          <VariablePicker
-            catalog={variableCatalog}
-            onInsert={insertVariable}
-            renderTrigger={(open) => (
-              <button type="button" className="ghost" onClick={open} style={{ padding: "2px 6px", fontSize: 11 }}>
-                {t("variable.add")}
-              </button>
-            )}
-          />
-        </div>
-        <textarea
-          ref={textRef}
-          rows={2}
-          value={widget.text ?? ""}
-          onChange={(e) => onChange((w) => { w.text = e.target.value; })}
-          placeholder={t("fields.text.placeholder")}
-        />
-      </div>
+          </>
+        }
+      >
+        <TextArea ref={textRef} value={widget.text ?? ""} onChange={(v) => onChange((w) => { w.text = v; })} placeholder={t("fields.text.placeholder")} />
+      </Field>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-        <label className="field">
-          {t("fields.text.horizontal")}
+      <FieldGrid cols={2}>
+        <Field single label={t("fields.text.horizontal")}>
           <Seg<Align>
             value={style.align ?? "center"}
             onChange={(v) => set((s) => { s.align = v; })}
@@ -81,9 +83,8 @@ export function TextFields({ widget, onChange, variableCatalog, showIcon = true 
               { value: "right", label: <AlignRight size={14} />, title: t("fields.text.align.right") },
             ]}
           />
-        </label>
-        <label className="field">
-          {t("fields.text.vertical")}
+        </Field>
+        <Field single label={t("fields.text.vertical")}>
           <Seg<VAlign>
             value={style.vAlign ?? "middle"}
             onChange={(v) => set((s) => { s.vAlign = v; })}
@@ -93,55 +94,43 @@ export function TextFields({ widget, onChange, variableCatalog, showIcon = true 
               { value: "bottom", label: <AlignVerticalJustifyEnd size={14} />, title: t("fields.text.valign.bottom") },
             ]}
           />
-        </label>
-      </div>
+        </Field>
+      </FieldGrid>
 
-      <label className="field">
-        {t("fields.text.fontSize")}
-        <input
-          type="number"
-          min={8}
-          max={72}
-          value={style.fontSize ?? 16}
-          onChange={(e) => set((s) => { s.fontSize = Number(e.target.value); })}
-        />
-      </label>
+      <Field single label={t("fields.text.fontSize")}>
+        <NumberInput min={8} max={72} unit="px" value={style.fontSize ?? 16} onChange={(v) => set((s) => { s.fontSize = v; })} />
+      </Field>
 
       {showIcon && (
         <>
-          <label className="field">
-            <DynamicFieldLabel label={t("fields.text.icon")} propertyKey="style.icon" widget={widget} variableCatalog={variableCatalog} onChange={onChange} resultKind="icon" iconColor={style.foreground} />
+          <Field
+            label={t("fields.text.icon")}
+            action={<DynamicFieldLabel label={t("fields.text.icon")} propertyKey="style.icon" widget={widget} variableCatalog={variableCatalog} onChange={onChange} resultKind="icon" iconColor={style.foreground} />}
+          >
             <IconPicker
               value={style.icon}
               color={style.foreground}
               onChange={(icon, iconName) => set((s) => { s.icon = icon; s.iconName = iconName; })}
             />
-          </label>
+          </Field>
           {(style.icon || widget.dynamic?.["style.icon"]) && (
-            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-                <label className="field">
-                  {t("fields.text.iconSize")}
-                  <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
-                    <input type="number" min={12} max={96} value={style.iconSize ?? 28} onChange={(e) => set((s) => { s.iconSize = Number(e.target.value); })} />
-                    <span style={{ fontSize: 11, color: "var(--ms-text-secondary)", flexShrink: 0 }}>px</span>
-                  </div>
-                </label>
-                <label className="field">
-                  {t("fields.text.iconPosition")}
-                  <select value={style.iconPosition ?? "top"} onChange={(e) => set((s) => { s.iconPosition = e.target.value as IconPosition; })}>
+            <>
+              <FieldGrid cols={2}>
+                <Field single label={t("fields.text.iconSize")}>
+                  <NumberInput min={12} max={96} unit="px" value={style.iconSize ?? 28} onChange={(v) => set((s) => { s.iconSize = v; })} />
+                </Field>
+                <Field single label={t("fields.text.iconPosition")}>
+                  <SelectInput value={style.iconPosition ?? "top"} onChange={(v) => set((s) => { s.iconPosition = v as IconPosition; })}>
                     <option value="top">{t("fields.text.iconPosition.top")}</option>
                     <option value="bottom">{t("fields.text.iconPosition.bottom")}</option>
                     <option value="left">{t("fields.text.iconPosition.left")}</option>
                     <option value="right">{t("fields.text.iconPosition.right")}</option>
-                  </select>
-                </label>
-              </div>
-              <label className="field">
-                {t("fields.text.iconColor")}
+                  </SelectInput>
+                </Field>
+              </FieldGrid>
+              <Field single label={t("fields.text.iconColor")} hint={style.iconName ? undefined : t("fields.text.iconColorHint")}>
                 <ColorField
                   disabled={!style.iconName}
-                  title={style.iconName ? undefined : t("fields.text.iconColorHint")}
                   value={/^#([0-9a-f]{6})$/i.test(style.foreground ?? "") ? style.foreground : "#e6e7ea"}
                   onChange={async (hex) => {
                     if (!style.iconName) return;
@@ -149,11 +138,11 @@ export function TextFields({ widget, onChange, variableCatalog, showIcon = true 
                     if (uri) set((s) => { s.icon = uri; });
                   }}
                 />
-              </label>
-            </div>
+              </Field>
+            </>
           )}
         </>
       )}
-    </div>
+    </>
   );
 }

@@ -960,6 +960,8 @@ export const tr = {
   "undo.cutWidgets": "Widget'ları kes",
   "schemaForm.variable.pick": "Değişken seç",
   "schemaForm.variable.clear": "Temizle",
+  "schemaForm.password.show": "Göster",
+  "schemaForm.password.hide": "Gizle",
   "widget.type.plugin-widget": "Eklenti widget'ı",
   "palette.pluginWidgets": "Eklenti widget'ları",
   "palette.unverified": "Doğrulanmamış",

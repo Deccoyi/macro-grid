@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<title>Panel spec</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+</head>
+<body style="margin:0;background:#1c1e22">
+
+
+<style>
+body{margin:0}
+.sp{--bg:#232529;--cv:#1c1e22;--raised:#2b2e33;--inset:#16171a;--bd:#35383e;--bds:#46494f;--tx:#e6e7ea;--tx2:#9a9ea6;--ac:#d97706;--bl:#4aa3ff;--mg:#e060b0;--gr:#4cc38a;font:13px/1.5 "Segoe UI",system-ui,sans-serif;color:var(--tx);background:var(--cv)}
+.sp *{box-sizing:border-box}
+.sp h1{margin:0;font:600 22px "Segoe UI",system-ui,sans-serif}
+.sp h2{margin:0 0 12px;font:600 15px "Segoe UI",system-ui,sans-serif;display:flex;gap:10px;align-items:center}
+.sp h2 span{font:700 11px ui-monospace,Consolas,monospace;color:var(--ac);background:rgba(217,119,6,.15);padding:2px 7px;border-radius:3px}
+.sec{border-top:1px solid var(--bd);padding-top:24px}
+p{margin:0;color:var(--tx2)}
+table{border-collapse:collapse;width:100%;font-size:12.5px}
+th{text-align:left;font:700 10.5px "Segoe UI",system-ui,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:var(--tx2);padding:6px 10px;border-bottom:1px solid var(--bds)}
+td{padding:7px 10px;border-bottom:1px solid var(--bd);vertical-align:top}
+code,.m{font:12px ui-monospace,Consolas,monospace;color:var(--ac)}
+td .v{font:12px ui-monospace,Consolas,monospace;color:var(--tx)}
+pre{margin:0;background:var(--inset);border:1px solid var(--bd);border-radius:6px;padding:14px 16px;font:12px/1.55 ui-monospace,Consolas,monospace;color:#cfd3da;overflow:hidden;white-space:pre}
+.rl{display:flex;gap:40px;align-items:flex-start}
+.stack{width:640px;background:var(--bg);border:1px solid var(--bd);padding:24px}
+.band{display:flex;align-items:center;padding:0 12px;font:11px ui-monospace,Consolas,monospace;color:#fff}
+.lab{background:rgba(74,163,255,.28);outline:1px solid var(--bl);color:#bfe0ff}
+.gap{background:rgba(224,96,176,.35);outline:1px solid var(--mg);color:#ffd0ec}
+.ctl{background:rgba(76,195,138,.2);outline:1px solid var(--gr);color:#c6f2de}
+.hnt{background:rgba(74,163,255,.14);outline:1px dashed var(--bl);color:#bfe0ff}
+.leg{display:flex;flex-direction:column;gap:0}
+.leg div{display:flex;align-items:center;font-size:12.5px;color:var(--tx2);padding-left:12px;border-left:2px solid var(--bds)}
+.leg b{color:var(--tx);font-weight:600;margin-right:6px}
+.chip{display:inline-block;font:11px ui-monospace,Consolas,monospace;padding:1px 6px;border-radius:3px;background:var(--raised);border:1px solid var(--bd);color:var(--tx)}
+ul{margin:0;padding-left:18px;color:var(--tx2)}
+li{margin:4px 0}
+li b{color:var(--tx);font-weight:600}
+.warn{border-left:3px solid var(--ac);background:rgba(217,119,6,.12);padding:10px 14px;border-radius:0 4px 4px 0;color:var(--tx);font-size:12.5px}
+</style>
+
+<div class="sp" style="width: 1040px; height: 2200px; padding: 40px; display: flex; flex-direction: column; gap: 28px">
+
+<div>
+<h1>Ölçü ve uygulama spec'i</h1>
+<p style="margin-top:6px;max-width:820px">Kodlama ajanı için tek kaynak. Panel genişliği 320 px varsayıldı (üst üste binmesin diye alanlar en az 144 px sütunlarla çalışır). Tüm değerler px; renkler mevcut <code>--ms-*</code> değişkenleridir, yeni renk yoktur.</p>
+</div>
+
+<div class="sec">
+<h2><span>01</span>Boşluk ve ölçü tokenları</h2>
+<table>
+<tr><th style="width:230px">Token</th><th style="width:90px">Değer</th><th>Nerede kullanılır</th></tr>
+<tr><td><code>--pf-pad</code></td><td class="v">12</td><td>Bölüm iç boşluğu (4 kenar), bölümler panel kenarına kadar uzanır; ayırıcı 1 px <code>--ms-border</code>. Eski <code>hr.sep</code> + dış <code>gap:14</code> kalkar.</td></tr>
+<tr><td><code>--pf-section-head</code></td><td class="v">28</td><td>Katlanır başlık yüksekliği, 13 px / 600, caret 14 px, başlık–içerik arası 8.</td></tr>
+<tr><td><code>--pf-gap-field</code></td><td class="v">12</td><td>Dikeyde alan ile alan arası (şu an 10). Her yerde tek değer.</td></tr>
+<tr><td><code>--pf-gap-col</code></td><td class="v">8</td><td>Yan yana alanlar (2'li / 3'lü grid) arası.</td></tr>
+<tr><td><code>--pf-label-h</code></td><td class="v">18</td><td>Etiket satırı yüksekliği, 12 px, <code>--ms-text-secondary</code>. Sağdaki aksiyonlar (Değişken, Dinamik, Yenile) bu satırda, 18 px yüksekliğinde.</td></tr>
+<tr><td><code>--pf-gap-label</code> / <code>--pf-gap-hint</code></td><td class="v">4 / 4</td><td>Etiket–kontrol ve kontrol–ipucu arası. İpucu 11 px / 1.4.</td></tr>
+<tr><td><code>--pf-ctl-h</code></td><td class="v">28</td><td>Input, select, color, segmented, button, file satırı: hepsi aynı yükseklik. Metin alanı (textarea) hariç. İç yatay boşluk 8.</td></tr>
+<tr><td><code>--pf-group-h</code></td><td class="v">16</td><td>Grup etiketi (10.5 px, büyük harf). Üstünde ek 4 (toplam 16), ilk grupta yok.</td></tr>
+<tr><td><code>--pf-radius</code></td><td class="v">4</td><td>Tüm kontroller. Liste/kart 4, bildirim bandı 4. Anahtar tam yuvarlak.</td></tr>
+<tr><td><code>--pf-indent</code></td><td class="v">6 + 10</td><td><code>visibleWhen</code> ile bağlı alan: 6 sol boşluk, 2 px çizgi, 10 iç boşluk.</td></tr>
+</table>
+</div>
+
+<div class="sec">
+<h2><span>02</span>Alan anatomisi (2× büyütülmüş)</h2>
+<div class="rl">
+<div class="stack" aria-label="Alan anatomisi çizimi">
+<div class="band lab" style="height:36px">etiket satırı · 18</div>
+<div class="band gap" style="height:8px"></div>
+<div class="band ctl" style="height:56px">kontrol · 28</div>
+<div class="band gap" style="height:8px"></div>
+<div class="band hnt" style="height:30px">ipucu · 11 px, en çok 2 satır</div>
+<div class="band gap" style="height:24px;margin-top:0">alan arası · 12</div>
+<div class="band lab" style="height:36px">sonraki alan</div>
+</div>
+<div class="leg" style="padding-top:24px">
+<div style="height:36px"><b>18</b>etiket (solda ad, sağda aksiyon)</div>
+<div style="height:8px;border-color:var(--mg)"></div>
+<div style="height:56px;border-color:var(--gr)"><b>28</b>kontrol, sabit</div>
+<div style="height:8px;border-color:var(--mg)"></div>
+<div style="height:30px"><b>auto</b>ipucu / hata mesajı</div>
+<div style="height:24px;border-color:var(--mg)"><b>12</b>sonraki alana</div>
+</div>
+</div>
+<p style="margin-top:14px">Yatay: panel 320 = 12 + <b style="color:var(--tx)">296</b> + 12. 2'li grid sütunu 144, 3'lü 93,3 (min-width:0 şart; sığmayan etiket <code>text-overflow: ellipsis</code>).</p>
+</div>
+
+<div class="sec">
+<h2><span>03</span>Alan tipi → yerleşim</h2>
+<table>
+<tr><th style="width:120px">Kind</th><th style="width:110px">Yerleşim</th><th style="width:150px">Grid'e girer mi</th><th>Not</th></tr>
+<tr><td><code>Text</code> <code>Password</code></td><td>stacked</td><td>Hayır, tam genişlik</td><td>Değişken ekle düğmesi etiket satırında. Password'de göz düğmesi input içinde sağda (28×28).</td></tr>
+<tr><td><code>Number</code></td><td>stacked</td><td>Evet, 2'li / 3'lü</td><td>Birim (<code>px</code>, <code>ms</code>) input içinde sağda, soluk renk. Yeni alan: <code>unit</code>.</td></tr>
+<tr><td><code>Slider</code></td><td>stacked</td><td>Hayır</td><td>İz esner, sağda 56 px yazılabilir değer kutusu (şu an salt metin).</td></tr>
+<tr><td><code>Bool</code></td><td>inline</td><td>Hayır</td><td>Etiket solda, anahtar (28×16) sağda, 28 px satır. Onay kutusu yerine anahtar; açıklama etiketin altında.</td></tr>
+<tr><td><code>Select</code></td><td>stacked</td><td>Evet, 2'li</td><td>Native select + sağda chevron. <code>optionsSource</code> varsa yenile simgesi etiket satırında. Bulunamayan seçenek: "değer (bulunamadı)".</td></tr>
+<tr><td><code>Segmented</code></td><td>stacked</td><td>Evet, 2'li (≤3 seçenek)</td><td>Seçili segmentte alt çizgi 2 px turuncu. 5+ seçenek ya da uzun etiket: Select kullan.</td></tr>
+<tr><td><code>Color</code></td><td>stacked</td><td>Evet, 2'li / 3'lü</td><td>Önizleme 16 + hex (mono). Palet portal ile açılır; panel taşması kırpmaz.</td></tr>
+<tr><td><code>File</code></td><td>stacked</td><td>Hayır</td><td>Salt okunur yol (esner) + "Gözat…" 28 px düğme, aralarında 6.</td></tr>
+<tr><td><code>Variable</code></td><td>stacked</td><td>Hayır</td><td>Seçici düğme (esner) + 28×28 temizle. Şu an temizle üstte; satır sonuna taşınır, düzen oynamaz.</td></tr>
+<tr><td><code>List</code></td><td>stacked</td><td>Hayır</td><td>Satır başlığı 32, açık satır içi 8 / 12 boşluk, içeride sol 28 girinti (chevron hizası). "Satır ekle" ghost düğme.</td></tr>
+<tr><td><code>Button</code></td><td>block</td><td>Hayır</td><td>Tam genişlik, 28 px. Sonuç metni altında ipucu olarak; hata ise kırmızı.</td></tr>
+<tr><td><code>Notice</code></td><td>block</td><td>Hayır</td><td>Etiketsiz, simge + metin, sarı ton, 11.5 px. Kutu arka planı %8 sarı.</td></tr>
+</table>
+</div>
+
+<div class="sec">
+<h2><span>04</span>Gruplama ve aksiyonlar</h2>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:32px">
+<ul>
+<li><b>Sıra her widget için aynı:</b> Ad → (kimlik / bildirimler) → Görünüm → İçerik veya Widget ayarları → Veri → Aksiyonlar → Özel CSS (kapalı).</li>
+<li><b>Gruplar:</b> uzun ayar listesinde <code>SectionLabel</code> ile Kaynak / Görünüm / Bağlantı gibi bölün. Bir grupta 6'dan fazla alan olmasın.</li>
+<li><b>Bildirim bandı:</b> sadece kimlik bölümünde ve ilgili alanın hemen üstünde. Aynı anda en çok 2.</li>
+<li><b>Dinamik (şimşek) simgesi:</b> etiket satırının sağında, 18 px. Bağlıysa turuncu dolu.</li>
+</ul>
+<ul>
+<li><b>Olay hücreleri:</b> 4 sütun, kare, 6 aralık. Özel widget 4'ten fazla olay bildirirse alt satıra akar; sütun sayısı hep 4 kalır.</li>
+<li><b>Aksiyon kartı:</b> başlık 32 (numara + ad + kaldır), gövde 8 iç boşluk, alanlar 12 aralık. Kartlar arası 8.</li>
+<li><b>"Aksiyon ekle":</b> ghost, 24 px, sola dayalı, sol kenar 6 negatif marj ile yazı hizası korunur.</li>
+<li><b>Uzun etiket:</b> iki satıra bölme, kes (ellipsis) ve <code>title</code> ver.</li>
+</ul>
+</div>
+</div>
+
+<div class="sec">
+<h2><span>05</span>Uygulama</h2>
+<div style="display:grid;grid-template-columns:1.05fr 1fr;gap:28px;align-items:start">
+<pre>/* theme.css */
+:root {
+  --pf-pad: 12px;      --pf-gap-field: 12px;
+  --pf-gap-col: 8px;   --pf-label-h: 18px;
+  --pf-ctl-h: 28px;    --pf-radius: 4px;
+}
+.pf-section   { padding: var(--pf-pad);
+                border-bottom: 1px solid var(--ms-border); }
+.pf-body      { display: flex; flex-direction: column;
+                gap: var(--pf-gap-field); padding-top: 8px; }
+.pf-field     { display: flex; flex-direction: column;
+                gap: 4px; min-width: 0; }
+.pf-field.inline { flex-direction: row; align-items: center;
+                justify-content: space-between; gap: 12px;
+                min-height: var(--pf-ctl-h); }
+.pf-label     { display: flex; align-items: center;
+                justify-content: space-between; gap: 8px;
+                height: var(--pf-label-h); font-size: 12px;
+                color: var(--ms-text-secondary); }
+.pf-ctl       { height: var(--pf-ctl-h); padding: 0 8px;
+                border-radius: var(--pf-radius); }
+.pf-grid-2    { display: grid; gap: var(--pf-gap-col);
+                grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.pf-grid-3    { display: grid; gap: var(--pf-gap-col);
+                grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.pf-hint      { font-size: 11px; line-height: 1.4;
+                color: var(--ms-text-secondary); }</pre>
+<ul style="font-size:12.5px">
+<li><b>controls.tsx:</b> <code>Field</code> (etiket, sağ aksiyon yuvası, ipucu, hata), <code>FieldGrid cols=2|3</code>, <code>Switch</code>, <code>NumberInput unit</code>, <code>RangeInput</code> bileşenleri. Dağınık <code>style={{display:"grid"…}}</code> blokları bunlara taşınır.</li>
+<li><b>Inspector.tsx:</b> <code>hr.sep</code> + <code>gap:14</code> yerine <code>.pf-section</code>; üstte başlık satırı 36 px.</li>
+<li><b>SchemaForm.tsx:</b> tüm tipler <code>Field</code> üzerinden; Bool → <code>Switch</code>; Number → birimli; Slider → yazılabilir değer; Variable temizle düğmesi satır sonuna; List satırı 32.</li>
+<li><b>PluginWidgetFields.tsx:</b> seçenek onay kutuları → <code>Switch</code> satırları (açıklama altta).</li>
+<li><b>Otomatik eşleme:</b> ardışık <code>Number</code> / <code>Color</code> / ≤3 seçenekli <code>Segmented</code> / <code>Select</code> alanları 2'li grid'e akar. İsteğe bağlı SDK alanları: <code>unit</code>, <code>group</code>, <code>width: "half" | "full"</code>. Bunlar SDK değişikliğidir, geliştirici changelog'una girer.</li>
+<li><b>Odak:</b> mevcut davranış korunur (turuncu kenarlık); klavye odağı için 1 px turuncu halka eklenebilir.</li>
+</ul>
+</div>
+<div class="warn" style="margin-top:16px">Panel yeniden boyutlandırılabilir: kökte <code>container-type: inline-size</code>, kırılımlar <code>@container</code> ile: &lt;240 tek sütun, 240–299 üçlü grid ikiliye, 300–399 varsayılan, ≥400 tek değerli alanlar Etiket | Değer satırı (etiket 120 px). Ayrıntı: 4. tahta ve docs/ui/ui-guidelines.md.</div>
+</div>
+
+</div>
+
+
+</body>
+</html>
