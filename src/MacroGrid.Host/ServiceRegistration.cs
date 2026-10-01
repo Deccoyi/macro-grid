@@ -61,6 +61,10 @@ internal static class ServiceRegistration
         services.AddActionHandler<OpenAction>();
         services.AddActionHandler<OpenUrlAction>();
         services.AddActionHandler<DelayAction>();
+        services.AddActionHandler<IfAction>();
+        services.AddActionHandler<ElseAction>();
+        services.AddActionHandler<EndIfAction>();
+        services.AddActionHandler<StopAction>();
         services.AddActionHandler<SetVariableAction>();
         services.AddSingleton<IAudioService, WindowsAudioService>();
         services.AddActionHandler<SetVolumeAction>();

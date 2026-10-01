@@ -35,6 +35,9 @@ public static class DynamicRuleEvaluator
                 yield return v;
     }
 
+    /// <summary>True when the condition is met right now (the same tree walk a dynamic rule uses; the If step of an action list calls it too).</summary>
+    public static bool Matches(ConditionNode node, IVariableStore variables) => EvaluateNode(node, variables);
+
     private static bool EvaluateNode(ConditionNode node, IVariableStore variables) => node.Kind switch
     {
         ConditionKinds.And => node.Children.Count > 0 && node.Children.All(c => EvaluateNode(c, variables)),
