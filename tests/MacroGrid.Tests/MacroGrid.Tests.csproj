@@ -22,6 +22,7 @@
     <Content Include="../shared/dynamic-rule-cases.json" Link="shared/dynamic-rule-cases.json" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="../shared/widget-name-cases.json" Link="shared/widget-name-cases.json" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="../shared/action-flow-cases.json" Link="shared/action-flow-cases.json" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="../shared/network-scope-cases.json" Link="shared/network-scope-cases.json" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>

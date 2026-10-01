@@ -31,6 +31,8 @@ New features and fixes in Macro Grid. For technical details, see [CHANGELOG-deve
 - **The phone keeps the profile you picked:** after a dropped connection or a restart, the phone opens the profile you last chose on it instead of the assigned one. A profile assigned in the editor replaces your last pick, and automatic switching by the active window still works as before.
 - **The Toolbox can be an A to Z list:** the menu next to "Add widget" switches between plugin groups and one plain alphabetical list, and a plugin group can be folded.
 - **The Toolbox marks the web widget with a small flask icon** instead of the word "Experimental".
+### Fixed
+- **Tighter limits on where a JavaScript plugin can connect:** a plugin can now only reach the kind of address you approved, and never Macro Grid itself.
 
 ## 1.3.1 - 2026-09-29
 ### New

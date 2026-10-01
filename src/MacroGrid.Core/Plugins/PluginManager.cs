@@ -47,7 +47,8 @@ public sealed partial class PluginManager(
     PluginWidgetCatalog? widgetCatalog = null,
     PluginWidgetEventHub? widgetEvents = null,
     OfficialCatalog? officialCatalog = null,
-    PluginInstallOriginStore? origins = null) : IHostedService, IPluginWidgetHost
+    PluginInstallOriginStore? origins = null,
+    IReadOnlyCollection<int>? ownPorts = null) : IHostedService, IPluginWidgetHost
 {
     private static readonly JsonSerializerOptions ManifestJson = new(JsonSerializerDefaults.Web);
     private readonly PluginTrustVerifier _trust = trustVerifier ?? PluginTrustVerifier.Official;

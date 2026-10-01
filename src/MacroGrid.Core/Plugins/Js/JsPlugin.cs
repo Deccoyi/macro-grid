@@ -87,7 +87,8 @@ public sealed partial class JsPlugin : IPlugin, IPluginWidgetHandler, IDisposabl
         JsPluginLimits? limits = null,
         IActiveWindowSource? windows = null,
         Func<bool>? isElevated = null,
-        ProblemList? problems = null)
+        ProblemList? problems = null,
+        JsNetworkPolicy? network = null)
     {
         _problems = problems;
         _windows = windows;
@@ -100,8 +101,8 @@ public sealed partial class JsPlugin : IPlugin, IPluginWidgetHandler, IDisposabl
         _logger = logger;
         _onFaulted = onFaulted;
         _limits = limits ?? JsPluginLimits.Default;
-        // Redirects are off: a redirect could send an approved request to a host that was never approved.
-        _http = new HttpClient(new SocketsHttpHandler { AllowAutoRedirect = false }) { Timeout = _limits.HttpTimeout };
+        // Redirects and the system proxy are off and the connection is made by the network guard: an approved request may only reach the kind of address that was approved.
+        _http = new HttpClient(JsNetworkGuard.CreateHandler(network ?? JsNetworkPolicy.None, ReportNetworkRefused)) { Timeout = _limits.HttpTimeout };
     }
 
     public void Initialize(IPluginHost host)

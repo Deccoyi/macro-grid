@@ -300,6 +300,7 @@ export const tr = {
   "action.unavailable": "Bu eylem kullanılamıyor. Plugin'i kaldırılmış veya kapatılmış olabilir.",
   "errorHelp.P100": "Bir plugin tuş basmak istedi ve kurallar reddetti; hiçbir şey yazılmadı. Plugin'in ne göndermeye çalıştığına bakın; beklemiyorsanız plugin'i kapatın.",
   "errorHelp.P101": "Bir plugin engelli bir komutu yazmaya çalıştı, bu yüzden kapatıldı. Güvenmiyorsanız kapalı bırakın veya yapımcısından düzeltme isteyin.",
+  "errorHelp.P102": "Bir plugin onaylanmadığı bir adrese ulaşmaya çalıştı, bu yüzden istek reddedildi. Pluginin ağ izinlerine bakın veya yapımcısına sorun.",
   "errorHelp.P110": "Bu C# plugin'i resmi ve değiştirilmemiş olmadığı için yüklenmedi. Resmi sürümü Plugin'ler penceresinden kurun.",
   "errorHelp.P111": "Resmi plugin listesi bu sürümü güvensiz olduğu için kapattı. Plugin'i Plugin'ler penceresinden güncelleyin veya kaldırın.",
   "errorHelp.P112": "Yayıncı bu sürümü yayından kaldırdı. Çalışmaya devam eder; Plugin'ler penceresinden güncelleyin veya kaldırın.",

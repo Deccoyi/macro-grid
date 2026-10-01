@@ -300,6 +300,7 @@ export const en: Record<DictKey, string | ((...args: string[]) => string)> = {
   "action.unavailable": "This action is not available. Its plugin may be removed or switched off.",
   "errorHelp.P100": "A plugin asked to press keys and the rules refused it; nothing was typed. Look at what the plugin was trying to send, and switch the plugin off if you do not expect that.",
   "errorHelp.P101": "A plugin tried to type a blocked command, so it was switched off. Leave it off unless you trust it, or ask its author for a fix.",
+  "errorHelp.P102": "A plugin tried to reach an address it was not approved for, so the request was refused. Check the plugin's network permissions or ask its author.",
   "errorHelp.P110": "This C# plugin was not loaded because it is not an official, unchanged plugin. Install the official version from the Plugins window.",
   "errorHelp.P111": "The official plugin list switched this version off because it is unsafe. Update the plugin in the Plugins window, or remove it.",
   "errorHelp.P112": "The publisher withdrew this version. It keeps running; update it or remove it in the Plugins window.",

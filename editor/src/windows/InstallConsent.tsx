@@ -1,8 +1,8 @@
-import { widgetOptionOf } from "./widgetPermission";
 import type { ReactNode } from "react";
 import { Braces, FolderOpen, Globe, Keyboard, ShieldAlert, ShieldCheck, Terminal, TriangleAlert, Zap } from "lucide-react";
 import { useT } from "../i18n/I18nContext";
-import { httpTargetScope, type HttpTargetScope } from "./httpTarget";
+import type { HttpTargetScope } from "./httpTarget";
+import { permissionLabel } from "./permissionLabel";
 
 const SCOPE_COLOR: Record<HttpTargetScope, string> = {
   local: "var(--ms-success, #4ade80)",
@@ -93,19 +93,16 @@ export function InstallConsent({ name, kind, permissions = [], sourceLabel }: {
 
 function PermissionRow({ permission }: { permission: string }) {
   const { t } = useT();
-  if (permission === "variables") return <Row icon={<Braces size={14} />}>{t("plugins.permission.variables")}</Row>;
-  if (permission === "actions") return <Row icon={<Zap size={14} />}>{t("plugins.permission.actions")}</Row>;
-  if (permission === "input") return <Row icon={<Keyboard size={14} />}>{t("plugins.permission.input")}</Row>;
-  const widgetOption = widgetOptionOf(permission);
-  if (widgetOption) return <Row icon={<ShieldCheck size={14} />}>{t(`plugins.permission.widget.${widgetOption}`)}</Row>;
-  if (permission.startsWith("http:")) {
-    const target = permission.slice(5);
-    const scope = httpTargetScope(target);
+  const label = permissionLabel(permission, t);
+  if (label.kind === "variables") return <Row icon={<Braces size={14} />}>{label.text}</Row>;
+  if (label.kind === "actions") return <Row icon={<Zap size={14} />}>{label.text}</Row>;
+  if (label.kind === "input") return <Row icon={<Keyboard size={14} />}>{label.text}</Row>;
+  if (label.kind === "http" && label.scope) {
     return (
-      <Row icon={<Globe size={14} />} chip={{ text: t(`consent.scope.${scope}`), color: SCOPE_COLOR[scope] }}>
-        {t("consent.http", target)}
+      <Row icon={<Globe size={14} />} chip={{ text: t(`consent.scope.${label.scope}`), color: SCOPE_COLOR[label.scope] }}>
+        {label.consentText}
       </Row>
     );
   }
-  return <Row icon={<ShieldCheck size={14} />}>{t("plugins.permission.unknown", permission)}</Row>;
+  return <Row icon={<ShieldCheck size={14} />}>{label.text}</Row>;
 }

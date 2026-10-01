@@ -195,9 +195,28 @@ public sealed partial class JsPlugin
         var request = new HttpRequestMessage(new HttpMethod(method), uri);
         if (method != "GET") request.Content = new StringContent(body, System.Text.Encoding.UTF8, "application/json");
         foreach (var (key, value) in JsonSerializer.Deserialize<Dictionary<string, string>>(headersJson) ?? [])
+        {
+            if (JsNetworkGuard.IsRefusedHeader(key) || JsNetworkGuard.IsMalformedHeader(key, value))
+            {
+                request.Dispose();
+                ReportNetworkRefused(uri.Host, uri.Port, "A request header is not allowed.");
+                throw new JsHostException(JsNetworkGuard.IsRefusedHeader(key) ? $"The header '{key}' cannot be set." : "A request header is not valid.");
+            }
             request.Headers.TryAddWithoutValidation(key, value);
+        }
         return request;
     }
+
+    /// <summary>One Error List line and one security log line for a network call the rules refused (never the URL path, a header or a body).</summary>
+    private void ReportNetworkRefused(string host, int port, string reason)
+    {
+        _problems?.Report(_manifest.Id, _manifest.Name, ProblemSeverity.Warning, ProblemCodes.NetworkRefused, $"A network call to {host}:{port} was refused: {reason}");
+        _logger.LogWarning(SecurityEvents.PluginNetworkRefused, "Security: a network call of plugin {Id} to {Host}:{Port} was refused",
+            SecurityEvents.ForLog(_manifest.Id), SecurityEvents.ForLog(host), port);
+    }
+
+    /// <summary>The text of a failed request: the refusal's own words when the network guard stopped it, else the framework's.</summary>
+    private static string DescribeFailure(Exception ex) => (ex.InnerException as NetworkRefusedException ?? ex as NetworkRefusedException)?.Message ?? ex.Message;
 
     private string Http(string method, string url, string body, string headersJson)
     {
@@ -215,7 +234,7 @@ public sealed partial class JsPlugin
         }
         catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException or IOException)
         {
-            throw new JsHostException($"The request failed: {ex.Message}");
+            throw new JsHostException($"The request failed: {DescribeFailure(ex)}");
         }
     }
 
@@ -259,7 +278,7 @@ public sealed partial class JsPlugin
             {
                 if (_disposed) return;
                 ok = false;
-                payload = $"The request failed: {ex.Message}";
+                payload = $"The request failed: {DescribeFailure(ex)}";
             }
             finally { Interlocked.Decrement(ref _pendingHttp); }
 

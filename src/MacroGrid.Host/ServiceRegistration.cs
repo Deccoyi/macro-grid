@@ -114,7 +114,8 @@ internal static class ServiceRegistration
             sp.GetRequiredService<PluginLocalizer>(), sp.GetRequiredService<ISecretProtector>(),
             windowSource: sp.GetRequiredService<IActiveWindowSource>(), problems: sp.GetRequiredService<ProblemList>(),
             widgetCatalog: sp.GetRequiredService<PluginWidgetCatalog>(), widgetEvents: sp.GetRequiredService<PluginWidgetEventHub>(),
-            officialCatalog: sp.GetRequiredService<OfficialCatalog>(), origins: sp.GetRequiredService<PluginInstallOriginStore>()));
+            officialCatalog: sp.GetRequiredService<OfficialCatalog>(), origins: sp.GetRequiredService<PluginInstallOriginStore>(),
+            ownPorts: [ServerApp.Port, ServerApp.TlsPort]));
         services.AddSingleton<PluginWidgetCatalog>();
         services.AddSingleton(sp => new PluginWidgetEventHub(sp.GetRequiredService<ProblemList>()));
         services.AddHostedService(sp => sp.GetRequiredService<PluginManager>());
