@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ayarlar: Spec</title>
+<style>
+body{margin:0}
+.w{--bg:#232529;--cv:#1c1e22;--raised:#2b2e33;--inset:#16171a;--bd:#35383e;--bds:#46494f;--tx:#e6e7ea;--tx2:#9a9ea6;--txd:#7b7f87;--ac:#d97706;font:13px/1.5 "Segoe UI",system-ui,sans-serif;color:var(--tx);background:var(--cv);width:1040px;height:1500px;padding:32px 40px;overflow:hidden}
+.w *{box-sizing:border-box}
+h1{margin:0 0 4px;font:600 20px/1.3 "Segoe UI",system-ui,sans-serif}
+h2{margin:28px 0 8px;font:600 14px/1.3 "Segoe UI",system-ui,sans-serif;padding-bottom:6px;border-bottom:1px solid var(--bd)}
+p{margin:0 0 8px;color:var(--tx2);font-size:12.5px;max-width:880px}
+table{border-collapse:collapse;width:100%;font-size:12px}
+th{text-align:left;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--txd);font-weight:700;padding:4px 8px;border-bottom:1px solid var(--bd)}
+td{padding:5px 8px;border-bottom:1px solid var(--bd);vertical-align:top;color:var(--tx2)}
+td:first-child{color:var(--tx);white-space:nowrap}
+code{font:11.5px ui-monospace,Consolas,monospace;color:var(--tx);background:var(--inset);padding:1px 4px;border-radius:3px}
+ul{margin:0;padding-left:18px;color:var(--tx2);font-size:12.5px}
+li{margin-bottom:3px}
+pre{margin:6px 0 0;padding:10px 12px;background:var(--inset);border:1px solid var(--bd);border-radius:4px;font:11.5px/1.5 ui-monospace,Consolas,monospace;color:var(--tx);overflow:hidden;white-space:pre}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:32px}
+
+body{background:#101114;padding:24px}</style>
+</head>
+<body>
+
+<div class="w">
+<h1>Ayarlar penceresi: ölçüler ve uygulama spec'i</h1>
+<p>Pencere, Özellikler panelindeki alan sistemiyle aynı dili kullanır: aynı kontrol yüksekliği, yazı boyu, köşe yarıçapı ve çizgi mantığı. Tam metin: <code>docs/ui/settings-window-design.md</code>.</p>
+
+<h2>Pencere iskeleti</h2>
+<table>
+<tr><th>Parça</th><th>Ölçü</th><th>Not</th></tr>
+<tr><td>Pencere</td><td><code>188px | minmax(0,1fr)</code></td><td>Sol gezinme + içerik. Gezinme arka planı <code>--ms-bg-panel</code>, sağında 1px hairline.</td></tr>
+<tr><td>Gezinme öğesi</td><td>28px, 13px, 4px yarıçap, padding 0 10px</td><td>Seçili: yükseltilmiş zemin + 2px sol vurgu çizgisi.</td></tr>
+<tr><td>Gezinme grup etiketi</td><td>16px, 10.5px/700 büyük harf</td><td>Grup arası 12px. Gruplar: Uygulama · Cihazlar ve profiller · Veri ve kurallar.</td></tr>
+<tr><td>İçerik</td><td>padding 24px 32px</td><td>Sayfa genişliği 640 (Genel), 760 (Değişkenler, Otomasyon), sola hizalı.</td></tr>
+<tr><td>Sayfa başlığı</td><td>16px/600; altında 12px açıklama (tx2)</td><td>Açıklama en fazla 640px genişlikte.</td></tr>
+<tr><td>Grup başlığı</td><td>28px, 13px/600</td><td>Gruplar arası 24px.</td></tr>
+</table>
+
+<h2>Ayar satırı ve alanlar</h2>
+<table>
+<tr><th>Öğe</th><th>Ölçü</th><th>Not</th></tr>
+<tr><td>Satır</td><td>min 48px, padding 10px 0, <code>minmax(0,1fr) 220px</code>, boşluk 24px</td><td>Üstte ve altta 1px hairline. Kart yok: aynı kapta tekrarlanan satırlar çizgiyle ayrılır.</td></tr>
+<tr><td>Ad / ipucu</td><td>12px tx / 11px tx2 satır yüksekliği 1.4</td><td>İpucu ad altında 2px.</td></tr>
+<tr><td>Kontrol</td><td>28px, 12px, yarıçap 4px, zemin inset, kenarlık <code>--ms-border</code></td><td>Aynı <code>.c</code> kontrolü Özellikler panelindeki gibi. Odak: vurgu kenarlığı.</td></tr>
+<tr><td>Anahtar</td><td>28×16, topuz 12px</td><td>Doğru/yanlış ayarlar anahtar kullanır, onay kutusu değil.</td></tr>
+<tr><td>Segmentli</td><td>28px, seçili öğe altında 2px vurgu</td><td>Tetikleyici seçimi gibi 2–4 seçenek.</td></tr>
+<tr><td>Gün düğmesi</td><td>28px, 4px yarıçap; açık: vurgu zemin + kenarlık + metin</td><td><code>aria-pressed</code>.</td></tr>
+<tr><td>Simge düğmesi</td><td>28×28 (kural içinde 24×24), şeffaf, hover raised</td><td>Sil hover rengi tehlike. <code>aria-label</code> zorunlu.</td></tr>
+<tr><td>Alt düğme</td><td>28px, yükseltilmiş, 12px</td><td>Sayfa altına tek başına.</td></tr>
+</table>
+
+<div class="two">
+<div>
+<h2>Değişkenler tablosu</h2>
+<ul>
+<li>Sütunlar: Ad (esnek) · Tür 104 · Başlangıç değeri 160 · Sakla 56 · Sil 28, boşluk 8.</li>
+<li>Sütun başlığı 24px, 10.5px/700 büyük harf, altında hairline.</li>
+<li>Ad: <code>user.</code> öneki soluk, kalanı tek aralıklı.</li>
+<li>Açıklama satırın altında, 20px yüksek, çerçevesiz; hover'da inset zemin, odakta vurgu kenarlığı.</li>
+<li>Geçersiz başlangıç değeri: kırmızı kenarlık + 11px kırmızı ileti.</li>
+<li>Ekleme çubuğu: Ad (esnek) · Tür 160 · Ekle. Ad boşken Ekle devre dışı.</li>
+</ul>
+</div>
+<div>
+<h2>Otomasyon kuralları</h2>
+<ul>
+<li>Kural başlığı: 24 aç/kapa · 28 anahtar · özet (esnek) · 28 çalıştır · 28 sil, min 52px.</li>
+<li>Özet: ad 12/600, altında 11px durum satırı. Durum rengi: başarısız tehlike, engellendi uyarı, çalışıyor vurgu.</li>
+<li>Düzenleyici 36px içeriden başlar, en fazla 560px.</li>
+<li>Koşul satırı: <code>1.4fr | 128px | 1fr</code>.</li>
+<li>Aksiyon kartı: 32px başlık, numara dairesi 16px, gövde padding 8px; tek bağımsız öğeler kart olabilir.</li>
+<li>Bekleme alanı 140px, sağda "sn" birimi.</li>
+</ul>
+</div>
+</div>
+
+<h2>Yeni tokenlar (theme.css, <code>--pf-*</code>)</h2>
+<pre>--pf-page-pad-y: 24px;   --pf-page-pad-x: 32px;
+--pf-group-gap: 24px;    --pf-row-pad: 10px;
+--pf-nav-item-h: 28px;
+/* yalnızca genişlikler pencereye yerel olabilir */
+--st-nav-w: 188px;  --st-ctl-w: 220px;
+--st-page-w: 640px; --st-page-w-wide: 760px;</pre>
+
+<h2>Duyarlılık</h2>
+<ul>
+<li>Pencere ≥ 720px: yukarıdaki iskelet.</li>
+<li>&lt; 720px: gezinme kalkar, yerine içerik üstünde 28px yüksek seçim kutusu gelir; içerik padding 16px.</li>
+<li>&lt; 560px içerik: ayar satırı tek sütun (kontrol, ad ve ipucunun altında tam genişlik); değişken satırı iki satıra bölünür (ad+tür / değer+sakla+sil).</li>
+</ul>
+
+<h2>Uygulama notları</h2>
+<ul>
+<li><code>ToolWindowLayout.tsx</code>: 170px gezinmeyi 188px gruplu gezinmeyle değiştirir; sayfa içeriği <code>.st-page</code> içinde.</li>
+<li>Yeni ortak bileşenler: <code>SettingGroup</code>, <code>SettingRow</code>, <code>PageHeader</code>, <code>InlineText</code>, <code>DayChip</code>. Sayfalar yalnızca bunları kullanır, yerel renk veya yükseklik tanımlamaz.</li>
+<li>Yeni i18n anahtarları: gezinme grup etiketleri, grup başlıkları (Başlangıç, Güncellemeler, Bağlantı güvenliği), boş liste ve limit metinleri. Metinler yalnızca <code>tr.ts</code>/<code>en.ts</code> içinde; tüm diğer metinler mevcut anahtarlardır.</li>
+</ul>
+</div>
+</body>
+</html>

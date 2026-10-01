@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ayarlar: Durumlar</title>
+<style>
+body{margin:0}
+.w{--bg:#232529;--cv:#1c1e22;--raised:#2b2e33;--inset:#16171a;--bd:#35383e;--bds:#46494f;--tx:#e6e7ea;--tx2:#9a9ea6;--txd:#7b7f87;--ac:#d97706;--acm:rgba(217,119,6,.15);--dg:#e5584a;--wr:#facc15;font:12px/1.3 "Segoe UI",system-ui,sans-serif;color:var(--tx);background:var(--cv);width:960px;height:640px;padding:24px 32px;overflow:hidden}
+.w *{box-sizing:border-box}
+.w svg.i{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:32px}
+h2{margin:0 0 4px;font:600 13px/28px "Segoe UI",system-ui,sans-serif}
+.cap{font-size:11px;color:var(--tx2);line-height:1.4;margin-bottom:8px}
+.box{border:1px solid var(--bd);border-radius:4px;background:var(--bg);padding:12px;margin-bottom:20px}
+.empty{padding:20px 12px;text-align:center;color:var(--tx2);font-size:12px;line-height:1.4}
+.empty b{display:block;color:var(--tx);font-weight:600;margin-bottom:2px}
+.al{display:flex;gap:8px;align-items:flex-start;padding:6px 8px;border-radius:4px;border:1px solid var(--dg);background:rgba(229,88,74,.08);color:var(--dg);font-size:11.5px;line-height:1.4}
+.al svg{margin-top:1px}
+.c{display:block;width:100%;height:28px;padding:0 8px;background:var(--inset);border:1px solid var(--bd);border-radius:4px;color:var(--tx);font:12px "Segoe UI",system-ui,sans-serif}
+.c.bad{border-color:var(--dg)}
+.hint{font-size:11px;line-height:1.4;color:var(--dg);margin-top:4px}
+.hint.n{color:var(--tx2)}
+.btn{display:inline-flex;align-items:center;height:28px;padding:0 12px;background:var(--raised);border:1px solid var(--bd);border-radius:4px;color:var(--tx);font:12px "Segoe UI",system-ui,sans-serif}
+.btn:disabled{opacity:.5}
+.row{display:flex;gap:8px;align-items:center}
+.cnt{font-size:11px;color:var(--tx2)}
+.cnt.full{color:var(--wr)}
+
+body{background:#101114;padding:24px}</style>
+</head>
+<body>
+
+<div class="w">
+<svg width="0" height="0" style="position:absolute"><defs><symbol id="al" viewBox="0 0 24 24"><path d="M12 3 2 20h20zM12 10v5M12 18h.01"/></symbol></defs></svg>
+<h1 style="margin:0 0 20px;font:600 16px/1.3 'Segoe UI',system-ui,sans-serif">Boş, hata ve limit durumları</h1>
+<div class="cols">
+<div>
+<h2>Boş liste: değişkenler</h2>
+<div class="cap">Satır yerine kısa bir açıklama; ekleme çubuğu her zaman altta kalır.</div>
+<div class="box"><div class="empty"><b>Henüz değişken yok</b>Aşağıdan bir ad ve tür seçerek ilk değişkeninizi ekleyin.</div></div>
+
+<h2>Boş liste: otomasyon</h2>
+<div class="cap">"Şununla başlayan kural ekle" düğmeleri görünür kalır.</div>
+<div class="box"><div class="empty"><b>Henüz kural yok</b>Bir tetikleyici seçerek ilk kuralınızı ekleyin.</div></div>
+
+<h2>Limit dolu</h2>
+<div class="cap">Sayaç uyarı rengine döner, ekleme denetimleri devre dışı kalır.</div>
+<div class="box"><div class="row"><span class="cnt full">200 / 200 değişken</span></div><div class="hint n">Yeni değişken eklemek için bir tanesini silin.</div></div>
+</div>
+<div>
+<h2>Ekleme hatası</h2>
+<div class="cap">Ad alanı kırmızı çerçeve alır; ileti 11px, altında.</div>
+<div class="box"><div class="row"><input class="c bad" type="text" value="sayac" aria-invalid="true"><button class="btn" type="button" disabled>Değişken ekle</button></div><div class="hint" role="alert">Bu adda bir değişken zaten var.</div></div>
+
+<h2>Sayfa hatası</h2>
+<div class="cap">Yükleme veya kaydetme başarısız olduğunda sayfanın en üstünde, tek satır.</div>
+<div class="box"><div class="al" role="alert"><svg class="i"><use href="#al"/></svg><span>Değişkenler kaydedilemedi. Düzenleyici sunucuya bağlı mı?</span></div></div>
+
+<h2>Sorun mesajı: kural</h2>
+<div class="cap">Kural satırının özeti uyarı veya hata rengiyle yazılır; ayrıntı düzenleyicide.</div>
+<div class="box"><div style="font-size:12px;font-weight:600">Telefon bağlanınca OBS'yi aç</div><div style="font-size:11px;color:var(--wr);margin-top:1px">Pixel 8 bağlanınca · 09:12 saatinde engellendi</div><div style="font-size:11px;color:var(--dg);margin-top:8px">Önceki çalışma başarısız oldu.</div></div>
+</div>
+</div>
+</div>
+</body>
+</html>

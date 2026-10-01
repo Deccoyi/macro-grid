@@ -100,6 +100,8 @@ All numbers are CSS px and live as tokens in `theme.css`; never write a literal 
 - [03-spec.html](properties-panel-mockups/03-spec.html): the measurements: token table, 2x anatomy with every px value, kind-to-layout table, grouping rules, the CSS snippet and the implementation notes.
 - [04-responsive.html](properties-panel-mockups/04-responsive.html): the same field list at 240, 320 and 440 px, showing the container-query tiers described below.
 
+**Settings window.** Pages in the Settings window (General, Global variable list, Automation, ...) follow the same field system; layout, tokens and mockups are in [settings-window-design.md](settings-window-design.md).
+
 ### Tokens
 
 | Token | Value | Meaning |
