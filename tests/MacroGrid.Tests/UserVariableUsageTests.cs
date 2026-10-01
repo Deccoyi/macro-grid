@@ -1,4 +1,5 @@
 using System.Text.Json.Nodes;
+using MacroGrid.Core.Automation;
 using MacroGrid.Core.Model;
 using MacroGrid.Core.Variables;
 
@@ -48,5 +49,26 @@ public class UserVariableUsageTests
         var page = new Page { Id = "pg", Name = "P", Widgets = [.. Enumerable.Range(0, 80).Select(i => W("w" + i, "{user.n}"))] };
 
         Assert.Equal(UserVariableUsage.MaxResults, UserVariableUsage.Find([new Profile { Pages = [page] }], "user.n").Count);
+    }
+
+    [Fact]
+    public void A_rule_is_found_by_its_condition_or_its_steps()
+    {
+        var byCondition = new AutomationRule
+        {
+            Id = "c", Name = "Condition",
+            Trigger = new AutomationTrigger { Condition = new ConditionNode { Variable = "user.count", Operator = ">", Value = "1" } },
+        };
+        var bySteps = new AutomationRule
+        {
+            Id = "s", Name = "Steps",
+            Trigger = new AutomationTrigger { Kind = AutomationTriggerKinds.Time, Time = "07:30" },
+            Actions = [new ActionBinding("core.setVariable", new JsonObject { ["variable"] = "user.count" })],
+        };
+        var other = new AutomationRule { Id = "o", Name = "Other", Trigger = new AutomationTrigger { Condition = new ConditionNode { Variable = "user.counter" } } };
+
+        var found = UserVariableUsage.FindInRules([byCondition, bySteps, other], "user.count");
+
+        Assert.Equal(["c", "s"], found.Select(r => r.Id));
     }
 }
