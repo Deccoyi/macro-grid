@@ -43,6 +43,14 @@ describe("RestoreContent", () => {
     expect(ticked.has("profile:p2")).toBe(true);
   });
 
+  it("words the automation rules item and says they come back switched off", () => {
+    const withRules: Inspected = { ...inspected, items: [{ kind: "automation", key: "", name: "", state: "different", names: [], added: 1, changed: 2 }] };
+    render(<PreferencesProvider><RestoreContent inspected={withRules} ticked={new Set()} /></PreferencesProvider>);
+
+    expect(screen.getByText(/Automation rules/)).toBeTruthy();
+    expect(screen.getByText(/1 added, 2 changed. They come back switched off./)).toBeTruthy();
+  });
+
   it("shows the fixed passwords line, a worded warning and an unknown code as it is", () => {
     render(<PreferencesProvider><RestoreContent inspected={inspected} ticked={new Set()} /></PreferencesProvider>);
 

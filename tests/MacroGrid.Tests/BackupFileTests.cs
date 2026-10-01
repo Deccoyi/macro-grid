@@ -6,6 +6,7 @@ using MacroGrid.Core.Backup;
 using MacroGrid.Core.Model;
 using MacroGrid.Core.Preferences;
 using MacroGrid.Core.Profiles;
+using MacroGrid.Core.Automation;
 using MacroGrid.Core.Variables;
 using MacroGrid.Plugin.Abstractions;
 using MacroGrid.Protocol;
@@ -27,6 +28,7 @@ public class BackupFileTests
         ProfileTree = [new ProfileTreeNode { Type = "profile", Id = "p1" }, new ProfileTreeNode { Type = "profile", Id = "p2" }],
         Preferences = new AppPreferences { Theme = "light" },
         Variables = [new UserVariable("score", VariableType.Number, 3.0, true, "points")],
+        AutomationRules = [new AutomationRule { Id = "r1", Name = "Morning", Trigger = new AutomationTrigger { Kind = AutomationTriggerKinds.Time, Time = "08:00", Days = [1, 2] } }],
         Devices = [new BackupDevice("dev1", "Phone", "p2", true, false)],
         PluginSettings = { ["obs"] = new JsonObject { ["host"] = "localhost" } },
         LanguagePacks = { ["de"] = "{\"meta\":{\"tag\":\"de\"}}" },
@@ -69,6 +71,9 @@ public class BackupFileTests
         Assert.Equal(2, read.Content.ProfileTree.Count);
         Assert.Equal("light", read.Content.Preferences!.Theme);
         Assert.Equal("score", Assert.Single(read.Content.Variables).Name);
+        var rule = Assert.Single(read.Content.AutomationRules);
+        Assert.Equal("08:00", rule.Trigger.Time);
+        Assert.Equal([1, 2], rule.Trigger.Days);
         Assert.Equal(new BackupDevice("dev1", "Phone", "p2", true, false), Assert.Single(read.Content.Devices));
         Assert.Equal("localhost", read.Content.PluginSettings["obs"]["host"]!.GetValue<string>());
         Assert.Contains("de", read.Content.LanguagePacks.Keys);

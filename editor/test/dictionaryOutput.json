@@ -735,6 +735,13 @@
       "five": "Differs in: 5",
       "words": "Differs in: Arg1"
     },
+    "restore.detail.automation": {
+      "zero": "0 added, 0 changed. They come back switched off.",
+      "one": "1 added, 1 changed. They come back switched off.",
+      "two": "2 added, 2 changed. They come back switched off.",
+      "five": "5 added, 5 changed. They come back switched off.",
+      "words": "Arg1 added, Arg2 changed. They come back switched off."
+    },
     "restore.detail.variables": {
       "zero": "0 added, 0 changed, 0 left out (another type).",
       "one": "1 added, 1 changed, 1 left out (another type).",
@@ -1632,6 +1639,13 @@
       "two": "Farkı olanlar: 2",
       "five": "Farkı olanlar: 5",
       "words": "Farkı olanlar: Arg1"
+    },
+    "restore.detail.automation": {
+      "zero": "0 eklenecek, 0 değişecek. Kapalı olarak geri gelirler.",
+      "one": "1 eklenecek, 1 değişecek. Kapalı olarak geri gelirler.",
+      "two": "2 eklenecek, 2 değişecek. Kapalı olarak geri gelirler.",
+      "five": "5 eklenecek, 5 değişecek. Kapalı olarak geri gelirler.",
+      "words": "Arg1 eklenecek, Arg2 değişecek. Kapalı olarak geri gelirler."
     },
     "restore.detail.variables": {
       "zero": "0 eklenecek, 0 değişecek, 0 atlanacak (tipi farklı).",

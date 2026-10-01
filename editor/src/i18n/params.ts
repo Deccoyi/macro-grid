@@ -105,6 +105,7 @@ export const PARAMS: Partial<Record<DictKey, readonly string[]>> = {
   "restore.detail.profileNew": ["backupPages","backupWidgets"],
   "restore.detail.changedPages": ["pages"],
   "restore.detail.names": ["names"],
+  "restore.detail.automation": ["added","changed"],
   "restore.detail.variables": ["added","changed","skipped"],
   "restore.detail.languagePack": ["here","backup"],
   "restore.warn.languagePackMissing": ["language"],

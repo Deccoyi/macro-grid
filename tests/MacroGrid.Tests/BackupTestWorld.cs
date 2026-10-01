@@ -1,4 +1,5 @@
 using MacroGrid.Core.Actions;
+using MacroGrid.Core.Automation;
 using MacroGrid.Core.Backup;
 using MacroGrid.Core.Devices;
 using MacroGrid.Core.Languages;
@@ -19,6 +20,7 @@ internal sealed class BackupTestWorld : IDisposable
     public ProfileTreeStore Tree { get; }
     public PreferencesStore Preferences { get; }
     public UserVariableService Variables { get; }
+    public AutomationStore Automation { get; }
     public DeviceStore Devices { get; }
     public LanguagePackStore Languages { get; }
     public PluginManager Plugins { get; }
@@ -35,6 +37,7 @@ internal sealed class BackupTestWorld : IDisposable
         Tree = new ProfileTreeStore(Root);
         Preferences = new PreferencesStore(Root);
         Variables = new UserVariableService(Root, store);
+        Automation = new AutomationStore(Root);
         Devices = new DeviceStore(Root);
         Languages = new LanguagePackStore(Root);
         var pluginsDir = Path.Combine(Root, "plugins");
@@ -43,9 +46,9 @@ internal sealed class BackupTestWorld : IDisposable
         Plugins = new PluginManager(pluginsDir, "1.0.0", new PluginStatusRegistry(), dispatcher,
             new VariableCatalog([]), new VariableProviderHost([], store, NullLogger<VariableProviderHost>.Instance), store,
             new PluginPermissionStore(Root), null, NullLogger<PluginManager>.Instance, trustVerifier: TestPluginSigning.Lenient);
-        Collector = new BackupCollector(Profiles, Tree, Preferences, Variables, Devices, Plugins, Languages);
+        Collector = new BackupCollector(Profiles, Tree, Preferences, Variables, Automation, Devices, Plugins, Languages);
         Service = new BackupService(Collector, Root, "1.0.0");
-        Restorer = new BackupRestorer(Service, Collector, Profiles, Tree, Preferences, Variables, Devices, Plugins, Languages, dispatcher,
+        Restorer = new BackupRestorer(Service, Collector, Profiles, Tree, Preferences, Variables, Automation, Devices, Plugins, Languages, dispatcher,
             profile => { Broadcast.Add(profile.Id); return Task.CompletedTask; });
     }
 

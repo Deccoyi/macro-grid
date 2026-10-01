@@ -527,7 +527,7 @@ export interface ImportProfileResult {
   missingFiles?: { page: string; widget: string; path: string }[];
 }
 
-export type RestoreItemKind = "profile" | "profileTree" | "preferences" | "variables" | "device" | "pluginSettings" | "languagePack";
+export type RestoreItemKind = "profile" | "profileTree" | "preferences" | "variables" | "automation" | "device" | "pluginSettings" | "languagePack";
 export type RestoreItemState = "new" | "different" | "same";
 
 export interface RestoreItem {

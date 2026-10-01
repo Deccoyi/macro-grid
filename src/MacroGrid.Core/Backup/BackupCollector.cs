@@ -1,4 +1,5 @@
 using System.Text.Json.Nodes;
+using MacroGrid.Core.Automation;
 using MacroGrid.Core.Devices;
 using MacroGrid.Core.Languages;
 using MacroGrid.Core.Model;
@@ -15,6 +16,7 @@ public sealed class BackupCollector(
     ProfileTreeStore tree,
     PreferencesStore preferences,
     UserVariableService variables,
+    AutomationStore automation,
     DeviceStore devices,
     PluginManager plugins,
     LanguagePackStore languages)
@@ -28,6 +30,7 @@ public sealed class BackupCollector(
             ProfileTree = tree.GetNormalized(allProfiles),
             Preferences = preferences.Get(),
             Variables = [.. variables.List()],
+            AutomationRules = [.. automation.List()],
             // Built field by field: the token and the pairing times are never read into a backup.
             Devices = [.. devices.All.Select(d => new BackupDevice(d.Id, d.Name, d.AssignedProfileId, d.FollowActiveWindow, d.AutoSwitchLocked))],
         };
