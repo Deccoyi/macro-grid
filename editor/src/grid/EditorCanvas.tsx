@@ -1,4 +1,5 @@
 import { useCallback, useRef, useState } from "react";
+import { CircleAlert } from "lucide-react";
 import { Grid, PluginWidgetContext, WidgetView, gridArea, type Page, type Widget } from "@macro/renderer";
 import { useT } from "../i18n/I18nContext";
 import { canPlace, canPlaceExcluding, clamp, overlappingWidgets } from "./collision";
@@ -14,6 +15,8 @@ interface EditorCanvasProps {
   onRectChange: (widgetId: string, rect: { x: number; y: number; w: number; h: number }) => void;
   onContextMenu: (x: number, y: number, widgetId: string) => void;
   variables: Record<string, unknown>;
+  /** Widgets with an error line, with the line's text: each gets a small red marker (drawn in the overlay, never inside the widget). */
+  problemWidgets?: ReadonlyMap<string, string>;
 }
 
 type DragMode = "move" | "resize";
@@ -32,7 +35,7 @@ interface DragState {
  * uses (so "what you see is what you ship"), plus a light-DOM overlay per widget for selection,
  * dragging and resizing. The overlay never touches the widget's own shadow root.
  */
-export function EditorCanvas({ page, selectedIds, onSelect, onToggleSelect, onRectChange, onContextMenu, variables }: EditorCanvasProps) {
+export function EditorCanvas({ page, selectedIds, onSelect, onToggleSelect, onRectChange, onContextMenu, variables, problemWidgets }: EditorCanvasProps) {
   const { t } = useT();
   const pluginPreview = usePluginWidgetPreview(page.widgets, variables);
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -180,6 +183,15 @@ export function EditorCanvas({ page, selectedIds, onSelect, onToggleSelect, onRe
                   borderRadius: widget.style?.radius ?? 4,
                 }}
               />
+              {problemWidgets?.has(widget.id) && (
+                <div
+                  title={problemWidgets.get(widget.id)}
+                  onPointerDown={(e) => { e.stopPropagation(); if (!isSelected) onSelect([widget.id]); }}
+                  style={{ position: "absolute", top: 3, right: 3, display: "flex", color: "var(--ms-danger)", background: "var(--ms-bg-surface)", borderRadius: "50%" }}
+                >
+                  <CircleAlert size={14} strokeWidth={2.25} />
+                </div>
+              )}
               {isSelected && (
                 <div
                   onPointerDown={(e) => beginDrag("resize", widget, e)}

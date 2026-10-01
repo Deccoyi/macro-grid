@@ -64,6 +64,8 @@ public sealed class ActionDispatcher(IEnumerable<IActionHandler> handlers, ILogg
             if (!_handlers.TryGetValue(binding.Type, out var handler))
             {
                 logger.LogWarning("Unknown action type {Type} on widget {WidgetId}", binding.Type, widget.Id);
+                var text = $"'{PlainText.Clean(binding.Type, 60)}' is not available. Its plugin may be removed or switched off.";
+                (errors ??= []).Add(Failure(binding.Type, ActionFailureCode.NotFound, text) with { Missing = true });
                 continue;
             }
 

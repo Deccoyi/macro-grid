@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Plus, X } from "lucide-react";
 import { commandItem } from "../commands/commandItem";
 import { useCommands } from "../commands/CommandsContext";
@@ -6,6 +6,8 @@ import type { Command } from "../commands/types";
 import type { DeviceSize } from "../grid/DevicePreviewFrame";
 import { DevicePreviewFrame } from "../grid/DevicePreviewFrame";
 import { EditorCanvas } from "../grid/EditorCanvas";
+import { useDiagnostics } from "../diagnostics/DiagnosticsContext";
+import { problemWidgets } from "../diagnostics/problemWidgets";
 import { useT } from "../i18n/I18nContext";
 import { ContextMenu, type ContextMenuEntry } from "../panels/ContextMenu";
 import { useEditorStateContext } from "../state/EditorStateContext";
@@ -27,6 +29,11 @@ export function DocumentArea({ deviceSize }: { deviceSize: DeviceSize | null }) 
   const { openPageIds, closeTab } = useOpenPages();
   const [widgetMenu, setWidgetMenu] = useState<{ x: number; y: number } | null>(null);
   const { currentPage, currentPageId, profile } = state;
+  const { diagnostics } = useDiagnostics();
+  const marked = useMemo(
+    () => problemWidgets(diagnostics, profile?.id ?? "", (d) => d.message ?? (d.messageKey ? t(d.messageKey, ...(d.messageArgs ?? [])) : "")),
+    [diagnostics, profile?.id, t],
+  );
 
   if (!currentPage || !profile) return null;
 
@@ -103,6 +110,7 @@ export function DocumentArea({ deviceSize }: { deviceSize: DeviceSize | null }) 
                 onRectChange={state.setWidgetRect}
                 onContextMenu={(x, y) => setWidgetMenu({ x, y })}
                 variables={state.variables}
+                problemWidgets={marked}
               />
             </DevicePreviewFrame>
           </div>

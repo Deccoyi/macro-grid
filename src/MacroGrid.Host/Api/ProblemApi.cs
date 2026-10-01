@@ -18,7 +18,7 @@ internal static class ProblemApi
             version = problems.Version,
             problems = problems.Snapshot().Select(p => new
             {
-                p.Id, p.Source, p.SourceName, severity = p.Severity.ToString().ToLowerInvariant(), p.Code, p.Message, p.Count, p.FirstAt, p.LastAt,
+                p.Id, p.Source, p.SourceName, severity = p.Severity.ToString().ToLowerInvariant(), p.Code, p.Message, p.Count, p.FirstAt, p.LastAt, p.Target,
             }),
         }));
 

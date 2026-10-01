@@ -6,6 +6,9 @@ export interface DiagnosticTarget {
   profileId: string;
   pageId?: string;
   widgetId?: string;
+  /** The event of the widget the line is about ("press", "longPress"...) and the 0-based number of the action in it. */
+  event?: string;
+  actionIndex?: number;
   /** Free text for display only, e.g. "actions.press[0]". */
   field?: string;
 }
@@ -28,6 +31,9 @@ export interface Diagnostic {
   /** How many times this same message happened; shown as "x5" when more than one. */
   count?: number;
   target?: DiagnosticTarget;
+  /** When a server line first and last happened (ISO text). */
+  firstAt?: string;
+  lastAt?: string;
   /** "server" for a line the server reported; the export leaves those out because the server adds its own. */
   origin?: "server";
 }

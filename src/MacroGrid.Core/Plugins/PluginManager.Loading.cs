@@ -197,6 +197,7 @@ public sealed partial class PluginManager
             }
 
             localizer?.Register(manifest.Id, dir, manifest.DefaultLanguage);
+            problems?.Resolve("macro-grid", ProblemCodes.ActionMissing);
             problems?.Resolve(manifest.Id, ProblemCodes.NotAllowed, ProblemCodes.LoadFailed, ProblemCodes.Incompatible, ProblemCodes.SwitchedOff, ProblemCodes.PluginReported);
             var treeProvider = instance as IPluginTreeProvider;
             var info = new LoadedPlugin(manifest.Id, manifest.Name, manifest.Version, PluginLoadStatus.Loaded, null,

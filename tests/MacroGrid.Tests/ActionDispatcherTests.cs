@@ -233,4 +233,20 @@ private sealed class OutcomeHandler(Func<Task<ActionOutcome>> run) : IActionHand
         public Task ReleaseAsync(ActionContext context, JsonObject settings, CancellationToken cancellationToken) =>
             throw new InvalidOperationException("release failed");
     }
+
+    [Fact]
+    public async Task A_missing_action_is_reported_and_the_next_one_still_runs()
+    {
+        var plain = new PlainHandler();
+        var dispatcher = new ActionDispatcher([plain], NullLogger<ActionDispatcher>.Instance);
+        var widget = new Widget { Actions = { [WidgetEvents.Press] = [new ActionBinding("gone.type", []), new ActionBinding(plain.Type, [])] } };
+
+        var failures = await dispatcher.DispatchAsync(widget, WidgetEvents.Press, Context(), default);
+
+        var failure = Assert.Single(failures);
+        Assert.True(failure.Missing);
+        Assert.Equal(ActionFailureCode.NotFound, failure.Code);
+        Assert.Contains("'gone.type' is not available", failure.Message);
+        Assert.Single(plain.Calls);
+    }
 }

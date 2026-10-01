@@ -24,7 +24,7 @@ describe("diagnostic columns", () => {
   });
 
   it("lets the description take the rest of a wide panel and makes a narrow one scroll", () => {
-    expect(gridTemplate(DEFAULT_COLUMN_WIDTHS)).toBe("90px 70px 420px 150px 130px 100px 1fr");
-    expect(tableMinWidth(DEFAULT_COLUMN_WIDTHS)).toBe(980);
+    expect(gridTemplate(DEFAULT_COLUMN_WIDTHS)).toBe("90px 70px 420px 150px 130px 100px 70px 1fr");
+    expect(tableMinWidth(DEFAULT_COLUMN_WIDTHS)).toBe(1050);
   });
 });
