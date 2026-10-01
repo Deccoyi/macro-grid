@@ -7,6 +7,10 @@ import type { DictKey } from "./tr";
  */
 export const PARAMS: Partial<Record<DictKey, readonly string[]>> = {
   "automation.count": ["count","max"],
+  "dynamic.preset.rules.one": ["count"],
+  "dynamic.preset.rules.other": ["count"],
+  "dynamic.preset.add.one": ["count"],
+  "dynamic.preset.add.other": ["count"],
   "automation.newName": ["n"],
   "automation.delete.confirm": ["name"],
   "automation.full": ["max"],

@@ -1,13 +1,14 @@
 import { useState } from "react";
-import { ArrowRight, CircleOff, Gauge, Plus, ToggleRight, Variable, X } from "lucide-react";
+import { ArrowRight, CircleOff, Gauge, Layers, Plus, ToggleRight, Variable, X } from "lucide-react";
 import type { DynamicBinding } from "@macro/renderer";
 import type { VariableInfo } from "../../api/types";
-import { ColorField } from "../fields/controls";
+import { ColorField, SelectInput, TextInput } from "../fields/controls";
 import { IconPicker } from "../IconPicker";
 import { useT } from "../../i18n/I18nContext";
 import type { DictKey } from "../../i18n/tr";
 import { VariablePicker } from "../VariablePicker";
-import { ConditionEditor, chipStyle } from "./ConditionEditor";
+import { PresetsPopover } from "./PresetsPopover";
+import { ConditionEditor } from "./ConditionEditor";
 import { combinatorOf, fromConditionNode, isValueless, newCase, newCondition, toConditionNode, type EditCase } from "./conditionEditing";
 import { useBackdropClose } from "../../components/useBackdropClose";
 import { applyTemplate, buildTemplate, templateKinds, variablesFor, type TemplateKind, type TemplateWords } from "./quickTemplates";
@@ -41,6 +42,7 @@ export function DynamizeModal({ propertyLabel, binding, variableCatalog, resultK
       : [newCase(defaultResult)],
   );
   const [defaultValue, setDefaultValue] = useState(binding?.default ?? "");
+  const [presetsOpen, setPresetsOpen] = useState(false);
 
   const updateCase = (index: number, fn: (c: EditCase) => void) =>
     setCases((prev) => prev.map((c, i) => (i === index ? withMutation(c, fn) : c)));
@@ -74,8 +76,9 @@ export function DynamizeModal({ propertyLabel, binding, variableCatalog, resultK
     // lines (z-index 99) there, not just the App-root dialogs it used to only need to beat.
     <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.5)", zIndex: 200, display: "flex", alignItems: "center", justifyContent: "center" }} {...backdrop}>
       <div
+        className="pf-root dz-window"
         onClick={(e) => e.stopPropagation()}
-        style={{ width: 600, maxHeight: "82vh", background: "var(--ms-bg-surface)", border: "1px solid var(--ms-border-strong)", display: "flex", flexDirection: "column" }}
+        style={{ width: 680, maxHeight: "82vh", background: "var(--ms-bg-surface)", border: "1px solid var(--ms-border-strong)", display: "flex", flexDirection: "column" }}
       >
         {/* Header — a window title bar, not a web modal's rounded card top: square corners, no radius
            anywhere in this shell (see docs/ui/ui-guidelines.md: "like a window", never like a web modal). */}
@@ -94,85 +97,96 @@ export function DynamizeModal({ propertyLabel, binding, variableCatalog, resultK
         </div>
 
         {/* Body */}
-        <div style={{ padding: "16px 20px", display: "flex", flexDirection: "column", gap: 10, overflowY: "auto" }}>
+        <div style={{ overflowY: "auto" }}>
           {unsupported && (
-            <div style={{ fontSize: 11, color: "var(--ms-text-secondary)", background: "var(--ms-bg-inset)", padding: 8 }}>
+            <div style={{ fontSize: 11, color: "var(--ms-text-secondary)", background: "var(--ms-bg-inset)", padding: 8, margin: "var(--pf-pad)" }}>
               {t("dynamic.unsupported")}
             </div>
           )}
 
-          {!unsupported && <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-            <Keyword muted>{t("dynamic.quick.title")}</Keyword>
-            {templateKinds(resultKind).map((kind) => {
-              const choices = variablesFor(kind, variableCatalog);
-              const Icon = QUICK_ICONS[kind];
-              const label = (
-                <>
-                  <Icon size={12} /> {t(QUICK_KEYS[kind])}
-                </>
-              );
-              if (choices.length === 0) {
-                return (
-                  <button key={kind} type="button" className="ghost" disabled title={t("dynamic.quick.noVariable")} style={chipStyle}>{label}</button>
+          {!unsupported && (
+            <div className="dz-quick">
+              <Keyword muted>{t("dynamic.quick.title")}</Keyword>
+              {templateKinds(resultKind).map((kind) => {
+                const choices = variablesFor(kind, variableCatalog);
+                const Icon = QUICK_ICONS[kind];
+                const label = (
+                  <>
+                    <Icon size={12} /> {t(QUICK_KEYS[kind])}
+                  </>
                 );
-              }
-              return (
-                <VariablePicker
-                  key={kind}
-                  catalog={choices}
-                  mode="bare"
-                  onInsert={(name) => { const picked = choices.find((v) => v.name === name); if (picked) addTemplate(kind, picked); }}
-                  renderTrigger={(open) => <button type="button" className="ghost" onClick={open} style={chipStyle}>{label}</button>}
-                />
-              );
-            })}
-          </div>}
+                if (choices.length === 0) {
+                  return (
+                    <button key={kind} type="button" className="dz-chip" disabled title={t("dynamic.quick.noVariable")}>{label}</button>
+                  );
+                }
+                return (
+                  <VariablePicker
+                    key={kind}
+                    catalog={choices}
+                    mode="bare"
+                    onInsert={(name) => { const picked = choices.find((v) => v.name === name); if (picked) addTemplate(kind, picked); }}
+                    renderTrigger={(open) => <button type="button" className="dz-chip" onClick={open}>{label}</button>}
+                  />
+                );
+              })}
+              <button type="button" className="dz-chip dashed" onClick={() => setPresetsOpen(true)}>
+                <Layers size={12} /> {t("dynamic.preset.all")}
+              </button>
+              <span className="dz-hint">{t("dynamic.quick.firstMatch")}</span>
+            </div>
+          )}
 
           {cases.map((c, i) => (
-            <div key={i} style={{ border: "1px solid var(--ms-border)", background: "var(--ms-bg-canvas)", padding: "12px 14px", display: "flex", flexDirection: "column", gap: 9 }}>
+            <div key={i} className="dz-rule">
               <Keyword>{i === 0 ? t("dynamic.if") : t("dynamic.elseIf")}</Keyword>
-
-              <ConditionEditor value={c} variableCatalog={variableCatalog} onChange={(v) => updateCase(i, (cc) => { cc.combinator = v.combinator; cc.conditions = v.conditions; })} />
-
-              <hr className="sep" style={{ margin: "1px 0" }} />
-
-              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <Keyword muted>{t("dynamic.then")}</Keyword>
-                <ArrowRight size={13} color="var(--ms-border-strong)" />
-                <div style={{ width: wideResult ? 260 : 150 }}>
-                  <ResultInput value={c.result} onChange={(v) => updateCase(i, (cc) => { cc.result = v; })} kind={resultKind} iconColor={iconColor} />
+              <div className="dz-content">
+                <ConditionEditor value={c} variableCatalog={variableCatalog} onChange={(v) => updateCase(i, (cc) => { cc.combinator = v.combinator; cc.conditions = v.conditions; })} />
+                <div className="dz-then">
+                  <Keyword muted>{t("dynamic.then")}</Keyword>
+                  <ArrowRight size={13} color="var(--ms-border-strong)" />
+                  <div className={wideResult ? "dz-result wide" : "dz-result"}>
+                    <ResultInput value={c.result} onChange={(v) => updateCase(i, (cc) => { cc.result = v; })} kind={resultKind} iconColor={iconColor} />
+                  </div>
+                  <div className="spacer" />
+                  {cases.length > 1 && (
+                    <button type="button" className="ghost pf-danger" onClick={() => setCases((prev) => prev.filter((_, idx) => idx !== i))} style={{ fontSize: 12 }}>
+                      {t("dynamic.removeRule")}
+                    </button>
+                  )}
                 </div>
-                <div style={{ flex: 1 }} />
-                {cases.length > 1 && (
-                  <button type="button" className="ghost" onClick={() => setCases((prev) => prev.filter((_, idx) => idx !== i))} style={{ color: "var(--ms-danger)", fontSize: 12 }}>
-                    {t("dynamic.removeRule")}
-                  </button>
-                )}
               </div>
             </div>
           ))}
 
-          <button
-            type="button"
-            className="ghost"
-            onClick={() => setCases((prev) => [...prev, newCase(defaultResult)])}
-            style={{ border: "1px dashed var(--ms-border-strong)", padding: 9, display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}
-          >
+          <button type="button" className="ghost dz-add" onClick={() => setCases((prev) => [...prev, newCase(defaultResult)])}>
             <Plus size={14} /> {t("dynamic.newRule")}
           </button>
 
-          <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", border: "1px dashed var(--ms-border)" }}>
+          <div className="dz-else">
             <Keyword muted>{t("dynamic.else")}</Keyword>
-            <div style={{ flex: 1, fontSize: 12, color: "var(--ms-text-disabled)" }}>{t("dynamic.elseHint")}</div>
-            <div style={{ width: wideResult ? 260 : 150 }}>
-              <ResultInput value={defaultValue} onChange={setDefaultValue} kind={resultKind} iconColor={iconColor} allowEmpty />
+            <div className="dz-else-row">
+              <div className="dz-else-hint">{t("dynamic.elseHint")}</div>
+              <div className={wideResult ? "dz-result wide" : "dz-result"}>
+                <ResultInput value={defaultValue} onChange={setDefaultValue} kind={resultKind} iconColor={iconColor} allowEmpty />
+              </div>
             </div>
           </div>
         </div>
 
+        {presetsOpen && (
+          <PresetsPopover
+            variableCatalog={variableCatalog}
+            resultKind={resultKind}
+            words={words}
+            onAdd={addTemplate}
+            onClose={() => setPresetsOpen(false)}
+          />
+        )}
+
         {/* Footer */}
         <div style={{ display: "flex", alignItems: "center", padding: "14px 20px", borderTop: "1px solid var(--ms-border)" }}>
-          <button type="button" className="ghost" onClick={remove} style={{ color: "var(--ms-danger)" }}>{t("dynamic.remove")}</button>
+          <button type="button" className="ghost pf-danger" onClick={remove}>{t("dynamic.remove")}</button>
           <div style={{ flex: 1 }} />
           <div style={{ display: "flex", gap: 8 }}>
             <button type="button" className="ghost" onClick={onClose}>{t("dynamic.cancel")}</button>
@@ -185,11 +199,7 @@ export function DynamizeModal({ propertyLabel, binding, variableCatalog, resultK
 }
 
 function Keyword({ children, muted }: { children: string; muted?: boolean }) {
-  return (
-    <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: ".04em", textTransform: "uppercase", color: muted ? "var(--ms-text-disabled)" : "var(--ms-text-secondary)", flexShrink: 0 }}>
-      {children}
-    </span>
-  );
+  return <span className={muted ? "dz-keyword muted" : "dz-keyword"}>{children}</span>;
 }
 
 /** The rule's "then" value — a plain flat select for a fixed choice set, or the same ColorField
@@ -199,13 +209,7 @@ function ResultInput({ value, onChange, kind, iconColor, allowEmpty }: { value: 
   const { t } = useT();
   if (kind === "text") {
     return (
-      <input
-        type="text"
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder={allowEmpty ? t("dynamic.noChange") : t("fields.text.placeholder")}
-        style={{ width: "100%" }}
-      />
+      <TextInput label={t("dynamic.then")} value={value} onChange={onChange} placeholder={allowEmpty ? t("dynamic.noChange") : t("fields.text.placeholder")} />
     );
   }
   if (kind === "icon") {
@@ -214,12 +218,12 @@ function ResultInput({ value, onChange, kind, iconColor, allowEmpty }: { value: 
   }
   if (typeof kind === "object") {
     return (
-      <select value={value} onChange={(e) => onChange(e.target.value)} style={{ width: "100%" }}>
+      <SelectInput label={t("dynamic.then")} value={value} onChange={onChange}>
         {allowEmpty && <option value="">{t("dynamic.noChange")}</option>}
         {kind.select.map((o) => (
           <option key={o.value} value={o.value}>{o.label}</option>
         ))}
-      </select>
+      </SelectInput>
     );
   }
   return (

@@ -99,7 +99,7 @@ The Dynamize window is a separate tool window, so it gets **no responsive tiers*
 | Design part | Code |
 |---|---|
 | Rule keywords, rule list, Then/Otherwise rows | `DynamizeModal.tsx` (replace the boxed `cases.map` and the dashed else box) |
-| Condition row, AND/OR/XOR, `+ Condition` | `ConditionEditor.tsx` (keep the logic, change the layout to the grid in 4.3; `chipStyle` stays) |
+| Condition row, AND/OR/XOR, `+ Condition` | `ConditionEditor.tsx` (keep the logic, change the layout to the grid in 4.3; the variable chip is `.dz-chip`) |
 | Result control | `ResultInput` in `DynamizeModal.tsx` (behaviour unchanged) |
 | Quick chips and the presets list | `quickTemplates.ts`: `TemplateKind`, `templateKinds(resultKind)`, `variablesFor`, `buildTemplate`, `applyTemplate` |
 | Preview table in the Presets window | `buildTemplate(kind, variable, resultKind, words)` output, rendered read-only |
@@ -128,3 +128,9 @@ The Dynamize window is a separate tool window, so it gets **no responsive tiers*
 - Do not put long prose in the window; one-sentence hints only.
 - Do not stack a second modal on the Dynamize window. Open the Presets window as an owned tool window or as a popover anchored to the `All presets...`
   chip; a modal inside a modal breaks the guidelines.
+
+## 9. As built
+
+- The rule grid is `--dz-keyword-w | 1fr`: there is no drag grip, because rules cannot be reordered (first match wins by list order). Add the grip column when reordering exists.
+- The condition grid has no bind-variable column: a condition value cannot be bound to a variable today. Columns are chip | operator | value | delete; under 360px the value wraps to a second row.
+- The Presets window is a fixed 720x420 non-modal popover (`PresetsPopover.tsx`) opened from the dashed "All presets..." chip. Click outside or Escape closes it; there is no dimming and no second modal.
