@@ -1,5 +1,5 @@
 import { useMemo, useRef, useState } from "react";
-import { CircleGauge, FlaskConical, Globe, Image as ImageIcon, MoreVertical, Puzzle, RectangleHorizontal, ShieldAlert, SlidersHorizontal, ToggleRight, Type, type LucideIcon } from "lucide-react";
+import { ChevronDown, ChevronRight, CircleGauge, FlaskConical, Globe, Image as ImageIcon, MoreVertical, Puzzle, RectangleHorizontal, ShieldAlert, SlidersHorizontal, ToggleRight, Type, type LucideIcon } from "lucide-react";
 import type { WidgetType } from "@macro/renderer";
 import type { PluginWidgetInfo } from "../api/types";
 import { useT } from "../i18n/I18nContext";
@@ -21,12 +21,38 @@ const PALETTE: { type: WidgetType; key: DictKey; icon: LucideIcon }[] = [
 ];
 
 const VIEW_KEY = "macro-grid.editor.toolboxView";
+const COLLAPSED_KEY = "macro-grid.editor.toolboxCollapsed";
+
+/** The groups the person folded, remembered per person in this window's storage (a group id is "plugin:<id>" or "category:<name>"). */
+function useCollapsedGroups(): [Set<string>, (id: string) => void] {
+  const [collapsed, setCollapsed] = useState<Set<string>>(() => {
+    try {
+      const saved: unknown = JSON.parse(localStorage.getItem(COLLAPSED_KEY) ?? "[]");
+      return new Set(Array.isArray(saved) ? saved.filter((v): v is string => typeof v === "string") : []);
+    } catch {
+      return new Set();
+    }
+  });
+  const toggle = (id: string) =>
+    setCollapsed((prev) => {
+      const next = new Set(prev);
+      if (!next.delete(id)) next.add(id);
+      try {
+        localStorage.setItem(COLLAPSED_KEY, JSON.stringify([...next]));
+      } catch {
+        // Storage can be unavailable; the folds then last until the window closes.
+      }
+      return next;
+    });
+  return [collapsed, toggle];
+}
 
 /** The way the Toolbox is arranged is remembered per person in this window's storage; a private window simply starts with the default. */
 function useToolboxView(): [ToolboxView, (view: ToolboxView) => void] {
   const [view, setView] = useState<ToolboxView>(() => {
     try {
-      return localStorage.getItem(VIEW_KEY) === "category" ? "category" : "plugin";
+      const saved = localStorage.getItem(VIEW_KEY);
+      return saved === "alphabetical" ? "alphabetical" : "plugin";
     } catch {
       return "plugin";
     }
@@ -82,13 +108,14 @@ export function WidgetPalette({ onAdd, onAddPluginWidget, disabled }: WidgetPale
   const pluginWidgets = usePluginWidgets();
   const [query, setQuery] = useState("");
   const [view, setView] = useToolboxView();
+  const [collapsed, toggleGroup] = useCollapsedGroups();
   const [menu, setMenu] = useState<{ x: number; y: number } | null>(null);
   const kebab = useRef<HTMLButtonElement>(null);
 
   const entries = useMemo<ToolboxEntry<Item>[]>(
     () => [
       ...PALETTE.map((item) => ({ name: t(item.key), builtin: true, item })),
-      ...pluginWidgets.map((info) => ({ name: info.name, category: info.category, plugin: info.plugin, pluginName: info.pluginName, builtin: false, item: info as Item })),
+      ...pluginWidgets.map((info) => ({ name: info.name, plugin: info.plugin, pluginName: info.pluginName, builtin: false, item: info as Item })),
     ],
     [pluginWidgets, t],
   );
@@ -97,7 +124,9 @@ export function WidgetPalette({ onAdd, onAddPluginWidget, disabled }: WidgetPale
     const info = e.builtin ? null : (e.item as PluginWidgetInfo);
     return matchesSearch(query, e.name, info?.description, info?.pluginName, info?.category);
   });
-  const groups = groupToolbox(matching, view, { builtIn: t("palette.builtIn"), other: t("palette.other") });
+  const groups = groupToolbox(matching, view);
+  // While something is searched for, every group is open so a match is never hidden in a folded one; an untitled group has no header to fold.
+  const isFolded = (id: string) => query === "" && collapsed.has(id);
 
   const openMenu = () => {
     const rect = kebab.current?.getBoundingClientRect();
@@ -105,7 +134,7 @@ export function WidgetPalette({ onAdd, onAddPluginWidget, disabled }: WidgetPale
   };
   const menuItems: ContextMenuEntry[] = [
     { label: t("palette.view.plugin"), checked: view === "plugin", onSelect: () => setView("plugin") },
-    { label: t("palette.view.category"), checked: view === "category", onSelect: () => setView("category") },
+    { label: t("palette.view.alphabetical"), checked: view === "alphabetical", onSelect: () => setView("alphabetical") },
   ];
 
   const renderTile = (entry: ToolboxEntry<Item>) => {
@@ -182,12 +211,18 @@ export function WidgetPalette({ onAdd, onAddPluginWidget, disabled }: WidgetPale
       {groups.map((group) => (
         <div key={group.id} style={{ display: "flex", flexDirection: "column", gap: 6 }}>
           {group.title !== null && (
-            <div style={{ fontSize: 11, color: "var(--ms-text-secondary)", textTransform: "uppercase", letterSpacing: ".04em", display: "flex", alignItems: "center", gap: 4 }}>
+            <button
+              type="button"
+              onClick={() => toggleGroup(group.id)}
+              aria-expanded={!isFolded(group.id)}
+              style={{ fontSize: 11, color: "var(--ms-text-secondary)", textTransform: "uppercase", letterSpacing: ".04em", display: "flex", alignItems: "center", gap: 4, background: "transparent", border: "none", padding: 0, cursor: "pointer", textAlign: "left" }}
+            >
+              {isFolded(group.id) ? <ChevronRight size={12} strokeWidth={2} /> : <ChevronDown size={12} strokeWidth={2} />}
               {group.plugin && view === "plugin" && <Puzzle size={11} strokeWidth={2} />}
               <span style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={group.plugin && view === "plugin" ? t("palette.pluginWidgets") : undefined}>{group.title}</span>
-            </div>
+            </button>
           )}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 6 }}>{group.entries.map(renderTile)}</div>
+          {!isFolded(group.id) && <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 6 }}>{group.entries.map(renderTile)}</div>}
         </div>
       ))}
     </div>

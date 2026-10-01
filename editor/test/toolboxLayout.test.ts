@@ -1,30 +1,31 @@
 import { describe, expect, it } from "vitest";
 import { groupToolbox, type ToolboxEntry } from "../src/panels/toolboxLayout";
 
-const labels = { builtIn: "Standard", other: "Other" };
 const builtin = (name: string): ToolboxEntry<string> => ({ name, builtin: true, item: name });
-const plugin = (name: string, pluginName: string, category?: string): ToolboxEntry<string> => ({ name, plugin: pluginName.toLowerCase(), pluginName, category, builtin: false, item: name });
+const plugin = (name: string, pluginName: string): ToolboxEntry<string> => ({ name, plugin: pluginName.toLowerCase(), pluginName, builtin: false, item: name });
 
 describe("toolbox layout", () => {
-  const entries = [builtin("Toggle"), builtin("Button"), plugin("Weather", "Zed", "Weather"), plugin("Gauge", "Alpha", "Gauges"), plugin("Dial", "Alpha", "Gauges"), plugin("Odd", "Beta")];
+  const entries = [builtin("Toggle"), builtin("Button"), plugin("Weather", "Zed"), plugin("Gauge", "Alpha"), plugin("Dial", "Alpha")];
 
   it("keeps the built-in widgets first and untitled, and a group per plugin, in the plugin view", () => {
-    const groups = groupToolbox(entries, "plugin", labels);
+    const groups = groupToolbox(entries, "plugin");
 
-    expect(groups.map((g) => g.title)).toEqual([null, "Zed", "Alpha", "Beta"]);
+    expect(groups.map((g) => g.title)).toEqual([null, "Zed", "Alpha"]);
     expect(groups[0]!.entries.map((e) => e.name)).toEqual(["Toggle", "Button"]);
+    expect(groups[2]!.entries.map((e) => e.name)).toEqual(["Gauge", "Dial"]);
   });
 
-  it("groups by category, and sorts the groups and the widgets in them alphabetically, in the category view", () => {
-    const groups = groupToolbox(entries, "category", labels);
+  it("lists everything in one untitled group, A to Z, built-in and plugin widgets mixed, in the alphabetical view", () => {
+    const groups = groupToolbox(entries, "alphabetical");
 
-    expect(groups.map((g) => g.title)).toEqual(["Standard", "Gauges", "Other", "Weather"]);
-    expect(groups[0]!.entries.map((e) => e.name)).toEqual(["Button", "Toggle"]);
-    expect(groups[1]!.entries.map((e) => e.name)).toEqual(["Dial", "Gauge"]);
+    expect(groups).toHaveLength(1);
+    expect(groups[0]!.title).toBeNull();
+    expect(groups[0]!.entries.map((e) => e.name)).toEqual(["Button", "Dial", "Gauge", "Toggle", "Weather"]);
   });
 
   it("leaves out a group with nothing in it", () => {
-    expect(groupToolbox([builtin("Button")], "plugin", labels)).toHaveLength(1);
-    expect(groupToolbox([], "category", labels)).toEqual([]);
+    expect(groupToolbox([builtin("Button")], "plugin")).toHaveLength(1);
+    expect(groupToolbox([], "plugin")).toEqual([]);
+    expect(groupToolbox([], "alphabetical")).toEqual([]);
   });
 });

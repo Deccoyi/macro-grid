@@ -326,9 +326,7 @@ export const tr = {
   "palette.search": "Widget ara",
   "palette.menu": "Toolbox seçenekleri",
   "palette.view.plugin": "Plugin'e göre grupla",
-  "palette.view.category": "Kategoriye göre grupla (A-Z)",
-  "palette.builtIn": "Standart",
-  "palette.other": "Diğer",
+  "palette.view.alphabetical": "Alfabetik liste (A-Z)",
   "palette.results": (count: string) => `${count} bulundu`,
   "palette.noMatch": "Eşleşen widget yok.",
   "palette.title": "Widget ekle",
@@ -513,7 +511,9 @@ export const tr = {
   "fields.text.iconColorHint": "Bu ikon eski bir sürümde eklenmiş, rengini değiştirmek için yeniden seçin",
 
   // ---- Web fields ----
-  "notice.dismiss": "Bir daha gösterme",
+  "notice.dismiss": "Kapat",
+  "notice.closeNow": "Şimdilik kapat",
+  "notice.dontShow": "Bir daha gösterme",
   "preferences.notices.reset": "Kapatılan uyarıları yeniden göster",
   "fields.web.experimentalTitle": "Deneysel.",
   "fields.web.experimentalText": "Sayfa uygulamanın içinde çalışır; ağır bir sayfa deck'i yavaşlatabilir veya kilitleyebilir. Az sayıda web widget'ı ve hafif sayfalar kullanın.",

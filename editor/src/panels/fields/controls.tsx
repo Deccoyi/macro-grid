@@ -10,12 +10,15 @@ const SWATCHES = [
   "#0e7490", "#1d4ed8", "#4338ca", "#6d28d9", "#a21caf", "#be185d", "#78350f", "#111827",
 ];
 
-/** A hint box the person can close for good. `id` is stored in the preferences (server side), so it stays closed on every window and
- * after a restart; the Preferences window can show all closed boxes again. Only for hints: a warning about the current input must not use it. */
+/** A hint box the person can close. The X asks which kind of closing: "close for now" hides it in this window until it is opened again, "do not show
+ * again" stores `id` in the preferences (server side), so it stays closed on every window and after a restart; the Preferences window can show all
+ * closed boxes again. Only for hints: a warning about the current input must not use it. */
 export function DismissibleNote({ id, accent = "var(--ms-accent)", children }: { id: string; accent?: string; children: ReactNode }) {
   const { t } = useT();
   const { dismissedNotices, dismissNotice } = usePreferences();
-  if (dismissedNotices[id]) return null;
+  const [asking, setAsking] = useState(false);
+  const [hiddenNow, setHiddenNow] = useState(false);
+  if (dismissedNotices[id] || hiddenNow) return null;
   return (
     <div
       role="note"
@@ -25,16 +28,23 @@ export function DismissibleNote({ id, accent = "var(--ms-accent)", children }: {
       }}
     >
       {children}
-      <button
-        type="button"
-        className="ghost"
-        onClick={() => dismissNotice(id)}
-        title={t("notice.dismiss")}
-        aria-label={t("notice.dismiss")}
-        style={{ position: "absolute", top: 4, right: 4, width: 18, height: 18, padding: 0, display: "flex", alignItems: "center", justifyContent: "center", border: "none", background: "transparent", color: "var(--ms-text-secondary)", cursor: "pointer" }}
-      >
-        <X size={12} />
-      </button>
+      {asking ? (
+        <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }} onKeyDown={(e) => { if (e.key === "Escape") setAsking(false); }}>
+          <button type="button" autoFocus onClick={() => setHiddenNow(true)}>{t("notice.closeNow")}</button>
+          <button type="button" onClick={() => dismissNotice(id)}>{t("notice.dontShow")}</button>
+        </div>
+      ) : (
+        <button
+          type="button"
+          className="ghost"
+          onClick={() => setAsking(true)}
+          title={t("notice.dismiss")}
+          aria-label={t("notice.dismiss")}
+          style={{ position: "absolute", top: 4, right: 4, width: 18, height: 18, padding: 0, display: "flex", alignItems: "center", justifyContent: "center", border: "none", background: "transparent", color: "var(--ms-text-secondary)", cursor: "pointer" }}
+        >
+          <X size={12} />
+        </button>
+      )}
     </div>
   );
 }
