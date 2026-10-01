@@ -340,6 +340,7 @@ public sealed class ClientHub(
             {
                 var active = toggles.Toggle(widget.Id);
                 await BroadcastToggleAsync(session.ProfileId, msg.PageId, widget.Id, active);
+                widgetState.Refresh(widget.Id); // self.toggled changed: every device showing this button re-evaluates its look
                 var errors = await dispatcher.DispatchAsync(widget, active ? WidgetEvents.ToggleOn : WidgetEvents.ToggleOff, context, CancellationToken.None);
                 await ReportActionErrorsAsync(session, errors, msg.PageId, widget, active ? WidgetEvents.ToggleOn : WidgetEvents.ToggleOff);
             });
