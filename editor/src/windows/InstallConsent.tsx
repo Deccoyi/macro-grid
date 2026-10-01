@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { Braces, FolderOpen, Globe, Keyboard, ShieldAlert, ShieldCheck, Terminal, TriangleAlert, Zap } from "lucide-react";
+import { Braces, FolderOpen, HardDrive, Globe, Keyboard, ShieldAlert, ShieldCheck, Terminal, TriangleAlert, Zap } from "lucide-react";
 import { useT } from "../i18n/I18nContext";
 import type { HttpTargetScope } from "./httpTarget";
 import { permissionLabel } from "./permissionLabel";
@@ -97,6 +97,7 @@ function PermissionRow({ permission }: { permission: string }) {
   if (label.kind === "variables") return <Row icon={<Braces size={14} />}>{label.text}</Row>;
   if (label.kind === "actions") return <Row icon={<Zap size={14} />}>{label.text}</Row>;
   if (label.kind === "input") return <Row icon={<Keyboard size={14} />}>{label.text}</Row>;
+  if (label.kind === "storage") return <Row icon={<HardDrive size={14} />}>{label.text}</Row>;
   if (label.kind === "http" && label.scope) {
     return (
       <Row icon={<Globe size={14} />} chip={{ text: t(`consent.scope.${label.scope}`), color: SCOPE_COLOR[label.scope] }}>

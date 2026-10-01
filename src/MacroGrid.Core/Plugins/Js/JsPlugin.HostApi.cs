@@ -70,6 +70,34 @@ public sealed partial class JsPlugin
         _host!.RegisterAction(new JsAction(this, meta));
     }
 
+    // ---- storage ----
+
+    private JsStorage Storage()
+    {
+        Require(JsPermissions.Storage);
+        return _storage ??= new JsStorage(_host!.DataDirectory, _logger);
+    }
+
+    private string? StorageGet(string key) => Storage().Get(key);
+
+    private void StorageSet(string key, string json)
+    {
+        try { Storage().Set(key, json); }
+        catch (StorageLimitException ex)
+        {
+            ReportLimit(ex.Message);
+            throw new JsHostException(ex.Message);
+        }
+    }
+
+    private void StorageRemove(string key) => Storage().Remove(key);
+
+    private string StorageKeys() => JsonSerializer.Serialize(Storage().Keys());
+
+    /// <summary>One Error List line per kind of limit a plugin reached (the same message counts up instead of adding lines).</summary>
+    private void ReportLimit(string message) =>
+        _problems?.Report(_manifest.Id, _manifest.Name, ProblemSeverity.Warning, ProblemCodes.LimitReached, message);
+
     private void SettingsPage(string json)
     {
         var fields = JsonSerializer.Deserialize<SettingField[]>(json, ProtocolJson.Options)

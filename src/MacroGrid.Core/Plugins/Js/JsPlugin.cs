@@ -66,6 +66,7 @@ public sealed partial class JsPlugin : IPlugin, IPluginWidgetHandler, IDisposabl
     private Engine? _engine;
     private IPluginHost? _host;
     private JsSettingsPage? _settingsPage;
+    private JsStorage? _storage;
     private Thread? _thread;
     private int _pendingTimerJobs;
     private int _pendingHttp;
@@ -235,6 +236,7 @@ public sealed partial class JsPlugin : IPlugin, IPluginWidgetHandler, IDisposabl
         _disposeCts.Cancel();
         _http.Dispose();
         _disposeCts.Dispose();
+        _storage?.Dispose();
         // The loop ends when it has drained; an engine call cannot be interrupted, but every call has a time limit.
     }
 
@@ -298,6 +300,10 @@ public sealed partial class JsPlugin : IPlugin, IPluginWidgetHandler, IDisposabl
         engine.SetValue("__pressEnd", new Action(() => { if (_press is { } press) press.Settled = true; }));
         engine.SetValue("__http", new Func<string, string, string, string, string>(Http));
         engine.SetValue("__httpAsync", new Action<int, string, string, string, string>(HttpAsync));
+        engine.SetValue("__storageGet", new Func<string, string?>(StorageGet));
+        engine.SetValue("__storageSet", new Action<string, string>(StorageSet));
+        engine.SetValue("__storageRemove", new Action<string>(StorageRemove));
+        engine.SetValue("__storageKeys", new Func<string>(StorageKeys));
         engine.SetValue("__widgetPost", new Action<string>(WidgetPost));
         engine.SetValue("__diagnosticsReport", new Action<string, string, string?>(DiagnosticsReport));
         engine.SetValue("__diagnosticsClear", new Action(() => _host!.Diagnostics.Clear()));

@@ -11,7 +11,7 @@ public sealed partial class JsPlugin
           'use strict';
           const g = globalThis;
           const names = ['permissions', 'log', 'varSet', 'varGet', 'varRemove', 'varDescribe', 'registerAction',
-            'settingsPage', 'settingsGet', 'status', 'hotkey', 'type', 'pressEnd', 'http', 'httpAsync', 'widgetPost', 'widgetReply', 'diagnosticsReport', 'diagnosticsResolve', 'diagnosticsClear', 'timer', 'cancel', 'actionDone'];
+            'settingsPage', 'settingsGet', 'status', 'hotkey', 'type', 'pressEnd', 'http', 'httpAsync', 'storageGet', 'storageSet', 'storageRemove', 'storageKeys', 'widgetPost', 'widgetReply', 'diagnosticsReport', 'diagnosticsResolve', 'diagnosticsClear', 'timer', 'cancel', 'actionDone'];
           const n = {};
           for (const name of names) { n[name] = g['__' + name]; delete g['__' + name]; }
 
@@ -71,6 +71,12 @@ public sealed partial class JsPlugin
               post: (url, body, options) => request('POST', url, body, options),
               getAsync: (url, options) => requestAsync('GET', url, undefined, options),
               postAsync: (url, body, options) => requestAsync('POST', url, body, options),
+            }),
+            storage: Object.freeze({
+              get: (key) => { const v = n.storageGet(String(key)); return v === null ? null : JSON.parse(v); },
+              set: (key, value) => n.storageSet(String(key), JSON.stringify(value === undefined ? null : value)),
+              remove: (key) => n.storageRemove(String(key)),
+              keys: () => JSON.parse(n.storageKeys()),
             }),
             widgets: Object.freeze({
               onMessage: (fn) => {
