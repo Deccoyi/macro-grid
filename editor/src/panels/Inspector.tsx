@@ -82,9 +82,9 @@ export function Inspector({
       <div className="pf-section">
         <div className="pf-body">
           <div className="pf-group-label section-label">{t("widget.selected.count", String(selectedWidgets.length))}</div>
-          <button className="ghost pf-btn" onClick={onDuplicateSelected}>{t("widget.selected.duplicate")}</button>
-          <button className="ghost pf-btn" onClick={onMoveCopySelected}>{t("widget.selected.moveCopy")}</button>
-          <button className="ghost pf-btn pf-danger" onClick={onDeleteSelected}>{t("widget.selected.delete")}</button>
+          <button className="pf-btn" onClick={onDuplicateSelected}>{t("widget.selected.duplicate")}</button>
+          <button className="pf-btn" onClick={onMoveCopySelected}>{t("widget.selected.moveCopy")}</button>
+          <button className="pf-btn pf-danger" onClick={onDeleteSelected}>{t("widget.selected.delete")}</button>
         </div>
       </div>
     );
@@ -217,9 +217,9 @@ function PageProperties({ page, onRename, onSetGrid, onSetGap, onSetPadding, onS
 
       <div className="pf-section">
         <FieldGrid cols={2}>
-          <button className="ghost pf-btn" onClick={() => onDuplicate(page.id)}>{t("page.properties.duplicate")}</button>
+          <button className="pf-btn" onClick={() => onDuplicate(page.id)}>{t("page.properties.duplicate")}</button>
           <button
-            className="ghost pf-btn pf-danger"
+            className="pf-btn pf-danger"
             disabled={!canDelete}
             onClick={async () => { if (await confirmAsync(t("page.deleteConfirm", page.name), { title: t("page.delete"), danger: true })) onDelete(page.id); }}
           >
