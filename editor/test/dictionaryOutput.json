@@ -1,5 +1,82 @@
 {
   "en": {
+    "automation.count": {
+      "zero": "0 of 0 rules",
+      "one": "1 of 1 rules",
+      "two": "2 of 2 rules",
+      "five": "5 of 5 rules",
+      "words": "Arg1 of Arg2 rules"
+    },
+    "automation.newName": {
+      "zero": "Rule 0",
+      "one": "Rule 1",
+      "two": "Rule 2",
+      "five": "Rule 5",
+      "words": "Rule Arg1"
+    },
+    "automation.delete.confirm": {
+      "zero": "Delete the rule \"0\"?",
+      "one": "Delete the rule \"1\"?",
+      "two": "Delete the rule \"2\"?",
+      "five": "Delete the rule \"5\"?",
+      "words": "Delete the rule \"Arg1\"?"
+    },
+    "automation.full": {
+      "zero": "The list is full (0 rules).",
+      "one": "The list is full (1 rules).",
+      "two": "The list is full (2 rules).",
+      "five": "The list is full (5 rules).",
+      "words": "The list is full (Arg1 rules)."
+    },
+    "automation.steps.limit": {
+      "zero": "At most 0 steps.",
+      "one": "At most 1 steps.",
+      "two": "At most 2 steps.",
+      "five": "At most 5 steps.",
+      "words": "At most Arg1 steps."
+    },
+    "automation.summary.variable": {
+      "zero": "When 0",
+      "one": "When 1",
+      "two": "When 2",
+      "five": "When 5",
+      "words": "When Arg1"
+    },
+    "automation.summary.time": {
+      "zero": "At 0, 0",
+      "one": "At 1, 1",
+      "two": "At 2, 2",
+      "five": "At 5, 5",
+      "words": "At Arg1, Arg2"
+    },
+    "automation.summary.device": {
+      "zero": "When 0 connects",
+      "one": "When 1 connects",
+      "two": "When 2 connects",
+      "five": "When 5 connects",
+      "words": "When Arg1 connects"
+    },
+    "automation.last.ok": {
+      "zero": "Ran at 0",
+      "one": "Ran at 1",
+      "two": "Ran at 2",
+      "five": "Ran at 5",
+      "words": "Ran at Arg1"
+    },
+    "automation.last.refused": {
+      "zero": "Held back at 0",
+      "one": "Held back at 1",
+      "two": "Held back at 2",
+      "five": "Held back at 5",
+      "words": "Held back at Arg1"
+    },
+    "automation.last.failed": {
+      "zero": "Failed at 0: 0",
+      "one": "Failed at 1: 1",
+      "two": "Failed at 2: 2",
+      "five": "Failed at 5: 5",
+      "words": "Failed at Arg1: Arg2"
+    },
     "action.logic.steps.one": {
       "zero": "0 step",
       "one": "1 step",
@@ -202,6 +279,13 @@
       "two": "…and 2 more",
       "five": "…and 5 more",
       "words": "…and Arg1 more"
+    },
+    "globalVariables.delete.rules": {
+      "zero": "Automation rules that use it: 0",
+      "one": "Automation rules that use it: 1",
+      "two": "Automation rules that use it: 2",
+      "five": "Automation rules that use it: 5",
+      "words": "Automation rules that use it: Arg1"
     },
     "globalVariables.delete.used.one": {
       "zero": "\"0\" is used in 0 place. Delete it anyway? Those places will show nothing until you fix them.",
@@ -651,6 +735,13 @@
       "five": "Differs in: 5",
       "words": "Differs in: Arg1"
     },
+    "restore.detail.automation": {
+      "zero": "0 added, 0 changed. They come back switched off.",
+      "one": "1 added, 1 changed. They come back switched off.",
+      "two": "2 added, 2 changed. They come back switched off.",
+      "five": "5 added, 5 changed. They come back switched off.",
+      "words": "Arg1 added, Arg2 changed. They come back switched off."
+    },
     "restore.detail.variables": {
       "zero": "0 added, 0 changed, 0 left out (another type).",
       "one": "1 added, 1 changed, 1 left out (another type).",
@@ -814,6 +905,83 @@
     }
   },
   "tr": {
+    "automation.count": {
+      "zero": "0 / 0 kural",
+      "one": "1 / 1 kural",
+      "two": "2 / 2 kural",
+      "five": "5 / 5 kural",
+      "words": "Arg1 / Arg2 kural"
+    },
+    "automation.newName": {
+      "zero": "Kural 0",
+      "one": "Kural 1",
+      "two": "Kural 2",
+      "five": "Kural 5",
+      "words": "Kural Arg1"
+    },
+    "automation.delete.confirm": {
+      "zero": "\"0\" kuralı silinsin mi?",
+      "one": "\"1\" kuralı silinsin mi?",
+      "two": "\"2\" kuralı silinsin mi?",
+      "five": "\"5\" kuralı silinsin mi?",
+      "words": "\"Arg1\" kuralı silinsin mi?"
+    },
+    "automation.full": {
+      "zero": "Liste dolu (0 kural).",
+      "one": "Liste dolu (1 kural).",
+      "two": "Liste dolu (2 kural).",
+      "five": "Liste dolu (5 kural).",
+      "words": "Liste dolu (Arg1 kural)."
+    },
+    "automation.steps.limit": {
+      "zero": "En fazla 0 adım.",
+      "one": "En fazla 1 adım.",
+      "two": "En fazla 2 adım.",
+      "five": "En fazla 5 adım.",
+      "words": "En fazla Arg1 adım."
+    },
+    "automation.summary.variable": {
+      "zero": "0 olunca",
+      "one": "1 olunca",
+      "two": "2 olunca",
+      "five": "5 olunca",
+      "words": "Arg1 olunca"
+    },
+    "automation.summary.time": {
+      "zero": "0, 0",
+      "one": "1, 1",
+      "two": "2, 2",
+      "five": "5, 5",
+      "words": "Arg1, Arg2"
+    },
+    "automation.summary.device": {
+      "zero": "0 bağlanınca",
+      "one": "1 bağlanınca",
+      "two": "2 bağlanınca",
+      "five": "5 bağlanınca",
+      "words": "Arg1 bağlanınca"
+    },
+    "automation.last.ok": {
+      "zero": "0 saatinde çalıştı",
+      "one": "1 saatinde çalıştı",
+      "two": "2 saatinde çalıştı",
+      "five": "5 saatinde çalıştı",
+      "words": "Arg1 saatinde çalıştı"
+    },
+    "automation.last.refused": {
+      "zero": "0 saatinde engellendi",
+      "one": "1 saatinde engellendi",
+      "two": "2 saatinde engellendi",
+      "five": "5 saatinde engellendi",
+      "words": "Arg1 saatinde engellendi"
+    },
+    "automation.last.failed": {
+      "zero": "0 saatinde başarısız: 0",
+      "one": "1 saatinde başarısız: 1",
+      "two": "2 saatinde başarısız: 2",
+      "five": "5 saatinde başarısız: 5",
+      "words": "Arg1 saatinde başarısız: Arg2"
+    },
     "action.logic.steps.one": {
       "zero": "0 adım",
       "one": "1 adım",
@@ -1016,6 +1184,13 @@
       "two": "…ve 2 yer daha",
       "five": "…ve 5 yer daha",
       "words": "…ve Arg1 yer daha"
+    },
+    "globalVariables.delete.rules": {
+      "zero": "Bunu kullanan otomasyon kuralları: 0",
+      "one": "Bunu kullanan otomasyon kuralları: 1",
+      "two": "Bunu kullanan otomasyon kuralları: 2",
+      "five": "Bunu kullanan otomasyon kuralları: 5",
+      "words": "Bunu kullanan otomasyon kuralları: Arg1"
     },
     "globalVariables.delete.used.one": {
       "zero": "\"0\" 0 yerde kullanılıyor. Yine de silinsin mi? Siz düzeltene kadar bu yerler boş görünür.",
@@ -1464,6 +1639,13 @@
       "two": "Farkı olanlar: 2",
       "five": "Farkı olanlar: 5",
       "words": "Farkı olanlar: Arg1"
+    },
+    "restore.detail.automation": {
+      "zero": "0 eklenecek, 0 değişecek. Kapalı olarak geri gelirler.",
+      "one": "1 eklenecek, 1 değişecek. Kapalı olarak geri gelirler.",
+      "two": "2 eklenecek, 2 değişecek. Kapalı olarak geri gelirler.",
+      "five": "5 eklenecek, 5 değişecek. Kapalı olarak geri gelirler.",
+      "words": "Arg1 eklenecek, Arg2 değişecek. Kapalı olarak geri gelirler."
     },
     "restore.detail.variables": {
       "zero": "0 eklenecek, 0 değişecek, 0 atlanacak (tipi farklı).",

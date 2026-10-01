@@ -1,4 +1,4 @@
-import type { Profile } from "@macro/renderer";
+import type { ActionBinding, ConditionNode, Profile } from "@macro/renderer";
 type SettingFieldKind = "Text" | "Password" | "Number" | "Slider" | "Bool" | "Select" | "Segmented" | "File" | "List" | "Button" | "Notice" | "Variable" | "Color";
 
 export interface SettingOption {
@@ -99,6 +99,49 @@ export interface UserVariableDef {
 export interface UserVariablesResponse {
   variables: UserVariableDef[];
   limits: { maxCount: number; maxNameLength: number; maxDescriptionLength: number; maxTextLength: number };
+}
+
+/** Mirrors MacroGrid.Core.Automation: one trigger; only the fields of its kind are used. */
+export type AutomationTriggerKind = "variable" | "time" | "deviceConnect";
+
+export interface AutomationTrigger {
+  kind: AutomationTriggerKind;
+  condition?: ConditionNode | null;
+  /** "HH:mm". */
+  time?: string | null;
+  /** 0 = Sunday ... 6 = Saturday; empty = every day. */
+  days: number[];
+  /** null = any paired device. */
+  deviceId?: string | null;
+}
+
+export interface AutomationRuleDef {
+  id: string;
+  name: string;
+  enabled: boolean;
+  trigger: AutomationTrigger;
+  actions: ActionBinding[];
+  cooldownSeconds: number;
+}
+
+export interface AutomationRuleStatus {
+  running: boolean;
+  lastStart?: string | null;
+  lastResult: "none" | "ok" | "failed" | "refused";
+  lastMessage?: string | null;
+  runs: number;
+}
+
+export interface AutomationResponse {
+  paused: boolean;
+  rules: AutomationRuleDef[];
+  limits: { maxRules: number; maxNameLength: number; maxSteps: number; maxCooldownSeconds: number; maxComparisons: number };
+  status: Record<string, AutomationRuleStatus>;
+}
+
+export interface AutomationRuleUse {
+  id: string;
+  name: string;
 }
 
 export interface UserVariableUse {
@@ -484,7 +527,7 @@ export interface ImportProfileResult {
   missingFiles?: { page: string; widget: string; path: string }[];
 }
 
-export type RestoreItemKind = "profile" | "profileTree" | "preferences" | "variables" | "device" | "pluginSettings" | "languagePack";
+export type RestoreItemKind = "profile" | "profileTree" | "preferences" | "variables" | "automation" | "device" | "pluginSettings" | "languagePack";
 export type RestoreItemState = "new" | "different" | "same";
 
 export interface RestoreItem {

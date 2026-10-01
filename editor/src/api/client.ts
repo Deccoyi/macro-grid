@@ -37,6 +37,9 @@ import type {
   UserVariableDef,
   UserVariablesResponse,
   UserVariableUse,
+  AutomationResponse,
+  AutomationRuleDef,
+  AutomationRuleUse,
   VariableInfo,
   VariableSnapshot,
 } from "./types";
@@ -133,6 +136,13 @@ export const api = {
   /** Replaces the whole Global Variable List; the server refuses the whole list with an error message when any part is invalid. */
   setUserVariables: (variables: UserVariableDef[]): Promise<void> => send("PUT", "/api/user-variables", { variables }),
   userVariableUsage: (name: string): Promise<UserVariableUse[]> => get(`/api/user-variables/usage?name=${encodeURIComponent(name)}`),
+
+  getAutomation: (): Promise<AutomationResponse> => get("/api/automation"),
+  /** Replaces the whole rule list and the pause; the server refuses all of it with an error message when any part is invalid. */
+  setAutomation: (rules: AutomationRuleDef[], paused: boolean): Promise<void> => send("PUT", "/api/automation", { rules, paused }),
+  /** "Run now": 409 with the reason when the rule cannot start. */
+  runAutomationRule: (id: string): Promise<void> => send("POST", `/api/automation/${encodeURIComponent(id)}/run`),
+  automationUsage: (name: string): Promise<AutomationRuleUse[]> => get(`/api/automation/usage?name=${encodeURIComponent(name)}`),
 
   /** Shows a native "choose an .exe" dialog on the server's desktop and returns the chosen path, or null if canceled. */
   browseForExecutable: (): Promise<string | null> =>

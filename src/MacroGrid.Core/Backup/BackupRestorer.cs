@@ -7,6 +7,7 @@ using MacroGrid.Core.Model;
 using MacroGrid.Core.Plugins;
 using MacroGrid.Core.Preferences;
 using MacroGrid.Core.Profiles;
+using MacroGrid.Core.Automation;
 using MacroGrid.Core.Variables;
 using MacroGrid.Protocol;
 
@@ -18,6 +19,7 @@ public static class RestoreItemKind
     public const string ProfileTree = "profileTree";
     public const string Preferences = "preferences";
     public const string Variables = "variables";
+    public const string Automation = "automation";
     public const string Device = "device";
     public const string PluginSettings = "pluginSettings";
     public const string LanguagePack = "languagePack";
@@ -39,7 +41,7 @@ public sealed record RestoreItem(string Kind, string Key, string Name, string St
     public int? HereWidgets { get; init; }
     public int? BackupPages { get; init; }
     public int? BackupWidgets { get; init; }
-    /// <summary>Variables: how many would be added, changed, and left out because their type differs.</summary>
+    /// <summary>Variables and automation rules: how many would be added, changed, and (variables only) left out because their type differs.</summary>
     public int? Added { get; init; }
     public int? Changed { get; init; }
     public int? Skipped { get; init; }
@@ -70,6 +72,7 @@ public sealed class BackupRestorer(
     ProfileTreeStore tree,
     PreferencesStore preferences,
     UserVariableService variables,
+    AutomationStore automation,
     DeviceStore devices,
     PluginManager plugins,
     LanguagePackStore languages,
@@ -135,7 +138,7 @@ public sealed class BackupRestorer(
 
     private static readonly string[] ApplyOrder =
     [
-        RestoreItemKind.LanguagePack, RestoreItemKind.Variables, RestoreItemKind.Profile, RestoreItemKind.ProfileTree,
+        RestoreItemKind.LanguagePack, RestoreItemKind.Variables, RestoreItemKind.Automation, RestoreItemKind.Profile, RestoreItemKind.ProfileTree,
         RestoreItemKind.Preferences, RestoreItemKind.Device, RestoreItemKind.PluginSettings,
     ];
 
@@ -165,6 +168,9 @@ public sealed class BackupRestorer(
 
         if (content.Variables.Count > 0)
             items.Add(CompareVariables(content.Variables, here.Variables, warnings));
+
+        if (content.AutomationRules.Count > 0)
+            items.Add(CompareAutomation(content.AutomationRules, here.AutomationRules));
 
         var paired = here.Devices.ToDictionary(d => d.Id, StringComparer.Ordinal);
         foreach (var device in content.Devices)
@@ -244,6 +250,26 @@ public sealed class BackupRestorer(
         return new RestoreItem(RestoreItemKind.Variables, "", "", state) { Added = added, Changed = changed, Skipped = skipped };
     }
 
+    /// <summary>A rule counts as changed when anything but its on/off switch differs, since a restored rule always comes back switched off.</summary>
+    private static RestoreItem CompareAutomation(List<AutomationRule> backup, List<AutomationRule> here)
+    {
+        int added = 0, changed = 0;
+        foreach (var rule in backup)
+        {
+            var existing = here.FirstOrDefault(r => r.Id == rule.Id);
+            if (existing is null) added++;
+            else if (!Equal(SwitchedOff(rule), SwitchedOff(existing))) changed++;
+        }
+        return new RestoreItem(RestoreItemKind.Automation, "", "", added + changed == 0 ? RestoreState.Same : RestoreState.Different) { Added = added, Changed = changed };
+    }
+
+    private static AutomationRule SwitchedOff(AutomationRule rule)
+    {
+        var copy = JsonSerializer.Deserialize<AutomationRule>(JsonSerializer.SerializeToUtf8Bytes(rule, Json), Json) ?? new AutomationRule();
+        copy.Enabled = false;
+        return copy;
+    }
+
     private static string Describe(UserVariable v) =>
         JsonSerializer.Serialize(new { v.Type, Initial = UserVariables.TryConvert(v.Type, v.Initial, out var value) ? value : null, v.Keep, v.Description }, Json);
 
@@ -289,6 +315,9 @@ public sealed class BackupRestorer(
                 case RestoreItemKind.Variables:
                     ApplyVariables(content.Variables, warnings);
                     break;
+                case RestoreItemKind.Automation:
+                    ApplyAutomation(content.AutomationRules);
+                    break;
                 case RestoreItemKind.Profile:
                     var profile = content.Profiles.First(p => p.Id == item.Key);
                     profiles.Save(profile);
@@ -327,6 +356,20 @@ public sealed class BackupRestorer(
             else warnings.Add(new RestoreWarning("variableTypeConflict", [variable.Name]));
         }
         if (!variables.TryReplace(merged, out var error)) throw new InvalidOperationException(error);
+    }
+
+    /// <summary>Rules are merged by id, never removed, and every restored rule is saved switched off: a restore must not start actions by itself. The pause switch keeps its value.</summary>
+    private void ApplyAutomation(List<AutomationRule> backup)
+    {
+        var merged = automation.List().ToList();
+        foreach (var rule in backup)
+        {
+            var off = SwitchedOff(rule);
+            var index = merged.FindIndex(r => r.Id == rule.Id);
+            if (index < 0) merged.Add(off);
+            else merged[index] = off;
+        }
+        if (!automation.TryReplace(merged, automation.Paused, out var error)) throw new InvalidOperationException(error);
     }
 
     /// <summary>A restore never turns on unencrypted connections: that setting keeps its current value when the backup would switch it on.</summary>

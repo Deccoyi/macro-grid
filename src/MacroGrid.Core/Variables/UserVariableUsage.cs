@@ -1,6 +1,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
+using MacroGrid.Core.Automation;
 using MacroGrid.Core.Model;
 using MacroGrid.Protocol;
 
@@ -9,6 +10,8 @@ namespace MacroGrid.Core.Variables;
 /// <summary>Where a widget uses a variable: its text, a dynamic rule, an action's settings or its own properties.</summary>
 [JsonConverter(typeof(JsonStringEnumConverter<UserVariableSpot>))]
 public enum UserVariableSpot { Text, Dynamic, Action, Props }
+
+public sealed record AutomationRuleUse(string Id, string Name);
 
 public sealed record UserVariableUse(string ProfileId, string ProfileName, string PageId, string PageName, string WidgetId, string WidgetName, UserVariableSpot Spot);
 
@@ -34,6 +37,16 @@ public static class UserVariableUsage
                     }
                 }
         return found;
+    }
+
+    /// <summary>The automation rules whose condition or steps mention a variable.</summary>
+    public static IReadOnlyList<AutomationRuleUse> FindInRules(IEnumerable<AutomationRule> rules, string fullName)
+    {
+        var pattern = new Regex($@"(?<![A-Za-z0-9_.]){Regex.Escape(fullName)}(?![A-Za-z0-9_])", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+        return [.. rules
+            .Where(r => pattern.IsMatch(JsonSerializer.Serialize(r.Trigger, ProtocolJson.Options)) || pattern.IsMatch(JsonSerializer.Serialize(r.Actions, ProtocolJson.Options)))
+            .Select(r => new AutomationRuleUse(r.Id, r.Name))
+            .Take(MaxResults)];
     }
 
     private static IEnumerable<UserVariableSpot> Spots(Widget widget, Regex pattern)

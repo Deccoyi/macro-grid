@@ -26,6 +26,7 @@ function itemTitle(t: Translate, item: RestoreItem): string {
     case "profileTree": return t("restore.item.profileTree");
     case "preferences": return t("restore.item.preferences");
     case "variables": return t("restore.item.variables");
+    case "automation": return t("restore.item.automation");
     case "device": return t("restore.item.device", item.name);
     case "pluginSettings": return t("restore.item.pluginSettings", item.name);
     case "languagePack": return t("restore.item.languagePack", item.name);
@@ -42,6 +43,8 @@ function itemDetail(t: Translate, item: RestoreItem): string[] {
     if (item.state === "different" && item.names.length > 0) lines.push(t("restore.detail.changedPages", item.names.join(", ")));
   } else if (item.kind === "variables") {
     lines.push(t("restore.detail.variables", n(item.added), n(item.changed), n(item.skipped)));
+  } else if (item.kind === "automation") {
+    lines.push(t("restore.detail.automation", n(item.added), n(item.changed)));
   } else if (item.kind === "languagePack") {
     lines.push(t("restore.detail.languagePack", item.hereVersion == null ? "-" : n(item.hereVersion), item.backupVersion == null ? "-" : n(item.backupVersion)));
   } else if (item.state === "different" && item.names.length > 0) {

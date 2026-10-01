@@ -2,6 +2,7 @@ using System.Text.Json.Nodes;
 using MacroGrid.Core.Backup;
 using MacroGrid.Core.Model;
 using MacroGrid.Core.Preferences;
+using MacroGrid.Core.Automation;
 using MacroGrid.Core.Variables;
 using MacroGrid.Plugin.Abstractions;
 
@@ -130,6 +131,39 @@ public sealed class BackupRestorerTests : IDisposable
         var all = _world.Variables.List();
         Assert.Contains(all, v => v.Name == "extra");
         Assert.Equal(VariableType.Number, all.Single(v => v.Name == "score").Type);
+    }
+
+    private static AutomationRule TimeRule(string id, string time, bool enabled) => new()
+    {
+        Id = id, Name = id, Enabled = enabled, Trigger = new AutomationTrigger { Kind = AutomationTriggerKinds.Time, Time = time, Days = [] },
+    };
+
+    [Fact]
+    public async Task Automation_rules_are_merged_by_id_and_always_come_back_switched_off()
+    {
+        _world.Automation.TryReplace([TimeRule("a", "08:00", true), TimeRule("keep", "09:00", true)], paused: false, out _);
+        var result = InspectOf(new BackupContent { AutomationRules = [TimeRule("a", "10:00", true), TimeRule("b", "11:00", true)] });
+
+        var item = result.Items.Single(i => i.Kind == RestoreItemKind.Automation);
+        Assert.Equal(1, item.Added);
+        Assert.Equal(1, item.Changed);
+        var done = await _world.Restorer.RestoreAsync(result.Id, [Pick(item)]);
+        Assert.True(Assert.Single(done).Ok);
+
+        var rules = _world.Automation.List();
+        Assert.Equal(3, rules.Count);
+        Assert.Equal("10:00", rules.Single(r => r.Id == "a").Trigger.Time);
+        Assert.True(rules.Single(r => r.Id == "keep").Enabled);
+        Assert.False(rules.Single(r => r.Id == "a").Enabled);
+        Assert.False(rules.Single(r => r.Id == "b").Enabled);
+    }
+
+    [Fact]
+    public void A_rule_that_differs_only_by_its_switch_counts_as_the_same()
+    {
+        _world.Automation.TryReplace([TimeRule("a", "08:00", true)], paused: false, out _);
+        var result = InspectOf(new BackupContent { AutomationRules = [TimeRule("a", "08:00", false)] });
+        Assert.Equal(RestoreState.Same, result.Items.Single(i => i.Kind == RestoreItemKind.Automation).State);
     }
 
     [Fact]

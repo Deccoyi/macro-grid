@@ -8,6 +8,7 @@ using MacroGrid.Core.Languages;
 using MacroGrid.Core.Model;
 using MacroGrid.Core.Preferences;
 using MacroGrid.Core.Profiles;
+using MacroGrid.Core.Automation;
 using MacroGrid.Core.Variables;
 using MacroGrid.Protocol;
 
@@ -34,6 +35,8 @@ public sealed class BackupContent
     public List<ProfileTreeNode> ProfileTree { get; init; } = [];
     public AppPreferences? Preferences { get; init; }
     public List<UserVariable> Variables { get; init; } = [];
+    /// <summary>The automation rules. A backup from a build without automation has none.</summary>
+    public List<AutomationRule> AutomationRules { get; init; } = [];
     public List<BackupDevice> Devices { get; init; } = [];
     /// <summary>Plugin id to the settings-page values of that plugin.</summary>
     public Dictionary<string, JsonObject> PluginSettings { get; init; } = new(StringComparer.OrdinalIgnoreCase);
@@ -64,6 +67,7 @@ public static partial class BackupFile
     private const string PreferencesEntry = "preferences.json";
     private const string VariablesEntry = "user-variables.json";
     private const string DevicesEntry = "devices.json";
+    private const string AutomationEntry = "automation.json";
 
     private static readonly JsonSerializerOptions Json = new(ProtocolJson.Options) { WriteIndented = true };
 
@@ -117,6 +121,7 @@ public static partial class BackupFile
             AppPreferences? preferences = null;
             List<UserVariable> variables = [];
             List<BackupDevice> devices = [];
+            List<AutomationRule> automation = [];
 
             foreach (var entry in zip.Entries)
             {
@@ -145,6 +150,9 @@ public static partial class BackupFile
                     case EntryKind.Variables:
                         variables = Parse<List<UserVariable>>(data, name) ?? [];
                         break;
+                    case EntryKind.Automation:
+                        automation = Parse<List<AutomationRule>>(data, name) ?? [];
+                        break;
                     case EntryKind.Devices:
                         devices = (Parse<List<BackupDevice>>(data, name) ?? []).Where(d => IsValidProfileId(d.Id) && !string.IsNullOrWhiteSpace(d.Name)).ToList();
                         break;
@@ -160,7 +168,7 @@ public static partial class BackupFile
 
             var content = new BackupContent
             {
-                Profiles = profiles, ProfileTree = tree, Preferences = preferences, Variables = variables,
+                Profiles = profiles, ProfileTree = tree, Preferences = preferences, Variables = variables, AutomationRules = automation,
                 Devices = devices, PluginSettings = pluginSettings, LanguagePacks = languages,
             };
             return new BackupFileContent(manifest, content);
@@ -172,7 +180,7 @@ public static partial class BackupFile
         }
     }
 
-    private enum EntryKind { Unknown, Profile, Tree, Preferences, Variables, Devices, PluginSettings, Language }
+    private enum EntryKind { Unknown, Profile, Tree, Preferences, Variables, Automation, Devices, PluginSettings, Language }
 
     private static EntryKind Classify(string name, out string key)
     {
@@ -183,6 +191,7 @@ public static partial class BackupFile
             case PreferencesEntry: return EntryKind.Preferences;
             case VariablesEntry: return EntryKind.Variables;
             case DevicesEntry: return EntryKind.Devices;
+            case AutomationEntry: return EntryKind.Automation;
         }
         if (TryKey(name, "profiles/", out key) && IdPattern().IsMatch(key)) return EntryKind.Profile;
         if (TryKey(name, "plugin-settings/", out key) && PluginIdPattern().IsMatch(key) && !key.Contains("..")) return EntryKind.PluginSettings;
@@ -214,6 +223,8 @@ public static partial class BackupFile
         entries.Add((TreeEntry, JsonSerializer.SerializeToUtf8Bytes(content.ProfileTree, Json)));
         if (content.Preferences is not null) entries.Add((PreferencesEntry, JsonSerializer.SerializeToUtf8Bytes(content.Preferences, Json)));
         entries.Add((VariablesEntry, JsonSerializer.SerializeToUtf8Bytes(content.Variables, Json)));
+        // Written only when there are rules, so a backup without any stays byte-identical to one from before automation existed.
+        if (content.AutomationRules.Count > 0) entries.Add((AutomationEntry, JsonSerializer.SerializeToUtf8Bytes(content.AutomationRules, Json)));
         entries.Add((DevicesEntry, JsonSerializer.SerializeToUtf8Bytes(content.Devices.OrderBy(d => d.Id, StringComparer.Ordinal), Json)));
         foreach (var (id, settings) in content.PluginSettings.OrderBy(p => p.Key, StringComparer.OrdinalIgnoreCase))
             entries.Add(($"plugin-settings/{id}.json", Encoding.UTF8.GetBytes(settings.ToJsonString(Json))));

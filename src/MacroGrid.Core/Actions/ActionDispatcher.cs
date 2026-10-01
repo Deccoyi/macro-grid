@@ -60,6 +60,19 @@ public sealed class ActionDispatcher(IEnumerable<IActionHandler> handlers, ILogg
         if (!widget.Actions.TryGetValue(eventName, out var bindings) || bindings.Count == 0)
             return (IReadOnlyList<ActionFailure>?)errors ?? [];
 
+        var failures = await RunListAsync(bindings, context, widget.Id, cancellationToken);
+        if (errors is null) return failures;
+        errors.AddRange(failures);
+        return errors;
+    }
+
+    /// <summary>
+    /// Runs an action list in order (If, Otherwise, End and Stop steps included) and returns the failures; a failing step never stops the next one.
+    /// <paramref name="origin"/> is only the text the log uses (a widget id, or <c>rule:&lt;id&gt;</c>). The list belongs to no widget, so a rule can use it too.
+    /// </summary>
+    public async Task<IReadOnlyList<ActionFailure>> RunListAsync(IReadOnlyList<ActionBinding> bindings, ActionContext context, string? origin, CancellationToken cancellationToken)
+    {
+        List<ActionFailure>? errors = null;
         var flow = new ActionFlow.Run();
         foreach (var binding in bindings)
         {
@@ -69,13 +82,13 @@ public sealed class ActionDispatcher(IEnumerable<IActionHandler> handlers, ILogg
 
             if (!_handlers.TryGetValue(binding.Type, out var handler))
             {
-                logger.LogWarning("Unknown action type {Type} on widget {WidgetId}", binding.Type, widget.Id);
+                logger.LogWarning("Unknown action type {Type} on widget {WidgetId}", binding.Type, origin);
                 var text = $"'{PlainText.Clean(binding.Type, 60)}' is not available. Its plugin may be removed or switched off.";
                 (errors ??= []).Add(Failure(binding.Type, ActionFailureCode.NotFound, text) with { Missing = true });
                 continue;
             }
 
-            var failure = await RunOneAsync(handler, ResolveVariables(handler, binding.Settings), context, widget.Id, cancellationToken);
+            var failure = await RunOneAsync(handler, ResolveVariables(handler, binding.Settings), context, origin, cancellationToken);
             flow.Ran(failure is not null);
             if (failure is not null) (errors ??= []).Add(failure);
         }

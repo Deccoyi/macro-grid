@@ -11,6 +11,7 @@ A `.mgbackup` file is a zip. It is built from the stores (profiles, the profile 
 | `manifest.json` | `formatVersion` (1), `kind` (`backup` or `restorePoint`), `reason`, `createdAt`, `serverVersion`, `contentHash`, the plugins the profiles need |
 | `profiles/<id>.json` | one profile each (the id is 1 to 64 letters, digits, `-`, `_` and must equal the entry name) |
 | `profile-tree.json`, `preferences.json`, `user-variables.json` | as stored |
+| `automation.json` | the automation rules, only when there are any. A restore merges them by id and saves every restored rule switched off; see [automation-rules.md](automation-rules.md) |
 | `devices.json` | per paired device: id, name, assigned profile, follow-active-window, auto-switch lock. **No token.** |
 | `plugin-settings/<plugin id>.json` | only from a running plugin's settings page; password fields are removed, also inside list rows |
 | `languages/<tag>.json` | installed language packs |
