@@ -588,6 +588,160 @@
       "five": "This profile needs plugins that are not installed: 5. Install them from the Plugins window and its buttons will work.",
       "words": "This profile needs plugins that are not installed: Arg1. Install them from the Plugins window and its buttons will work."
     },
+    "restore.madeOn": {
+      "zero": "Made 0 with version 0.",
+      "one": "Made 1 with version 1.",
+      "two": "Made 2 with version 2.",
+      "five": "Made 5 with version 5.",
+      "words": "Made Arg1 with version Arg2."
+    },
+    "restore.item.profile": {
+      "zero": "Profile: 0",
+      "one": "Profile: 1",
+      "two": "Profile: 2",
+      "five": "Profile: 5",
+      "words": "Profile: Arg1"
+    },
+    "restore.item.device": {
+      "zero": "Phone: 0",
+      "one": "Phone: 1",
+      "two": "Phone: 2",
+      "five": "Phone: 5",
+      "words": "Phone: Arg1"
+    },
+    "restore.item.pluginSettings": {
+      "zero": "Plugin settings: 0",
+      "one": "Plugin settings: 1",
+      "two": "Plugin settings: 2",
+      "five": "Plugin settings: 5",
+      "words": "Plugin settings: Arg1"
+    },
+    "restore.item.languagePack": {
+      "zero": "Language pack: 0",
+      "one": "Language pack: 1",
+      "two": "Language pack: 2",
+      "five": "Language pack: 5",
+      "words": "Language pack: Arg1"
+    },
+    "restore.detail.profile": {
+      "zero": "Backup: 0 pages, 0 widgets. Here: 0 pages, 0 widgets.",
+      "one": "Backup: 1 pages, 1 widgets. Here: 1 pages, 1 widgets.",
+      "two": "Backup: 2 pages, 2 widgets. Here: 2 pages, 2 widgets.",
+      "five": "Backup: 5 pages, 5 widgets. Here: 5 pages, 5 widgets.",
+      "words": "Backup: Arg1 pages, Arg2 widgets. Here: Arg3 pages, Arg4 widgets."
+    },
+    "restore.detail.profileNew": {
+      "zero": "0 pages, 0 widgets.",
+      "one": "1 pages, 1 widgets.",
+      "two": "2 pages, 2 widgets.",
+      "five": "5 pages, 5 widgets.",
+      "words": "Arg1 pages, Arg2 widgets."
+    },
+    "restore.detail.changedPages": {
+      "zero": "Changed pages: 0",
+      "one": "Changed pages: 1",
+      "two": "Changed pages: 2",
+      "five": "Changed pages: 5",
+      "words": "Changed pages: Arg1"
+    },
+    "restore.detail.names": {
+      "zero": "Differs in: 0",
+      "one": "Differs in: 1",
+      "two": "Differs in: 2",
+      "five": "Differs in: 5",
+      "words": "Differs in: Arg1"
+    },
+    "restore.detail.variables": {
+      "zero": "0 added, 0 changed, 0 left out (another type).",
+      "one": "1 added, 1 changed, 1 left out (another type).",
+      "two": "2 added, 2 changed, 2 left out (another type).",
+      "five": "5 added, 5 changed, 5 left out (another type).",
+      "words": "Arg1 added, Arg2 changed, Arg3 left out (another type)."
+    },
+    "restore.detail.languagePack": {
+      "zero": "Version here: 0. Version in the backup: 0.",
+      "one": "Version here: 1. Version in the backup: 1.",
+      "two": "Version here: 2. Version in the backup: 2.",
+      "five": "Version here: 5. Version in the backup: 5.",
+      "words": "Version here: Arg1. Version in the backup: Arg2."
+    },
+    "restore.warn.languagePackMissing": {
+      "zero": "The preferences use the language 0, which is not installed here.",
+      "one": "The preferences use the language 1, which is not installed here.",
+      "two": "The preferences use the language 2, which is not installed here.",
+      "five": "The preferences use the language 5, which is not installed here.",
+      "words": "The preferences use the language Arg1, which is not installed here."
+    },
+    "restore.warn.deviceNotPaired": {
+      "zero": "0 is not paired with this PC, so its choices are left out.",
+      "one": "1 is not paired with this PC, so its choices are left out.",
+      "two": "2 is not paired with this PC, so its choices are left out.",
+      "five": "5 is not paired with this PC, so its choices are left out.",
+      "words": "Arg1 is not paired with this PC, so its choices are left out."
+    },
+    "restore.warn.deviceProfileMissing": {
+      "zero": "0 used a profile that is not here, so it will use none.",
+      "one": "1 used a profile that is not here, so it will use none.",
+      "two": "2 used a profile that is not here, so it will use none.",
+      "five": "5 used a profile that is not here, so it will use none.",
+      "words": "Arg1 used a profile that is not here, so it will use none."
+    },
+    "restore.warn.missingPlugin": {
+      "zero": "This backup needs the plugin 0, which is not installed.",
+      "one": "This backup needs the plugin 1, which is not installed.",
+      "two": "This backup needs the plugin 2, which is not installed.",
+      "five": "This backup needs the plugin 5, which is not installed.",
+      "words": "This backup needs the plugin Arg1, which is not installed."
+    },
+    "restore.warn.unknownActionType": {
+      "zero": "Actions with no provider on this server: 0.",
+      "one": "Actions with no provider on this server: 1.",
+      "two": "Actions with no provider on this server: 2.",
+      "five": "Actions with no provider on this server: 5.",
+      "words": "Actions with no provider on this server: Arg1."
+    },
+    "restore.warn.missingFile": {
+      "zero": "File not found on this PC (0, 0): 0",
+      "one": "File not found on this PC (1, 1): 1",
+      "two": "File not found on this PC (2, 2): 2",
+      "five": "File not found on this PC (5, 5): 5",
+      "words": "File not found on this PC (Arg1, Arg2): Arg3"
+    },
+    "restore.warn.variableTypeConflict": {
+      "zero": "The variable 0 has another type here, so it is left as it is.",
+      "one": "The variable 1 has another type here, so it is left as it is.",
+      "two": "The variable 2 has another type here, so it is left as it is.",
+      "five": "The variable 5 has another type here, so it is left as it is.",
+      "words": "The variable Arg1 has another type here, so it is left as it is."
+    },
+    "restore.warn.pluginSettingsNotRunning": {
+      "zero": "Settings of the plugin 0 are left out because it is not running here.",
+      "one": "Settings of the plugin 1 are left out because it is not running here.",
+      "two": "Settings of the plugin 2 are left out because it is not running here.",
+      "five": "Settings of the plugin 5 are left out because it is not running here.",
+      "words": "Settings of the plugin Arg1 are left out because it is not running here."
+    },
+    "restore.result.done": {
+      "zero": "Restored 0 items. The editor will reload now.",
+      "one": "Restored 1 items. The editor will reload now.",
+      "two": "Restored 2 items. The editor will reload now.",
+      "five": "Restored 5 items. The editor will reload now.",
+      "words": "Restored Arg1 items. The editor will reload now."
+    },
+    "restore.result.failed": {
+      "zero": "These could not be restored: 0",
+      "one": "These could not be restored: 1",
+      "two": "These could not be restored: 2",
+      "five": "These could not be restored: 5",
+      "words": "These could not be restored: Arg1"
+    },
+    "profile.importMissing.files": {
+      "zero": "Files these actions use are not on this PC: 0.",
+      "one": "Files these actions use are not on this PC: 1.",
+      "two": "Files these actions use are not on this PC: 2.",
+      "five": "Files these actions use are not on this PC: 5.",
+      "words": "Files these actions use are not on this PC: Arg1."
+    },
     "schemaForm.untitledRow": {
       "zero": "Item 0",
       "one": "Item 1",
@@ -1247,6 +1401,160 @@
       "two": "Bu profil yüklü olmayan eklentilere ihtiyaç duyuyor: 2. Eklentiler penceresinden kurunca düğmeleri çalışır.",
       "five": "Bu profil yüklü olmayan eklentilere ihtiyaç duyuyor: 5. Eklentiler penceresinden kurunca düğmeleri çalışır.",
       "words": "Bu profil yüklü olmayan eklentilere ihtiyaç duyuyor: Arg1. Eklentiler penceresinden kurunca düğmeleri çalışır."
+    },
+    "restore.madeOn": {
+      "zero": "0 tarihinde, 0 sürümüyle alındı.",
+      "one": "1 tarihinde, 1 sürümüyle alındı.",
+      "two": "2 tarihinde, 2 sürümüyle alındı.",
+      "five": "5 tarihinde, 5 sürümüyle alındı.",
+      "words": "Arg1 tarihinde, Arg2 sürümüyle alındı."
+    },
+    "restore.item.profile": {
+      "zero": "Profil: 0",
+      "one": "Profil: 1",
+      "two": "Profil: 2",
+      "five": "Profil: 5",
+      "words": "Profil: Arg1"
+    },
+    "restore.item.device": {
+      "zero": "Telefon: 0",
+      "one": "Telefon: 1",
+      "two": "Telefon: 2",
+      "five": "Telefon: 5",
+      "words": "Telefon: Arg1"
+    },
+    "restore.item.pluginSettings": {
+      "zero": "Eklenti ayarları: 0",
+      "one": "Eklenti ayarları: 1",
+      "two": "Eklenti ayarları: 2",
+      "five": "Eklenti ayarları: 5",
+      "words": "Eklenti ayarları: Arg1"
+    },
+    "restore.item.languagePack": {
+      "zero": "Dil paketi: 0",
+      "one": "Dil paketi: 1",
+      "two": "Dil paketi: 2",
+      "five": "Dil paketi: 5",
+      "words": "Dil paketi: Arg1"
+    },
+    "restore.detail.profile": {
+      "zero": "Yedekte: 0 sayfa, 0 bileşen. Burada: 0 sayfa, 0 bileşen.",
+      "one": "Yedekte: 1 sayfa, 1 bileşen. Burada: 1 sayfa, 1 bileşen.",
+      "two": "Yedekte: 2 sayfa, 2 bileşen. Burada: 2 sayfa, 2 bileşen.",
+      "five": "Yedekte: 5 sayfa, 5 bileşen. Burada: 5 sayfa, 5 bileşen.",
+      "words": "Yedekte: Arg1 sayfa, Arg2 bileşen. Burada: Arg3 sayfa, Arg4 bileşen."
+    },
+    "restore.detail.profileNew": {
+      "zero": "0 sayfa, 0 bileşen.",
+      "one": "1 sayfa, 1 bileşen.",
+      "two": "2 sayfa, 2 bileşen.",
+      "five": "5 sayfa, 5 bileşen.",
+      "words": "Arg1 sayfa, Arg2 bileşen."
+    },
+    "restore.detail.changedPages": {
+      "zero": "Değişen sayfalar: 0",
+      "one": "Değişen sayfalar: 1",
+      "two": "Değişen sayfalar: 2",
+      "five": "Değişen sayfalar: 5",
+      "words": "Değişen sayfalar: Arg1"
+    },
+    "restore.detail.names": {
+      "zero": "Farkı olanlar: 0",
+      "one": "Farkı olanlar: 1",
+      "two": "Farkı olanlar: 2",
+      "five": "Farkı olanlar: 5",
+      "words": "Farkı olanlar: Arg1"
+    },
+    "restore.detail.variables": {
+      "zero": "0 eklenecek, 0 değişecek, 0 atlanacak (tipi farklı).",
+      "one": "1 eklenecek, 1 değişecek, 1 atlanacak (tipi farklı).",
+      "two": "2 eklenecek, 2 değişecek, 2 atlanacak (tipi farklı).",
+      "five": "5 eklenecek, 5 değişecek, 5 atlanacak (tipi farklı).",
+      "words": "Arg1 eklenecek, Arg2 değişecek, Arg3 atlanacak (tipi farklı)."
+    },
+    "restore.detail.languagePack": {
+      "zero": "Buradaki sürüm: 0. Yedekteki sürüm: 0.",
+      "one": "Buradaki sürüm: 1. Yedekteki sürüm: 1.",
+      "two": "Buradaki sürüm: 2. Yedekteki sürüm: 2.",
+      "five": "Buradaki sürüm: 5. Yedekteki sürüm: 5.",
+      "words": "Buradaki sürüm: Arg1. Yedekteki sürüm: Arg2."
+    },
+    "restore.warn.languagePackMissing": {
+      "zero": "Tercihler 0 dilini kullanıyor, ama bu dil burada kurulu değil.",
+      "one": "Tercihler 1 dilini kullanıyor, ama bu dil burada kurulu değil.",
+      "two": "Tercihler 2 dilini kullanıyor, ama bu dil burada kurulu değil.",
+      "five": "Tercihler 5 dilini kullanıyor, ama bu dil burada kurulu değil.",
+      "words": "Tercihler Arg1 dilini kullanıyor, ama bu dil burada kurulu değil."
+    },
+    "restore.warn.deviceNotPaired": {
+      "zero": "0 bu bilgisayarla eşleşmiş değil, bu yüzden seçimleri atlandı.",
+      "one": "1 bu bilgisayarla eşleşmiş değil, bu yüzden seçimleri atlandı.",
+      "two": "2 bu bilgisayarla eşleşmiş değil, bu yüzden seçimleri atlandı.",
+      "five": "5 bu bilgisayarla eşleşmiş değil, bu yüzden seçimleri atlandı.",
+      "words": "Arg1 bu bilgisayarla eşleşmiş değil, bu yüzden seçimleri atlandı."
+    },
+    "restore.warn.deviceProfileMissing": {
+      "zero": "0 burada olmayan bir profili kullanıyordu, profilsiz kalacak.",
+      "one": "1 burada olmayan bir profili kullanıyordu, profilsiz kalacak.",
+      "two": "2 burada olmayan bir profili kullanıyordu, profilsiz kalacak.",
+      "five": "5 burada olmayan bir profili kullanıyordu, profilsiz kalacak.",
+      "words": "Arg1 burada olmayan bir profili kullanıyordu, profilsiz kalacak."
+    },
+    "restore.warn.missingPlugin": {
+      "zero": "Bu yedek 0 eklentisine ihtiyaç duyuyor, ama kurulu değil.",
+      "one": "Bu yedek 1 eklentisine ihtiyaç duyuyor, ama kurulu değil.",
+      "two": "Bu yedek 2 eklentisine ihtiyaç duyuyor, ama kurulu değil.",
+      "five": "Bu yedek 5 eklentisine ihtiyaç duyuyor, ama kurulu değil.",
+      "words": "Bu yedek Arg1 eklentisine ihtiyaç duyuyor, ama kurulu değil."
+    },
+    "restore.warn.unknownActionType": {
+      "zero": "Bu sunucuda karşılığı olmayan aksiyonlar: 0.",
+      "one": "Bu sunucuda karşılığı olmayan aksiyonlar: 1.",
+      "two": "Bu sunucuda karşılığı olmayan aksiyonlar: 2.",
+      "five": "Bu sunucuda karşılığı olmayan aksiyonlar: 5.",
+      "words": "Bu sunucuda karşılığı olmayan aksiyonlar: Arg1."
+    },
+    "restore.warn.missingFile": {
+      "zero": "Dosya bu bilgisayarda bulunamadı (0, 0): 0",
+      "one": "Dosya bu bilgisayarda bulunamadı (1, 1): 1",
+      "two": "Dosya bu bilgisayarda bulunamadı (2, 2): 2",
+      "five": "Dosya bu bilgisayarda bulunamadı (5, 5): 5",
+      "words": "Dosya bu bilgisayarda bulunamadı (Arg1, Arg2): Arg3"
+    },
+    "restore.warn.variableTypeConflict": {
+      "zero": "0 değişkeninin tipi burada farklı, olduğu gibi bırakıldı.",
+      "one": "1 değişkeninin tipi burada farklı, olduğu gibi bırakıldı.",
+      "two": "2 değişkeninin tipi burada farklı, olduğu gibi bırakıldı.",
+      "five": "5 değişkeninin tipi burada farklı, olduğu gibi bırakıldı.",
+      "words": "Arg1 değişkeninin tipi burada farklı, olduğu gibi bırakıldı."
+    },
+    "restore.warn.pluginSettingsNotRunning": {
+      "zero": "0 eklentisinin ayarları, burada çalışmadığı için atlandı.",
+      "one": "1 eklentisinin ayarları, burada çalışmadığı için atlandı.",
+      "two": "2 eklentisinin ayarları, burada çalışmadığı için atlandı.",
+      "five": "5 eklentisinin ayarları, burada çalışmadığı için atlandı.",
+      "words": "Arg1 eklentisinin ayarları, burada çalışmadığı için atlandı."
+    },
+    "restore.result.done": {
+      "zero": "0 öğe geri yüklendi. Editör şimdi yeniden yüklenecek.",
+      "one": "1 öğe geri yüklendi. Editör şimdi yeniden yüklenecek.",
+      "two": "2 öğe geri yüklendi. Editör şimdi yeniden yüklenecek.",
+      "five": "5 öğe geri yüklendi. Editör şimdi yeniden yüklenecek.",
+      "words": "Arg1 öğe geri yüklendi. Editör şimdi yeniden yüklenecek."
+    },
+    "restore.result.failed": {
+      "zero": "Bunlar geri yüklenemedi: 0",
+      "one": "Bunlar geri yüklenemedi: 1",
+      "two": "Bunlar geri yüklenemedi: 2",
+      "five": "Bunlar geri yüklenemedi: 5",
+      "words": "Bunlar geri yüklenemedi: Arg1"
+    },
+    "profile.importMissing.files": {
+      "zero": "Bu aksiyonların kullandığı dosyalar bu bilgisayarda yok: 0.",
+      "one": "Bu aksiyonların kullandığı dosyalar bu bilgisayarda yok: 1.",
+      "two": "Bu aksiyonların kullandığı dosyalar bu bilgisayarda yok: 2.",
+      "five": "Bu aksiyonların kullandığı dosyalar bu bilgisayarda yok: 5.",
+      "words": "Bu aksiyonların kullandığı dosyalar bu bilgisayarda yok: Arg1."
     },
     "schemaForm.untitledRow": {
       "zero": "0. öğe",

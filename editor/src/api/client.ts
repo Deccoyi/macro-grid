@@ -6,6 +6,8 @@ import type {
   AppPreferences,
   ExportProfileResult,
   ImportProfileResult,
+  InspectBackupResult,
+  RestoreItemResult,
   LanguagePackFile,
   LanguagePackInfo,
   OptionsResult,
@@ -314,6 +316,19 @@ export const api = {
 
   /** Shows a native "Save As" dialog on the server's desktop and writes the profile there as a .msprofile
    * package (the profile plus a manifest naming the plugins it needs). */
+  /** Saves a full backup (a .mgbackup file) where the person chooses. */
+  exportBackup: (): Promise<{ path: string | null }> => send("POST", "/api/backup/export"),
+
+  /** Opens a .mgbackup file through a native dialog and answers what differs from what is here; nothing changes yet. */
+  inspectBackup: (): Promise<InspectBackupResult> => send("POST", "/api/backup/inspect"),
+
+  /** Applies the chosen items of the backup that was inspected (a restore point is made first). */
+  restoreBackup: (id: string, items: { kind: string; key: string }[]): Promise<RestoreItemResult[]> =>
+    send("POST", "/api/backup/restore", { id, items }),
+
+  /** The editor asks for a restore point before it overwrites a profile by an import. */
+  createRestorePoint: (reason: "import"): Promise<void> => send("POST", "/api/restore-points", { reason }),
+
   exportProfileDialog: (profile: Profile): Promise<ExportProfileResult> => send("POST", "/api/browse/export-profile", profile),
 
   /** Opens (or focuses) a real, separate OS window for a tool panel — see docs/ui/ui-guidelines.md:

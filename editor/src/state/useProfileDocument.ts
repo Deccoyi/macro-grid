@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, type SetStateAction 
 import type { AppMatch, Page, Profile, Widget } from "@macro/renderer";
 import { api } from "../api/client";
 import type { ProfileSummary } from "../api/types";
-import { choiceAsync, confirmAsync } from "../dialogs/dialogStore";
+import { alertAsync, choiceAsync, confirmAsync } from "../dialogs/dialogStore";
 import { useT } from "../i18n/I18nContext";
 import type { DictKey } from "../i18n/tr";
 import {
@@ -278,6 +278,13 @@ export function useProfileDocument() {
         if (choice === null) return;
 
         if (choice === "overwrite") {
+          // The overwrite keeps no copy of its own, so a restore point comes first; when it cannot be made nothing is overwritten.
+          try {
+            await api.createRestorePoint("import");
+          } catch {
+            await alertAsync(t("restore.point.failed"), { title: t("restore.point.failedTitle") });
+            return;
+          }
           await api.saveProfile({ ...data, id: existing.id, name: originalName });
           await loadProfileList(existing.id);
           return;
@@ -379,6 +386,7 @@ export function useProfileDocument() {
     selectProfile,
     createProfile,
     importProfileFromJson,
+    confirmDiscardIfDirty,
     deleteProfile,
     refreshProfileList,
     renameProfile,

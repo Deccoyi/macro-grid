@@ -4,7 +4,9 @@ import { api } from "../api/client";
 import { commandItem } from "../commands/commandItem";
 import type { Command } from "../commands/types";
 import { alertAsync, choiceAsync, confirmAsync, confirmRichAsync, promptAsync } from "../dialogs/dialogStore";
+import { BackupContent } from "../dialogs/BackupContent";
 import { LogExportContent } from "../dialogs/LogExportContent";
+import { RestoreContent, restoreItemId, restoreWarningText } from "../dialogs/RestoreContent";
 import { showStatusNotice } from "../state/statusNotice";
 import { usePreferences } from "../preferences/PreferencesContext";
 import { clearWebUrls, collectWebSites } from "../state/webUrls";
@@ -19,6 +21,8 @@ import { ContextMenu, type ContextMenuEntry } from "./ContextMenu";
 interface MenuBarProps {
   profile: Profile | null;
   onImportProfile: (data: Profile) => Promise<void>;
+  /** True when it is fine to leave the profile as it is on screen (asks first when there are unsaved edits). */
+  confirmDiscardIfDirty: () => boolean | Promise<boolean>;
   /** The Edit commands (undo/redo/cut/copy/paste/duplicate/delete/select all) — built once in App.tsx
    * alongside their shortcuts, and turned into menu rows here with commandItem() so the Edit menu, the
    * shortcuts and every context menu item all run the exact same code. */
@@ -52,7 +56,7 @@ function mnemonicLabel(label: string, letter: string | undefined, show: boolean)
  * holding Alt reveals mnemonic underlines (Alt+letter opens that menu directly). Settings/Plugins open
  * as real separate OS windows (ToolWindow.cs) rather than in-page modals; only File's import/export use
  * native Open/Save dialogs on the server's desktop instead of browser download/upload. */
-export function MenuBar({ profile, onImportProfile, editCommands }: MenuBarProps) {
+export function MenuBar({ profile, onImportProfile, confirmDiscardIfDirty, editCommands }: MenuBarProps) {
   const { t, tn, lang } = useT();
   const serverVersion = useServerVersion();
   const pluginUpdates = usePluginUpdateCount();
@@ -105,13 +109,64 @@ export function MenuBar({ profile, onImportProfile, editCommands }: MenuBarProps
     const missing = result.missingPlugins?.map((p) => p.name) ?? [];
     const covered = new Set(result.missingPlugins?.flatMap((p) => p.actionTypes) ?? []);
     const unknown = (result.unknownActionTypes ?? []).filter((type) => !covered.has(type));
-    if (missing.length > 0 || unknown.length > 0) {
+    const files = [...new Set((result.missingFiles ?? []).map((f) => f.path))];
+    if (missing.length > 0 || unknown.length > 0 || files.length > 0) {
       const paragraphs = [
         missing.length > 0 && t("profile.importMissing.plugins", missing.join(", ")),
         unknown.length > 0 && t("profile.importMissing.actions", unknown.join(", ")),
+        files.length > 0 && t("profile.importMissing.files", files.join(", ")),
       ].filter(Boolean);
       await alertAsync(paragraphs.join("\n\n"), { title: t("profile.importMissingTitle") });
     }
+  };
+
+  const backupEverything = async () => {
+    if (!(await confirmRichAsync({ title: t("backup.title"), content: <BackupContent />, confirmLabel: t("backup.save") }))) return;
+    try {
+      const result = await api.exportBackup();
+      if (result.path) showStatusNotice("backup.saved");
+    } catch {
+      showStatusNotice("backup.saveFailed");
+    }
+  };
+
+  const restoreBackup = async () => {
+    if (!(await confirmDiscardIfDirty())) return;
+    let inspected;
+    try {
+      inspected = await api.inspectBackup();
+    } catch (err) {
+      await alertAsync(err instanceof Error ? err.message : String(err), { title: t("restore.inspectFailedTitle") });
+      return;
+    }
+    if (!inspected.result) return;
+
+    const ticked = new Set(inspected.result.items.filter((i) => i.state !== "same").map(restoreItemId));
+    const go = await confirmRichAsync({
+      title: t("restore.title"),
+      content: <RestoreContent inspected={inspected.result} ticked={ticked} />,
+      confirmLabel: t("restore.apply"),
+    });
+    if (!go) return;
+    const chosen = inspected.result.items.filter((i) => ticked.has(restoreItemId(i))).map((i) => ({ kind: i.kind, key: i.key }));
+    if (chosen.length === 0) return;
+
+    let results;
+    try {
+      results = await api.restoreBackup(inspected.result.id, chosen);
+    } catch (err) {
+      await alertAsync(err instanceof Error ? err.message : String(err), { title: t("restore.failedTitle") });
+      return;
+    }
+    const failed = results.filter((r) => !r.ok);
+    const warnings = results.flatMap((r) => r.warnings).map((w) => restoreWarningText(t, w));
+    const paragraphs = [
+      t("restore.result.done", String(results.length - failed.length)),
+      failed.length > 0 && t("restore.result.failed", failed.map((r) => `${r.key || r.kind}: ${r.error ?? ""}`).join("; ")),
+      ...warnings,
+    ].filter(Boolean);
+    await alertAsync(paragraphs.join("\n\n"), { title: t("restore.failedTitle") });
+    window.location.reload();
   };
 
   const findCommand = (id: string) => editCommands.find((c) => c.id === id)!;
@@ -120,6 +175,9 @@ export function MenuBar({ profile, onImportProfile, editCommands }: MenuBarProps
     { divider: true },
     { label: t("menu.file.exportProfile"), onSelect: exportProfile, disabled: !profile },
     { label: t("menu.file.importProfile"), onSelect: importProfile },
+    { divider: true },
+    { label: t("menu.file.backup"), onSelect: backupEverything },
+    { label: t("menu.file.restore"), onSelect: restoreBackup },
   ];
   const editItems: ContextMenuEntry[] = [
     commandItem(findCommand("edit.undo"), t),

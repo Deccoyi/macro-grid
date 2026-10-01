@@ -309,6 +309,7 @@ function AppContent() {
       <MenuBar
         profile={profile}
         onImportProfile={(data: Profile) => state.importProfileFromJson(data)}
+        confirmDiscardIfDirty={state.confirmDiscardIfDirty}
         editCommands={editCommands}
       />
 

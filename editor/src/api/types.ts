@@ -480,6 +480,52 @@ export interface ImportProfileResult {
   missingPlugins?: PackagePluginRef[];
   /** Action types in the profile that no installed plugin or built-in provides (also covers plain JSON files, which carry no manifest). */
   unknownActionTypes?: string[];
+  /** Files named by an action that are not on this PC. */
+  missingFiles?: { page: string; widget: string; path: string }[];
+}
+
+export type RestoreItemKind = "profile" | "profileTree" | "preferences" | "variables" | "device" | "pluginSettings" | "languagePack";
+export type RestoreItemState = "new" | "different" | "same";
+
+export interface RestoreItem {
+  kind: RestoreItemKind;
+  key: string;
+  name: string;
+  state: RestoreItemState;
+  names: string[];
+  herePages?: number | null;
+  hereWidgets?: number | null;
+  backupPages?: number | null;
+  backupWidgets?: number | null;
+  added?: number | null;
+  changed?: number | null;
+  skipped?: number | null;
+  hereVersion?: number | null;
+  backupVersion?: number | null;
+}
+
+/** A warning is a code plus values; the editor words it (restore.warn.<code>). */
+export interface RestoreWarning {
+  code: string;
+  args: string[];
+}
+
+export interface InspectBackupResult {
+  path: string | null;
+  result?: {
+    id: string;
+    manifest: { createdAt: string; serverVersion: string; reason: string };
+    items: RestoreItem[];
+    warnings: RestoreWarning[];
+  };
+}
+
+export interface RestoreItemResult {
+  kind: RestoreItemKind;
+  key: string;
+  ok: boolean;
+  error: string | null;
+  warnings: RestoreWarning[];
 }
 
 export interface ExportProfileResult {

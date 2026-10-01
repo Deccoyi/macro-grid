@@ -45,6 +45,7 @@ export function useEditorState() {
     selectProfile: document.selectProfile,
     createProfile: document.createProfile,
     importProfileFromJson: document.importProfileFromJson,
+    confirmDiscardIfDirty: document.confirmDiscardIfDirty,
     deleteProfile: document.deleteProfile,
     refreshProfileList: document.refreshProfileList,
     renameProfile: document.renameProfile,
