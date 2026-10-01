@@ -155,6 +155,10 @@ function invalidSetting(field: SettingField, value: unknown): string | null {
   if ((field.kind === "Select" || field.kind === "Segmented") && !field.optionsSource && field.options && field.options.length > 0) {
     return field.options.some((o) => o.value === String(value)) ? null : String(value);
   }
+  if (field.kind === "MultiSelect" && !field.optionsSource && field.options && field.options.length > 0 && Array.isArray(value)) {
+    const unknown = value.find((v) => !field.options!.some((o) => o.value === String(v)));
+    return unknown === undefined ? null : String(unknown);
+  }
   if ((field.kind === "Number" || field.kind === "Slider" || field.kind === "Duration") && typeof value === "number") {
     if (field.min != null && value < field.min) return `${value} < ${field.min}`;
     if (field.max != null && value > field.max) return `${value} > ${field.max}`;

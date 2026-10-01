@@ -60,3 +60,30 @@ describe("Duration field", () => {
     expect(onChange).toHaveBeenCalledWith({ d: 5000 });
   });
 });
+
+describe("MultiSelect field", () => {
+  const field: SettingField = { key: "m", label: "Tags", kind: "MultiSelect", options: [{ value: "a", label: "A" }, { value: "b", label: "B" }, { value: "c", label: "C" }] };
+
+  it("saves the ticked values in option order", () => {
+    const { onChange, container } = draw([field], { m: ["c"] });
+    const boxes = container.querySelectorAll<HTMLInputElement>("input[type=checkbox]");
+    expect([...boxes].map((b) => b.checked)).toEqual([false, false, true]);
+    fireEvent.click(boxes[0]!);
+    expect(onChange).toHaveBeenCalledWith({ m: ["a", "c"] });
+  });
+
+  it("shows a value that is no longer an option and lets it be removed", () => {
+    const { onChange, container } = draw([field], { m: ["a", "gone"] });
+    const boxes = container.querySelectorAll<HTMLInputElement>("input[type=checkbox]");
+    expect(boxes).toHaveLength(4);
+    expect(container.textContent).toContain("gone (not found)");
+    fireEvent.click(boxes[3]!);
+    expect(onChange).toHaveBeenCalledWith({ m: ["a"] });
+  });
+
+  it("reads a single saved text as one item", () => {
+    const { container } = draw([field], { m: "b" });
+    const boxes = container.querySelectorAll<HTMLInputElement>("input[type=checkbox]");
+    expect([...boxes].map((b) => b.checked)).toEqual([false, true, false]);
+  });
+});

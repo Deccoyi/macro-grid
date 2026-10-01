@@ -48,6 +48,12 @@ export function SchemaForm({ fields, values, onChange, fetchOptions, variableCat
   );
 }
 
+/** A MultiSelect value as a list: a plugin that switched a field from Select to MultiSelect may still have a single text saved. */
+function asChosen(value: unknown): string[] {
+  if (Array.isArray(value)) return value.map(String);
+  return typeof value === "string" && value !== "" ? [value] : [];
+}
+
 function isVisible(field: SettingField, values: Record<string, unknown>): boolean {
   if (!field.visibleWhen) return true;
   const [depKey, depValue] = field.visibleWhen.split("=");
@@ -232,6 +238,46 @@ function SchemaFieldRow({
         </div>
         {field.description && <FieldHint text={field.description} />}
       </label>
+    );
+  }
+
+  if (field.kind === "MultiSelect") {
+    const chosen = asChosen(value ?? field.default);
+    const known = new Set(opts.options.map((o) => o.value));
+    const stale = chosen.filter((v) => !known.has(v));
+    // The saved array follows the option order; a value that is no longer an option stays, last, so it can be unticked.
+    const toggle = (optionValue: string, on: boolean) => {
+      const next = new Set(chosen);
+      if (on) next.add(optionValue); else next.delete(optionValue);
+      onChange([...opts.options.map((o) => o.value).filter((v) => next.has(v)), ...stale.filter((v) => next.has(v))]);
+    };
+    return (
+      <div className="field">
+        <div style={{ display: "flex", alignItems: "center" }}>
+          <span style={{ flex: 1 }}>{field.label}</span>
+          {field.optionsSource && (
+            <button type="button" className="ghost" title={t("schemaForm.refresh")} onClick={opts.refresh} style={{ display: "flex", padding: 4 }} disabled={opts.loading}>
+              <RefreshCw size={12} className={opts.loading ? "spin" : undefined} />
+            </button>
+          )}
+        </div>
+        <div style={{ maxHeight: 160, overflowY: "auto", display: "flex", flexDirection: "column", gap: 4 }}>
+          {opts.options.map((o) => (
+            <label key={o.value} style={{ display: "flex", gap: 6, alignItems: "center" }}>
+              <input type="checkbox" checked={chosen.includes(o.value)} onChange={(e) => toggle(o.value, e.target.checked)} />
+              {o.group ? `${o.group} › ${o.label}` : o.label}
+            </label>
+          ))}
+          {stale.map((v) => (
+            <label key={v} style={{ display: "flex", gap: 6, alignItems: "center" }}>
+              <input type="checkbox" checked onChange={(e) => toggle(v, e.target.checked)} />
+              {`${v} ${t("schemaForm.notFound")}`}
+            </label>
+          ))}
+        </div>
+        {opts.error && <span style={{ color: "var(--ms-danger)", fontSize: 11 }}>{opts.error}</span>}
+        {field.description && !opts.error && <FieldHint text={field.description} />}
+      </div>
     );
   }
 
