@@ -135,7 +135,7 @@ export function ColorField({ value, onChange, disabled, title }: { value?: strin
   return (
     <>
       <button ref={triggerRef} type="button" className="color-field" id={field?.id} aria-labelledby={field?.labelId} disabled={disabled} title={title} style={{ width: "100%", cursor: "pointer" }} onClick={() => setOpen((o) => !o)}>
-        <span style={{ width: 15, height: 15, borderRadius: 3, background: isColor ? value : "transparent", border: isColor ? "1px solid rgba(255,255,255,.18)" : "1px dashed var(--ms-text-disabled)", flexShrink: 0 }} />
+        <span style={{ width: 16, height: 16, borderRadius: 3, background: isColor ? value : "transparent", border: isColor ? "1px solid rgba(255,255,255,.18)" : "1px dashed var(--ms-text-disabled)", flexShrink: 0 }} />
         <span style={{ fontFamily: "ui-monospace, monospace", fontSize: 12, flex: 1, textAlign: "left", color: isColor ? "var(--ms-text-primary)" : "var(--ms-text-disabled)" }}>
           {value || "—"}
         </span>
@@ -146,7 +146,7 @@ export function ColorField({ value, onChange, disabled, title }: { value?: strin
           <div className="color-field">
             <label
               title={t("color.pickFromWheel")}
-              style={{ width: 15, height: 15, borderRadius: 3, background: isColor ? value : "transparent", border: isColor ? "1px solid rgba(255,255,255,.18)" : "1px dashed var(--ms-text-disabled)", flexShrink: 0, position: "relative", overflow: "hidden", cursor: "pointer" }}
+              style={{ width: 16, height: 16, borderRadius: 3, background: isColor ? value : "transparent", border: isColor ? "1px solid rgba(255,255,255,.18)" : "1px dashed var(--ms-text-disabled)", flexShrink: 0, position: "relative", overflow: "hidden", cursor: "pointer" }}
             >
               <input
                 type="color"

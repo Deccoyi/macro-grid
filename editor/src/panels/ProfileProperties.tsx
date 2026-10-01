@@ -45,7 +45,7 @@ export function ProfileProperties({ target, isCurrent, appMatches, onAppMatchesC
 
       <div className="pf-section">
         <button
-          className="ghost pf-btn pf-danger"
+          className="pf-btn pf-danger"
           disabled={!isCurrent || !canDelete}
           onClick={async () => { if (await confirmAsync(t("profile.deleteConfirm", target.name), { title: t("profile.delete"), danger: true })) onDelete(); }}
         >
