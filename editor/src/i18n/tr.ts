@@ -218,7 +218,7 @@ export const tr = {
   "update.error.verify": "İndirilen dosya doğrulanamadı ve silindi. Daha sonra tekrar deneyin.",
   "update.error.start": "Kurulum başlatılamadı.",
   "preferences.updates.auto": "Güncellemeleri otomatik denetle",
-  "preferences.updates.auto.hint": "Macro Grid, yeni bir sürüm var mı diye birkaç saatte bir yalnızca github.com adresine bağlanır. Sizinle ilgili hiçbir bilgi gönderilmez. Kapatırsanız yalnızca \"Güncellemeleri denetle\" ile elle denetlersiniz.",
+  "preferences.updates.auto.hint": "Macro Grid, yeni bir sürüm var mı diye birkaç saatte bir yalnızca github.com adresine bağlanır; yeni sürümü ve güvensiz bir resmi plugin'i kapatabilen listeyi yeniler. Sizinle ilgili hiçbir bilgi gönderilmez. Kapatırsanız yalnızca \"Güncellemeleri denetle\" ile elle denetlersiniz.",
   "preferences.unencrypted": "Şifrelenmemiş bağlantılara izin ver",
   "preferences.unencrypted.hint": "Kapatırsan diğer cihazlar yalnızca şifreli porttan bağlanabilir. Tarayıcı destesi ve şifreleme gelmeden önce eşleşmiş telefonlar çalışmaz; telefon uygulaması kodu tarayarak yeniden eşleşir. Açık olan bağlantılar bitene kadar sürer.",
   "preferences.updates.prerelease": "Ön sürümleri de göster (alfa sürümleri)",

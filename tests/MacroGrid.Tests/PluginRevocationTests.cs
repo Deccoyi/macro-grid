@@ -1,5 +1,6 @@
 using System.Net;
 using MacroGrid.Core.Actions;
+using MacroGrid.Core.Diagnostics;
 using MacroGrid.Core.Plugins;
 using MacroGrid.Core.Plugins.Distribution;
 using MacroGrid.Core.Variables;
@@ -26,7 +27,9 @@ public sealed class PluginRevocationTests : IAsyncLifetime
     private PluginManager _manager = null!;
     private OfficialCatalog _catalog = null!;
     private FakeHttpHandler _handler = null!;
+    private readonly ProblemList _problems = new();
     private byte[]? _listBody;
+    private byte[]? _indexBody;
     private long _sequence;
 
     public PluginRevocationTests()
@@ -40,14 +43,15 @@ public sealed class PluginRevocationTests : IAsyncLifetime
     {
         _providerHost = new VariableProviderHost([], new VariableStore(), NullLogger<VariableProviderHost>.Instance);
         await _providerHost.StartAsync(CancellationToken.None);
-        _handler = new FakeHttpHandler(_ => _listBody is { } body
-            ? new HttpResponseMessage(HttpStatusCode.OK) { Content = new ByteArrayContent(body) }
-            : new HttpResponseMessage(HttpStatusCode.NotFound));
+        _handler = new FakeHttpHandler(request =>
+            (request.RequestUri!.AbsoluteUri.Contains(PluginSourceUrls.IndexFileName) ? _indexBody : _listBody) is { } body
+                ? new HttpResponseMessage(HttpStatusCode.OK) { Content = new ByteArrayContent(body) }
+                : new HttpResponseMessage(HttpStatusCode.NotFound));
         var http = new HttpClient(_handler);
         _catalog = new OfficialCatalog(http, new PluginCatalogStateStore(_root), new PluginCatalogClient(http, _clock), _clock, TestPluginSigning.PublicKey, new Random(1));
         _manager = new PluginManager(_pluginsDir, "1.0.0", new PluginStatusRegistry(), new ActionDispatcher([], NullLogger<ActionDispatcher>.Instance),
             new VariableCatalog([]), _providerHost, new VariableStore(), new PluginPermissionStore(_root), null,
-            NullLogger<PluginManager>.Instance, trustVerifier: TestPluginSigning.Strict, officialCatalog: _catalog, origins: _origins);
+            NullLogger<PluginManager>.Instance, problems: _problems, trustVerifier: TestPluginSigning.Strict, officialCatalog: _catalog, origins: _origins);
     }
 
     public async Task DisposeAsync()
@@ -195,6 +199,99 @@ public sealed class PluginRevocationTests : IAsyncLifetime
 
         Assert.Equal(PluginLoadStatus.Loaded, _manager.Plugins.Single(p => p.Id == "demo").Status);
         Assert.Empty(await _manager.ApplyRevocationsAsync());
+    }
+
+    private PluginCatalogMonitor NewMonitor(ProblemList problems) => new(_catalog, _manager, _origins, problems, _clock);
+
+    private static string[] Codes(ProblemList problems) => [.. problems.Snapshot().Select(p => p.Code)];
+
+    [Fact]
+    public async Task Only_official_plugins_make_the_service_watch_the_catalog()
+    {
+        var monitor = NewMonitor(_problems);
+        await _manager.InstallFromFolderAsync(NewJs("local"));
+        Assert.False(monitor.HasWatchedPlugins());
+
+        FromOfficial("demo");
+        await _manager.InstallFromFolderAsync(NewJs("demo"));
+
+        Assert.True(monitor.HasWatchedPlugins());
+    }
+
+    [Fact]
+    public async Task A_due_safety_list_is_fetched_and_applied_to_the_running_plugins()
+    {
+        FromOfficial("demo");
+        await _manager.InstallFromFolderAsync(NewJs("demo"));
+        _listBody = TestPluginSigning.SignEnvelope("""{ "kind": "revoked", "sequence": 1, "formatVersion": 1, "plugins": [ { "id": "demo", "reason": "Unsafe build." } ] }""");
+        var problems = _problems;
+
+        await NewMonitor(problems).RunOnceAsync(CancellationToken.None);
+
+        Assert.Equal(PluginLoadStatus.NotAllowed, _manager.Plugins.Single(p => p.Id == "demo").Status);
+        Assert.Contains(ProblemCodes.Revoked, Codes(problems));
+    }
+
+    [Fact]
+    public async Task A_failed_look_changes_nothing()
+    {
+        FromOfficial("demo");
+        await _manager.InstallFromFolderAsync(NewJs("demo"));
+
+        await NewMonitor(_problems).RunOnceAsync(CancellationToken.None);
+
+        Assert.Equal(PluginLoadStatus.Loaded, _manager.Plugins.Single(p => p.Id == "demo").Status);
+    }
+
+    [Fact]
+    public async Task An_installed_withdrawn_version_gets_a_warning_that_goes_when_it_no_longer_applies()
+    {
+        FromOfficial("demo");
+        await _manager.InstallFromFolderAsync(NewJs("demo"));
+        var problems = _problems;
+        var monitor = NewMonitor(problems);
+        _indexBody = TestPluginSigning.SignEnvelope($$"""
+            { "kind": "index", "sequence": 1, "formatVersion": 2, "name": "Official", "plugins": [
+              { "id": "demo", "name": "Demo", "kind": "js", "versions": [
+                { "version": "1.0.0", "minMacroGrid": "1.0.0", "withdrawn": true, "url": "https://github.com/Deccoyi/macro-grid-plugin/releases/download/v1/demo.zip", "sha256": "{{new string('a', 64)}}", "size": 10 } ] } ] }
+            """);
+        await _catalog.GetIndexAsync(TimeSpan.Zero, CancellationToken.None, ignoreBackoff: true);
+
+        monitor.UpdateLines();
+        Assert.Contains(ProblemCodes.Withdrawn, Codes(problems));
+
+        _clock.Advance(TimeSpan.FromMinutes(5));
+        _indexBody = TestPluginSigning.SignEnvelope($$"""
+            { "kind": "index", "sequence": 2, "formatVersion": 2, "name": "Official", "plugins": [
+              { "id": "demo", "name": "Demo", "kind": "js", "versions": [
+                { "version": "1.0.0", "minMacroGrid": "1.0.0", "url": "https://github.com/Deccoyi/macro-grid-plugin/releases/download/v1/demo.zip", "sha256": "{{new string('a', 64)}}", "size": 10 } ] } ] }
+            """);
+        await _catalog.GetIndexAsync(TimeSpan.Zero, CancellationToken.None, ignoreBackoff: true);
+
+        monitor.UpdateLines();
+        Assert.DoesNotContain(ProblemCodes.Withdrawn, Codes(problems));
+    }
+
+    [Fact]
+    public async Task A_safety_list_unchecked_for_two_weeks_gets_one_quiet_line_that_a_good_check_removes()
+    {
+        FromOfficial("demo");
+        await _manager.InstallFromFolderAsync(NewJs("demo"));
+        var problems = _problems;
+        var monitor = NewMonitor(problems);
+        _catalog.GetRevokedAsync(TimeSpan.Zero, CancellationToken.None).GetAwaiter().GetResult();
+
+        monitor.UpdateLines();
+        Assert.DoesNotContain(ProblemCodes.CatalogStale, Codes(problems));
+
+        _clock.Advance(PluginCatalogPolicy.StaleAfter + TimeSpan.FromHours(1));
+        monitor.UpdateLines();
+        Assert.Contains(ProblemCodes.CatalogStale, Codes(problems));
+        Assert.Equal(PluginLoadStatus.Loaded, _manager.Plugins.Single(p => p.Id == "demo").Status);
+
+        await PublishListAsync();
+        monitor.UpdateLines();
+        Assert.DoesNotContain(ProblemCodes.CatalogStale, Codes(problems));
     }
 
     private PluginCatalogInstaller NewInstaller(FakeHttpHandler download) =>

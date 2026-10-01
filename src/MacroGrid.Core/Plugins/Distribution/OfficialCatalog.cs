@@ -127,6 +127,15 @@ public sealed class OfficialCatalog
         return state.Revoked.NextCheckUtc is not { } r || r <= now || state.Index.NextCheckUtc is not { } i || i <= now;
     }
 
+    /// <summary>How long until the earliest file is due; zero when one is due now (or was never checked).</summary>
+    public TimeSpan NextDueIn()
+    {
+        var now = _clock.GetUtcNow();
+        var state = _store.Get();
+        var next = new[] { state.Revoked.NextCheckUtc, state.Index.NextCheckUtc }.Select(t => t ?? now).Min();
+        return next > now ? next - now : TimeSpan.Zero;
+    }
+
     private bool IsYoungerThan(CatalogFileState file, TimeSpan maxAge) =>
         file.CheckedUtc is { } at && _clock.GetUtcNow() - at < maxAge;
 

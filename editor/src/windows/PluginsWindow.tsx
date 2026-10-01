@@ -461,6 +461,7 @@ export function PluginsWindow() {
                     )}
                   </div>
                   {p.detail && <div style={{ fontSize: 11, color: "var(--ms-text-secondary)", marginTop: 2 }}>{p.detail}</div>}
+                  {p.withdrawn && <div style={{ fontSize: 11, color: "var(--ms-warning, #facc15)", marginTop: 2 }}>{t("plugins.withdrawn.installedNote")}</div>}
                   {(p.keyboardUsesToday ?? 0) > 0 && (
                     <div style={{ fontSize: 11, color: "var(--ms-text-secondary)", marginTop: 2 }}>{t("plugins.keyboardUses", String(p.keyboardUsesToday ?? 0))}</div>
                   )}
