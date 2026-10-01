@@ -11,7 +11,7 @@ public sealed partial class JsPlugin
           'use strict';
           const g = globalThis;
           const names = ['permissions', 'log', 'varSet', 'varGet', 'varRemove', 'varDescribe', 'registerAction',
-            'settingsPage', 'settingsGet', 'status', 'hotkey', 'type', 'pressEnd', 'http', 'httpAsync', 'widgetPost', 'widgetReply', 'diagnosticsReport', 'diagnosticsResolve', 'diagnosticsClear', 'timer', 'cancel', 'actionDone'];
+            'settingsPage', 'settingsGet', 'status', 'hotkey', 'type', 'pressEnd', 'http', 'httpAsync', 'storageGet', 'storageSet', 'storageRemove', 'storageKeys', 'notify', 'wsConnect', 'wsSend', 'wsClose', 'widgetPost', 'widgetReply', 'diagnosticsReport', 'diagnosticsResolve', 'diagnosticsClear', 'timer', 'cancel', 'actionDone'];
           const n = {};
           for (const name of names) { n[name] = g['__' + name]; delete g['__' + name]; }
 
@@ -43,6 +43,25 @@ public sealed partial class JsPlugin
             }
           });
 
+          const sockets = Object.create(null);
+          let nextSocket = 1;
+          const connectSocket = (url, options) => {
+            const o = options || {};
+            const id = nextSocket++;
+            sockets[id] = {
+              onOpen: typeof o.onOpen === 'function' ? o.onOpen : null,
+              onMessage: typeof o.onMessage === 'function' ? o.onMessage : null,
+              onClose: typeof o.onClose === 'function' ? o.onClose : null,
+            };
+            try {
+              n.wsConnect(id, String(url), JSON.stringify(Array.isArray(o.protocols) ? o.protocols.map(String) : []), JSON.stringify(o.headers || {}));
+            } catch (e) {
+              delete sockets[id];
+              throw e;
+            }
+            return Object.freeze({ send: (text) => n.wsSend(id, String(text)), close: () => n.wsClose(id) });
+          };
+
           const host = {
             permissions: Object.freeze(JSON.parse(n.permissions())),
             log: (message) => n.log(String(message)),
@@ -71,6 +90,14 @@ public sealed partial class JsPlugin
               post: (url, body, options) => request('POST', url, body, options),
               getAsync: (url, options) => requestAsync('GET', url, undefined, options),
               postAsync: (url, body, options) => requestAsync('POST', url, body, options),
+            }),
+            ws: Object.freeze({ connect: connectSocket }),
+            notify: (text) => n.notify(String(text)),
+            storage: Object.freeze({
+              get: (key) => { const v = n.storageGet(String(key)); return v === null ? null : JSON.parse(v); },
+              set: (key, value) => n.storageSet(String(key), JSON.stringify(value === undefined ? null : value)),
+              remove: (key) => n.storageRemove(String(key)),
+              keys: () => JSON.parse(n.storageKeys()),
             }),
             widgets: Object.freeze({
               onMessage: (fn) => {
@@ -133,6 +160,13 @@ public sealed partial class JsPlugin
               result.then((v) => n.widgetReply(id, true, JSON.stringify(v === undefined ? null : v)),
                           (e) => n.widgetReply(id, false, String(e && e.message ? e.message : e)));
             else n.widgetReply(id, true, JSON.stringify(result === undefined ? null : result));
+          };
+          g.__wsEvent = function (id, kind, payload) {
+            const s = sockets[id];
+            if (!s) return;
+            if (kind === 'open') { if (s.onOpen) s.onOpen(); }
+            else if (kind === 'message') { if (s.onMessage) s.onMessage(payload); }
+            else { delete sockets[id]; if (s.onClose) s.onClose(JSON.parse(payload)); }
           };
           g.__httpDone = function (id, ok, payload) {
             const p = pending[id];

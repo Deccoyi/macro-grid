@@ -42,6 +42,8 @@ public sealed partial class JsPlugin : IPlugin, IPluginWidgetHandler, IDisposabl
     private readonly IInputService? _input;
     private readonly ILogger _logger;
     private readonly ProblemList? _problems;
+    private readonly PluginNotifications? _notifications;
+    private readonly JsNetworkPolicy _network;
     // The last message a refused key press put on the problem list; a script that does not catch it fails the whole call with the same text, which must not be listed twice.
     private volatile string? _lastReported;
     private readonly Action<string> _onFaulted;
@@ -66,6 +68,7 @@ public sealed partial class JsPlugin : IPlugin, IPluginWidgetHandler, IDisposabl
     private Engine? _engine;
     private IPluginHost? _host;
     private JsSettingsPage? _settingsPage;
+    private JsStorage? _storage;
     private Thread? _thread;
     private int _pendingTimerJobs;
     private int _pendingHttp;
@@ -87,8 +90,12 @@ public sealed partial class JsPlugin : IPlugin, IPluginWidgetHandler, IDisposabl
         JsPluginLimits? limits = null,
         IActiveWindowSource? windows = null,
         Func<bool>? isElevated = null,
-        ProblemList? problems = null)
+        ProblemList? problems = null,
+        JsNetworkPolicy? network = null,
+        PluginNotifications? notifications = null)
     {
+        _notifications = notifications;
+        _network = network ?? JsNetworkPolicy.None;
         _problems = problems;
         _windows = windows;
         _isElevated = isElevated ?? JsInputPolicy.ServerIsElevated;
@@ -100,8 +107,8 @@ public sealed partial class JsPlugin : IPlugin, IPluginWidgetHandler, IDisposabl
         _logger = logger;
         _onFaulted = onFaulted;
         _limits = limits ?? JsPluginLimits.Default;
-        // Redirects are off: a redirect could send an approved request to a host that was never approved.
-        _http = new HttpClient(new SocketsHttpHandler { AllowAutoRedirect = false }) { Timeout = _limits.HttpTimeout };
+        // Redirects and the system proxy are off and the connection is made by the network guard: an approved request may only reach the kind of address that was approved.
+        _http = new HttpClient(JsNetworkGuard.CreateHandler(_network, ReportNetworkRefused)) { Timeout = _limits.HttpTimeout };
     }
 
     public void Initialize(IPluginHost host)
@@ -232,8 +239,10 @@ public sealed partial class JsPlugin : IPlugin, IPluginWidgetHandler, IDisposabl
         foreach (var wait in _outcomeWaits.Values) wait.TrySetResult("""{"ok":false,"code":"Unavailable"}""");
         _outcomeWaits.Clear();
         _disposeCts.Cancel();
+        CloseAllSockets();
         _http.Dispose();
         _disposeCts.Dispose();
+        _storage?.Dispose();
         // The loop ends when it has drained; an engine call cannot be interrupted, but every call has a time limit.
     }
 
@@ -297,6 +306,14 @@ public sealed partial class JsPlugin : IPlugin, IPluginWidgetHandler, IDisposabl
         engine.SetValue("__pressEnd", new Action(() => { if (_press is { } press) press.Settled = true; }));
         engine.SetValue("__http", new Func<string, string, string, string, string>(Http));
         engine.SetValue("__httpAsync", new Action<int, string, string, string, string>(HttpAsync));
+        engine.SetValue("__storageGet", new Func<string, string?>(StorageGet));
+        engine.SetValue("__storageSet", new Action<string, string>(StorageSet));
+        engine.SetValue("__storageRemove", new Action<string>(StorageRemove));
+        engine.SetValue("__storageKeys", new Func<string>(StorageKeys));
+        engine.SetValue("__notify", new Action<string>(Notify));
+        engine.SetValue("__wsConnect", new Action<int, string, string, string>(WsConnect));
+        engine.SetValue("__wsSend", new Action<int, string>(WsSend));
+        engine.SetValue("__wsClose", new Action<int>(WsClose));
         engine.SetValue("__widgetPost", new Action<string>(WidgetPost));
         engine.SetValue("__diagnosticsReport", new Action<string, string, string?>(DiagnosticsReport));
         engine.SetValue("__diagnosticsClear", new Action(() => _host!.Diagnostics.Clear()));

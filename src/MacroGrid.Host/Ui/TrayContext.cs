@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using MacroGrid.Core.Plugins;
 using MacroGrid.Core.Preferences;
 using MacroGrid.Core.Profiles;
 using MacroGrid.Core.Sessions;
@@ -64,6 +65,12 @@ internal sealed class TrayContext : ApplicationContext
         };
         _icon.DoubleClick += (_, _) => OpenEditor();
         _icon.BalloonTipClicked += (_, _) => _balloonClick?.Invoke();
+        // A plugin with the notify permission shows a short notice; its title is always the plugin's own name.
+        server.Services.GetRequiredService<PluginNotifications>().Posted += (title, text) => _ui.Post(_ =>
+        {
+            _balloonClick = null;
+            _icon.ShowBalloonTip(5000, title, text, ToolTipIcon.None);
+        }, null);
         _updates.UpdateAnnounced += offer => _ui.Post(_ => AnnounceUpdate(offer), null);
         // The installer has been started; leave the way the Exit item does, so the tray icon and the server go down cleanly.
         server.Services.GetRequiredService<UpdateInstaller>().ExitRequested += () => _ui.Post(_ => ExitThread(), null);

@@ -1,4 +1,3 @@
-import { widgetOptionOf } from "./widgetPermission";
 import { useEffect, useState } from "react";
 import { ArrowLeft, ExternalLink, FolderOpen, Link as LinkIcon, Plus, RefreshCw, RotateCw, Search, Settings, Trash2 } from "lucide-react";
 import { api } from "../api/client";
@@ -9,7 +8,7 @@ import { useT } from "../i18n/I18nContext";
 import { useDocumentTitle } from "../i18n/useDocumentTitle";
 import { SectionLabel } from "../panels/fields/controls";
 import { ToolWindowLayout } from "./ToolWindowLayout";
-import { httpTargetScope } from "./httpTarget";
+import { permissionLabel } from "./permissionLabel";
 import { InstallConsent } from "./InstallConsent";
 
 type Category = "installed" | "discover";
@@ -251,16 +250,7 @@ export function PluginsWindow() {
       .catch(() => {});
   }, [category]);
 
-  const permissionText = (permission: string) => {
-    if (permission === "variables" || permission === "actions" || permission === "input") return t(`plugins.permission.${permission}`);
-    const widgetOption = widgetOptionOf(permission);
-    if (widgetOption) return t(`plugins.permission.widget.${widgetOption}`);
-    if (permission.startsWith("http:")) {
-      const target = permission.slice(5);
-      return t(`plugins.permission.http.${httpTargetScope(target)}`, target);
-    }
-    return t("plugins.permission.unknown", permission);
-  };
+  const permissionText = (permission: string) => permissionLabel(permission, t).text;
 
   const installFromCatalog = async (entry: PluginCatalogEntryInfo, official: boolean, sourceLabel: string) => {
     if (!entry.installableVersion) return;

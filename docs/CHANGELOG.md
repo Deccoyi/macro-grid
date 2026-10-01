@@ -4,6 +4,7 @@ New features and fixes in Macro Grid. For technical details, see [CHANGELOG-deve
 
 ## Unreleased
 ### New
+- **New plugin permissions:** a JavaScript plugin can ask to keep a small amount of its own data, to show short notices in the tray, and to keep a live connection open to one address. Each one is listed and can be switched off like the others.
 - **Action lists can now make decisions:** add an If step (with an optional Otherwise) to run steps only when a condition is met or when the step before failed, and a Stop step to end the list early.
 - **A button can change its look from its own state:** while it is held, while its action is running, when it is switched on, and after its action failed. Find them under "This button" in the variable list.
 - **Your own variables:** a new "Global Variable List" in Preferences lets you define text, number and true/false variables and use them anywhere as `{user.name}`: in texts, rules and actions. You can keep a value after a restart.
@@ -31,6 +32,8 @@ New features and fixes in Macro Grid. For technical details, see [CHANGELOG-deve
 - **The phone keeps the profile you picked:** after a dropped connection or a restart, the phone opens the profile you last chose on it instead of the assigned one. A profile assigned in the editor replaces your last pick, and automatic switching by the active window still works as before.
 - **The Toolbox can be an A to Z list:** the menu next to "Add widget" switches between plugin groups and one plain alphabetical list, and a plugin group can be folded.
 - **The Toolbox marks the web widget with a small flask icon** instead of the word "Experimental".
+### Fixed
+- **Tighter limits on where a JavaScript plugin can connect:** a plugin can now only reach the kind of address you approved, and never Macro Grid itself.
 
 ## 1.3.1 - 2026-09-29
 ### New

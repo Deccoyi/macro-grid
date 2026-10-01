@@ -24,14 +24,70 @@ A JS plugin is untrusted: the user installs it from a folder and only approves a
    exception is a bug and propagates.
 3. **Namespaced output.** Variables and action types must start with `<plugin id>.` (also enforced when describing
    variables), so a plugin cannot spoof `system.*` or another plugin.
-4. **HTTP is exact.** Only `http:<host>:<port>` pairs that were approved; redirects are off (a redirect could leave the
-   approved host); timeout and response size are capped. `host.http.get/post` block the plugin's own thread until the answer
+4. **The network is exact.** Only `http:<host>:<port>` and `ws:<host>:<port>` pairs that were approved, and the connection itself is
+   checked (see "Network rules" below); redirects and the system proxy are off; timeout and response size are capped. `host.http.get/post` block the plugin's own thread until the answer
    arrives; `host.http.getAsync/postAsync` return a promise instead (see "Async requests" below).
 5. **Budgets per call** (`JsPluginLimits`): time (Jint's timeout constraint), memory, statement count, recursion depth. Each
    entry into the script starts with a fresh budget. Timers cannot be shorter than 100 ms, at most 20, and ticks that pile up
    while the script is busy are dropped.
 6. **Isolation.** One thread per plugin, one job at a time. A blocked or slow plugin only delays itself. Five failures in a
    row switch the plugin off (`PluginManager.DisableAsync`, status `Error` with the last message; Reload restarts it).
+
+## Network rules
+
+Every connection a plugin makes (web request or web socket) goes through `JsNetworkGuard`, from a `SocketsHttpHandler.ConnectCallback` that resolves the
+name, drops the addresses the rules refuse and connects to one that was checked, so a second, different answer from the name service cannot be used.
+
+1. **The address must be of the kind the name says.** `JsNetworkGuard.ScopeOf(host)`: `localhost`, `*.localhost` and loopback literals are *local*; private,
+   link-local and shared (100.64/10) literals, single-label names and `.local`, `.lan`, `.home.arpa`, `.internal` are *lan*; everything else is *internet*. A local name
+   may only connect to a loopback address, a lan name to a private one, an internet name to a public one. The editor labels an approval with the same rules
+   (`networkTargetScope`; `tests/shared/network-scope-cases.json` is read by both).
+2. **Macro Grid's own ports are never reachable.** On this computer (loopback or one of its own network card addresses) the server's ports (`PluginManager`'s
+   `ownPorts`) are refused whatever was approved.
+3. **Headers that steer a request or its framing cannot be set:** `Host`, `Origin`, `Connection`, `Upgrade`, `Content-Length`, `Transfer-Encoding`, `TE`, `Trailer`,
+   `Expect`, `Sec-*` and `Proxy-*`. A header name or value with a line break or another control character is refused too.
+
+A refusal reaches the script as a catchable error, adds one Error List line (`P102`, counted when it repeats) and one security log line (event 1108). It never
+carries the path, a header or a body.
+
+## Storage
+
+Permission `storage`. `host.storage.get(key)` (null when missing), `set(key, value)`, `remove(key)`, `keys()`; a value is anything `JSON.stringify` accepts. The
+file is `storage.json` in the plugin's folder (`{ "formatVersion": 1, "values": { ... } }`); the script never names a path. Keys are 1-64 characters of letters,
+digits, `.`, `_`, `-`; at most 64 keys, 16 KB per value, 256 KB in total. It is loaded once, kept in memory, written at most every two seconds after a change and
+when the plugin stops (through a temporary file), so a crash can lose the last two seconds. It is plain text, like `settings.json`: not a place for secrets. It stays
+over an update and goes with uninstall. A reached limit is a catchable error and one `P103` line.
+
+## Notices
+
+Permission `notify`. `host.notify(text)` shows a short tray notice. The title is always the plugin's own name, the text is cleaned (`PlainText.Clean`) and cut to
+200 characters, a click does nothing. `PluginNotifications` rate-limits: 3 in a row, then one every 30 seconds per plugin; the rest are dropped with one `P103` line.
+With no tray (tests, a shell without one) the call does nothing.
+
+## Web sockets
+
+Permission `ws:<host>:<port>` (one per target, separate from `http:`).
+
+```js
+const socket = host.ws.connect('wss://example.com:443/feed', {
+  protocols: ['v1'],                       // optional
+  headers: { Authorization: 'Bearer ...' }, // optional, the header rules above apply
+  onOpen() {}, onMessage(text) {}, onClose(info) {}, // info: { code, reason, error }
+});
+socket.send('text'); socket.close();
+```
+
+`wss://` is allowed for any approved target; plain `ws://` only when the name is *local* or *lan*. Certificates are checked the normal way. `connect` may be called at
+any time and throws at once for a missing permission, a refused scheme, a header or a limit; everything later, also a failed connect, arrives through `onClose`
+(`error` is set). There is no automatic reconnect; the script uses `host.after`.
+
+The connection and the read loop run on the thread pool and each event is a job on the plugin's thread (`__wsEvent`). The read loop waits for the job before it reads the
+next message, so a fast sender is slowed down by the network and nothing is dropped. A job that comes from a socket never has a press window, so a message cannot press
+keys. `Dispose` aborts all sockets (reload, permission switched off, fault switch-off, uninstall, revocation).
+
+Limits (`JsPluginLimits`): 2 sockets per plugin; 10 connects a minute; connect timeout 10 s; text messages only, at most 64 KB each way (a larger incoming one closes the
+socket and adds a `P103` line); 50 incoming messages a second (the read loop waits, nothing is dropped); 20 outgoing a second with at most 32 waiting (`send` throws);
+keep-alive ping every 30 s.
 
 ## Reporting problems
 
