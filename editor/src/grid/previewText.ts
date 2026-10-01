@@ -1,3 +1,6 @@
+/** Same cut as the server's template (shown while a variable is unavailable). */
+const MAX_PLACEHOLDER = 64;
+
 /**
  * Best-effort local substitution of {name|format} tokens using the one-shot variable snapshot, so a
  * template widget shows something close to what the server's Template.Render would produce, rather
@@ -6,12 +9,13 @@
  */
 export function renderPreviewText(text: string | undefined, variables: Record<string, unknown>): string | undefined {
   if (!text || !text.includes("{")) return text;
-  return text.replace(/\{\{|\}\}|\{([^{}|]+)(?:\|([^{}]*))?\}/g, (match, name: string | undefined, format: string | undefined) => {
+  return text.replace(/\{\{|\}\}|\{([^{}|]+)(?:\|([^{}|]*))?(?:\|([^{}]*))?\}/g, (match, name: string | undefined, format: string | undefined, placeholder: string | undefined) => {
     if (match === "{{") return "{";
     if (match === "}}") return "}";
     if (!name) return match;
     const value = variables[name.trim()];
-    return value === undefined || value === null ? "" : formatPreviewValue(value, format);
+    if (value === undefined || value === null) return placeholder === undefined ? "" : placeholder.slice(0, MAX_PLACEHOLDER);
+    return formatPreviewValue(value, format);
   });
 }
 
