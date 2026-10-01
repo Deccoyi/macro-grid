@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 import { useT } from "../../i18n/I18nContext";
 import { codeToKeyName, codeToModifier, formatCombo } from "./keyCapture";
+import { useFieldId } from "../fields/controls";
 
 interface HotkeyCaptureProps {
   value: string;
@@ -67,8 +68,9 @@ export function HotkeyCapture({ value, onChange }: HotkeyCaptureProps) {
   };
 
   return (
-    <div style={{ display: "flex", gap: 6 }}>
+    <div className="pf-row">
       <input
+        id={useFieldId()}
         type="text"
         readOnly
         value={display}

@@ -3,6 +3,7 @@ import { webUrlHost, type ActionBinding, type Page } from "@macro/renderer";
 import { api } from "../../api/client";
 import type { ActionInfo, OptionsResult, ProfileSummary, SettingField, VariableInfo } from "../../api/types";
 import { useT } from "../../i18n/I18nContext";
+import { Field, NumberInput, SelectInput, TextAreaInput, TextInput, useFieldId } from "../fields/controls";
 import { WebWarning } from "../fields/WebFields";
 import { HotkeyCapture } from "./HotkeyCapture";
 import { SchemaForm } from "./SchemaForm";
@@ -22,20 +23,18 @@ const num = (v: unknown, fallback = 0) => (typeof v === "number" ? v : fallback)
 function HotkeyForm({ binding, onChange }: ActionFormProps) {
   const { t } = useT();
   return (
-    <label className="field">
-      {t("form.hotkey.label")}
+    <Field label={t("form.hotkey.label")}>
       <HotkeyCapture value={str(binding.settings.keys)} onChange={(keys) => onChange({ keys })} />
-    </label>
+    </Field>
   );
 }
 
 function TypeTextForm({ binding, onChange }: ActionFormProps) {
   const { t } = useT();
   return (
-    <label className="field">
-      {t("form.typeText.label")}
-      <textarea rows={2} value={str(binding.settings.text)} onChange={(e) => onChange({ text: e.target.value })} />
-    </label>
+    <Field label={t("form.typeText.label")}>
+      <TextAreaInput value={str(binding.settings.text)} onChange={(text) => onChange({ text })} />
+    </Field>
   );
 }
 
@@ -43,43 +42,40 @@ function PageActionForm({ binding, onChange, pages }: ActionFormProps) {
   const { t } = useT();
   const mode = str(binding.settings.mode, "goto");
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-      <label className="field">
-        {t("form.page.mode")}
-        <select value={mode} onChange={(e) => onChange({ mode: e.target.value, pageId: binding.settings.pageId })}>
+    <>
+      <Field label={t("form.page.mode")}>
+        <SelectInput value={mode} onChange={(v) => onChange({ mode: v, pageId: binding.settings.pageId })}>
           <option value="goto">{t("form.page.mode.goto")}</option>
           <option value="next">{t("form.page.mode.next")}</option>
           <option value="prev">{t("form.page.mode.prev")}</option>
           <option value="back">{t("form.page.mode.back")}</option>
-        </select>
-      </label>
+        </SelectInput>
+      </Field>
       {mode === "goto" && (
-        <label className="field">
-          {t("form.page.page")}
-          <select value={str(binding.settings.pageId)} onChange={(e) => onChange({ mode, pageId: e.target.value })}>
+        <Field label={t("form.page.page")}>
+          <SelectInput value={str(binding.settings.pageId)} onChange={(v) => onChange({ mode, pageId: v })}>
             <option value="">{t("form.pickPlaceholder")}</option>
             {pages.map((p) => (
               <option key={p.id} value={p.id}>{p.name}</option>
             ))}
-          </select>
-        </label>
+          </SelectInput>
+        </Field>
       )}
-    </div>
+    </>
   );
 }
 
 function ProfileActionForm({ binding, onChange, profiles }: ActionFormProps) {
   const { t } = useT();
   return (
-    <label className="field">
-      {t("form.profile.label")}
-      <select value={str(binding.settings.profileId)} onChange={(e) => onChange({ profileId: e.target.value })}>
+    <Field label={t("form.profile.label")}>
+      <SelectInput value={str(binding.settings.profileId)} onChange={(v) => onChange({ profileId: v })}>
         <option value="">{t("form.pickPlaceholder")}</option>
         {profiles.map((p) => (
           <option key={p.id} value={p.id}>{p.name}</option>
         ))}
-      </select>
-    </label>
+      </SelectInput>
+    </Field>
   );
 }
 
@@ -100,73 +96,63 @@ function WebActionForm({ binding, onChange, pages }: ActionFormProps) {
   const missing = widgetId !== "" && !widgets.some((w) => w.id === widgetId);
   const set = (patch: Record<string, unknown>) => onChange({ widgetId, mode, url, ...patch });
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-      <label className="field">
-        {t("form.web.widget")}
-        <select value={widgetId} onChange={(e) => set({ widgetId: e.target.value })} style={missing ? { borderColor: "var(--ms-danger)" } : undefined}>
+    <>
+      <Field label={t("form.web.widget")} error={missing ? t("form.web.missing") : undefined}>
+        <SelectInput value={widgetId} onChange={(v) => set({ widgetId: v })}>
           <option value="">{t("form.pickPlaceholder")}</option>
           {missing && <option value={widgetId}>{t("form.web.missing")}</option>}
           {widgets.map((w) => (
             <option key={w.id} value={w.id}>{w.label}</option>
           ))}
-        </select>
-      </label>
-      <label className="field">
-        {t("form.web.mode")}
-        <select value={mode} onChange={(e) => set({ mode: e.target.value })}>
+        </SelectInput>
+      </Field>
+      <Field label={t("form.web.mode")}>
+        <SelectInput value={mode} onChange={(v) => set({ mode: v })}>
           <option value="set">{t("form.web.mode.set")}</option>
           <option value="reset">{t("form.web.mode.reset")}</option>
           <option value="reload">{t("form.web.mode.reload")}</option>
-        </select>
-      </label>
+        </SelectInput>
+      </Field>
       {mode === "set" && (
         <>
-          <label className="field">
-            {t("form.web.url")}
-            <input type="text" value={url} onChange={(e) => set({ url: e.target.value })} placeholder={t("fields.web.urlPlaceholder")} />
-          </label>
+          <Field label={t("form.web.url")}>
+            <TextInput value={url} onChange={(v) => set({ url: v })} placeholder={t("fields.web.urlPlaceholder")} />
+          </Field>
           <WebWarning url={url} />
         </>
       )}
-      <p style={{ fontSize: 11, color: "var(--ms-text-secondary)", margin: 0 }}>{t("form.web.thisDevice")}</p>
-    </div>
+      <span className="pf-hint">{t("form.web.thisDevice")}</span>
+    </>
   );
 }
 
 function OpenApplicationForm({ binding, onChange }: ActionFormProps) {
   const { t } = useT();
+  const browse = async () => {
+    const path = await api.browseForExecutable();
+    if (path) onChange({ target: path, arguments: binding.settings.arguments });
+  };
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-      <label className="field">
-        {t("form.openApp.label")}
-        <div style={{ display: "flex", gap: 6 }}>
-          <input
-            type="text"
-            readOnly
-            value={str(binding.settings.target)}
-            placeholder={t("form.openApp.browsePlaceholder")}
-            onClick={async () => {
-              const path = await api.browseForExecutable();
-              if (path) onChange({ target: path, arguments: binding.settings.arguments });
-            }}
-          />
-          <button
-            type="button"
-            className="ghost"
-            onClick={async () => {
-              const path = await api.browseForExecutable();
-              if (path) onChange({ target: path, arguments: binding.settings.arguments });
-            }}
-          >
+    <>
+      <Field label={t("form.openApp.label")}>
+        <div className="pf-row">
+          <div className="grow">
+            <TextInput
+              readOnly
+              value={str(binding.settings.target)}
+              placeholder={t("form.openApp.browsePlaceholder")}
+              onClick={browse}
+            />
+          </div>
+          <button type="button" className="ghost pf-ctl" onClick={browse}>
             {t("form.openApp.browse")}
           </button>
         </div>
-      </label>
-      <label className="field">
-        {t("form.openApp.arguments")}
-        <input type="text" value={str(binding.settings.arguments)} onChange={(e) => onChange({ target: binding.settings.target, arguments: e.target.value })} />
-      </label>
-    </div>
+      </Field>
+      <Field label={t("form.openApp.arguments")}>
+        <TextInput value={str(binding.settings.arguments)} onChange={(v) => onChange({ target: binding.settings.target, arguments: v })} />
+      </Field>
+    </>
   );
 }
 
@@ -175,17 +161,20 @@ function OpenUrlActionForm({ binding, onChange }: ActionFormProps) {
   const url = str(binding.settings.url);
   const looksValid = url === "" || /^https?:\/\/.+/i.test(url);
   return (
-    <label className="field">
-      {t("form.openUrl.label")}
-      <input
-        type="url"
-        value={url}
-        onChange={(e) => onChange({ url: e.target.value })}
-        placeholder="https://example.com/..."
-        style={!looksValid ? { borderColor: "var(--ms-danger)" } : undefined}
-      />
-      {!looksValid && <span style={{ color: "var(--ms-danger)", fontSize: 11 }}>{t("form.openUrl.invalid")}</span>}
-    </label>
+    <Field label={t("form.openUrl.label")} error={looksValid ? undefined : t("form.openUrl.invalid")}>
+      <TextInput value={url} onChange={(v) => onChange({ url: v })} placeholder="https://example.com/..." />
+    </Field>
+  );
+}
+
+/** The text of a number of seconds, kept as typed, labelled by the nearest Field. */
+function SecondsInput({ text, onChange }: { text: string; onChange: (text: string) => void }) {
+  const id = useFieldId();
+  return (
+    <div className="pf-num has-unit">
+      <input id={id} type="number" min={0} max={60} step={0.1} value={text} onChange={(e) => onChange(e.target.value)} />
+      <span className="unit" aria-hidden="true">s</span>
+    </div>
   );
 }
 
@@ -198,46 +187,40 @@ function DelayActionForm({ binding, onChange }: ActionFormProps) {
     setText((current) => (Math.round(Number(current) * 1000) === ms ? current : String(ms / 1000)));
   }, [ms]);
   return (
-    <label className="field">
-      {t("form.delay.label")}
-      <input
-        type="number"
-        min={0}
-        max={60}
-        step={0.1}
-        value={text}
-        onChange={(e) => {
-          setText(e.target.value);
-          const seconds = Number(e.target.value);
-          if (e.target.value !== "" && Number.isFinite(seconds)) onChange({ ms: Math.round(seconds * 1000) });
+    <Field label={t("form.delay.label")}>
+      <SecondsInput
+        text={text}
+        onChange={(value) => {
+          setText(value);
+          const seconds = Number(value);
+          if (value !== "" && Number.isFinite(seconds)) onChange({ ms: Math.round(seconds * 1000) });
         }}
       />
-    </label>
+    </Field>
   );
 }
 
 function StopForm() {
   const { t } = useT();
-  return <p style={{ fontSize: 11.5, color: "var(--ms-text-secondary)", margin: 0 }}>{t("action.logic.stopNote")}</p>;
+  return <div className="pf-note info">{t("action.logic.stopNote")}</div>;
 }
 
 /** No settings to configure — the action reads the widget's live dragged value instead (core.setVolume). */
 function NoSettingsForm() {
   const { t } = useT();
-  return <p style={{ fontSize: 11.5, color: "var(--ms-text-secondary)", margin: 0 }}>{t("form.noSettings")}</p>;
+  return <div className="pf-note info">{t("form.noSettings")}</div>;
 }
 
 function SetMuteActionForm({ binding, onChange }: ActionFormProps) {
   const { t } = useT();
   const muted = binding.settings.muted !== false;
   return (
-    <label className="field">
-      {t("form.setMute.label")}
-      <select value={muted ? "mute" : "unmute"} onChange={(e) => onChange({ muted: e.target.value === "mute" })}>
+    <Field label={t("form.setMute.label")}>
+      <SelectInput value={muted ? "mute" : "unmute"} onChange={(v) => onChange({ muted: v === "mute" })}>
         <option value="mute">{t("form.setMute.mute")}</option>
         <option value="unmute">{t("form.setMute.unmute")}</option>
-      </select>
-    </label>
+      </SelectInput>
+    </Field>
   );
 }
 
@@ -264,22 +247,19 @@ function SetVariableForm({ binding, onChange, variableCatalog }: ActionFormProps
   const mode = modes.includes(str(binding.settings.mode, "set")) ? str(binding.settings.mode, "set") : "set";
   const valueField = { key: "value", label: t("form.setVariable.value"), kind: "Text", allowVariables: true } as SettingField;
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-      <label className="field">
-        {t("form.setVariable.variable")}
-        <select value={name} onChange={(e) => onChange({ variable: e.target.value, mode: "set" })}>
+    <>
+      <Field label={t("form.setVariable.variable")} hint={own.length === 0 ? t("form.setVariable.none") : undefined}>
+        <SelectInput value={name} onChange={(v) => onChange({ variable: v, mode: "set" })}>
           <option value="">{t("form.setVariable.choose")}</option>
           {name && !current && <option value={name}>{name} {t("form.setVariable.missing")}</option>}
           {own.map((v) => <option key={v.name} value={v.name}>{v.name}</option>)}
-        </select>
-      </label>
-      {own.length === 0 && <div style={{ fontSize: 11.5, color: "var(--ms-text-secondary)" }}>{t("form.setVariable.none")}</div>}
-      <label className="field">
-        {t("form.setVariable.mode")}
-        <select value={mode} onChange={(e) => onChange({ mode: e.target.value })}>
+        </SelectInput>
+      </Field>
+      <Field label={t("form.setVariable.mode")}>
+        <SelectInput value={mode} onChange={(v) => onChange({ mode: v })}>
           {modes.map((m) => <option key={m} value={m}>{t(SET_VARIABLE_MODE_KEYS[m as keyof typeof SET_VARIABLE_MODE_KEYS])}</option>)}
-        </select>
-      </label>
+        </SelectInput>
+      </Field>
       {mode === "set" && (
         <SchemaForm
           fields={[valueField]}
@@ -290,12 +270,11 @@ function SetVariableForm({ binding, onChange, variableCatalog }: ActionFormProps
         />
       )}
       {mode === "add" && (
-        <label className="field">
-          {t("form.setVariable.amount")}
-          <input type="number" step="any" value={num(binding.settings.amount, 1)} onChange={(e) => onChange({ amount: Number(e.target.value) })} />
-        </label>
+        <Field label={t("form.setVariable.amount")}>
+          <NumberInput step="any" value={num(binding.settings.amount, 1)} onChange={(v) => onChange({ amount: v })} />
+        </Field>
       )}
-    </div>
+    </>
   );
 }
 
@@ -304,21 +283,20 @@ function GenericJsonForm({ binding, onChange }: ActionFormProps) {
   const { t } = useT();
   const text = JSON.stringify(binding.settings, null, 2);
   return (
-    <label className="field">
-      {t("form.json.label")}
-      <textarea
+    <Field label={t("form.json.label")}>
+      <TextAreaInput
         rows={4}
-        style={{ fontFamily: "ui-monospace, monospace", fontSize: 12 }}
+        mono
         defaultValue={text}
-        onBlur={(e) => {
+        onBlur={(value) => {
           try {
-            onChange(JSON.parse(e.target.value || "{}"));
+            onChange(JSON.parse(value || "{}"));
           } catch {
             // Leave the last valid settings in place rather than corrupting them on invalid JSON.
           }
         }}
       />
-    </label>
+    </Field>
   );
 }
 
