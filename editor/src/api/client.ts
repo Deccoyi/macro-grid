@@ -277,8 +277,11 @@ export const api = {
 
   /** Downloads, verifies and installs one version from a catalog source through the same pipeline as a local
    * folder install (PluginManager.InstallFromFolderAsync), plus hash/signature checks first. */
-  installFromPluginCatalog: (source: string, id: string, version: string): Promise<PluginCatalogInstallResult> =>
-    send("POST", "/api/plugin-catalog/install", { source, id, version }),
+  installFromPluginCatalog: (source: string, id: string, version: string, hold = false): Promise<PluginCatalogInstallResult> =>
+    send("POST", "/api/plugin-catalog/install", { source, id, version, hold }),
+
+  /** "Stay on this version": only a plugin installed from a source can be held (404 otherwise). */
+  setPluginHold: (id: string, hold: boolean): Promise<void> => send("PUT", `/api/plugins/${encodeURIComponent(id)}/hold`, { hold }),
 
   listPluginSources: (): Promise<PluginSourcesResponse> => get("/api/plugin-sources"),
 

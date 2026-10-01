@@ -241,6 +241,13 @@ export const tr = {
   "plugins.badge.thirdParty": "Üçüncü taraf",
   "plugins.badge.local": "Yerel",
   "plugins.updateAvailable": "Güncelleme var",
+  "plugins.held": "Bu sürümde kalıyor",
+  "plugins.hold": "Bu sürümde kal (güncelleme önerme)",
+  "plugins.otherSource": "Bu eklenti başka bir kaynaktan kurulmuş, bu yüzden buradan güncellenmez.",
+  "plugins.goBack.button": "v{version} sürümüne dön",
+  "plugins.goBack.title": "Eski sürüme dönülsün mü?",
+  "plugins.goBack.confirm": "v{version} sürümüne dön",
+  "plugins.goBack.done": "{name}, v{version} sürümüne döndü. Bu sürümde kalacak.",
   "status.pluginUpdates.one": "{n} eklenti için güncelleme gerekli",
 
   "status.pluginUpdates.other": "{n} eklenti için güncelleme gerekli",
