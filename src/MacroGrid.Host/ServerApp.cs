@@ -202,6 +202,7 @@ internal static class ServerApp
         app.MapGroup("/api")
             .MapProfileApi()
             .MapAppApi()
+            .MapLanguageApi()
             .MapCatalogApi()
             .MapPluginApi()
             .MapPluginWidgetApi()

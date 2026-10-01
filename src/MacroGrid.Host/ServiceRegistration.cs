@@ -3,6 +3,7 @@ using MacroGrid.Core;
 using MacroGrid.Core.Actions;
 using MacroGrid.Core.Devices;
 using MacroGrid.Core.Diagnostics;
+using MacroGrid.Core.Languages;
 using MacroGrid.Core.Plugins;
 using MacroGrid.Core.Plugins.Widgets;
 using MacroGrid.Core.Plugins.Distribution;
@@ -40,6 +41,7 @@ internal static class ServiceRegistration
         AppLanguage.Current = preferencesStore.Get().Language;
         preferencesStore.Changed += () => AppLanguage.Current = preferencesStore.Get().Language;
         services.AddSingleton(preferencesStore);
+        services.AddSingleton(new LanguagePackStore(dataDir));
         services.AddSingleton(new LegalDocuments(AppContext.BaseDirectory));
         services.AddSingleton(new AutostartService(Environment.ProcessPath ?? Application.ExecutablePath));
         return services;
