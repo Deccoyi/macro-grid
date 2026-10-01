@@ -240,6 +240,8 @@ export const api = {
   /** The Error List as redacted JSON: `to: "text"` answers the document, `to: "file"` shows the Save dialog and answers the path (null when cancelled). */
   exportProblems: (to: "text" | "file", lines: ExportLine[]): Promise<{ text?: string; path?: string | null }> =>
     send("POST", "/api/problems/export", { to, lines }),
+  fetchLogsPreview: (): Promise<{ files: { name: string; bytes: number }[]; totalBytes: number }> => get("/api/diagnostics/logs-preview"),
+  exportLogs: (): Promise<{ path: string | null }> => send("POST", "/api/diagnostics/export-logs"),
   clearProblems: (source?: string): Promise<void> =>
     send("POST", source ? `/api/problems/clear?source=${encodeURIComponent(source)}` : "/api/problems/clear"),
 

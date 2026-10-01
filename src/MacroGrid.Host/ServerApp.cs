@@ -207,6 +207,7 @@ internal static class ServerApp
             .MapPluginWidgetApi()
             .MapPluginCatalogApi()
             .MapProblemApi()
+            .MapDiagnosticsApi()
             .MapWindowApi()
             .MapDeviceApi()
             .MapUpdateApi();
