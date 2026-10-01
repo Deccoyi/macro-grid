@@ -9,8 +9,8 @@ namespace MacroGrid.Core.Plugins.Distribution;
 /// </summary>
 public static class PluginZip
 {
-    private const long MaxEntryBytes = 100L * 1024 * 1024;
-    private const long MaxTotalBytes = 150L * 1024 * 1024;
+    internal const long MaxEntryBytes = 100L * 1024 * 1024;
+    internal const long MaxTotalBytes = 150L * 1024 * 1024;
 
     /// <exception cref="PluginDownloadException">The archive is not safe to extract.</exception>
     public static void ExtractSafely(byte[] zipBytes, string destinationDir)

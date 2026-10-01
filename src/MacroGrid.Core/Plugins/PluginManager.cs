@@ -428,7 +428,7 @@ public sealed partial class PluginManager(
         return File.Exists(entryFull) ? entryFull : null;
     }
 
-    private static string? ResolveIconPath(string dir, PluginManifest manifest)
+    internal static string? ResolveIconPath(string dir, PluginManifest manifest)
     {
         if (string.IsNullOrWhiteSpace(manifest.Icon)) return null;
         if (Path.IsPathRooted(manifest.Icon) || manifest.Icon.Contains("..")) return null;
