@@ -62,6 +62,39 @@ public sealed class PluginManagerTests : IAsyncLifetime
         return dir;
     }
 
+    [Theory]
+    [InlineData("obs", true)]
+    [InlineData("plc-icons", true)]
+    [InlineData("a.b_c-1", true)]
+    [InlineData("abc.", false)]
+    [InlineData("abc ", false)]
+    [InlineData("con", false)]
+    [InlineData("NUL.x", false)]
+    [InlineData("a/b", false)]
+    [InlineData("a b", false)]
+    [InlineData("", false)]
+    [InlineData("-abc", false)]
+    [InlineData("pluginç", false)]
+    public void Plugin_id_rule(string id, bool valid) => Assert.Equal(valid, PluginManager.IsValidPluginId(id));
+
+    [Fact]
+    public void Plugin_id_longer_than_64_characters_is_refused()
+    {
+        Assert.True(PluginManager.IsValidPluginId(new string('a', 64)));
+        Assert.False(PluginManager.IsValidPluginId(new string('a', 65)));
+    }
+
+    [Fact]
+    public async Task Installing_a_folder_with_a_refused_id_creates_nothing()
+    {
+        await _manager.StartAsync(CancellationToken.None);
+        var source = NewStubSource(id: "stub.");
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() => _manager.InstallFromFolderAsync(source));
+
+        Assert.Empty(Directory.GetDirectories(_pluginsDir));
+    }
+
     [Fact]
     public async Task Start_on_a_missing_folder_lists_nothing()
     {

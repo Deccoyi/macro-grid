@@ -189,8 +189,9 @@ public sealed partial class PluginManager(
     public async Task<PluginInstallResult> InstallFromFolderAsync(string sourceDir)
     {
         var manifest = ReadManifest(Path.Combine(sourceDir, "plugin.json"));
-        if (!IsSafeSegment(manifest.Id))
-            throw new InvalidOperationException($"'{manifest.Id}' is not a valid plugin id.");
+        if (!IsValidPluginId(manifest.Id))
+            throw new InvalidOperationException(
+                $"'{manifest.Id}' is not a valid plugin id. Use 1 to 64 letters, digits, '.', '-' or '_', starting with a letter or digit and not ending with a dot.");
         if (CheckInstallTrust(sourceDir, manifest) is { } refusal)
             throw new InvalidOperationException(refusal);
 
@@ -350,8 +351,22 @@ public sealed partial class PluginManager(
             ?? throw new JsonException("plugin.json is empty");
     }
 
-    private static bool IsSafeSegment(string id) =>
-        !string.IsNullOrWhiteSpace(id) && !id.Contains("..") && id.IndexOfAny(Path.GetInvalidFileNameChars()) < 0;
+    private static readonly string[] ReservedDeviceNames =
+        ["CON", "PRN", "AUX", "NUL", "COM1", "COM2", "COM3", "COM4", "COM5", "COM6", "COM7", "COM8", "COM9",
+         "LPT1", "LPT2", "LPT3", "LPT4", "LPT5", "LPT6", "LPT7", "LPT8", "LPT9"];
+
+    /// <summary>The id becomes a folder name, so it is limited to characters that mean the same on every file system: no trailing dot
+    /// (Windows drops it, so two ids could share a folder), no reserved device name, no spaces or other alphabets. Applied at install only;
+    /// plugins that are already installed keep loading.</summary>
+    internal static bool IsValidPluginId(string? id)
+    {
+        if (string.IsNullOrEmpty(id) || id.Length > 64) return false;
+        if (!char.IsAsciiLetterOrDigit(id[0]) || id[^1] == '.') return false;
+        foreach (var c in id)
+            if (!(char.IsAsciiLetterOrDigit(c) || c is '.' or '-' or '_')) return false;
+        var stem = id.Split('.')[0];
+        return !ReservedDeviceNames.Contains(stem, StringComparer.OrdinalIgnoreCase);
+    }
 
     /// <summary>The size limit is 100 KB: generous for a small square logo (an SVG is typically a few KB; a
     /// crisp 256x256 PNG rarely exceeds this), small enough that a plugin folder never balloons from it. Pixel
