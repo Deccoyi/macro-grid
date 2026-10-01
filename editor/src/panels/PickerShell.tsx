@@ -1,4 +1,5 @@
 import { useMemo, useState, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import { useT } from "../i18n/I18nContext";
 import { useBackdropClose } from "../components/useBackdropClose";
 
@@ -42,59 +43,48 @@ export function PickerShell({
 }: PickerShellProps) {
   const { t } = useT();
   const backdrop = useBackdropClose(onClose);
-  return (
-    // Rendered inline from wherever a Properties field opens it (e.g. AppearanceFields inside
-    // PropertiesToolWindow) — that puts it INSIDE the docking workspace's own isolated stacking context
-    // (.dv-theme-macro's `isolation: isolate`, needed to keep dockview's splitter lines from painting over
-    // an auto-hide flyout). A `position: fixed` descendant still only escapes normal layout, not that
-    // ancestor's stacking context, so its z-index has to beat everything else INSIDE that context too —
-    // the splitters sit at 99 — not just the other dialogs, which happen to be mounted at the App root
-    // and never enter that context at all.
-    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.5)", zIndex: 200, display: "flex", alignItems: "center", justifyContent: "center" }} {...backdrop}>
-      <div
-        onClick={(e) => e.stopPropagation()}
-        style={{
-          background: "var(--ms-bg-surface)", border: "1px solid var(--ms-border)", borderRadius: 6,
-          width: 620, height: 460, display: "grid", gridTemplateRows: "auto 1fr auto", gridTemplateColumns: "1fr",
-          overflow: "hidden",
-        }}
-      >
-        <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 10px", borderBottom: "1px solid var(--ms-border)" }}>
-          <span style={{ fontSize: 12, color: "var(--ms-text-secondary)", textTransform: "uppercase", letterSpacing: ".04em" }}>{title}</span>
-          <div style={{ flex: 1 }} />
-          <button type="button" className="ghost" onClick={onClose}>{t("picker.close")}</button>
+  // Portalled to <body>: the picker is opened from inside Properties fields, and rendered inline it
+  // inherits their rules (for example `.pf-actions button { height: 18px }`, which squashed every
+  // two-line row to 18 px so the rows overlapped). The z-index still has to beat dockview's splitters (99).
+  return createPortal(
+    <div className="picker-backdrop" {...backdrop}>
+      <div className="picker-dialog" role="dialog" aria-label={title} onClick={(e) => e.stopPropagation()}>
+        <div className="picker-head">
+          <h1>{title}</h1>
+          <button type="button" className="ghost picker-close" onClick={onClose} aria-label={t("picker.close")} title={t("picker.close")}>
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" /></svg>
+          </button>
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "150px 1fr", minHeight: 0 }}>
-          <div style={{ borderRight: "1px solid var(--ms-border)", overflowY: "auto", padding: 6 }}>
+        <div className="picker-body">
+          <div className="picker-cats">
             <CategoryButton active={activeCategory === "all"} onClick={() => onCategoryChange("all")} label={t("picker.all")} />
             {categories.map((c) => (
               <CategoryButton key={c.id} active={activeCategory === c.id} onClick={() => onCategoryChange(c.id)} label={c.label} badge={c.badge} />
             ))}
           </div>
 
-          <div style={{ display: "flex", flexDirection: "column", minHeight: 0, padding: 8, gap: 8 }}>
-            <input type="text" autoFocus placeholder={searchPlaceholder} value={query} onChange={(e) => onQueryChange(e.target.value)} />
-            <div style={{ flex: 1, overflowY: "auto" }}>{children}</div>
+          <div className="picker-main">
+            <div className="picker-search">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="m20 20-4-4" /></svg>
+              <input type="text" autoFocus placeholder={searchPlaceholder} aria-label={searchPlaceholder} value={query} onChange={(e) => onQueryChange(e.target.value)} />
+            </div>
+            <div className="picker-list">{children}</div>
           </div>
         </div>
 
-        {footer && <div style={{ padding: "6px 10px", borderTop: "1px solid var(--ms-border)", fontSize: 11, color: "var(--ms-text-secondary)" }}>{footer}</div>}
+        {footer && <div className="picker-foot">{footer}</div>}
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
 
 function CategoryButton({ active, onClick, label, badge }: { active: boolean; onClick: () => void; label: string; badge?: string | number }) {
   return (
-    <button
-      type="button"
-      className={active ? "active" : "ghost"}
-      onClick={onClick}
-      style={{ display: "flex", justifyContent: "space-between", width: "100%", textAlign: "left", marginBottom: 2 }}
-    >
+    <button type="button" className={active ? "picker-cat on" : "picker-cat"} onClick={onClick} aria-pressed={active}>
       <span>{label}</span>
-      {badge != null && <span style={{ color: "var(--ms-text-secondary)", fontSize: 11 }}>{badge}</span>}
+      {badge != null && <span className="picker-badge">{badge}</span>}
     </button>
   );
 }

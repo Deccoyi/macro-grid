@@ -56,25 +56,27 @@ export function VariablePicker({ catalog, onInsert, buttonLabel, mode = "templat
           onQueryChange={picker.setQuery}
           onClose={picker.closePicker}
         >
-          {items.length === 0 && <div style={{ color: "var(--ms-text-secondary)", fontSize: 12, padding: 8 }}>{t("variable.noMatch")}</div>}
+          {items.length === 0 && <div className="picker-empty">{t("variable.noMatch")}</div>}
           {items.map((v) => (
             <button
               key={v.name}
               type="button"
-              className="ghost"
+              className="picker-row"
               onClick={() => { onInsert(mode === "bare" ? v.name : v.example); picker.closePicker(); }}
               title={v.example}
-              style={{ display: "block", width: "100%", textAlign: "left", borderRadius: 0, padding: "6px 10px" }}
             >
-              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                <span style={{ fontFamily: "ui-monospace, monospace", fontSize: 12 }}>{`{${v.name}}`}</span>
-                <span style={typeBadgeStyle}>{t(VARIABLE_TYPE_KEYS[v.type ?? "text"])}{v.unit ? ` ${v.unit}` : ""}</span>
-              </div>
-              <div style={{ fontSize: 11, color: "var(--ms-text-secondary)" }}>
-                {catalogText.variableDescription(v)}
-                {v.type === "boolean" && " · true / false"}
-                {v.values && v.values.length > 0 && ` · ${t("variable.values")}: ${v.values.join(", ")}`}
-              </div>
+              <span className="picker-row-main">
+                <span className="picker-row-line">
+                  <span className="picker-row-name">{`{${v.name}}`}</span>
+                  <span className="picker-type">{t(VARIABLE_TYPE_KEYS[v.type ?? "text"])}{v.unit ? ` ${v.unit}` : ""}</span>
+                </span>
+                <span className="picker-row-desc">
+                  {catalogText.variableDescription(v)}
+                  {v.type === "boolean" && " · true / false"}
+                  {v.values && v.values.length > 0 && ` · ${t("variable.values")}: ${v.values.join(", ")}`}
+                </span>
+              </span>
+              <span className="picker-row-example">{v.example}</span>
             </button>
           ))}
         </PickerShell>
@@ -82,8 +84,3 @@ export function VariablePicker({ catalog, onInsert, buttonLabel, mode = "templat
     </>
   );
 }
-
-const typeBadgeStyle: React.CSSProperties = {
-  fontSize: 10, padding: "0 5px", border: "1px solid var(--ms-border)", borderRadius: 3,
-  color: "var(--ms-text-secondary)", background: "var(--ms-bg-inset)",
-};
