@@ -24,6 +24,8 @@ internal sealed class BackupTestWorld : IDisposable
     public PluginManager Plugins { get; }
     public BackupCollector Collector { get; }
     public BackupService Service { get; }
+    public BackupRestorer Restorer { get; }
+    public List<string> Broadcast { get; } = [];
 
     public BackupTestWorld()
     {
@@ -37,11 +39,14 @@ internal sealed class BackupTestWorld : IDisposable
         Languages = new LanguagePackStore(Root);
         var pluginsDir = Path.Combine(Root, "plugins");
         Directory.CreateDirectory(pluginsDir);
-        Plugins = new PluginManager(pluginsDir, "1.0.0", new PluginStatusRegistry(), new ActionDispatcher([], NullLogger<ActionDispatcher>.Instance),
+        var dispatcher = new ActionDispatcher([], NullLogger<ActionDispatcher>.Instance);
+        Plugins = new PluginManager(pluginsDir, "1.0.0", new PluginStatusRegistry(), dispatcher,
             new VariableCatalog([]), new VariableProviderHost([], store, NullLogger<VariableProviderHost>.Instance), store,
             new PluginPermissionStore(Root), null, NullLogger<PluginManager>.Instance, trustVerifier: TestPluginSigning.Lenient);
         Collector = new BackupCollector(Profiles, Tree, Preferences, Variables, Devices, Plugins, Languages);
         Service = new BackupService(Collector, Root, "1.0.0");
+        Restorer = new BackupRestorer(Service, Collector, Profiles, Tree, Preferences, Variables, Devices, Plugins, Languages, dispatcher,
+            profile => { Broadcast.Add(profile.Id); return Task.CompletedTask; });
     }
 
     public string RestorePointsFolder => Path.Combine(Root, BackupService.FolderName);

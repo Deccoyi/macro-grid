@@ -124,6 +124,11 @@ internal static class ServiceRegistration
             sp.GetRequiredService<PluginManager>(), sp.GetRequiredService<LanguagePackStore>()));
         services.AddSingleton(sp => new BackupService(sp.GetRequiredService<BackupCollector>(), dataDir, ClientHub.ServerVersion,
             sp.GetRequiredService<ILogger<BackupService>>()));
+        services.AddSingleton(sp => new BackupRestorer(sp.GetRequiredService<BackupService>(), sp.GetRequiredService<BackupCollector>(),
+            sp.GetRequiredService<ProfileStore>(), sp.GetRequiredService<ProfileTreeStore>(), sp.GetRequiredService<PreferencesStore>(),
+            sp.GetRequiredService<UserVariableService>(), sp.GetRequiredService<DeviceStore>(), sp.GetRequiredService<PluginManager>(),
+            sp.GetRequiredService<LanguagePackStore>(), sp.GetRequiredService<ActionDispatcher>(),
+            profile => sp.GetRequiredService<WidgetStateService>().BroadcastProfileAsync(profile)));
         services.AddSingleton<PluginNotifications>();
         services.AddSingleton<PluginWidgetCatalog>();
         services.AddSingleton(sp => new PluginWidgetEventHub(sp.GetRequiredService<ProblemList>()));
