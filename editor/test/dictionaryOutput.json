@@ -7,6 +7,34 @@
       "five": "5 of 5 rules",
       "words": "Arg1 of Arg2 rules"
     },
+    "dynamic.preset.rules.one": {
+      "zero": "0 rule",
+      "one": "1 rule",
+      "two": "2 rule",
+      "five": "5 rule",
+      "words": "Arg1 rule"
+    },
+    "dynamic.preset.rules.other": {
+      "zero": "0 rules",
+      "one": "1 rules",
+      "two": "2 rules",
+      "five": "5 rules",
+      "words": "Arg1 rules"
+    },
+    "dynamic.preset.add.one": {
+      "zero": "Add 0 rule",
+      "one": "Add 1 rule",
+      "two": "Add 2 rule",
+      "five": "Add 5 rule",
+      "words": "Add Arg1 rule"
+    },
+    "dynamic.preset.add.other": {
+      "zero": "Add 0 rules",
+      "one": "Add 1 rules",
+      "two": "Add 2 rules",
+      "five": "Add 5 rules",
+      "words": "Add Arg1 rules"
+    },
     "automation.newName": {
       "zero": "Rule 0",
       "one": "Rule 1",
@@ -932,6 +960,34 @@
       "two": "2 / 2 kural",
       "five": "5 / 5 kural",
       "words": "Arg1 / Arg2 kural"
+    },
+    "dynamic.preset.rules.one": {
+      "zero": "0 kural",
+      "one": "1 kural",
+      "two": "2 kural",
+      "five": "5 kural",
+      "words": "Arg1 kural"
+    },
+    "dynamic.preset.rules.other": {
+      "zero": "0 kural",
+      "one": "1 kural",
+      "two": "2 kural",
+      "five": "5 kural",
+      "words": "Arg1 kural"
+    },
+    "dynamic.preset.add.one": {
+      "zero": "0 kural ekle",
+      "one": "1 kural ekle",
+      "two": "2 kural ekle",
+      "five": "5 kural ekle",
+      "words": "Arg1 kural ekle"
+    },
+    "dynamic.preset.add.other": {
+      "zero": "0 kural ekle",
+      "one": "1 kural ekle",
+      "two": "2 kural ekle",
+      "five": "5 kural ekle",
+      "words": "Arg1 kural ekle"
     },
     "automation.newName": {
       "zero": "Kural 0",

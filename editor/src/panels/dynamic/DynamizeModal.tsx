@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ArrowRight, CircleOff, Gauge, Plus, ToggleRight, Variable, X } from "lucide-react";
+import { ArrowRight, CircleOff, Gauge, Layers, Plus, ToggleRight, Variable, X } from "lucide-react";
 import type { DynamicBinding } from "@macro/renderer";
 import type { VariableInfo } from "../../api/types";
 import { ColorField, SelectInput, TextInput } from "../fields/controls";
@@ -7,6 +7,7 @@ import { IconPicker } from "../IconPicker";
 import { useT } from "../../i18n/I18nContext";
 import type { DictKey } from "../../i18n/tr";
 import { VariablePicker } from "../VariablePicker";
+import { PresetsPopover } from "./PresetsPopover";
 import { ConditionEditor } from "./ConditionEditor";
 import { combinatorOf, fromConditionNode, isValueless, newCase, newCondition, toConditionNode, type EditCase } from "./conditionEditing";
 import { useBackdropClose } from "../../components/useBackdropClose";
@@ -41,6 +42,7 @@ export function DynamizeModal({ propertyLabel, binding, variableCatalog, resultK
       : [newCase(defaultResult)],
   );
   const [defaultValue, setDefaultValue] = useState(binding?.default ?? "");
+  const [presetsOpen, setPresetsOpen] = useState(false);
 
   const updateCase = (index: number, fn: (c: EditCase) => void) =>
     setCases((prev) => prev.map((c, i) => (i === index ? withMutation(c, fn) : c)));
@@ -128,6 +130,9 @@ export function DynamizeModal({ propertyLabel, binding, variableCatalog, resultK
                   />
                 );
               })}
+              <button type="button" className="dz-chip dashed" onClick={() => setPresetsOpen(true)}>
+                <Layers size={12} /> {t("dynamic.preset.all")}
+              </button>
               <span className="dz-hint">{t("dynamic.quick.firstMatch")}</span>
             </div>
           )}
@@ -168,6 +173,16 @@ export function DynamizeModal({ propertyLabel, binding, variableCatalog, resultK
             </div>
           </div>
         </div>
+
+        {presetsOpen && (
+          <PresetsPopover
+            variableCatalog={variableCatalog}
+            resultKind={resultKind}
+            words={words}
+            onAdd={addTemplate}
+            onClose={() => setPresetsOpen(false)}
+          />
+        )}
 
         {/* Footer */}
         <div style={{ display: "flex", alignItems: "center", padding: "14px 20px", borderTop: "1px solid var(--ms-border)" }}>

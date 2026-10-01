@@ -33,6 +33,7 @@ New features and fixes in Macro Grid. For technical details, see [CHANGELOG-deve
 - **A publisher can withdraw a version:** a withdrawn version cannot be installed, and if you have it you are asked to update or remove it. It keeps working until you do.
 - **A command-line tool for plugin authors (a separate download on the release page):** check, package, start and try out a JavaScript plugin.
 ### Changed
+- The Dynamize window has a cleaner rule list, and a Presets list with a preview of the rules a preset adds.
 - The Properties panel has a cleaner, aligned layout and adapts to its width.
 - **Wait is now under Logic and is set in seconds.**
 - **The plugin list opens faster and works from a saved copy:** if the internet is down, you still see the last list.
