@@ -203,6 +203,7 @@ internal static class ServerApp
             .MapProfileApi()
             .MapAppApi()
             .MapLanguageApi()
+            .MapBackupApi()
             .MapCatalogApi()
             .MapPluginApi()
             .MapPluginWidgetApi()

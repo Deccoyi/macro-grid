@@ -2,6 +2,7 @@ using MacroGrid.Host.Ui;
 using Microsoft.AspNetCore.Routing;
 using MacroGrid.Core;
 using MacroGrid.Core.Actions;
+using MacroGrid.Core.Backup;
 using MacroGrid.Core.Model;
 using MacroGrid.Core.Plugins;
 using MacroGrid.Core.Plugins.Widgets;
@@ -65,8 +66,16 @@ internal static class ProfileApi
             return Results.NoContent();
         });
 
-        api.MapDelete("/profiles/{id}", (string id, ProfileStore profiles) =>
-            profiles.Delete(id) ? Results.NoContent() : ApiResults.BadRequest("The last profile cannot be deleted."));
+        api.MapDelete("/profiles/{id}", (string id, ProfileStore profiles, BackupService backups) =>
+        {
+            // A delete keeps no copy of its own, so a restore point comes first; when it cannot be made nothing is deleted.
+            if (profiles.Get(id) is not null && profiles.All.Count > 1)
+            {
+                try { backups.CreateRestorePoint(BackupService.ReasonDelete); }
+                catch (BackupException) { return ApiResults.BadRequest("A restore point could not be made, so nothing was deleted."); }
+            }
+            return profiles.Delete(id) ? Results.NoContent() : ApiResults.BadRequest("The last profile cannot be deleted.");
+        });
 
         // .msprofile (a zip with the profile and a manifest naming the plugins it needs) or a plain profile JSON file.
         api.MapPost("/browse/import-profile", async (IUiDialogService dialogs, PluginManager plugins, ActionDispatcher dispatcher, PluginWidgetCatalog widgetCatalog) =>

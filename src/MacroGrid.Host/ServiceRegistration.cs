@@ -1,6 +1,7 @@
 using MacroGrid.Host.Ui;
 using MacroGrid.Core;
 using MacroGrid.Core.Actions;
+using MacroGrid.Core.Backup;
 using MacroGrid.Core.Devices;
 using MacroGrid.Core.Diagnostics;
 using MacroGrid.Core.Languages;
@@ -118,6 +119,11 @@ internal static class ServiceRegistration
             widgetCatalog: sp.GetRequiredService<PluginWidgetCatalog>(), widgetEvents: sp.GetRequiredService<PluginWidgetEventHub>(),
             officialCatalog: sp.GetRequiredService<OfficialCatalog>(), origins: sp.GetRequiredService<PluginInstallOriginStore>(),
             ownPorts: [ServerApp.Port, ServerApp.TlsPort], notifications: sp.GetRequiredService<PluginNotifications>()));
+        services.AddSingleton(sp => new BackupCollector(sp.GetRequiredService<ProfileStore>(), sp.GetRequiredService<ProfileTreeStore>(),
+            sp.GetRequiredService<PreferencesStore>(), sp.GetRequiredService<UserVariableService>(), sp.GetRequiredService<DeviceStore>(),
+            sp.GetRequiredService<PluginManager>(), sp.GetRequiredService<LanguagePackStore>()));
+        services.AddSingleton(sp => new BackupService(sp.GetRequiredService<BackupCollector>(), dataDir, ClientHub.ServerVersion,
+            sp.GetRequiredService<ILogger<BackupService>>()));
         services.AddSingleton<PluginNotifications>();
         services.AddSingleton<PluginWidgetCatalog>();
         services.AddSingleton(sp => new PluginWidgetEventHub(sp.GetRequiredService<ProblemList>()));
