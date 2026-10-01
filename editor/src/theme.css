@@ -521,3 +521,19 @@ hr.sep {
 .dz-presets-footer { display: flex; justify-content: flex-end; gap: 8px; padding: var(--pf-pad); border-top: 1px solid var(--ms-border); flex-shrink: 0; }
 
 .pf-mono { font-family: ui-monospace, Consolas, monospace; font-size: 12px; }
+
+/* Control states, one set for every field in the panels and windows built on the field system: rest, hover, focus, disabled, invalid.
+   Size never changes between states (the border is always 1px); only color does. */
+.pf-root input:is([type="text"], [type="number"], [type="url"], [type="password"]), .pf-root select, .pf-root textarea { transition: border-color .12s; }
+.pf-root input:is([type="text"], [type="number"], [type="url"], [type="password"]):hover:not(:disabled):not(:focus),
+.pf-root select:hover:not(:disabled):not(:focus), .pf-root textarea:hover:not(:disabled):not(:focus) { border-color: var(--ms-border-strong); }
+.pf-root input::placeholder, .pf-root textarea::placeholder { color: var(--ms-text-disabled); opacity: 1; }
+.pf-root input:disabled, .pf-root select:disabled, .pf-root textarea:disabled { opacity: .5; cursor: not-allowed; }
+.pf-root input[readonly]:not(:disabled) { cursor: default; }
+.pf-root input[aria-invalid="true"], .pf-root input[aria-invalid="true"]:focus { border-color: var(--ms-danger); }
+.pf-root button:not(.ghost):not(.primary):not(.pf-switch):not(.seg button):hover:not(:disabled) { background: var(--ms-bg-inset); border-color: var(--ms-border-strong); }
+.pf-root button.ghost:hover:not(:disabled) { background: var(--ms-bg-surface-raised); }
+.pf-root button:focus-visible, .pf-root .seg button:focus-visible { outline: 2px solid var(--ms-accent); outline-offset: -1px; }
+.pf-root button:disabled { opacity: .5; cursor: not-allowed; }
+.pf-root .seg button:hover:not(.on):not(:disabled) { background: var(--ms-bg-surface-raised); border-color: var(--ms-border); }
+.pf-root .seg button:disabled { opacity: .5; cursor: not-allowed; }
