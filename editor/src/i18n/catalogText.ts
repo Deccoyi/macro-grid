@@ -18,6 +18,8 @@ const TR: Record<string, string> = {
   "category:Widgets": "Widget'lar",
   "category:Other": "Diğer",
   "category:Plugins": "Eklentiler",
+  "category:Variables": "Değişkenler",
+  "category:Global Variable List": "Genel Değişken Listesi",
 
   // ---- Built-in actions ----
   "action:core.setVolume": "Ana ses seviyesi",
@@ -42,6 +44,8 @@ const TR: Record<string, string> = {
   "actionDesc:core.openUrl": "Varsayılan tarayıcıda bir adres açar",
   "action:core.delay": "Bekle",
   "actionDesc:core.delay": "Çoklu aksiyon içinde bekler",
+  "action:core.setVariable": "Değişken ayarla",
+  "actionDesc:core.setVariable": "Genel Değişken Listesi'ndeki bir değişkeni ayarlar, değiştirir, sayar veya sıfırlar",
 
 
   // ---- Built-in variables ----

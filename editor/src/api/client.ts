@@ -30,6 +30,9 @@ import type {
   StatusEntry,
   UpdateCheckOutcome,
   UpdateSnapshot,
+  UserVariableDef,
+  UserVariablesResponse,
+  UserVariableUse,
   VariableInfo,
   VariableSnapshot,
 } from "./types";
@@ -121,6 +124,11 @@ export const api = {
     send("POST", `/api/plugin-widgets/${encodeURIComponent(plugin)}/${encodeURIComponent(widget)}/request`, { settings, data }),
 
   variableCatalog: (): Promise<VariableInfo[]> => get("/api/variables/catalog"),
+
+  getUserVariables: (): Promise<UserVariablesResponse> => get("/api/user-variables"),
+  /** Replaces the whole Global Variable List; the server refuses the whole list with an error message when any part is invalid. */
+  setUserVariables: (variables: UserVariableDef[]): Promise<void> => send("PUT", "/api/user-variables", { variables }),
+  userVariableUsage: (name: string): Promise<UserVariableUse[]> => get(`/api/user-variables/usage?name=${encodeURIComponent(name)}`),
 
   /** Shows a native "choose an .exe" dialog on the server's desktop and returns the chosen path, or null if canceled. */
   browseForExecutable: (): Promise<string | null> =>

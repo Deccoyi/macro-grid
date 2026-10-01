@@ -6,9 +6,10 @@ import { useT } from "../i18n/I18nContext";
 import { useDocumentTitle } from "../i18n/useDocumentTitle";
 import { SectionLabel, Seg } from "../panels/fields/controls";
 import { usePreferences } from "../preferences/PreferencesContext";
+import { GlobalVariablesPage } from "./GlobalVariablesPage";
 import { ToolWindowLayout } from "./ToolWindowLayout";
 
-type Category = "general" | "appearance" | "language" | "previewProfiles" | "profiles";
+type Category = "general" | "appearance" | "language" | "previewProfiles" | "profiles" | "globalVariables";
 
 /** The whole page of the "Tercihler" tool window (see ToolWindow.cs) — a real separate, non-modal OS
  * window, not an in-page dialog. */
@@ -48,6 +49,7 @@ export function PreferencesWindow() {
     { id: "language", label: t("preferences.category.language") },
     { id: "previewProfiles", label: t("preferences.category.previewProfiles") },
     { id: "profiles", label: t("preferences.category.profiles") },
+    { id: "globalVariables", label: t("preferences.category.globalVariables") },
   ];
 
   return (
@@ -175,6 +177,8 @@ export function PreferencesWindow() {
           </p>
         </div>
       )}
+
+      {category === "globalVariables" && <GlobalVariablesPage />}
     </ToolWindowLayout>
   );
 }

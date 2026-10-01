@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 using MacroGrid.Core.Model;
 using MacroGrid.Protocol;
@@ -6,6 +7,7 @@ using MacroGrid.Protocol;
 namespace MacroGrid.Core.Variables;
 
 /// <summary>Where a widget uses a variable: its text, a dynamic rule, an action's settings or its own properties.</summary>
+[JsonConverter(typeof(JsonStringEnumConverter<UserVariableSpot>))]
 public enum UserVariableSpot { Text, Dynamic, Action, Props }
 
 public sealed record UserVariableUse(string ProfileId, string ProfileName, string PageId, string PageName, string WidgetId, string WidgetName, UserVariableSpot Spot);
