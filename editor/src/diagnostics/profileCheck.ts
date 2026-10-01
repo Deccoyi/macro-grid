@@ -19,6 +19,7 @@ export interface CheckCatalogs {
 const PAGE_ACTION = "core.page";
 const PROFILE_ACTION = "core.profile";
 const WEB_ACTION = "core.web";
+const SET_VARIABLE_ACTION = "core.setVariable";
 
 /** A `{name}` / `{name|format|placeholder}` token in a text; `{{` and `}}` are literal braces. */
 export function templateVariables(text: string | undefined): string[] {
@@ -50,6 +51,12 @@ export function checkProfile(profile: Profile, catalogs: CheckCatalogs, eventLab
   const webWidgetIds = new Set(profile.pages.flatMap((p) => p.widgets).filter((w) => w.type === "web").map((w) => w.id));
   const actionByType = new Map(catalogs.actions.map((a) => [a.type.toLowerCase(), a]));
   const known = (name: string) => catalogs.variableNames.has(name) || catalogs.liveVariableNames.has(name);
+  // A "user." name that is not in the Global Variable List gets its own, more helpful message than a variable some plugin does not provide.
+  const missingVariable = (v: string, id: string, page: string, widgetName: string, target: Diagnostic["target"]) => {
+    const own = v.toLowerCase().startsWith("user.");
+    const code = own ? "W231" : "W230";
+    add({ id: `${code}:${id}:${v}`, severity: "warning", code, messageKey: own ? "diag.check.W231" : "diag.check.W230", messageArgs: [page, widgetName, v], target });
+  };
 
   const add = (d: Omit<Diagnostic, "source" | "origin">) => list.push({ ...d, source: PROFILE_CHECK_SOURCE });
 
@@ -66,7 +73,7 @@ export function checkProfile(profile: Profile, catalogs: CheckCatalogs, eventLab
         }
       }
 
-      checkVariables(widget, page.name, name, base, known, add);
+      checkVariables(widget, page.name, name, base, known, missingVariable);
 
       for (const [event, bindings] of Object.entries(widget.actions) as [WidgetEventName, ActionBinding[] | undefined][]) {
         (bindings ?? []).forEach((binding, index) => {
@@ -84,6 +91,7 @@ export function checkProfile(profile: Profile, catalogs: CheckCatalogs, eventLab
           if (info.type === PAGE_ACTION && (s.mode ?? "goto") === "goto" && typeof s.pageId === "string" && s.pageId && !pageIds.has(s.pageId)) missing("page", "page");
           if (info.type === PROFILE_ACTION && typeof s.profileId === "string" && s.profileId && !catalogs.profileIds.has(s.profileId)) missing("profile", "profile");
           if (info.type === WEB_ACTION && typeof s.widgetId === "string" && s.widgetId && !webWidgetIds.has(s.widgetId)) missing("web", "web widget");
+          if (info.type === SET_VARIABLE_ACTION && typeof s.variable === "string" && s.variable && !known(s.variable)) missing("variable", "variable");
 
           for (const field of info.fields ?? []) {
             const problem = invalidSetting(field, s[field.key]);
@@ -92,7 +100,7 @@ export function checkProfile(profile: Profile, catalogs: CheckCatalogs, eventLab
             }
             if (field.allowVariables && typeof s[field.key] === "string") {
               for (const v of templateVariables(s[field.key] as string)) {
-                if (!known(v)) add({ id: `W230:${widget.id}:${event}:${index}:${v}`, severity: "warning", code: "W230", messageKey: "diag.check.W230", messageArgs: [page.name, name, v], target });
+                if (!known(v)) missingVariable(v, `${widget.id}:${event}:${index}`, page.name, name, target);
               }
             }
           }
@@ -105,7 +113,7 @@ export function checkProfile(profile: Profile, catalogs: CheckCatalogs, eventLab
 
 function checkVariables(
   widget: Widget, pageName: string, name: string, base: { profileId: string; pageId: string; widgetId: string },
-  known: (name: string) => boolean, add: (d: Omit<Diagnostic, "source" | "origin">) => void,
+  known: (name: string) => boolean, missingVariable: (v: string, id: string, page: string, widgetName: string, target: Diagnostic["target"]) => void,
 ) {
   const used = new Set<string>(templateVariables(widget.text));
   for (const binding of Object.values(widget.dynamic ?? {})) {
@@ -114,7 +122,7 @@ function checkVariables(
     names.forEach((n) => used.add(n));
   }
   for (const v of used) {
-    if (!known(v)) add({ id: `W230:${widget.id}:${v}`, severity: "warning", code: "W230", messageKey: "diag.check.W230", messageArgs: [pageName, name, v], target: base });
+    if (!known(v)) missingVariable(v, widget.id, pageName, name, base);
   }
 }
 

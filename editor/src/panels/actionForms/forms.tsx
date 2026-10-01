@@ -1,7 +1,7 @@
 import type { JSX } from "react";
 import { webUrlHost, type ActionBinding, type Page } from "@macro/renderer";
 import { api } from "../../api/client";
-import type { ActionInfo, ProfileSummary, VariableInfo } from "../../api/types";
+import type { ActionInfo, OptionsResult, ProfileSummary, SettingField, VariableInfo } from "../../api/types";
 import { useT } from "../../i18n/I18nContext";
 import { WebWarning } from "../fields/WebFields";
 import { HotkeyCapture } from "./HotkeyCapture";
@@ -225,6 +225,64 @@ function SetMuteActionForm({ binding, onChange }: ActionFormProps) {
   );
 }
 
+/** The ways a Set variable action can change a variable of each type (the server refuses the others). */
+export function setVariableModes(type: string | undefined): string[] {
+  if (type === "number") return ["set", "add", "reset"];
+  if (type === "boolean") return ["set", "toggle", "reset"];
+  return ["set", "reset"];
+}
+
+const SET_VARIABLE_MODE_KEYS = {
+  set: "form.setVariable.mode.set",
+  add: "form.setVariable.mode.add",
+  toggle: "form.setVariable.mode.toggle",
+  reset: "form.setVariable.mode.reset",
+} as const;
+
+function SetVariableForm({ binding, onChange, variableCatalog }: ActionFormProps) {
+  const { t } = useT();
+  const own = (variableCatalog ?? []).filter((v) => v.name.startsWith("user."));
+  const name = str(binding.settings.variable);
+  const current = own.find((v) => v.name === name);
+  const modes = setVariableModes(current?.type);
+  const mode = modes.includes(str(binding.settings.mode, "set")) ? str(binding.settings.mode, "set") : "set";
+  const valueField = { key: "value", label: t("form.setVariable.value"), kind: "Text", allowVariables: true } as SettingField;
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+      <label className="field">
+        {t("form.setVariable.variable")}
+        <select value={name} onChange={(e) => onChange({ variable: e.target.value, mode: "set" })}>
+          <option value="">{t("form.setVariable.choose")}</option>
+          {name && !current && <option value={name}>{name} {t("form.setVariable.missing")}</option>}
+          {own.map((v) => <option key={v.name} value={v.name}>{v.name}</option>)}
+        </select>
+      </label>
+      {own.length === 0 && <div style={{ fontSize: 11.5, color: "var(--ms-text-secondary)" }}>{t("form.setVariable.none")}</div>}
+      <label className="field">
+        {t("form.setVariable.mode")}
+        <select value={mode} onChange={(e) => onChange({ mode: e.target.value })}>
+          {modes.map((m) => <option key={m} value={m}>{t(SET_VARIABLE_MODE_KEYS[m as keyof typeof SET_VARIABLE_MODE_KEYS])}</option>)}
+        </select>
+      </label>
+      {mode === "set" && (
+        <SchemaForm
+          fields={[valueField]}
+          values={binding.settings as Record<string, unknown>}
+          onChange={(values) => onChange({ value: values.value })}
+          fetchOptions={() => Promise.resolve({ options: [] } as unknown as OptionsResult)}
+          variableCatalog={variableCatalog}
+        />
+      )}
+      {mode === "add" && (
+        <label className="field">
+          {t("form.setVariable.amount")}
+          <input type="number" step="any" value={num(binding.settings.amount, 1)} onChange={(e) => onChange({ amount: Number(e.target.value) })} />
+        </label>
+      )}
+    </div>
+  );
+}
+
 /** Raw JSON fallback for action types the editor doesn't have a dedicated form for yet (future plugins). */
 function GenericJsonForm({ binding, onChange }: ActionFormProps) {
   const { t } = useT();
@@ -260,6 +318,7 @@ const ACTION_FORMS: Record<string, (props: ActionFormProps) => JSX.Element> = {
   "core.setVolume": NoSettingsForm,
   "core.toggleMute": NoSettingsForm,
   "core.setMute": SetMuteActionForm,
+  "core.setVariable": SetVariableForm,
 };
 
 /** A plugin action with a declared schema (`ActionInfo.fields`, from IActionDescriptor) and no
