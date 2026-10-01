@@ -1,10 +1,12 @@
 import { useMemo, useRef, useState } from "react";
+import type { Profile } from "@macro/renderer";
 import { CircleAlert, Copy, Eraser, Info, Save, Search, TriangleAlert } from "lucide-react";
 import { api } from "../api/client";
 import { toExportLines } from "../diagnostics/exportLines";
 import { useDiagnostics } from "../diagnostics/DiagnosticsContext";
 import type { Diagnostic, DiagnosticSeverity } from "../diagnostics/types";
 import { useT } from "../i18n/I18nContext";
+import { useEditorStateContext } from "../state/EditorStateContext";
 import { clampWidth, DIAGNOSTIC_COLUMNS, gridTemplate, loadColumnWidths, saveColumnWidths, tableMinWidth, type DiagnosticColumn } from "./diagnosticColumns";
 type Filter = "all" | DiagnosticSeverity;
 
@@ -16,6 +18,7 @@ type Filter = "all" | DiagnosticSeverity;
 export function ErrorListPanel() {
   const { t } = useT();
   const { diagnostics, clear } = useDiagnostics();
+  const { profile } = useEditorStateContext();
   const [filter, setFilter] = useState<Filter>("all");
   const [query, setQuery] = useState("");
   const [widths, setWidths] = useState(loadColumnWidths);
@@ -67,7 +70,7 @@ export function ErrorListPanel() {
     return diagnostics.filter((d) => {
       if (filter !== "all" && d.severity !== filter) return false;
       if (!q) return true;
-      const text = `${d.code} ${d.message ?? d.messageKey ?? ""} ${d.sourceName ?? d.source} ${d.target?.pageId ?? ""} ${d.target?.field ?? ""}`.toLowerCase();
+      const text = `${d.code} ${d.message ?? d.messageKey ?? ""} ${d.sourceName ?? d.source} ${where(d, profile).page} ${where(d, profile).location}`.toLowerCase();
       return text.includes(q);
     });
   }, [diagnostics, filter, query]);
@@ -129,7 +132,7 @@ export function ErrorListPanel() {
           {filtered.length === 0 ? (
             <div style={{ padding: "16px 10px", color: "var(--ms-text-secondary)", fontSize: 12 }}>{t("errorList.empty")}</div>
           ) : (
-            filtered.map((d) => <Row key={d.id} d={d} template={template} />)
+            filtered.map((d) => <Row key={d.id} d={d} template={template} profile={profile} />)
           )}
         </div>
       </div>
@@ -137,10 +140,24 @@ export function ErrorListPanel() {
   );
 }
 
+/** The page and the widget (with its event) a line is about. The names come from the open profile; for a line about another profile the ids are shown. */
+function where(d: Diagnostic, profile: Profile | null): { page: string; location: string } {
+  const target = d.target;
+  if (!target) return { page: "—", location: "—" };
+  const own = profile && profile.id === target.profileId ? profile : null;
+  const page = target.pageId ? (own?.pages.find((p) => p.id === target.pageId)?.name ?? target.pageId) : "—";
+  const widget = target.widgetId
+    ? (own?.pages.flatMap((p) => p.widgets).find((w) => w.id === target.widgetId)?.name ?? target.widgetId)
+    : (target.field ?? "");
+  const detail = [target.event, target.actionIndex !== undefined ? `#${target.actionIndex + 1}` : ""].filter(Boolean).join(" ");
+  return { page, location: [widget, detail].filter(Boolean).join(" · ") || "—" };
+}
+
 const toolButton: React.CSSProperties = { display: "flex", alignItems: "center", gap: 5, color: "var(--ms-text-secondary)", fontSize: 11.5, background: "transparent", border: "none", cursor: "pointer" };
 
-function Row({ d, template }: { d: Diagnostic; template: string }) {
+function Row({ d, template, profile }: { d: Diagnostic; template: string; profile: Profile | null }) {
   const { t } = useT();
+  const { page, location } = where(d, profile);
   const Icon = d.severity === "error" ? CircleAlert : d.severity === "warning" ? TriangleAlert : Info;
   const color = d.severity === "error" ? "var(--ms-danger)" : "var(--ms-text-secondary)";
   const text = d.message ?? (d.messageKey ? t(d.messageKey, ...(d.messageArgs ?? [])) : "");
@@ -154,8 +171,8 @@ function Row({ d, template }: { d: Diagnostic; template: string }) {
         {(d.count ?? 1) > 1 && <span style={{ marginLeft: 8, color: "var(--ms-text-secondary)", fontFamily: "Consolas, monospace" }}>×{d.count}</span>}
       </span>
       <span style={{ color: "var(--ms-text-secondary)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{d.sourceName ?? t("errorList.source.editor")}</span>
-      <span style={{ color: "var(--ms-text-secondary)" }}>{d.target?.pageId ?? "—"}</span>
-      <span style={{ color: "var(--ms-text-secondary)", fontFamily: "Consolas, monospace" }}>{d.target?.field ?? "—"}</span>
+      <span style={{ color: "var(--ms-text-secondary)" }}>{page}</span>
+      <span style={{ color: "var(--ms-text-secondary)", fontFamily: "Consolas, monospace" }}>{location}</span>
     </div>
   );
 }

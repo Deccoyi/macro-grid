@@ -71,4 +71,15 @@ public sealed class ProblemListTests
         Assert.DoesNotContain('\u0007', message);
         Assert.Equal(300, message.Length);
     }
+
+    [Fact]
+    public void A_line_keeps_its_target_and_a_repeat_updates_it()
+    {
+        var list = new ProblemList();
+        list.Report("s", "S", ProblemSeverity.Error, "P131", "m", "k", 10, new ProblemTarget("p1", "pg1", "w1", "press", 0));
+        list.Report("s", "S", ProblemSeverity.Error, "P131", "m", "k", 10, new ProblemTarget("p1", "pg2", "w1", "press", 0));
+        var line = Assert.Single(list.Snapshot());
+        Assert.Equal(2, line.Count);
+        Assert.Equal("pg2", line.Target!.PageId);
+    }
 }

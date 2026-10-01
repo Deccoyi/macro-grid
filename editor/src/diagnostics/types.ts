@@ -6,6 +6,9 @@ export interface DiagnosticTarget {
   profileId: string;
   pageId?: string;
   widgetId?: string;
+  /** The event of the widget the line is about ("press", "longPress"...) and the 0-based number of the action in it. */
+  event?: string;
+  actionIndex?: number;
   /** Free text for display only, e.g. "actions.press[0]". */
   field?: string;
 }

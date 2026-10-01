@@ -2,6 +2,9 @@ namespace MacroGrid.Core.Diagnostics;
 
 public enum ProblemSeverity { Info, Warning, Error }
 
+/// <summary>Where in a profile a problem happened, so the editor can take the person there. Ids only: the editor looks the names up.</summary>
+public sealed record ProblemTarget(string ProfileId, string? PageId = null, string? WidgetId = null, string? Event = null, int? ActionIndex = null);
+
 /// <summary>One line of the editor's Error List: the same message from the same source counted, not repeated.</summary>
 public sealed record Problem(
     string Id, string Source, string SourceName, ProblemSeverity Severity, string Code, string Message,
@@ -9,6 +12,9 @@ public sealed record Problem(
 {
     /// <summary>Set by a plugin that wants to take the line back later (<see cref="ProblemList.ResolveKey"/>); not shown.</summary>
     public string? Key { get; init; }
+
+    /// <summary>The widget (and event or action) the problem belongs to, when it belongs to one.</summary>
+    public ProblemTarget? Target { get; init; }
 }
 
 /// <summary>Codes of the problems the server itself reports. The editor's own checks use their own codes.</summary>
@@ -69,7 +75,8 @@ public sealed class ProblemList
     /// <summary>Adds the line, or counts it again. With a <paramref name="key"/> the line of that key is replaced (an upsert), so a problem that
     /// changes does not pile up. When the source already has <paramref name="maxPerSourceAndCode"/> different lines with this code, a new one is
     /// dropped (false); a line that is already there (same key, or same text) is updated and never counts against the cap again.</summary>
-    public bool Report(string source, string sourceName, ProblemSeverity severity, string code, string message, string? key, int maxPerSourceAndCode)
+    public bool Report(
+        string source, string sourceName, ProblemSeverity severity, string code, string message, string? key, int maxPerSourceAndCode, ProblemTarget? target = null)
     {
         message = Clean(message);
         var now = DateTimeOffset.UtcNow;
@@ -83,12 +90,12 @@ public sealed class ProblemList
                 var existing = _items[index];
                 _items.RemoveAt(index);
                 var same = existing.Message == message && existing.Severity == severity;
-                _items.Insert(0, existing with { Message = message, Severity = severity, Count = same ? existing.Count + 1 : 1, LastAt = now, SourceName = sourceName });
+                _items.Insert(0, existing with { Message = message, Severity = severity, Count = same ? existing.Count + 1 : 1, LastAt = now, SourceName = sourceName, Target = target });
             }
             else
             {
                 if (_items.Count(p => p.Source == source && p.Code == code) >= maxPerSourceAndCode) return false;
-                _items.Insert(0, new Problem(Guid.NewGuid().ToString("N"), source, sourceName, severity, code, message, 1, now, now) { Key = key });
+                _items.Insert(0, new Problem(Guid.NewGuid().ToString("N"), source, sourceName, severity, code, message, 1, now, now) { Key = key, Target = target });
                 if (_items.Count > MaxEntries) _items.RemoveRange(MaxEntries, _items.Count - MaxEntries);
             }
             _version++;

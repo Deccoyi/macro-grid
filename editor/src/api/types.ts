@@ -243,6 +243,8 @@ export interface ServerProblem {
   count: number;
   firstAt: string;
   lastAt: string;
+  /** Where in a profile the problem happened, when it belongs to a widget. */
+  target?: { profileId: string; pageId?: string; widgetId?: string; event?: string; actionIndex?: number } | null;
 }
 
 export interface PluginCatalogResponse {

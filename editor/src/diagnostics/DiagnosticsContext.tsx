@@ -17,7 +17,7 @@ const DiagnosticsContext = createContext<DiagnosticsApi | null>(null);
 const POLL_MS = 2000;
 
 function fromServer(p: ServerProblem): Diagnostic {
-  return { id: p.id, source: p.source, sourceName: p.sourceName, severity: p.severity, code: p.code, message: p.message, count: p.count, origin: "server" };
+  return { id: p.id, source: p.source, sourceName: p.sourceName, severity: p.severity, code: p.code, message: p.message, count: p.count, origin: "server", target: p.target ?? undefined };
 }
 
 /** Error List's data. The editor's own checks call report(); nothing does yet. What the server has seen go wrong (a plugin's refused key press,
