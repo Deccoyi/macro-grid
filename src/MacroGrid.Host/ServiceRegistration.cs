@@ -87,6 +87,7 @@ internal static class ServiceRegistration
         services.AddSingleton(sp => new UserVariableService(dataDir, sp.GetRequiredService<VariableStore>()));
         services.AddHostedService(sp => sp.GetRequiredService<UserVariableService>());
         services.AddSingleton<IVariableCatalogSource>(sp => sp.GetRequiredService<UserVariableService>());
+        services.AddSingleton(new MacroGrid.Core.Automation.AutomationStore(dataDir));
         services.AddSingleton<IVariableCatalogSource, SelfVariableCatalog>();
         services.AddVariableProvider<SystemMetricsProvider>();
         services.AddVariableProvider<SystemAudioProvider>();
