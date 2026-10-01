@@ -452,3 +452,38 @@ hr.sep {
 .pf-clickable { cursor: pointer; }
 .pf-field button.pf-ctl.pf-row { justify-content: flex-start; }
 .pf-card-name { text-align: left; justify-content: flex-start; height: 24px; padding: 0 6px; }
+
+/* Dynamize window: hairline rule rows. --dz-keyword-w is this window's own keyword column; every height, gap and padding is a --pf-* token. */
+.dz-window { --dz-keyword-w: 58px; }
+.dz-quick { display: flex; align-items: center; gap: var(--pf-gap-col); flex-wrap: wrap; padding: var(--pf-pad); border-bottom: 1px solid var(--ms-border); }
+.dz-quick .dz-hint { margin-left: auto; font-size: 11px; color: var(--ms-text-secondary); }
+.dz-chip { display: inline-flex; align-items: center; gap: 6px; height: 24px; padding: 0 8px; font-size: 12px; background: var(--ms-bg-inset); border: 1px solid var(--ms-border); border-radius: var(--pf-radius); color: var(--ms-text-primary); }
+.dz-chip.mono { font-family: ui-monospace, Consolas, monospace; }
+.dz-rule, .dz-else { display: grid; grid-template-columns: var(--dz-keyword-w) minmax(0, 1fr); column-gap: 10px; padding: var(--pf-pad); border-bottom: 1px solid var(--ms-border); }
+.dz-keyword { font-size: 11px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--ms-text-secondary); line-height: var(--pf-ctl-h); }
+.dz-keyword.muted { color: var(--ms-text-disabled); }
+.dz-content { display: flex; flex-direction: column; gap: var(--pf-gap-col); min-width: 0; }
+.dz-conditions { container-type: inline-size; display: flex; flex-direction: column; gap: var(--pf-gap-col); min-width: 0; }
+.dz-cond { display: grid; grid-template-columns: minmax(0, 1.4fr) 128px minmax(0, 1fr) 24px; gap: var(--pf-gap-col); align-items: center; }
+.dz-cond .dz-subject { display: flex; align-items: center; gap: 6px; min-width: 0; }
+.dz-cond .dz-subject .dz-chip { flex: 1; min-width: 0; height: var(--pf-ctl-h); }
+.dz-cond .dz-value { display: flex; align-items: center; gap: 4px; min-width: 0; }
+.dz-cond .dz-value > * { min-width: 0; }
+.dz-cond .dz-value input { flex: 1; text-align: center; font-family: ui-monospace, Consolas, monospace; }
+.dz-cond .dz-value .pf-sel { flex: 1; }
+.dz-cond .dz-unit { font-size: 12px; color: var(--ms-text-secondary); flex-shrink: 0; }
+.dz-cond .dz-dash { color: var(--ms-text-disabled); font-size: 12px; }
+.dz-cond .dz-range { display: flex; gap: 4px; align-items: center; flex: 1; min-width: 0; }
+@container (max-width: 359px) {
+  .dz-cond { grid-template-columns: minmax(0, 1fr) 128px 24px; }
+  .dz-cond .dz-value { grid-column: 1 / span 2; grid-row: 2; }
+}
+.dz-seg { width: fit-content; }
+.dz-then { display: flex; align-items: center; gap: 10px; min-height: var(--pf-ctl-h); }
+.dz-then .dz-result { width: 150px; }
+.dz-then .dz-result.wide { width: 260px; }
+.dz-then .spacer { flex: 1; }
+.dz-add { display: flex; align-items: center; justify-content: center; gap: 6px; margin: var(--pf-pad); height: var(--pf-ctl-h); border: 1px dashed var(--ms-border-strong); }
+.dz-else { border-bottom: 0; }
+.dz-else .dz-else-hint { font-size: 12px; color: var(--ms-text-disabled); line-height: var(--pf-ctl-h); flex: 1; }
+.dz-else .dz-else-row { display: flex; align-items: center; gap: 10px; }

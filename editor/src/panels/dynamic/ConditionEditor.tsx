@@ -3,6 +3,7 @@ import type { VariableInfo } from "../../api/types";
 import { useT } from "../../i18n/I18nContext";
 import type { DictKey } from "../../i18n/tr";
 import { VariablePicker } from "../VariablePicker";
+import { Seg, SelectInput } from "../fields/controls";
 import { isValueless, newCondition, type EditCase, type EditCondition } from "./conditionEditing";
 import { allowsOrdering, fitConditionToVariable, isInvalidNumber, normalizeBoolText, valueInputFor, type ValueInput } from "./variableTypes";
 
@@ -38,7 +39,7 @@ export function ConditionEditor({ value, variableCatalog, onChange }: ConditionE
   };
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
+    <div className="dz-conditions">
       {value.conditions.map((cond, ci) => {
         const variableInfo = variableCatalog.find((v) => v.name === cond.variable);
         const valueInput = valueInputFor(variableInfo);
@@ -46,86 +47,84 @@ export function ConditionEditor({ value, variableCatalog, onChange }: ConditionE
           .filter((op) => allowsOrdering(valueInput) || op === "==" || op === "!=" || isValueless(op) || op === cond.operator);
         const setValue = (field: "value" | "value2") => (v: string) => update((cc) => { cc.conditions[ci]![field] = v; });
         return (
-        <div key={ci} style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-          {ci > 0 && (
-            <div className="seg" style={{ width: "auto", alignSelf: "flex-start" }}>
-              {(["and", "or", "xor"] as const).map((op) => (
+          <div key={ci} className="dz-conditions">
+            {ci > 0 && (
+              <div className="dz-seg">
+                <Seg<EditCase["combinator"]>
+                  value={value.combinator}
+                  onChange={(op) => update((cc) => { cc.combinator = op; })}
+                  options={(["and", "or", "xor"] as const).map((op) => ({ value: op, label: t(COMBINATOR_KEYS[op]) }))}
+                />
+              </div>
+            )}
+            <div className="dz-cond">
+              <div className="dz-subject">
                 <button
-                  key={op}
                   type="button"
-                  className={value.combinator === op ? "on" : undefined}
-                  onClick={() => update((cc) => { cc.combinator = op; })}
+                  className={cond.negate ? "active" : "ghost"}
+                  aria-pressed={Boolean(cond.negate)}
+                  onClick={() => update((cc) => { cc.conditions[ci]!.negate = !cc.conditions[ci]!.negate; })}
+                  title={t("dynamic.negate")}
+                  style={{ fontSize: 11, flexShrink: 0 }}
                 >
-                  {t(COMBINATOR_KEYS[op])}
+                  {t("dynamic.negate")}
                 </button>
-              ))}
+                <VariablePicker
+                  catalog={variableCatalog}
+                  mode="bare"
+                  onInsert={(name) => update((cc) => {
+                    const target = cc.conditions[ci]!;
+                    target.variable = name;
+                    fitConditionToVariable(target, variableCatalog.find((v) => v.name === name), true);
+                  })}
+                  renderTrigger={(open) => (
+                    <button type="button" className="dz-chip mono" onClick={open}>
+                      <Variable size={11} />
+                      <span className="pf-ellipsis">{cond.variable || t("dynamic.pickVariable")}</span>
+                    </button>
+                  )}
+                />
+              </div>
+
+              <SelectInput
+                label={t("dynamic.operator.label")}
+                value={cond.operator}
+                onChange={(op) => update((cc) => {
+                  const target = cc.conditions[ci]!;
+                  target.operator = op as EditCondition["operator"];
+                  fitConditionToVariable(target, variableCatalog.find((v) => v.name === target.variable));
+                })}
+              >
+                {operators.map((op) => (
+                  <option key={op} value={op}>{t(OPERATOR_KEYS[op])}</option>
+                ))}
+              </SelectInput>
+
+              <div className="dz-value">
+                {!isValueless(cond.operator) && <ConditionValue value={cond.value} onChange={setValue("value")} input={valueInput} invalid={isInvalidNumber(variableInfo, cond.value)} />}
+                {cond.operator === "between" && (
+                  <>
+                    <span className="dz-dash">–</span>
+                    <ConditionValue value={cond.value2} onChange={setValue("value2")} input={valueInput} />
+                  </>
+                )}
+              </div>
+
+              {value.conditions.length > 1 ? (
+                <button type="button" className="ghost pf-icon-btn small" aria-label={t("dynamic.removeCondition")} title={t("dynamic.removeCondition")} onClick={() => update((cc) => { cc.conditions.splice(ci, 1); })}>
+                  <Trash2 size={13} />
+                </button>
+              ) : <span />}
             </div>
-          )}
-          <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-            <button
-              type="button"
-              className={cond.negate ? "active" : "ghost"}
-              onClick={() => update((cc) => { cc.conditions[ci]!.negate = !cc.conditions[ci]!.negate; })}
-              title={t("dynamic.negate")}
-              style={{ fontSize: 11 }}
-            >
-              {t("dynamic.negate")}
-            </button>
-
-            <VariablePicker
-              catalog={variableCatalog}
-              mode="bare"
-              onInsert={(name) => update((cc) => {
-                const target = cc.conditions[ci]!;
-                target.variable = name;
-                fitConditionToVariable(target, variableCatalog.find((v) => v.name === name), true);
-              })}
-              renderTrigger={(open) => (
-                <button type="button" className="ghost" onClick={open} style={chipStyle}>
-                  <Variable size={11} />
-                  {cond.variable || t("dynamic.pickVariable")}
-                </button>
-              )}
-            />
-
-            <select
-              value={cond.operator}
-              onChange={(e) => update((cc) => {
-                const target = cc.conditions[ci]!;
-                target.operator = e.target.value as EditCondition["operator"];
-                fitConditionToVariable(target, variableCatalog.find((v) => v.name === target.variable));
-              })}
-              style={{ width: "auto" }}
-            >
-              {operators.map((op) => (
-                <option key={op} value={op}>{t(OPERATOR_KEYS[op])}</option>
-              ))}
-            </select>
-
-            {!isValueless(cond.operator) && <ConditionValue value={cond.value} onChange={setValue("value")} input={valueInput} invalid={isInvalidNumber(variableInfo, cond.value)} />}
-            {cond.operator === "between" && (
-              <>
-                <span style={{ color: "var(--ms-text-disabled)", fontSize: 12 }}>–</span>
-                <ConditionValue value={cond.value2} onChange={setValue("value2")} input={valueInput} />
-              </>
-            )}
-
-            <div style={{ flex: 1 }} />
-            {value.conditions.length > 1 && (
-              <button type="button" className="ghost" onClick={() => update((cc) => { cc.conditions.splice(ci, 1); })} style={{ display: "flex", padding: 4 }}>
-                <Trash2 size={13} />
-              </button>
-            )}
           </div>
-        </div>
         );
       })}
 
       <button
         type="button"
-        className="ghost"
+        className="ghost pf-btn small"
         onClick={() => update((cc) => { cc.conditions.push(newCondition()); })}
-        style={{ alignSelf: "flex-start", display: "flex", alignItems: "center", gap: 5, fontSize: 12 }}
+        style={{ alignSelf: "flex-start", width: "auto" }}
       >
         <Plus size={11} /> {t("dynamic.addCondition")}
       </button>
@@ -143,36 +142,25 @@ function ConditionValue({ value, onChange, input, invalid }: { value: string; on
       ? [{ value: "true", label: t("dynamic.bool.true") }, { value: "false", label: t("dynamic.bool.false") }]
       : input.values.map((v) => ({ value: v, label: v }));
     return (
-      <select
-        value={current}
-        onChange={(e) => onChange(e.target.value)}
-        title={t(input.kind === "boolean" ? "dynamic.value.boolHint" : "dynamic.value.choiceHint")}
-        style={{ width: "auto", minWidth: 108 }}
-      >
+      <SelectInput label={t("dynamic.value.label")} value={current} onChange={onChange}>
         {!choices.some((c) => c.value === current) && <option value={current}>{current}</option>}
         {choices.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
-      </select>
+      </SelectInput>
     );
   }
   return (
-    <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+    <>
       <input
         type="text"
         value={value}
         onChange={(e) => onChange(e.target.value)}
+        aria-label={t("dynamic.value.label")}
         placeholder={input.unit ? `50 ${input.unit}` : t("dynamic.value.placeholder")}
         title={invalid ? t("dynamic.value.notNumber") : t("dynamic.value.hint")}
         aria-invalid={invalid || undefined}
-        style={{ width: 108, textAlign: "center", fontFamily: "ui-monospace, monospace", ...(invalid ? { borderColor: "var(--ms-danger)" } : null) }}
+        style={invalid ? { borderColor: "var(--ms-danger)" } : undefined}
       />
-      {input.unit && <span style={{ fontSize: 12, color: "var(--ms-text-secondary)" }}>{input.unit}</span>}
-    </span>
+      {input.unit && <span className="dz-unit">{input.unit}</span>}
+    </>
   );
 }
-
-export const chipStyle: React.CSSProperties = {
-  display: "inline-flex", alignItems: "center", gap: 5, background: "var(--ms-bg-inset)",
-  border: "1px solid var(--ms-border)", borderRadius: 4, padding: "4px 8px",
-  fontSize: 12, fontFamily: "ui-monospace, monospace", color: "var(--ms-text-primary)",
-};
-
