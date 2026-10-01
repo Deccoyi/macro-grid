@@ -1,4 +1,4 @@
-import { Plus, Trash2, Variable } from "lucide-react";
+import { Ban, Plus, Trash2, Variable } from "lucide-react";
 import type { VariableInfo } from "../../api/types";
 import { useT } from "../../i18n/I18nContext";
 import type { DictKey } from "../../i18n/tr";
@@ -39,7 +39,7 @@ export function ConditionEditor({ value, variableCatalog, onChange }: ConditionE
   };
 
   return (
-    <div className="dz-conditions">
+    <div className={value.conditions.length > 1 ? "dz-conditions pf-nest" : "dz-conditions"}>
       {value.conditions.map((cond, ci) => {
         const variableInfo = variableCatalog.find((v) => v.name === cond.variable);
         const valueInput = valueInputFor(variableInfo);
@@ -59,16 +59,6 @@ export function ConditionEditor({ value, variableCatalog, onChange }: ConditionE
             )}
             <div className="dz-cond">
               <div className="dz-subject">
-                <button
-                  type="button"
-                  className={cond.negate ? "active" : "ghost"}
-                  aria-pressed={Boolean(cond.negate)}
-                  onClick={() => update((cc) => { cc.conditions[ci]!.negate = !cc.conditions[ci]!.negate; })}
-                  title={t("dynamic.negate")}
-                  style={{ fontSize: 11, flexShrink: 0 }}
-                >
-                  {t("dynamic.negate")}
-                </button>
                 <VariablePicker
                   catalog={variableCatalog}
                   mode="bare"
@@ -110,6 +100,16 @@ export function ConditionEditor({ value, variableCatalog, onChange }: ConditionE
                 )}
               </div>
 
+              <button
+                type="button"
+                className={cond.negate ? "active pf-icon-btn small" : "ghost pf-icon-btn small"}
+                aria-pressed={Boolean(cond.negate)}
+                aria-label={t("dynamic.negate")}
+                onClick={() => update((cc) => { cc.conditions[ci]!.negate = !cc.conditions[ci]!.negate; })}
+                title={t("dynamic.negate")}
+              >
+                <Ban size={13} />
+              </button>
               {value.conditions.length > 1 ? (
                 <button type="button" className="ghost pf-icon-btn small" aria-label={t("dynamic.removeCondition")} title={t("dynamic.removeCondition")} onClick={() => update((cc) => { cc.conditions.splice(ci, 1); })}>
                   <Trash2 size={13} />
@@ -126,7 +126,7 @@ export function ConditionEditor({ value, variableCatalog, onChange }: ConditionE
         onClick={() => update((cc) => { cc.conditions.push(newCondition()); })}
         style={{ alignSelf: "flex-start", width: "auto" }}
       >
-        <Plus size={11} /> {t("dynamic.addCondition")}
+        <Plus size={12} /> {t("dynamic.addCondition")}
       </button>
     </div>
   );

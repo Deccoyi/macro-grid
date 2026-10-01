@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { CircleOff, Gauge, Search, ToggleRight, Variable } from "lucide-react";
+import { CircleOff, Gauge, Layers, Search, ToggleRight, Variable } from "lucide-react";
+import { DzTitleBar } from "./DzTitleBar";
 import type { VariableInfo } from "../../api/types";
 import { useT } from "../../i18n/I18nContext";
 import type { DictKey } from "../../i18n/tr";
@@ -52,7 +53,7 @@ export function PresetsPopover({ variableCatalog, resultKind, words, onAdd, onCl
     <>
       <div className="dz-presets-backdrop" onClick={(e) => { e.stopPropagation(); onClose(); }} />
       <div className="dz-presets" role="dialog" aria-label={t("dynamic.preset.title")} onClick={(e) => e.stopPropagation()}>
-        <div className="dz-presets-title">{t("dynamic.preset.title")}</div>
+        <DzTitleBar icon={<Layers size={14} color="var(--ms-accent-hover)" />} title={t("dynamic.preset.title")} subtitle={t("dynamic.preset.subtitle")} onClose={onClose} />
         <div className="dz-presets-body">
           <div className="dz-presets-list">
             <div className="dz-presets-search">
@@ -65,7 +66,7 @@ export function PresetsPopover({ variableCatalog, resultKind, words, onAdd, onCl
                 if (rows.length === 0) return null;
                 return (
                   <div key={group.id}>
-                    <div className="dz-keyword muted dz-presets-group">{t(group.key)}</div>
+                    <div className="section-label dz-presets-group">{t(group.key)}</div>
                     {rows.map((k) => {
                       const RowIcon = ICONS[k];
                       const none = variablesFor(k, variableCatalog).length === 0;
@@ -95,7 +96,7 @@ export function PresetsPopover({ variableCatalog, resultKind, words, onAdd, onCl
             <div className="dz-presets-name"><Icon size={14} /> {t(NAME_KEYS[kind])}</div>
             <div className="dz-presets-desc">{t(DESCRIPTION_KEYS[kind])}</div>
 
-            <div className="dz-keyword muted">{t("dynamic.preset.variable")}</div>
+            <div className="section-label">{t("dynamic.preset.variable")}</div>
             {variable ? (
               <VariablePicker
                 catalog={choices}
@@ -112,7 +113,7 @@ export function PresetsPopover({ variableCatalog, resultKind, words, onAdd, onCl
               <div className="dz-presets-desc">{t("dynamic.quick.noVariable")}</div>
             )}
 
-            <div className="dz-keyword muted">{t("dynamic.preset.adds")}</div>
+            <div className="section-label">{t("dynamic.preset.adds")}</div>
             <div className="dz-presets-preview">
               {rules.map((r, i) => {
                 const cond = r.conditions[0]!;
@@ -127,10 +128,11 @@ export function PresetsPopover({ variableCatalog, resultKind, words, onAdd, onCl
                 );
               })}
             </div>
-            <div className="dz-presets-note">{t("dynamic.preset.note")}</div>
           </div>
         </div>
-        <div className="dz-presets-footer">
+        <div className="dz-footer">
+          <div className="hint">{t("dynamic.preset.note")}</div>
+          <div className="spacer" />
           <button type="button" className="ghost" onClick={onClose}>{t("dynamic.cancel")}</button>
           <button type="button" className="primary" disabled={!variable} onClick={() => { if (variable) { onAdd(kind, variable); onClose(); } }}>
             {tn("dynamic.preset.add", rules.length)}
