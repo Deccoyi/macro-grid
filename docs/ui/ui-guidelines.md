@@ -96,4 +96,4 @@ guarantee this) and the compact-control rule does not apply. The same restraint 
 
 ## Language
 
-User-visible text in the editor goes through the i18n files (`editor/src/i18n/tr.ts` and `en.ts`), never hard-coded in components.
+User-visible text in the editor goes through the i18n files (`editor/src/i18n/tr.ts` and `en.ts`), never hard-coded in components. Never build a sentence by joining translated pieces; use a text with `{name}` placeholders, or `.one`/`.other` keys for a count.

@@ -58,7 +58,7 @@ Tests
 - State lives as close as possible to where it is used. Lift only when two siblings need it; use context for cross-cutting values (preferences, theme), not for hot data.
 - Effects synchronise with something external and clean up after themselves; derived values are computed during render (or memoised when measured to matter), not stored in state.
 - Wire types mirror the protocol exactly and are defined once; UI code never redefines them.
-- All user-visible text goes through the i18n dictionaries; both languages keep identical key sets (a test enforces it).
+- All user-visible text goes through the i18n dictionaries; both languages keep identical key sets (a test enforces it). Values go in as `{name}` placeholders, never by joining strings; a count-dependent text uses plural keys (see [language-packs.md](../design/language-packs.md)).
 - Browser storage access goes through one small helper that tolerates missing/blocked storage and malformed JSON.
 - Native bridge calls are wrapped once behind a typed module; components never call the bridge directly.
 - Vite: no environment-specific code in source; assets referenced through imports; build output is never committed.

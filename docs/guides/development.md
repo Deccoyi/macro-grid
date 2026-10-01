@@ -95,7 +95,7 @@ The server keeps everything in `%AppData%\MacroGrid\` (profiles, paired devices,
 - **A CSS grid trap:** do not use `min()` inside `minmax()`; the whole declaration was treated as invalid and the grid collapsed to one column.
 - **Keys and names:** a new key name for `core.hotkey` must be added to both `KnownKeys` and `VirtualKeys`; a test checks that they agree.
 - **No emoji or text symbols as icons** in the UI; use `lucide-react` (see [ui-guidelines.md](../ui/ui-guidelines.md)).
-- **UI text** goes through `editor/src/i18n/tr.ts` and `en.ts`, never hard-coded in components. Some server strings (the tray menu and a few
+- **UI text** goes through `editor/src/i18n/tr.ts` and `en.ts`, never hard-coded in components. Texts with values use `{name}` placeholders listed in `i18n/params.ts`; a text that depends on a number has `.one` and `.other` keys read with `tn`. See [language-packs.md](../design/language-packs.md). Some server strings (the tray menu and a few
   native dialogs) are not translated yet.
 - **The editor's copy of the rule evaluator** (`editor/src/grid/evaluateDynamic.ts`) only drives the live preview. The server's
   `DynamicRuleEvaluator` is what really runs. If one changes, change the other, and add a row to `tests/shared/dynamic-rule-cases.json`, which both evaluators are tested against.
