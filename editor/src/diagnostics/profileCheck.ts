@@ -20,6 +20,7 @@ const PAGE_ACTION = "core.page";
 const PROFILE_ACTION = "core.profile";
 const WEB_ACTION = "core.web";
 const SET_VARIABLE_ACTION = "core.setVariable";
+const SELF_PREFIX = "self.";
 
 /** A `{name}` / `{name|format|placeholder}` token in a text; `{{` and `}}` are literal braces. */
 export function templateVariables(text: string | undefined): string[] {
@@ -32,7 +33,7 @@ export function templateVariables(text: string | undefined): string[] {
   return names;
 }
 
-function conditionVariables(node: ConditionNode, into: string[]) {
+export function conditionVariables(node: ConditionNode, into: string[]) {
   if (node.kind === "compare") {
     if (node.variable) into.push(node.variable);
     return;
@@ -74,6 +75,10 @@ export function checkProfile(profile: Profile, catalogs: CheckCatalogs, eventLab
       }
 
       checkVariables(widget, page.name, name, base, known, missingVariable);
+      const sliderVariable = widget.props?.valueVariable;
+      if (typeof sliderVariable === "string" && sliderVariable.toLowerCase().startsWith(SELF_PREFIX)) {
+        add({ id: `W232:${widget.id}:slider:${sliderVariable}`, severity: "warning", code: "W232", messageKey: "diag.check.W232", messageArgs: [page.name, name, sliderVariable], target: base });
+      }
 
       for (const [event, bindings] of Object.entries(widget.actions) as [WidgetEventName, ActionBinding[] | undefined][]) {
         (bindings ?? []).forEach((binding, index) => {
@@ -100,7 +105,9 @@ export function checkProfile(profile: Profile, catalogs: CheckCatalogs, eventLab
             }
             if (field.allowVariables && typeof s[field.key] === "string") {
               for (const v of templateVariables(s[field.key] as string)) {
-                if (!known(v)) missingVariable(v, `${widget.id}:${event}:${index}`, page.name, name, target);
+                if (v.toLowerCase().startsWith(SELF_PREFIX)) {
+                  add({ id: `W232:${widget.id}:${event}:${index}:${v}`, severity: "warning", code: "W232", messageKey: "diag.check.W232", messageArgs: [page.name, name, v], target });
+                } else if (!known(v)) missingVariable(v, `${widget.id}:${event}:${index}`, page.name, name, target);
               }
             }
           }

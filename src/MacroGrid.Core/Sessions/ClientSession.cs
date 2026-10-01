@@ -42,6 +42,10 @@ public sealed class ClientSession(WebSocket socket)
     /// <summary>Last pushed slider/knob live value per widget id (from its bound variable), so <see cref="WidgetStateService"/> only re-sends on an actual change.</summary>
     internal ConcurrentDictionary<string, double> SentValues { get; } = new();
 
+    /// <summary>Widgets whose actions have been running for a while on this device, and widgets held down on it (widget id to when the press began). Back <c>self.busy</c> and <c>self.pressed</c>.</summary>
+    internal ConcurrentDictionary<string, bool> Busy { get; } = new();
+    internal ConcurrentDictionary<string, DateTime> Pressed { get; } = new();
+
     /// <summary>Optional protocol features this client announced in its <c>hello</c> (see <see cref="ClientCapabilities"/>).</summary>
     internal HashSet<string> Capabilities { get; set; } = [];
 

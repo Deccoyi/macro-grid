@@ -145,3 +145,21 @@ Also: a number variable's value input is marked when the text is not a number (i
 "equal" instead of "greater than".
 
 The variables a person defines themselves (see [user-variables.md](user-variables.md)) are ordinary entries of this catalog under the category "Global Variable List", with their type, so the same inputs and templates apply.
+
+## Button variables (`self.*`)
+
+A button can change its look from its own state. Five variables are listed in the picker under "This button". They are answered by a small store placed in front of the shared one while a widget is evaluated for one device, so they never enter the shared store, the live snapshot or a plugin's view. The server still resolves text and style; the phone and the browser client receive the usual `widget.state` messages and need no change.
+
+| Name | Type | Scope | Value |
+|---|---|---|---|
+| `self.toggled` | True/False | the button, all devices | On while a toggle is on. False for a button that is not a toggle. |
+| `self.busy` | True/False | the button on one device | On while an action list started there has run for more than 150 ms. |
+| `self.pressed` | True/False | the button on one device | On while the finger is down, and for at least 150 ms. |
+| `self.lastResult` | Text: `Success`, `Failed` | the button, all devices | How the last action list ended. Empty until it has run. |
+| `self.lastError` | Text: the failure codes | the button, all devices | The code of the first failure of that run. Empty after a success. |
+
+- They work only in the button's own text and rules. An action setting or a slider's variable has no value for them, and the profile check warns (`W232`).
+- Nothing is saved: after a restart a toggle is off and there is no last result. An action the server accepted without confirmation counts as `Success`.
+- A change marks only that widget for a quick re-evaluation (`WidgetStateService.Refresh`), so a press costs a few small sends and a device that is not concerned sends nothing.
+- A name that is not one of the five is unavailable. The prefix `self.` is reserved: a plugin cannot write it and cannot be installed under that id.
+- The editor draws the resting look. When a button uses these variables, the Inspector offers a "Preview state" (Normal, Pressed, Busy, On, Failed, Success) that only changes the canvas and is not saved.

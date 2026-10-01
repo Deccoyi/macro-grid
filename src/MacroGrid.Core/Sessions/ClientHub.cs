@@ -23,6 +23,7 @@ public sealed class ClientHub(
     ActionDispatcher dispatcher,
     ToggleStateStore toggles,
     WidgetStateService widgetState,
+    LastResultStore results,
     DeviceStore devices,
     PairingService pairing,
     PluginStatusRegistry statusRegistry,
@@ -330,6 +331,10 @@ public sealed class ClientHub(
         var widget = FindWidget(session, msg.PageId, msg.WidgetId, out _);
         if (widget is null) return;
 
+        // self.pressed is set here, on the receive loop, so a slow action waiting in the queue does not delay it.
+        if (eventName == WidgetEvents.Press) widgetState.PressBegan(session, widget.Id);
+        else if (eventName == WidgetEvents.Release) widgetState.PressEnded(session, widget.Id);
+
         var device = new SessionDeviceController(session, profiles, widgetState);
         var context = new ActionContext(session.DeviceId!, msg.PageId, msg.WidgetId, device);
 
@@ -340,17 +345,42 @@ public sealed class ClientHub(
             {
                 var active = toggles.Toggle(widget.Id);
                 await BroadcastToggleAsync(session.ProfileId, msg.PageId, widget.Id, active);
-                var errors = await dispatcher.DispatchAsync(widget, active ? WidgetEvents.ToggleOn : WidgetEvents.ToggleOff, context, CancellationToken.None);
-                await ReportActionErrorsAsync(session, errors, msg.PageId, widget, active ? WidgetEvents.ToggleOn : WidgetEvents.ToggleOff);
+                widgetState.Refresh(widget.Id); // self.toggled changed: every device showing this button re-evaluates its look
+                await RunAsync(session, widget, active ? WidgetEvents.ToggleOn : WidgetEvents.ToggleOff, context, msg.PageId);
             });
             return;
         }
 
         queue.TryWrite(async () =>
         {
-            var errors = await dispatcher.DispatchAsync(widget, eventName, context, CancellationToken.None);
-            await ReportActionErrorsAsync(session, errors, msg.PageId, widget, eventName);
+            await RunAsync(session, widget, eventName, context, msg.PageId);
         });
+    }
+
+    /// <summary>Runs one event's action list and reports its failures. A list that takes a while makes the button busy on this device.
+    /// A release with no actions is still dispatched, because it also ends the "while held" actions of the press.</summary>
+    private async Task RunAsync(ClientSession session, Widget widget, string eventName, ActionContext context, string pageId)
+    {
+        var hasBindings = widget.Actions.TryGetValue(eventName, out var bindings) && bindings.Count > 0;
+        // The result is recorded inside the busy window, so the look goes straight from "busy" to the result.
+        async Task<IReadOnlyList<ActionFailure>> RunAndRecord()
+        {
+            var failures = await dispatcher.DispatchAsync(widget, eventName, context, CancellationToken.None);
+            results.Set(widget.Id, failures);
+            widgetState.Refresh(widget.Id);
+            return failures;
+        }
+
+        // An event with no actions leaves the last result alone, unless the dispatch itself failed.
+        var errors = hasBindings
+            ? await widgetState.RunBusyAsync(session, widget.Id, RunAndRecord)
+            : await dispatcher.DispatchAsync(widget, eventName, context, CancellationToken.None);
+        if (!hasBindings && errors.Count > 0)
+        {
+            results.Set(widget.Id, errors);
+            widgetState.Refresh(widget.Id);
+        }
+        await ReportActionErrorsAsync(session, errors, pageId, widget, eventName);
     }
 
     /// <summary>How long a failed action stays in the status bar if nothing else clears it.</summary>
@@ -396,8 +426,7 @@ public sealed class ClientHub(
         var context = new ActionContext(session.DeviceId!, msg.PageId, msg.WidgetId, device, Value: msg.Value);
         queue.TryWrite(async () =>
         {
-            var errors = await dispatcher.DispatchAsync(widget, WidgetEvents.ValueChange, context, CancellationToken.None);
-            await ReportActionErrorsAsync(session, errors, msg.PageId, widget, WidgetEvents.ValueChange);
+            await RunAsync(session, widget, WidgetEvents.ValueChange, context, msg.PageId);
         });
     }
 

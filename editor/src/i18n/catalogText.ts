@@ -20,6 +20,7 @@ const TR: Record<string, string> = {
   "category:Plugins": "Eklentiler",
   "category:Variables": "Değişkenler",
   "category:Global Variable List": "Genel Değişken Listesi",
+  "category:This button": "Bu düğme",
 
   // ---- Built-in actions ----
   "action:core.setVolume": "Ana ses seviyesi",
@@ -56,6 +57,11 @@ const TR: Record<string, string> = {
   "variable:system.ram.used": "Kullanılan RAM (GB)",
   "variable:system.ram.total": "Toplam RAM (GB)",
   "variable:system.audio.master": "Ana ses seviyesi (%)",
+  "variable:self.toggled": "Bu açma/kapama düğmesi açıkken doğru. Her cihazda aynıdır.",
+  "variable:self.busy": "Bu düğmenin aksiyonları çalışırken doğru (kısa bir an sonra). Yalnızca düğmeye basan cihazda.",
+  "variable:self.pressed": "Bu düğme basılıyken ve kısa bir süre sonrasında doğru. Yalnızca düğmeye basan cihazda.",
+  "variable:self.lastResult": "Bu düğmenin aksiyonlarının son çalışmasının sonucu. Hiç çalışmadıysa boş. Her cihazda aynıdır.",
+  "variable:self.lastError": "Son çalışma başarısız olduysa nedeni (hata kodu). Başarıdan sonra boş. Her cihazda aynıdır.",
   "variable:system.audio.muted": "Ses sessize alınmış mı",
 
 };

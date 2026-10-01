@@ -45,6 +45,11 @@ const VALUE_EVENTS: { event: WidgetEventName; key: DictKey; icon: ElementType }[
   { event: "valueChange", key: "action.event.valueChange", icon: SlidersHorizontal },
 ];
 
+/** The "This button" variables work only in the button's own text and rules, so an action's fields do not offer them. */
+function withoutSelf(catalog: VariableInfo[]): VariableInfo[] {
+  return catalog.filter((v) => !v.name.toLowerCase().startsWith("self."));
+}
+
 export function ActionEditor({ widget, actions, pages, profiles, variableCatalog, onChange }: ActionEditorProps) {
   const { t } = useT();
   const catalogText = useCatalogText();
@@ -157,7 +162,7 @@ export function ActionEditor({ widget, actions, pages, profiles, variableCatalog
               )}
               <button className="ghost" onClick={() => removeBinding(index)} title={t("action.remove")}><X size={14} /></button>
             </div>
-            <Form binding={binding} pages={pages} profiles={profiles} actionInfo={actionInfo} variableCatalog={variableCatalog} onChange={(settings) => updateBinding(index, { settings })} />
+            <Form binding={binding} pages={pages} profiles={profiles} actionInfo={actionInfo} variableCatalog={withoutSelf(variableCatalog)} onChange={(settings) => updateBinding(index, { settings })} />
           </div>
         );
       })}

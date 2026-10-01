@@ -80,6 +80,7 @@ internal static class ServiceRegistration
         services.AddSingleton(sp => new UserVariableService(dataDir, sp.GetRequiredService<VariableStore>()));
         services.AddHostedService(sp => sp.GetRequiredService<UserVariableService>());
         services.AddSingleton<IVariableCatalogSource>(sp => sp.GetRequiredService<UserVariableService>());
+        services.AddSingleton<IVariableCatalogSource, SelfVariableCatalog>();
         services.AddVariableProvider<SystemMetricsProvider>();
         services.AddVariableProvider<SystemAudioProvider>();
         var statusRegistry = new PluginStatusRegistry();
@@ -163,6 +164,7 @@ internal static class ServiceRegistration
 
         services.AddSingleton<SessionRegistry>();
         services.AddSingleton<ToggleStateStore>();
+        services.AddSingleton<LastResultStore>();
         services.AddSingleton<AssetStore>();
         services.AddSingleton<LayoutSender>();
         services.AddHostedSingleton<WidgetStateService>();

@@ -146,6 +146,10 @@ otherwise (with the unit as a suffix for a number). Booleans and fixed values on
 In a condition a boolean matches `true` / `false` and `1` / `0` alike, case-insensitively; other operators never match it. `unavailable` / `available` test only whether the variable has a value (never set, removed or `null` means unavailable); a text template can show a placeholder for it, `{name|format|placeholder}`. The template words
 (`On` / `Off`, `Açık` / `Kapalı`) are display only and do not match. A number is compared numerically and anything else as text, case-insensitively.
 
+### Button variables
+
+A button's own state (`self.toggled`, `self.busy`, `self.pressed`, `self.lastResult`, `self.lastError`) is answered per widget and per device by a small store in front of `VariableStore`; `WidgetStateService` evaluates a widget against it and `Refresh` marks a single widget for re-evaluation. See [design/variable-types-and-conditions.md](design/variable-types-and-conditions.md).
+
 ### Global Variable List
 
 The person can define variables of their own (text, number, true/false) in Preferences. `UserVariableService` publishes them into the same `VariableStore` as `user.<name>`, so every template, rule and slider works with them unchanged, and the `core.setVariable` action sets, switches, counts or resets them. The list and the values of the variables marked "keep" are saved in the data folder. See [design/user-variables.md](design/user-variables.md).

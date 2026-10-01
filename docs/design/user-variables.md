@@ -16,7 +16,7 @@ Variables the person defines, kept by the server and used anywhere a variable ca
 - **Files in the data folder** (write to a temporary file, then rename; a file that cannot be read is renamed to `.broken` and the list starts empty):
   - `user-variables.json`: `{ "formatVersion": 1, "variables": [ { "name", "type", "initial", "keep", "description" } ] }`.
   - `user-variable-values.json`: `{ "formatVersion": 1, "values": { "<name>": value } }`, only for variables with **keep**. It is written 2 seconds after the last change and when the server stops. A variable without keep starts again from its start value after a restart.
-- **Reserved prefix.** A plugin cannot write or remove a `user.*` name (the store a plugin gets ignores it), and the plugin ids `user`, `system`, `core` and `self` are refused at install.
+- **Reserved prefix.** A plugin cannot write or remove a `user.*` name (the store a plugin gets ignores it), and the plugin ids `user`, `system`, `core` and `self` are refused at install. The prefix `self.` is reserved for a button's own state (see variable-types-and-conditions.md).
 
 ## The Set variable action
 
