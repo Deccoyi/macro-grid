@@ -4,6 +4,7 @@ import { api } from "../../api/client";
 import type { OptionsResult, SettingField, SettingOption, VariableInfo } from "../../api/types";
 import { useT } from "../../i18n/I18nContext";
 import { VariablePicker } from "../VariablePicker";
+import { HotkeyCapture } from "./HotkeyCapture";
 import { ColorField, Seg } from "../fields/controls";
 
 interface SchemaFormProps {
@@ -182,6 +183,17 @@ function SchemaFieldRow({
       <div className="field">
         <span>{field.label}</span>
         <ColorField value={color} onChange={onChange} />
+        {field.description && <FieldHint text={field.description} />}
+      </div>
+    );
+  }
+
+  if (field.kind === "Hotkey") {
+    const combo = typeof value === "string" ? value : typeof field.default === "string" ? field.default : "";
+    return (
+      <div className="field">
+        <span>{field.label}</span>
+        <HotkeyCapture value={combo} onChange={onChange} />
         {field.description && <FieldHint text={field.description} />}
       </div>
     );
