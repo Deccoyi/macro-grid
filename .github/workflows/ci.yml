@@ -44,6 +44,7 @@ jobs:
             echo "::error::release.yml must build the Release configuration only."; exit 1
           fi
           grep -qE '\$Configuration\s*=\s*"Release"' scripts/publish.ps1 || { echo "::error::scripts/publish.ps1 must default to Release."; exit 1; }
+          grep -qE '\$Configuration\s*=\s*"Release"' scripts/publish-plugin-tool.ps1 || { echo "::error::scripts/publish-plugin-tool.ps1 must default to Release."; exit 1; }
       - name: Restore
         run: dotnet restore
       - name: Build
