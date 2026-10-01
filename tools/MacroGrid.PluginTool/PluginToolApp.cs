@@ -5,7 +5,7 @@ namespace MacroGrid.PluginTool;
 
 /// <summary>The plugin author's command line: check a plugin folder, package it, start it and try it out. Exit codes: 0 done, 1 the plugin has
 /// errors or the command failed, 2 the command line was not understood.</summary>
-public static class PluginToolApp
+public static partial class PluginToolApp
 {
     public const int Ok = 0;
     public const int Failed = 1;
@@ -15,6 +15,7 @@ public static class PluginToolApp
         Usage: macrogrid-plugin <command> [options]
 
           validate <folder>     check a plugin folder (nothing is run)
+          pack <folder> [--out dir]   check, then write <id>-<version>.zip and its .sha256
         """;
 
     public static int Run(string[] args, TextWriter output, TextWriter error)
@@ -30,6 +31,7 @@ public static class PluginToolApp
             return args[0] switch
             {
                 "validate" => Validate(args[1..], output, error),
+                "pack" => Pack(args[1..], output, error),
                 _ => UsageError($"Unknown command '{args[0]}'", error),
             };
         }

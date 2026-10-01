@@ -1,3 +1,6 @@
+using System.IO.Compression;
+using System.Security.Cryptography;
+using MacroGrid.Core.Plugins.Distribution;
 using MacroGrid.PluginTool;
 
 namespace MacroGrid.Tests;
@@ -65,4 +68,63 @@ public sealed class PluginToolTests : IDisposable
     [Fact]
     public void Validate_without_a_folder_is_a_usage_error() =>
         Assert.Equal(PluginToolApp.Usage, Run("validate").Code);
+
+    [Fact]
+    public void Pack_writes_a_zip_that_extracts_back_without_saved_data_or_hidden_files()
+    {
+        var dir = GoodPlugin();
+        Directory.CreateDirectory(Path.Combine(dir, "src"));
+        File.WriteAllText(Path.Combine(dir, "src", "lib.js"), "// lib");
+        File.WriteAllText(Path.Combine(dir, "settings.json"), "{}");
+        File.WriteAllText(Path.Combine(dir, "storage.json"), "{}");
+        Directory.CreateDirectory(Path.Combine(dir, ".git"));
+        File.WriteAllText(Path.Combine(dir, ".git", "config"), "x");
+        File.WriteAllText(Path.Combine(dir, ".hidden"), "x");
+        var outDir = Path.Combine(_root, "out");
+
+        var result = Run("pack", dir, "--out", outDir);
+
+        Assert.Equal(PluginToolApp.Ok, result.Code);
+        var zipPath = Path.Combine(outDir, "demo.one-1.2.3.zip");
+        using (var zip = ZipFile.OpenRead(zipPath))
+            Assert.Equal(["LICENSE", "index.js", "plugin.json", "src/lib.js"], zip.Entries.Select(e => e.FullName).ToArray());
+
+        var extracted = Path.Combine(_root, "extracted");
+        PluginZip.ExtractSafely(File.ReadAllBytes(zipPath), extracted);
+        Assert.Equal("// lib", File.ReadAllText(Path.Combine(extracted, "src", "lib.js")));
+        Assert.False(File.Exists(Path.Combine(extracted, "settings.json")));
+    }
+
+    [Fact]
+    public void Pack_is_byte_identical_twice_and_the_sha256_file_matches()
+    {
+        var dir = GoodPlugin();
+        var first = Run("pack", dir, "--out", Path.Combine(_root, "a"));
+        File.SetLastWriteTimeUtc(Path.Combine(dir, "index.js"), new DateTime(2020, 5, 5, 5, 5, 5, DateTimeKind.Utc));
+        Run("pack", dir, "--out", Path.Combine(_root, "b"));
+
+        var a = File.ReadAllBytes(Path.Combine(_root, "a", "demo.one-1.2.3.zip"));
+        var b = File.ReadAllBytes(Path.Combine(_root, "b", "demo.one-1.2.3.zip"));
+        Assert.Equal(a, b);
+
+        var hash = Convert.ToHexStringLower(SHA256.HashData(a));
+        Assert.Equal(hash, File.ReadAllText(Path.Combine(_root, "a", "demo.one-1.2.3.zip.sha256")));
+        Assert.Contains("sha256=" + hash, first.Out);
+    }
+
+    [Fact]
+    public void Pack_of_a_folder_with_errors_writes_nothing()
+    {
+        var dir = GoodPlugin(script: "function (");
+        var outDir = Path.Combine(_root, "out");
+
+        var result = Run("pack", dir, "--out", outDir);
+
+        Assert.Equal(PluginToolApp.Failed, result.Code);
+        Assert.False(Directory.Exists(outDir));
+    }
+
+    [Fact]
+    public void Pack_with_an_unknown_option_is_a_usage_error() =>
+        Assert.Equal(PluginToolApp.Usage, Run("pack", GoodPlugin(), "--zip", "x").Code);
 }
