@@ -27,6 +27,9 @@ Every `ClientSession` holds an `AutoSwitchState`: a stack of entries `{ ProfileI
 
 - `Profile.AppMatches` is a list of `AppMatch { ProcessName (for example "Player.exe"), TitleContains? }`. Rules live on the profile. If several
   profiles match the same window, the first one in `ProfileStore.All` wins. `ProfileValidator` rejects empty and duplicate rules.
+- **What a device opens when it connects** (`ProfileResolver.ResolveOnConnect`): the profile the person last picked on the device itself
+  (`PairedDevice.LastProfileId`, set by the drawer and by a profile button, never by an auto switch), if it still exists; otherwise the default
+  above. An assignment made in the editor clears the last pick, since it is newer. An auto switch still acts on top of this once connected.
 - `PairedDevice.FollowActiveWindow` and `PairedDevice.AutoSwitchLocked` are stored in `devices.json`, so the lock survives a reconnect
   (`DeviceStore` setters follow the `AssignProfile` pattern).
 - `AppPreferences.DefaultProfileId` is the app-wide default profile.

@@ -23,6 +23,9 @@ public sealed class ClientSession(WebSocket socket)
     public string? ProfileId { get; internal set; }
     public string? PageId { get; internal set; }
 
+    /// <summary>Called when the person switches profile by hand (not an auto switch), so the hub can remember it for the device.</summary>
+    internal Action<string>? ManualProfileChosen { get; set; }
+
     /// <summary>Pages this client navigated away from, for <c>core.page</c> "back". Only touched by this session's own single-threaded action queue.</summary>
     internal Stack<string> PageHistory { get; } = new();
 

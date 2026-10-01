@@ -94,6 +94,20 @@ public sealed class DeviceStore
         {
             if (!_devices.TryGetValue(deviceId, out var device)) return false;
             device.AssignedProfileId = profileId;
+            device.LastProfileId = null; // an editor assignment is newer than a pick made on the device
+        }
+        Save();
+        return true;
+    }
+
+    /// <summary>Remembers the profile the person picked on the device, so it is opened again after a reconnect. Returns false if the device isn't paired.</summary>
+    public bool SetLastProfile(string deviceId, string profileId)
+    {
+        lock (_lock)
+        {
+            if (!_devices.TryGetValue(deviceId, out var device)) return false;
+            if (device.LastProfileId == profileId) return true;
+            device.LastProfileId = profileId;
         }
         Save();
         return true;

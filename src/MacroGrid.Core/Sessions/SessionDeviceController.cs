@@ -28,6 +28,7 @@ public sealed class SessionDeviceController(ClientSession session, ProfileStore 
     public Task SwitchProfileAsync(string profileId)
     {
         session.AutoSwitch.OnManual(profileId);
+        session.ManualProfileChosen?.Invoke(profileId);
         return ApplyProfileAsync(profileId);
     }
 

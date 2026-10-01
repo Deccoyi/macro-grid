@@ -252,7 +252,9 @@ public sealed class ClientHub(
 
         // A device with no assigned profile (or one assigned to a profile that's since been deleted)
         // falls back to the app-wide default, then just the first profile — ProfileResolver.ResolveDefault.
-        var profile = ProfileResolver.ResolveDefault(device, profiles, preferences);
+        var profile = ProfileResolver.ResolveOnConnect(device, profiles, preferences);
+        var deviceId = device.Id;
+        session.ManualProfileChosen = profileId => devices.SetLastProfile(deviceId, profileId);
         session.ProfileId = profile.Id;
         session.AutoSwitch.OnManual(profile.Id); // the resolved-default profile is this session's manual base.
         session.AutoSwitch.SetLocked(device.AutoSwitchLocked);
