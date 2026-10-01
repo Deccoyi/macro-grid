@@ -50,6 +50,12 @@ public sealed class PluginTrustVerifier
         ".dll", ".exe", ".so", ".dylib", ".node", ".ps1", ".bat", ".cmd", ".com", ".scr", ".msi", ".js", ".vbs", ".wsf", ".hta", ".lnk",
     };
 
+    /// <summary>True for a file that can be loaded or run, and for the two signature files: what a replaced plugin must lose before the new files are copied.</summary>
+    internal static bool IsCodeFile(string path) =>
+        ExecutableExtensions.Contains(Path.GetExtension(path))
+        || Path.GetFileName(path).Equals(SignatureJsonName, StringComparison.OrdinalIgnoreCase)
+        || Path.GetFileName(path).Equals(SignatureName, StringComparison.OrdinalIgnoreCase);
+
     private readonly byte[] _publicKey;
     private readonly bool _allowUnsigned;
 

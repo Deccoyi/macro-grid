@@ -217,6 +217,7 @@ public sealed partial class PluginManager(
             var destDir = Path.Combine(pluginsRoot, manifest.Id);
             var marker = Path.Combine(destDir, ".uninstall");
             if (File.Exists(marker)) File.Delete(marker);
+            RemoveCodeFiles(destDir);
             CopyDirectory(sourceDir, destDir);
 
             var info = await LoadFolderCoreAsync(destDir);
@@ -440,6 +441,14 @@ public sealed partial class PluginManager(
 
         var file = new FileInfo(iconFull);
         return file.Exists && file.Length <= MaxIconBytes ? iconFull : null;
+    }
+
+    /// <summary>Deletes the loadable files and the signature files of the old version, so the new version is checked against its own list only. Data files (.json and the like) stay.</summary>
+    private static void RemoveCodeFiles(string destDir)
+    {
+        if (!Directory.Exists(destDir)) return;
+        foreach (var file in Directory.EnumerateFiles(destDir, "*", SearchOption.AllDirectories).ToList())
+            if (PluginTrustVerifier.IsCodeFile(file)) File.Delete(file);
     }
 
     private static void CopyDirectory(string sourceDir, string destDir)
