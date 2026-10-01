@@ -108,6 +108,8 @@ stopping the ones after it. A failure is shown as a toast on the phone that pres
 (a button pointed at a deleted OBS scene) is never silent. If an action handler also implements `IActionDescriptor`, the editor draws its settings
 form from its `Fields`; text fields marked `AllowVariables` have their `{variables}` resolved by the server before the action runs.
 
+An action can also implement `IActionOutcomeHandler` and return a coded outcome (success, failed with a code and a short text, or accepted) instead of throwing; the dispatcher then calls only that method. Both ways end as an `ActionFailure` (`Code`, `Message`): the text is cleaned of control and direction characters, cut to 200 characters and, when empty, replaced by a default text for the code. The first failure is shown as the toast and the status bar item. The code is not sent to the phone.
+
 ## Variables and text
 
 `VariableStore` holds live values (`system.time`, `system.cpu`, `system.ram`, `system.ram.used`, `system.ram.total`, `system.uptime`,

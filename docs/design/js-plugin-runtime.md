@@ -66,6 +66,18 @@ more job that calls `__httpDone`, which settles the promise, and the engine then
 own time, memory and statement budget. Dispose cancels everything in flight. There is no `fetch`, `setTimeout` or other
 browser API; `host.after`/`host.every` remain the timers.
 
+## Reporting an action's outcome
+
+A script action can return `{ ok: false, code, message }` to report a failure or `{ ok: 'accepted', message }` when the other side cannot confirm. `code` is
+one of the SDK's `ActionFailureCode` names, matched ignoring case (a missing or unknown code is `ProviderError`); `message` must be a string. Any other return value
+(nothing, `true`, a number, an object without `ok`) is success, as before. A reported failure is not a script fault: it adds no Error List line and does
+not count towards switching the plugin off; a thrown error still does. The returned shape is read as JSON and larger than 4 KB means `ProviderError`.
+
+An `async` action is not waited for unless it is registered with `outcome: true`; then the host waits for the promise (at most
+`JsPluginLimits.ActionOutcomeTimeout`, 10 seconds, then `Timeout`), maps the resolved shape the same way and treats a rejection as `ProviderError` with the error's
+message. At most 16 such waits can be pending per plugin (one more is `Unavailable` at once) and a dispose settles them. Without `outcome: true` an async action
+behaves as before: its rejection is silent.
+
 ## Not covered
 
 - A plugin drawing its own widget: done differently, not by the script itself. A plugin ships widget scripts that run in a sandboxed worker on the

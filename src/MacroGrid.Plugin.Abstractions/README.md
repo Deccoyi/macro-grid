@@ -56,6 +56,30 @@ new VariableInfo("myplugin.state", "State", "{myplugin.state}", "My plugin") { V
 When the thing a variable shows is not there (a lost connection, a closed app), call `Set(name, null)` or `Remove(name)` instead of leaving the last value or
 writing zero. A rule can then react with the "is unavailable" comparison, for example to grey out a button.
 
+## Reporting the result of an action
+
+An action that talks to another program should say what happened. Implement `IActionOutcomeHandler` next to `IActionHandler` and return
+`ActionOutcome.Success`, `ActionOutcome.Failed(code, message)` or `ActionOutcome.Accepted(message)`. When a handler implements it, the host calls only
+`ExecuteWithOutcomeAsync`; keep `ExecuteAsync` as `(await ExecuteWithOutcomeAsync(...)).ThrowIfFailed()`. A failure is shown to the person as a short text, so
+write the message as plain words (the host cuts it to 200 characters and uses a default text for the code when it is empty). An exception still works as
+before and counts as `ProviderError`.
+
+| Code | Use it when |
+|---|---|
+| `NotConfigured` | A required setting is empty. |
+| `NotConnected` | The program or device the action talks to is not connected. |
+| `PermissionDenied` | The other side or the system did not allow it. |
+| `ProviderError` | The other side reported an error, or something unexpected went wrong. |
+| `ProviderRejected` | The other side understood the request and refused it. |
+| `InvalidParameter` | A setting has a value that cannot be used. |
+| `NotFound` | The target (a scene, a file, a sound) does not exist. |
+| `Timeout` | There was no answer in time. |
+| `Unavailable` | The action cannot run right now. |
+
+Rules: do not report success only because a request was sent; wait for the answer, but for a bounded time, then report `Timeout`; use `Accepted` when the
+other side cannot confirm (the host shows nothing for it yet); honour the cancellation token; never put a secret, an address with credentials or a file
+path in the message. A plugin that uses this needs an editor that has the interface, so raise `minMacroGrid`.
+
 ## Security
 
 Report a vulnerability in the SDK privately, as described in the server's
