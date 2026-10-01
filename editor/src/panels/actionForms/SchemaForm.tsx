@@ -4,6 +4,7 @@ import { api } from "../../api/client";
 import type { OptionsResult, SettingField, SettingOption, VariableInfo } from "../../api/types";
 import { useT } from "../../i18n/I18nContext";
 import { VariablePicker } from "../VariablePicker";
+import { HotkeyCapture } from "./HotkeyCapture";
 import { ColorField, Field, NumberInput, RangeInput, Seg, SelectInput, Switch, TextInput, useFieldId } from "../fields/controls";
 import { layoutFields, segmentedAsSelect } from "./schemaFormLayout";
 
@@ -225,6 +226,15 @@ function SchemaFieldRow({
     return (
       <Field single label={field.label} hint={hint}>
         <ColorField value={color} onChange={onChange} />
+      </Field>
+    );
+  }
+
+  if (field.kind === "Hotkey") {
+    const combo = typeof value === "string" ? value : typeof field.default === "string" ? field.default : "";
+    return (
+      <Field single label={field.label} hint={hint}>
+        <HotkeyCapture value={combo} onChange={onChange} />
       </Field>
     );
   }
