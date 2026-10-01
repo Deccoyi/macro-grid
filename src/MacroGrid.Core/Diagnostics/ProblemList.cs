@@ -51,6 +51,8 @@ public static class ProblemCodes
     public const string Withdrawn = "P112";
     /// <summary>The official safety list could not be checked for a long time. Plugins keep running.</summary>
     public const string CatalogStale = "P113";
+    /// <summary>An official JavaScript plugin's files no longer match the signature it was installed with. It does not run until it is reinstalled.</summary>
+    public const string FilesChanged = "P114";
     /// <summary>A press ran an action whose type is not available (its plugin was removed or is switched off). Cleared when a plugin loads.</summary>
     public const string ActionMissing = "P131";
     /// <summary>A plugin reported a problem itself (<c>IPluginDiagnostics</c>).</summary>

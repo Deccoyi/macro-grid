@@ -404,6 +404,7 @@ export const en: Record<DictKey, string> = {
   "errorHelp.P111": "The official plugin list switched this version off because it is unsafe. Update the plugin in the Plugins window, or remove it.",
   "errorHelp.P112": "The publisher withdrew this version. It keeps running; update it or remove it in the Plugins window.",
   "errorHelp.P113": "The official plugin safety list could not be checked for a while. Plugins keep running; check your internet connection or press Refresh in the Plugins window.",
+  "errorHelp.P114": "The files of this official plugin changed after it was installed, so it does not run. Reinstall it from the Plugins window.",
   "errorHelp.P120": "The plugin could not be loaded or started. Reinstall it from the Plugins window; if it keeps failing, send the exported logs to its author.",
   "errorHelp.P121": "The plugin does not work with this version of Macro Grid. Update the plugin or Macro Grid.",
   "errorHelp.P122": "The plugin failed and was switched off. Switch it on again in the Plugins window after updating it; the logs show what failed.",

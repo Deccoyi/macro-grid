@@ -151,6 +151,49 @@ public sealed class PluginRevocationTests : IAsyncLifetime
         Assert.Null(origin.CodeFiles);
     }
 
+    private static PluginInstallOrigin FromOfficialSigned() => FromOfficial() with { ContentsSigned = true };
+
+    [Fact]
+    public async Task An_official_javascript_plugin_with_a_contents_signature_stops_when_a_file_is_edited()
+    {
+        var dir = NewJs("demo");
+        TestPluginSigning.Sign(dir);
+        var installed = await _manager.InstallFromFolderAsync(dir, FromOfficialSigned());
+        Assert.Equal(PluginLoadStatus.Loaded, installed.Plugin.Status);
+
+        File.WriteAllText(Path.Combine(_pluginsDir, "demo", "index.js"), "// edited");
+        var reloaded = await _manager.ReloadAsync("demo");
+
+        Assert.Equal(PluginLoadStatus.NotAllowed, reloaded!.Status);
+        Assert.Contains(ProblemCodes.FilesChanged, _problems.Snapshot().Select(p => p.Code));
+    }
+
+    [Fact]
+    public async Task A_file_added_next_to_a_signed_official_javascript_plugin_stops_it_too()
+    {
+        var dir = NewJs("demo");
+        TestPluginSigning.Sign(dir);
+        await _manager.InstallFromFolderAsync(dir, FromOfficialSigned());
+
+        File.WriteAllText(Path.Combine(_pluginsDir, "demo", "extra.js"), "// added");
+
+        Assert.Equal(PluginLoadStatus.NotAllowed, (await _manager.ReloadAsync("demo"))!.Status);
+    }
+
+    [Fact]
+    public async Task An_official_javascript_plugin_without_a_contents_signature_or_from_elsewhere_is_not_checked()
+    {
+        await _manager.InstallFromFolderAsync(NewJs("demo"), FromOfficial());
+        File.WriteAllText(Path.Combine(_pluginsDir, "demo", "index.js"), "// edited");
+        Assert.Equal(PluginLoadStatus.Loaded, (await _manager.ReloadAsync("demo"))!.Status);
+
+        var dir = NewJs("other");
+        TestPluginSigning.Sign(dir);
+        await _manager.InstallFromFolderAsync(dir, FromOfficialSigned() with { Trust = PluginTrust.ThirdParty });
+        File.WriteAllText(Path.Combine(_pluginsDir, "other", "index.js"), "// edited");
+        Assert.Equal(PluginLoadStatus.Loaded, (await _manager.ReloadAsync("other"))!.Status);
+    }
+
     [Fact]
     public async Task A_plugin_with_no_official_origin_is_not_covered()
     {

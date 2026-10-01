@@ -79,7 +79,8 @@ public sealed class PluginTrustVerifier
         return new PluginTrustResult(true, true, strict.Reason, null);
     }
 
-    private PluginTrustResult VerifyStrict(string dir, PluginManifest manifest)
+    /// <summary>The signature check with no development-build leniency: used for an official JavaScript plugin, which was installed with a contents signature.</summary>
+    internal PluginTrustResult VerifyStrict(string dir, PluginManifest manifest)
     {
         var jsonPath = Path.Combine(dir, SignatureJsonName);
         var sigPath = Path.Combine(dir, SignatureName);

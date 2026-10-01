@@ -407,6 +407,7 @@ export const tr = {
   "errorHelp.P111": "Resmi plugin listesi bu sürümü güvensiz olduğu için kapattı. Plugin'i Plugin'ler penceresinden güncelleyin veya kaldırın.",
   "errorHelp.P112": "Yayıncı bu sürümü yayından kaldırdı. Çalışmaya devam eder; Plugin'ler penceresinden güncelleyin veya kaldırın.",
   "errorHelp.P113": "Resmi plugin güvenlik listesi bir süredir kontrol edilemedi. Plugin'ler çalışmaya devam eder; internet bağlantınızı kontrol edin veya Plugin'ler penceresinde Yenile'ye basın.",
+  "errorHelp.P114": "Bu resmi eklentinin dosyaları kurulumdan sonra değişti, bu yüzden çalışmıyor. Plugin'ler penceresinden yeniden kurun.",
   "errorHelp.P120": "Plugin yüklenemedi veya başlatılamadı. Plugin'ler penceresinden yeniden kurun; sürekli olursa dışa aktarılan günlükleri yapımcısına gönderin.",
   "errorHelp.P121": "Plugin bu Macro Grid sürümüyle çalışmıyor. Plugin'i veya Macro Grid'i güncelleyin.",
   "errorHelp.P122": "Plugin hata verdi ve kapatıldı. Güncelledikten sonra Plugin'ler penceresinden tekrar açın; günlükler neyin hata verdiğini gösterir.",
