@@ -9,9 +9,9 @@ namespace MacroGrid.Host.Api;
 /// <summary>
 /// Discover-tab endpoints: browsing and installing from the official catalog (phase 2), added third-party
 /// multi-plugin sources (phase 3), and a pasted single-plugin repository link (phase 4) of the plugin
-/// distribution plan. Loopback-only, like the rest of <c>/api</c>. The HTTP client behind <see
-/// cref="PluginCatalogClient"/> and <see cref="PluginPackageDownloader"/> is only ever used from these
-/// endpoints — nothing runs in the background.
+/// distribution plan. Loopback-only, like the rest of <c>/api</c>. The official source is read through
+/// <see cref="OfficialCatalog"/> (signed files with a saved copy); every other source goes through
+/// <see cref="PluginCatalogClient"/>. The background look at the official files is <c>PluginCatalogService</c>.
 /// </summary>
 internal static class PluginCatalogApi
 {
@@ -37,7 +37,7 @@ internal static class PluginCatalogApi
 
             try
             {
-                var index = await client.FetchIndexAsync(owner, repo, cancellationToken);
+                var index = await client.FetchIndexAsync(owner, repo, cancellationToken, fresh: true);
                 var source = new PluginSource($"{owner}/{repo}".ToLowerInvariant(), owner, repo, index.Name, DateTimeOffset.UtcNow);
                 sources.Add(source);
                 return ApiResults.Json(source);
@@ -51,14 +51,14 @@ internal static class PluginCatalogApi
         api.MapDelete("/plugin-sources/{id}", (string id, PluginSourceStore sources) =>
             sources.Remove(id) ? Results.NoContent() : Results.NotFound());
 
-        api.MapGet("/plugin-catalog", async (string? source, PluginCatalogClient client, PluginSourceStore sources, PluginManager plugins, PluginInstallOriginStore origins, CancellationToken cancellationToken) =>
+        api.MapGet("/plugin-catalog", async (string? source, bool? refresh, PluginCatalogClient client, OfficialCatalog official, PluginSourceStore sources, PluginManager plugins, PluginInstallOriginStore origins, CancellationToken cancellationToken) =>
         {
             if (!TryResolveSource(source, sources, out var owner, out var repo, out var isOfficial))
                 return ApiResults.BadRequest($"Unknown source: {source}");
 
             try
             {
-                var index = await client.FetchIndexAsync(owner, repo, cancellationToken);
+                var index = await IndexAsync(isOfficial, owner, repo, client, official, refresh == true, cancellationToken);
                 return ApiResults.Json(new
                 {
                     source,
@@ -77,12 +77,13 @@ internal static class PluginCatalogApi
         });
 
         // A catalog plugin's icon, fetched by the host (the editor never loads a remote image itself). 404 when there is none.
-        api.MapGet("/plugin-catalog/icon", async (string? source, string? id, PluginCatalogClient client, PluginCatalogIcons icons, PluginSourceStore sources, CancellationToken cancellationToken) =>
+        api.MapGet("/plugin-catalog/icon", async (string? source, string? id, PluginCatalogClient client, OfficialCatalog official, PluginCatalogIcons icons, PluginSourceStore sources, CancellationToken cancellationToken) =>
         {
-            if (!TryResolveSource(source, sources, out var owner, out var repo, out _) || string.IsNullOrWhiteSpace(id)) return Results.NotFound();
+            if (!TryResolveSource(source, sources, out var owner, out var repo, out var isOfficial) || string.IsNullOrWhiteSpace(id)) return Results.NotFound();
             try
             {
-                var index = await client.FetchIndexAsync(owner, repo, cancellationToken);
+                // The icon endpoint is called once per listed plugin, so it never goes to the network for the index when a copy exists.
+                var index = isOfficial && official.Index is { } copy ? copy : await IndexAsync(isOfficial, owner, repo, client, official, fresh: false, cancellationToken);
                 var entry = index.Plugins.FirstOrDefault(p => p.Id == id);
                 if (entry is null || await icons.GetAsync(owner, repo, entry, cancellationToken) is not { } icon) return Results.NotFound();
                 return Results.File(icon.Data, icon.ContentType);
@@ -93,7 +94,7 @@ internal static class PluginCatalogApi
             }
         });
 
-        api.MapPost("/plugin-catalog/install", async (PluginCatalogInstallRequest request, PluginCatalogClient client, PluginSourceStore sources, PluginCatalogInstaller installer, CancellationToken cancellationToken) =>
+        api.MapPost("/plugin-catalog/install", async (PluginCatalogInstallRequest request, PluginCatalogClient client, OfficialCatalog official, PluginSourceStore sources, PluginCatalogInstaller installer, CancellationToken cancellationToken) =>
         {
             if (!TryResolveSource(request.Source, sources, out var owner, out var repo, out var isOfficial))
                 return ApiResults.BadRequest($"Unknown source: {request.Source}");
@@ -102,7 +103,7 @@ internal static class PluginCatalogApi
 
             try
             {
-                var index = await client.FetchIndexAsync(owner, repo, cancellationToken);
+                var index = await IndexAsync(isOfficial, owner, repo, client, official, fresh: false, cancellationToken);
                 var entry = index.Plugins.FirstOrDefault(p => p.Id == request.Id);
                 var version = entry?.Versions.FirstOrDefault(v => v.Version == request.Version);
                 if (entry is null || version is null)
@@ -191,6 +192,13 @@ internal static class PluginCatalogApi
 
         return api;
     }
+
+    /// <summary>The official source comes from the saved, signed copy (refreshed when it is older than an hour, or a minute for the Refresh
+    /// button); another source from its five-minute memory copy.</summary>
+    private static Task<PluginCatalogIndex> IndexAsync(bool isOfficial, string owner, string repo, PluginCatalogClient client, OfficialCatalog official, bool fresh, CancellationToken cancellationToken) =>
+        isOfficial
+            ? official.GetIndexAsync(fresh ? TimeSpan.FromMinutes(1) : TimeSpan.FromHours(1), cancellationToken, ignoreBackoff: fresh)
+            : client.FetchIndexAsync(owner, repo, cancellationToken, fresh);
 
     /// <summary>"official" resolves to the hard-coded official repository; anything else must be a saved
     /// source's id (<c>"&lt;owner&gt;/&lt;repo&gt;"</c>).</summary>

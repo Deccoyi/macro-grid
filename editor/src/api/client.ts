@@ -249,8 +249,9 @@ export const api = {
   pluginCatalogIconUrl: (source: string, id: string): string =>
     `/api/plugin-catalog/icon?source=${encodeURIComponent(source)}&id=${encodeURIComponent(id)}`,
 
-  fetchPluginCatalog: (source: string): Promise<PluginCatalogResponse> =>
-    get(`/api/plugin-catalog?source=${encodeURIComponent(source)}`),
+  /** `refresh` (the Refresh button) asks the server to look at the source again instead of using its saved copy. */
+  fetchPluginCatalog: (source: string, refresh = false): Promise<PluginCatalogResponse> =>
+    get(`/api/plugin-catalog?source=${encodeURIComponent(source)}${refresh ? "&refresh=true" : ""}`),
 
   /** Downloads, verifies and installs one version from a catalog source through the same pipeline as a local
    * folder install (PluginManager.InstallFromFolderAsync), plus hash/signature checks first. */

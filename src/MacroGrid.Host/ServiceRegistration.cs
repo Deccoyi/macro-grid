@@ -132,6 +132,8 @@ internal static class ServiceRegistration
         var http = new HttpClient(new SocketsHttpHandler { AllowAutoRedirect = false }) { Timeout = TimeSpan.FromMinutes(2) };
         http.DefaultRequestHeaders.UserAgent.ParseAdd($"MacroGrid/{ClientHub.ServerVersion}");
         services.AddSingleton(new PluginCatalogClient(http));
+        services.AddSingleton(new PluginCatalogStateStore(dataDir));
+        services.AddSingleton(sp => new OfficialCatalog(http, sp.GetRequiredService<PluginCatalogStateStore>(), sp.GetRequiredService<PluginCatalogClient>()));
         services.AddSingleton(new PluginPackageDownloader(http));
         services.AddSingleton(sp => new PluginCatalogIcons(sp.GetRequiredService<PluginPackageDownloader>()));
         services.AddSingleton(new PluginInstallOriginStore(dataDir));

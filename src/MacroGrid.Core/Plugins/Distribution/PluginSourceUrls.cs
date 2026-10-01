@@ -2,11 +2,14 @@ using System.Text.RegularExpressions;
 
 namespace MacroGrid.Core.Plugins.Distribution;
 
+/// <summary>One place the official catalog's signed files can be read from. <see cref="IsApi"/> sources have an hourly quota that is watched.</summary>
+public sealed record CatalogSource(Uri Url, bool IsApi);
+
 /// <summary>
-/// The only URLs the plugin distribution feature ever talks to: fixed <c>raw.githubusercontent.com</c> and
-/// <c>github.com/.../releases/download/...</c> addresses built from an owner/repo pair, never the GitHub API. See
-/// the plugin repository's website/reference/source-index.md for why (no rate limit, and this is the host's
-/// first outbound connection, opt-in and user-triggered only).
+/// The only URLs the plugin distribution feature ever talks to. Added sources and pasted links use fixed
+/// <c>raw.githubusercontent.com</c> and <c>github.com/.../releases/download/...</c> addresses built from an owner/repo pair.
+/// The official catalog's two signed files come from the repository contents API first and the project's Pages site second
+/// (<see cref="OfficialSources"/>); both addresses are built here, never from a request or a file.
 /// </summary>
 public static partial class PluginSourceUrls
 {
@@ -42,6 +45,17 @@ public static partial class PluginSourceUrls
         "objects.githubusercontent.com",
         "release-assets.githubusercontent.com",
     ];
+
+    /// <summary>The signed files of the official catalog live in <c>website/public/catalog/</c> of the plugin repository: the API reads them
+    /// from the repository, the Pages site serves the same committed copy.</summary>
+    public static IReadOnlyList<CatalogSource> OfficialSources(string fileName) =>
+    [
+        new(new Uri($"https://api.github.com/repos/{OfficialOwner}/{OfficialRepo}/contents/website/public/catalog/{fileName}"), IsApi: true),
+        new(new Uri($"https://{OfficialOwner.ToLowerInvariant()}.github.io/{OfficialRepo}/catalog/{fileName}"), IsApi: false),
+    ];
+
+    public const string IndexFileName = "index.signed.json";
+    public const string RevokedFileName = "revoked.signed.json";
 
     public static Uri IndexUrl(string owner, string repo) =>
         new($"https://raw.githubusercontent.com/{owner}/{repo}/HEAD/macrogrid-index.json");

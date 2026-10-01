@@ -134,13 +134,13 @@ export function PluginsWindow() {
     refresh();
   }, []);
 
-  const refreshCatalog = (source = selectedSource) => {
+  const refreshCatalog = (source = selectedSource, force = false) => {
     setCatalogLoading(true);
     setCatalogError(null);
     setCatalog(null);
     setSelectedEntryId(null);
     api
-      .fetchPluginCatalog(source)
+      .fetchPluginCatalog(source, force)
       .then((response) => {
         setCatalogOfficial(response.official ?? source === "official");
         if (response.error) setCatalogError(response.error);
@@ -631,7 +631,7 @@ export function PluginsWindow() {
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
             <SectionLabel>{t("plugins.category.discover")}</SectionLabel>
             <div style={{ flex: 1 }} />
-            <button type="button" className="ghost" title={t("plugins.refresh")} onClick={() => refreshCatalog()} style={{ display: "flex", padding: 6 }}>
+            <button type="button" className="ghost" title={t("plugins.refresh")} onClick={() => refreshCatalog(selectedSource, true)} style={{ display: "flex", padding: 6 }}>
               <RefreshCw size={14} />
             </button>
           </div>

@@ -17,6 +17,9 @@ public static class PluginSigning
     internal const string PublicKeyBase64 =
         "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEeRPznqxspydIc9Iq5a56OywKWDzxY9ILuCeWBBAcfFJHM2LWIeKXvRxwVyTPHA/zayTob/+TMxn7DWVGD5tyXw==";
 
+    /// <summary>The embedded official public key (DER).</summary>
+    public static byte[] OfficialPublicKey => Convert.FromBase64String(PublicKeyBase64);
+
     /// <summary>True when <paramref name="signatureBase64"/> is a valid ECDSA P-256/SHA-256 signature (IEEE P1363,
     /// 64 bytes) over <paramref name="packageBytes"/> made by the official plugin-signing key. Any malformed input
     /// (bad base64, wrong length, ...) is treated as a failed verification, never an exception.</summary>
