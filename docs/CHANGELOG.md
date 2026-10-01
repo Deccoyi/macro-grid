@@ -4,6 +4,8 @@ New features and fixes in Macro Grid. For technical details, see [CHANGELOG-deve
 
 ## Unreleased
 ### New
+- **Go back a version:** a plugin's page in Discover can put the previous version back.
+- **Stay on this version:** stops update reminders for one plugin. Safety warnings still appear.
 - **Shared profile files are now `.mgprofile`:** older `.msprofile` files can still be imported.
 - **Back up everything:** File > Back Up Everything saves your profiles, preferences, variables, phone choices, plugin settings and language packs in one file. File > Restore lets you tick what to bring back. Nothing is deleted, and passwords and phone pairings are not part of a backup.
 - **Restore points:** before a restore, before a profile is deleted or overwritten by an import, and after an update, Macro Grid keeps a copy of your data so you can go back.
@@ -14,6 +16,8 @@ New features and fixes in Macro Grid. For technical details, see [CHANGELOG-deve
 - **A button can change its look from its own state:** while it is held, while its action is running, when it is switched on, and after its action failed. Find them under "This button" in the variable list.
 - **Your own variables:** a new "Global Variable List" in Preferences lets you define text, number and true/false variables and use them anywhere as `{user.name}`: in texts, rules and actions. You can keep a value after a restart.
 - **Automation rules:** run a list of actions by itself when a value crosses a limit, at a time of day or when a device connects (Preferences > Automation). Each rule can be switched off, and all of them can be paused. Rules do not press keys.
+- **Official plugins are checked every time they start:** an official plugin whose files were changed does not run until it is installed again.
+- **Fixed:** updating a plugin no longer leaves files of the old version behind, and a plugin removed and installed again from a folder is no longer shown as official.
 - **Set variable action:** a button can set a variable, switch it, add to it or reset it. A slider can set a number variable.
 - **Plugins can add their own widgets:** a plugin can draw a widget of its own, such as a gauge, and it appears in the Toolbox under the plugin's name. Plugin widgets run in a closed box with no network, so a broken one cannot harm the rest of the deck. If one keeps crashing the app, it is switched off and you can turn it back on.
 - **Switch off a single plugin permission:** in the Plugins window, an installed JavaScript plugin lists its permissions with a tick box each. Untick one and the plugin keeps running without it.

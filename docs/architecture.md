@@ -223,7 +223,7 @@ Macro Grid is meant for a home or office network you trust. It is not hardened f
   the official plugin key (the private key stays on the maintainer's PC), every file must still match, and no unlisted file may be loadable or
   executable. A plugin that fails is not loaded (status *Not allowed*). A C# plugin has full trust, so this is what keeps other authors' code out of the
   server process; a build made from source in the Debug configuration (`MACROGRID_UNSIGNED_PLUGINS`) is the only exception, and no setting, switch or
-  environment variable turns it on in a released build. Plugins by other authors are JavaScript and are sandboxed and need approved permissions. The
+  environment variable turns it on in a released build. Plugins by other authors are JavaScript and are sandboxed and need approved permissions. An official JavaScript plugin installed with a contents signature is verified the same way at every load, so editing its files in place stops it. The
   `input` permission (pressing keys and typing) works only while a device button press is being handled, for at most 5 seconds, with at most 200
   characters and 10 key combinations per press, never with the Windows key, never into a terminal, a script host, a system tool or a Macro Grid window,
   never when the server runs as administrator, and text that looks like a harmful command switches the plugin off. An approved plugin with `input` can

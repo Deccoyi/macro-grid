@@ -16,6 +16,8 @@ namespace MacroGrid.Host.Api;
 internal static class PluginCatalogApi
 {
     public const string OfficialSourceId = "official";
+    public const string NotOfferedCode = "not-offered";
+    public const string OtherSourceCode = "other-source";
 
     public static RouteGroupBuilder MapPluginCatalogApi(this RouteGroupBuilder api)
     {
@@ -73,7 +75,7 @@ internal static class PluginCatalogApi
                     // Only the official source may ship C# plugins; a third-party source's C# entries are not offered.
                     plugins = index.Plugins
                         .Where(entry => isOfficial || !string.Equals(entry.Kind, "csharp", StringComparison.OrdinalIgnoreCase))
-                        .Select(entry => DescribeEntry(entry, plugins, origins, isOfficial ? official : null)),
+                        .Select(entry => DescribeEntry(entry, $"https://github.com/{owner}/{repo}", plugins, origins, isOfficial ? official : null)),
                 });
             }
             catch (PluginCatalogException ex)
@@ -100,7 +102,7 @@ internal static class PluginCatalogApi
             }
         });
 
-        api.MapPost("/plugin-catalog/install", async (PluginCatalogInstallRequest request, PluginCatalogClient client, OfficialCatalog official, PluginSourceStore sources, PluginCatalogInstaller installer, CancellationToken cancellationToken) =>
+        api.MapPost("/plugin-catalog/install", async (PluginCatalogInstallRequest request, PluginCatalogClient client, OfficialCatalog official, PluginSourceStore sources, PluginCatalogInstaller installer, PluginInstallOriginStore origins, CancellationToken cancellationToken) =>
         {
             if (!TryResolveSource(request.Source, sources, out var owner, out var repo, out var isOfficial))
                 return ApiResults.BadRequest($"Unknown source: {request.Source}");
@@ -116,7 +118,15 @@ internal static class PluginCatalogApi
                     return ApiResults.BadRequest("That plugin or version is no longer listed by the source.");
 
                 var sourceUrl = $"https://github.com/{owner}/{repo}";
-                var result = await installer.InstallAsync(entry, version, sourceUrl, isOfficial, cancellationToken);
+                // A plugin that came from another source is not replaced from this one (see "Go back one version" in the distribution design).
+                if (origins.Get(entry.Id) is { } existing && !string.Equals(existing.SourceUrl, sourceUrl, StringComparison.OrdinalIgnoreCase))
+                    return ApiResults.Json(new { installed = false, error = "This plugin was installed from another source.", code = OtherSourceCode });
+                var choice = PluginCatalogChoice.Choose(entry, ClientHub.ServerVersion, null,
+                    isOfficial ? v => official.Revoked?.Find(entry.Id, v.Version) is not null : null);
+                if (!choice.Offered.Any(v => v.Version == version.Version))
+                    return ApiResults.Json(new { installed = false, error = "That version is not on offer.", code = NotOfferedCode });
+
+                var result = await installer.InstallAsync(entry, version, sourceUrl, isOfficial, cancellationToken, hold: request.Hold == true);
                 return ApiResults.Json(new { installed = true, id = result.Id, name = result.Name, status = result.Plugin.Status, detail = result.Plugin.Detail });
             }
             catch (Exception ex) when (ex is PluginCatalogException or PluginDownloadException or InvalidOperationException or IOException or UnauthorizedAccessException)
@@ -231,7 +241,7 @@ internal static class PluginCatalogApi
         return false;
     }
 
-    private static object DescribeEntry(PluginCatalogEntry entry, PluginManager plugins, PluginInstallOriginStore origins, OfficialCatalog? official)
+    private static object DescribeEntry(PluginCatalogEntry entry, string sourceUrl, PluginManager plugins, PluginInstallOriginStore origins, OfficialCatalog? official)
     {
         var installed = plugins.Plugins.FirstOrDefault(p => p.Id == entry.Id);
         var origin = origins.Get(entry.Id);
@@ -240,6 +250,10 @@ internal static class PluginCatalogApi
             official is null ? null : v => official.Revoked?.Find(entry.Id, v.Version) is not null);
         var compatible = choice.Installable;
         var latest = choice.Latest;
+        var sameSource = origin is null || string.Equals(origin.SourceUrl, sourceUrl, StringComparison.OrdinalIgnoreCase);
+        var held = origin?.Hold == true;
+        var newerVersion = installed is not null && compatible is not null
+            && SemVer.CompareVersionStrings(compatible.Version, installed.Version) > 0;
 
         return new
         {
@@ -261,15 +275,21 @@ internal static class PluginCatalogApi
             permissions = compatible?.Permissions ?? latest?.Permissions ?? [],
             installed = installed is not null,
             installedVersion = installed?.Version,
-            updateAvailable = installed is not null && compatible is not null
-                && SemVer.CompareVersionStrings(compatible.Version, installed.Version) > 0,
+            sameSource,
+            held,
+            newerVersion,
+            // An update is offered only from the source the plugin came from, and not while the person chose to stay on this
+            // version, unless that version was withdrawn or switched off.
+            updateAvailable = newerVersion && sameSource && (!held || choice.InstalledWithdrawn || choice.InstalledRevoked),
+            previous = choice.Previous is { } previous ? new { previous.Version, permissions = previous.Permissions ?? [] } : null,
+            otherSource = !sameSource ? origin!.SourceUrl : null,
             trust = origin?.Trust.ToString() ?? (installed is not null ? PluginTrust.Local.ToString() : null),
         };
     }
 
     private sealed record PluginAddSourceRequest(string? Url);
 
-    private sealed record PluginCatalogInstallRequest(string? Source, string? Id, string? Version);
+    private sealed record PluginCatalogInstallRequest(string? Source, string? Id, string? Version, bool? Hold);
 
     private sealed record PluginLinkRequest(string? Url);
 }

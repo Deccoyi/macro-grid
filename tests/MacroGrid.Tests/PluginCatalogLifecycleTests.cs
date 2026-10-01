@@ -207,4 +207,33 @@ public sealed class PluginCatalogChoiceTests
         Assert.Null(c.Installable);
         Assert.NotNull(c.IncompatibleReason);
     }
+
+    [Fact]
+    public void At_most_five_versions_are_offered_newest_first_and_the_previous_one_is_found()
+    {
+        var entry = Entry(V("1.0.0"), V("1.1.0"), V("1.2.0"), V("1.3.0"), V("1.4.0"), V("1.5.0"), V("1.6.0", withdrawn: true));
+
+        var c = PluginCatalogChoice.Choose(entry, "1.5.0", "1.3.0");
+
+        Assert.Equal(["1.5.0", "1.4.0", "1.3.0", "1.2.0", "1.1.0"], c.Offered.Select(v => v.Version));
+        Assert.Equal("1.2.0", c.Previous!.Version);
+    }
+
+    [Fact]
+    public void There_is_no_previous_version_when_nothing_older_is_offered_or_the_plugin_is_not_installed()
+    {
+        var entry = Entry(V("1.0.0"), V("1.1.0"));
+
+        Assert.Null(PluginCatalogChoice.Choose(entry, "1.5.0", "1.0.0").Previous);
+        Assert.Null(PluginCatalogChoice.Choose(entry, "1.5.0", null).Previous);
+    }
+
+    [Fact]
+    public void An_installed_version_that_was_revoked_is_reported()
+    {
+        var entry = Entry(V("1.0.0"), V("1.1.0"));
+
+        Assert.True(PluginCatalogChoice.Choose(entry, "1.5.0", "1.1.0", v => v.Version == "1.1.0").InstalledRevoked);
+        Assert.False(PluginCatalogChoice.Choose(entry, "1.5.0", "1.0.0", v => v.Version == "1.1.0").InstalledRevoked);
+    }
 }

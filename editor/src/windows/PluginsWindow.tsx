@@ -252,6 +252,47 @@ export function PluginsWindow() {
 
   const permissionText = (permission: string) => permissionLabel(permission, t).text;
 
+  const setHold = async (entry: PluginCatalogEntryInfo, hold: boolean) => {
+    setError(null);
+    try {
+      await api.setPluginHold(entry.id, hold);
+      refresh();
+      refreshCatalog();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    }
+  };
+
+  const goBack = async (entry: PluginCatalogEntryInfo) => {
+    const previous = entry.previous;
+    if (!previous) return;
+    const proceed = await confirmRichAsync({
+      title: t("plugins.goBack.title"),
+      content: <InstallConsent name={entry.name} kind={entry.kind} permissions={previous.permissions} sourceLabel={catalogOfficial ? undefined : currentSourceLabel()} />,
+      confirmLabel: t("plugins.goBack.confirm", previous.version),
+    });
+    if (!proceed) return;
+    setInstallingCatalogId(entry.id);
+    setError(null);
+    setNotice(null);
+    try {
+      // Going back also stays: otherwise the next refresh would offer the newer version again.
+      const result = await api.installFromPluginCatalog(selectedSource, entry.id, previous.version, true);
+      if (result.installed) {
+        setNotice(t("plugins.goBack.done", result.name ?? entry.name, previous.version));
+        approveIfNeeded(entry.id, result.status);
+        refresh();
+        refreshCatalog();
+      } else {
+        setError(t("plugins.discover.installFailed", entry.name, result.error ?? "?"));
+      }
+    } catch (err) {
+      setError(t("plugins.discover.installFailed", entry.name, err instanceof Error ? err.message : String(err)));
+    } finally {
+      setInstallingCatalogId(null);
+    }
+  };
+
   const installFromCatalog = async (entry: PluginCatalogEntryInfo, official: boolean, sourceLabel: string) => {
     if (!entry.installableVersion) return;
 
@@ -446,6 +487,7 @@ export function PluginsWindow() {
                     >
                       {t(`plugins.badge.${p.trust === "ThirdParty" ? "thirdParty" : p.trust === "Official" ? "official" : "local"}`)}
                     </span>
+                    {p.held && <span style={{ fontSize: 10, color: "var(--ms-text-secondary)" }}>{t("plugins.held")}</span>}
                     {catalog?.find((e) => e.id === p.id)?.updateAvailable && (
                       <span style={{ fontSize: 10, color: "var(--ms-warning, #facc15)" }}>{t("plugins.updateAvailable")}</span>
                     )}
@@ -577,6 +619,23 @@ export function PluginsWindow() {
               <SectionLabel>{t("plugins.discover.about")}</SectionLabel>
               <p style={{ fontSize: 13, lineHeight: 1.65, color: "var(--ms-text-secondary)", margin: "6px 0 16px" }}>{selectedEntry.description}</p>
             </>
+          )}
+
+          {selectedEntry.installed && selectedEntry.sameSource !== false && (
+            <div style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap", marginBottom: 14 }}>
+              <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12.5 }}>
+                <input type="checkbox" checked={selectedEntry.held === true} onChange={(e) => setHold(selectedEntry, e.target.checked)} />
+                {t("plugins.hold")}
+              </label>
+              {selectedEntry.previous && (
+                <button type="button" className="ghost" disabled={installingCatalogId === selectedEntry.id} onClick={() => goBack(selectedEntry)} style={{ fontSize: 12 }}>
+                  {t("plugins.goBack.button", selectedEntry.previous.version)}
+                </button>
+              )}
+            </div>
+          )}
+          {selectedEntry.installed && selectedEntry.sameSource === false && (
+            <div style={{ fontSize: 12, color: "var(--ms-text-secondary)", marginBottom: 14 }}>{t("plugins.otherSource")}</div>
           )}
 
           {selectedEntry.withdrawn ? (

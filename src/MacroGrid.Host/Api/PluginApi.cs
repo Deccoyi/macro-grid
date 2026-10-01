@@ -30,10 +30,19 @@ internal static class PluginApi
                 p.Permissions,
                 p.SwitchedOffPermissions,
                 Trust = (origins.Get(p.Id)?.Trust ?? PluginTrust.Local).ToString(),
+                Held = origins.Get(p.Id)?.Hold == true,
                 // From the saved catalog copy only: this list is read often and must not use the network.
                 Withdrawn = origins.Get(p.Id)?.Trust == PluginTrust.Official
                     && official.Index?.Plugins.FirstOrDefault(e => e.Id == p.Id)?.Versions.Any(v => v.Withdrawn && v.Version == p.Version) == true,
             }));
+
+        // "Stay on this version": only a plugin installed from a source has an origin to carry the choice.
+        api.MapPut("/plugins/{id}/hold", (string id, PluginHoldRequest request, PluginInstallOriginStore origins) =>
+        {
+            if (origins.Get(id) is not { } origin) return Results.NotFound();
+            origins.Set(id, origin with { Hold = request.Hold });
+            return Results.NoContent();
+        });
 
         api.MapGet("/icon-packs", (PluginManager plugins, PluginLocalizer localizer) =>
             plugins.IconPacksWithOwner.Select(o => new { o.Pack.Id, DisplayName = localizer.Translate(o.PluginId, o.Pack.DisplayName)!, Icons = o.Pack.IconNames }));
@@ -227,6 +236,8 @@ internal static class PluginApi
     }
 
     private sealed record SettingsCommandRequest(string? Command, JsonObject? Values);
+
+    private sealed record PluginHoldRequest(bool Hold);
 
     private sealed record PluginInstallConfirmRequest(string Path);
 

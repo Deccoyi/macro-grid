@@ -413,6 +413,24 @@ public sealed class PluginManagerTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Replacing_a_plugin_removes_the_code_files_of_the_old_version_but_keeps_its_data()
+    {
+        await _manager.StartAsync(CancellationToken.None);
+        var first = NewStubSource();
+        File.WriteAllText(Path.Combine(first, "extra.js"), "// old");
+        File.WriteAllText(Path.Combine(first, "signature.json"), "{}");
+        await _manager.InstallFromFolderAsync(first);
+        var installed = Path.Combine(_pluginsDir, "stub");
+        File.WriteAllText(Path.Combine(installed, "settings.json"), "{\"a\":1}");
+
+        await _manager.InstallFromFolderAsync(NewStubSource());
+
+        Assert.False(File.Exists(Path.Combine(installed, "extra.js")));
+        Assert.False(File.Exists(Path.Combine(installed, "signature.json")));
+        Assert.Equal("{\"a\":1}", File.ReadAllText(Path.Combine(installed, "settings.json")));
+    }
+
+    [Fact]
     public async Task Install_with_an_oversized_icon_reports_no_HasIcon()
     {
         await _manager.StartAsync(CancellationToken.None);

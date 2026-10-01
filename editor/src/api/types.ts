@@ -185,6 +185,8 @@ export interface PluginInfo {
    * older server (treat as "Local"). Only GET /api/plugins sends this; approve/reload's single-plugin response
    * does not, since the caller already has it from the list. */
   trust?: "Official" | "ThirdParty" | "Local";
+  /** The person chose to stay on this version (no update offered). Missing from an older server. */
+  held?: boolean;
   /** True when the running plugin implements the optional `IPluginTreeProvider` — only then does the Plugins
    * tool window give it a chevron and ask GET /api/plugins/{id}/tree-items for anything. Missing from an
    * older server (treat as false). See docs/design/plugins-tool-window.md. */
@@ -300,8 +302,16 @@ export interface PluginCatalogEntryInfo {
   permissions: string[];
   installed: boolean;
   installedVersion: string | null;
-  /** True when installableVersion is newer than the installed version. */
+  /** True when installableVersion is newer than the installed version, the plugin came from this source, and the person did not choose to stay on the installed version (unless it was withdrawn or switched off). */
   updateAvailable: boolean;
+  /** False when the plugin was installed from a different source than the one listed. Missing from an older server (treat as true). */
+  sameSource?: boolean;
+  /** The person chose to stay on the installed version. Missing from an older server. */
+  held?: boolean;
+  /** The next older version on offer below the installed one, with the permissions it asks for; null when there is none. */
+  previous?: { version: string; permissions: string[] } | null;
+  /** The source the plugin was installed from, when that is not the listed one. */
+  otherSource?: string | null;
   /** "Official" | "ThirdParty" | "Local" | null (not installed and no recorded origin). */
   trust: string | null;
 }

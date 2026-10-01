@@ -122,10 +122,25 @@ public sealed partial class PluginManager
                 logger.LogWarning("C# plugin {Id} is not signed; loaded because this is a development build", SecurityEvents.ForLog(manifest.Id));
         }
 
+        // An official JavaScript plugin that was installed with a contents signature is checked again at every load: an edit
+        // in place (or a file added next to it) stops it until it is reinstalled. Other JavaScript plugins are not checked.
+        var origin = origins?.Get(manifest.Id);
+        var contentsVerified = false;
+        if (manifest.Kind == PluginKind.Js && origin is { Trust: PluginTrust.Official, ContentsSigned: true })
+        {
+            contentsVerified = _trust.VerifyStrict(dir, manifest).Allowed;
+            if (!contentsVerified)
+            {
+                logger.LogWarning(SecurityEvents.PluginFilesChanged, "Security: official plugin {Id} was not loaded: its files changed after install", SecurityEvents.ForLog(manifest.Id));
+                return Fail(PluginLoadStatus.NotAllowed, "The plugin's files changed after it was installed. Reinstall it from the Plugins window.", problemCode: ProblemCodes.FilesChanged);
+            }
+        }
+        problems?.Resolve(manifest.Id, ProblemCodes.FilesChanged);
+
         // The official safety list only reaches what the official project vouches for: plugins installed from the official
-        // catalog, and officially signed C# plugins. A saved list is all this reads; with none, everything loads.
+        // catalog, officially signed C# plugins and signed JavaScript folders. A saved list is all this reads; with none, everything loads.
         if (listedAsRevoked is not null
-            && (origins?.Get(manifest.Id)?.Trust == PluginTrust.Official || trust is { Allowed: true, Unsigned: false }))
+            && (origin?.Trust == PluginTrust.Official || contentsVerified || trust is { Allowed: true, Unsigned: false }))
         {
             logger.LogWarning(SecurityEvents.PluginRevoked, "Security: plugin {Id} {Version} was not loaded: switched off by the official plugin list",
                 SecurityEvents.ForLog(manifest.Id), SecurityEvents.ForLog(manifest.Version));

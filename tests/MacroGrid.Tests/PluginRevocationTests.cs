@@ -97,18 +97,101 @@ public sealed class PluginRevocationTests : IAsyncLifetime
         return dir;
     }
 
-    private void FromOfficial(string id) => _origins.Set(id, new PluginInstallOrigin("https://github.com/Deccoyi/macro-grid-plugin", "1.0.0", PluginTrust.Official));
+    private static PluginInstallOrigin FromOfficial() => new("https://github.com/Deccoyi/macro-grid-plugin", "1.0.0", PluginTrust.Official);
 
     [Fact]
     public async Task An_official_plugin_on_the_list_does_not_run_and_the_reason_is_shown()
     {
         await PublishListAsync(("demo", "1.0.0"));
-        FromOfficial("demo");
 
-        var result = await _manager.InstallFromFolderAsync(NewJs("demo"));
+        var result = await _manager.InstallFromFolderAsync(NewJs("demo"), FromOfficial());
 
         Assert.Equal(PluginLoadStatus.NotAllowed, result.Plugin.Status);
         Assert.Contains("Unsafe build.", result.Plugin.Detail);
+    }
+
+    [Fact]
+    public async Task The_origin_is_recorded_before_the_first_load_and_forgotten_on_uninstall_or_a_folder_install()
+    {
+        await _manager.InstallFromFolderAsync(NewJs("demo"), FromOfficial());
+        Assert.Equal(PluginTrust.Official, _origins.Get("demo")!.Trust);
+        Assert.False(_origins.Get("demo")!.Hold);
+
+        await _manager.InstallFromFolderAsync(NewJs("demo"));
+        Assert.Null(_origins.Get("demo"));
+
+        await _manager.InstallFromFolderAsync(NewJs("demo"), FromOfficial());
+        await _manager.UninstallAsync("demo");
+        Assert.Null(_origins.Get("demo"));
+    }
+
+    [Fact]
+    public async Task A_refused_install_keeps_the_old_origin()
+    {
+        await _manager.InstallFromFolderAsync(NewJs("demo"), FromOfficial());
+
+        var bad = Path.Combine(_root, "bad");
+        Directory.CreateDirectory(bad);
+        File.WriteAllText(Path.Combine(bad, "plugin.json"), "{ not json");
+        await Assert.ThrowsAnyAsync<Exception>(() => _manager.InstallFromFolderAsync(bad));
+
+        Assert.NotNull(_origins.Get("demo"));
+    }
+
+    [Fact]
+    public void An_origin_file_from_before_the_new_members_reads_with_defaults()
+    {
+        File.WriteAllText(Path.Combine(_root, "plugin-installs.json"),
+            """{ "old": { "sourceUrl": "https://x", "version": "1.0.0", "trust": "Official" } }""");
+
+        var origin = new PluginInstallOriginStore(_root).Get("old")!;
+
+        Assert.False(origin.Hold);
+        Assert.False(origin.ContentsSigned);
+        Assert.Null(origin.CodeFiles);
+    }
+
+    private static PluginInstallOrigin FromOfficialSigned() => FromOfficial() with { ContentsSigned = true };
+
+    [Fact]
+    public async Task An_official_javascript_plugin_with_a_contents_signature_stops_when_a_file_is_edited()
+    {
+        var dir = NewJs("demo");
+        TestPluginSigning.Sign(dir);
+        var installed = await _manager.InstallFromFolderAsync(dir, FromOfficialSigned());
+        Assert.Equal(PluginLoadStatus.Loaded, installed.Plugin.Status);
+
+        File.WriteAllText(Path.Combine(_pluginsDir, "demo", "index.js"), "// edited");
+        var reloaded = await _manager.ReloadAsync("demo");
+
+        Assert.Equal(PluginLoadStatus.NotAllowed, reloaded!.Status);
+        Assert.Contains(ProblemCodes.FilesChanged, _problems.Snapshot().Select(p => p.Code));
+    }
+
+    [Fact]
+    public async Task A_file_added_next_to_a_signed_official_javascript_plugin_stops_it_too()
+    {
+        var dir = NewJs("demo");
+        TestPluginSigning.Sign(dir);
+        await _manager.InstallFromFolderAsync(dir, FromOfficialSigned());
+
+        File.WriteAllText(Path.Combine(_pluginsDir, "demo", "extra.js"), "// added");
+
+        Assert.Equal(PluginLoadStatus.NotAllowed, (await _manager.ReloadAsync("demo"))!.Status);
+    }
+
+    [Fact]
+    public async Task An_official_javascript_plugin_without_a_contents_signature_or_from_elsewhere_is_not_checked()
+    {
+        await _manager.InstallFromFolderAsync(NewJs("demo"), FromOfficial());
+        File.WriteAllText(Path.Combine(_pluginsDir, "demo", "index.js"), "// edited");
+        Assert.Equal(PluginLoadStatus.Loaded, (await _manager.ReloadAsync("demo"))!.Status);
+
+        var dir = NewJs("other");
+        TestPluginSigning.Sign(dir);
+        await _manager.InstallFromFolderAsync(dir, FromOfficialSigned() with { Trust = PluginTrust.ThirdParty });
+        File.WriteAllText(Path.Combine(_pluginsDir, "other", "index.js"), "// edited");
+        Assert.Equal(PluginLoadStatus.Loaded, (await _manager.ReloadAsync("other"))!.Status);
     }
 
     [Fact]
@@ -125,9 +208,8 @@ public sealed class PluginRevocationTests : IAsyncLifetime
     public async Task A_third_party_plugin_is_not_covered()
     {
         await PublishListAsync(("demo", "1.0.0"));
-        _origins.Set("demo", new PluginInstallOrigin("https://github.com/someone/their-plugins", "1.0.0", PluginTrust.ThirdParty));
 
-        var result = await _manager.InstallFromFolderAsync(NewJs("demo"));
+        var result = await _manager.InstallFromFolderAsync(NewJs("demo"), new PluginInstallOrigin("https://github.com/someone/their-plugins", "1.0.0", PluginTrust.ThirdParty));
 
         Assert.Equal(PluginLoadStatus.Loaded, result.Plugin.Status);
     }
@@ -147,9 +229,9 @@ public sealed class PluginRevocationTests : IAsyncLifetime
     public async Task Another_version_of_a_listed_plugin_still_loads()
     {
         await PublishListAsync(("demo", "1.0.0"));
-        FromOfficial("demo");
+        await _manager.InstallFromFolderAsync(NewJs("demo"), FromOfficial());
 
-        var result = await _manager.InstallFromFolderAsync(NewJs("demo", "1.1.0"));
+        var result = await _manager.InstallFromFolderAsync(NewJs("demo", "1.1.0"), FromOfficial());
 
         Assert.Equal(PluginLoadStatus.Loaded, result.Plugin.Status);
     }
@@ -157,9 +239,8 @@ public sealed class PluginRevocationTests : IAsyncLifetime
     [Fact]
     public async Task Without_a_saved_list_everything_loads()
     {
-        FromOfficial("demo");
 
-        var result = await _manager.InstallFromFolderAsync(NewJs("demo"));
+        var result = await _manager.InstallFromFolderAsync(NewJs("demo"), FromOfficial());
 
         Assert.Equal(PluginLoadStatus.Loaded, result.Plugin.Status);
         Assert.Equal(0, _handler.Calls);
@@ -168,10 +249,8 @@ public sealed class PluginRevocationTests : IAsyncLifetime
     [Fact]
     public async Task Applying_the_list_stops_a_listed_plugin_starts_a_cleared_one_and_leaves_the_others_alone()
     {
-        FromOfficial("demo");
-        FromOfficial("other");
-        await _manager.InstallFromFolderAsync(NewJs("demo"));
-        await _manager.InstallFromFolderAsync(NewJs("other"));
+        await _manager.InstallFromFolderAsync(NewJs("demo"), FromOfficial());
+        await _manager.InstallFromFolderAsync(NewJs("other"), FromOfficial());
         Assert.Empty(await _manager.ApplyRevocationsAsync());
 
         await PublishListAsync(("demo", "1.0.0"));
@@ -212,8 +291,7 @@ public sealed class PluginRevocationTests : IAsyncLifetime
         await _manager.InstallFromFolderAsync(NewJs("local"));
         Assert.False(monitor.HasWatchedPlugins());
 
-        FromOfficial("demo");
-        await _manager.InstallFromFolderAsync(NewJs("demo"));
+        await _manager.InstallFromFolderAsync(NewJs("demo"), FromOfficial());
 
         Assert.True(monitor.HasWatchedPlugins());
     }
@@ -221,8 +299,7 @@ public sealed class PluginRevocationTests : IAsyncLifetime
     [Fact]
     public async Task A_due_safety_list_is_fetched_and_applied_to_the_running_plugins()
     {
-        FromOfficial("demo");
-        await _manager.InstallFromFolderAsync(NewJs("demo"));
+        await _manager.InstallFromFolderAsync(NewJs("demo"), FromOfficial());
         _listBody = TestPluginSigning.SignEnvelope("""{ "kind": "revoked", "sequence": 1, "formatVersion": 1, "plugins": [ { "id": "demo", "reason": "Unsafe build." } ] }""");
         var problems = _problems;
 
@@ -235,8 +312,7 @@ public sealed class PluginRevocationTests : IAsyncLifetime
     [Fact]
     public async Task A_failed_look_changes_nothing()
     {
-        FromOfficial("demo");
-        await _manager.InstallFromFolderAsync(NewJs("demo"));
+        await _manager.InstallFromFolderAsync(NewJs("demo"), FromOfficial());
 
         await NewMonitor(_problems).RunOnceAsync(CancellationToken.None);
 
@@ -246,8 +322,7 @@ public sealed class PluginRevocationTests : IAsyncLifetime
     [Fact]
     public async Task An_installed_withdrawn_version_gets_a_warning_that_goes_when_it_no_longer_applies()
     {
-        FromOfficial("demo");
-        await _manager.InstallFromFolderAsync(NewJs("demo"));
+        await _manager.InstallFromFolderAsync(NewJs("demo"), FromOfficial());
         var problems = _problems;
         var monitor = NewMonitor(problems);
         _indexBody = TestPluginSigning.SignEnvelope($$"""
@@ -275,8 +350,7 @@ public sealed class PluginRevocationTests : IAsyncLifetime
     [Fact]
     public async Task A_safety_list_unchecked_for_two_weeks_gets_one_quiet_line_that_a_good_check_removes()
     {
-        FromOfficial("demo");
-        await _manager.InstallFromFolderAsync(NewJs("demo"));
+        await _manager.InstallFromFolderAsync(NewJs("demo"), FromOfficial());
         var problems = _problems;
         var monitor = NewMonitor(problems);
         _catalog.GetRevokedAsync(TimeSpan.Zero, CancellationToken.None).GetAwaiter().GetResult();
@@ -295,7 +369,7 @@ public sealed class PluginRevocationTests : IAsyncLifetime
     }
 
     private PluginCatalogInstaller NewInstaller(FakeHttpHandler download) =>
-        new(new PluginPackageDownloader(new HttpClient(download)), _manager, _origins, Path.Combine(_root, "staging"), _catalog);
+        new(new PluginPackageDownloader(new HttpClient(download)), _manager, Path.Combine(_root, "staging"), _catalog);
 
     private static (PluginCatalogEntry Entry, PluginCatalogVersion Version) NewEntry()
     {

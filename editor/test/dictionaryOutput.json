@@ -434,6 +434,27 @@
       "five": "5 installed.",
       "words": "Arg1 installed."
     },
+    "plugins.goBack.button": {
+      "zero": "Go back to v0",
+      "one": "Go back to v1",
+      "two": "Go back to v2",
+      "five": "Go back to v5",
+      "words": "Go back to vArg1"
+    },
+    "plugins.goBack.confirm": {
+      "zero": "Go back to v0",
+      "one": "Go back to v1",
+      "two": "Go back to v2",
+      "five": "Go back to v5",
+      "words": "Go back to vArg1"
+    },
+    "plugins.goBack.done": {
+      "zero": "0 is back on v0. It will stay on this version.",
+      "one": "1 is back on v1. It will stay on this version.",
+      "two": "2 is back on v2. It will stay on this version.",
+      "five": "5 is back on v5. It will stay on this version.",
+      "words": "Arg1 is back on vArg2. It will stay on this version."
+    },
     "plugins.discover.link.failed": {
       "zero": "Could not install from that link: 0",
       "one": "Could not install from that link: 1",
@@ -1338,6 +1359,27 @@
       "two": "2 yüklendi.",
       "five": "5 yüklendi.",
       "words": "Arg1 yüklendi."
+    },
+    "plugins.goBack.button": {
+      "zero": "v0 sürümüne dön",
+      "one": "v1 sürümüne dön",
+      "two": "v2 sürümüne dön",
+      "five": "v5 sürümüne dön",
+      "words": "vArg1 sürümüne dön"
+    },
+    "plugins.goBack.confirm": {
+      "zero": "v0 sürümüne dön",
+      "one": "v1 sürümüne dön",
+      "two": "v2 sürümüne dön",
+      "five": "v5 sürümüne dön",
+      "words": "vArg1 sürümüne dön"
+    },
+    "plugins.goBack.done": {
+      "zero": "0, v0 sürümüne döndü. Bu sürümde kalacak.",
+      "one": "1, v1 sürümüne döndü. Bu sürümde kalacak.",
+      "two": "2, v2 sürümüne döndü. Bu sürümde kalacak.",
+      "five": "5, v5 sürümüne döndü. Bu sürümde kalacak.",
+      "words": "Arg1, vArg2 sürümüne döndü. Bu sürümde kalacak."
     },
     "plugins.discover.link.failed": {
       "zero": "Bu bağlantıdan yüklenemedi: 0",

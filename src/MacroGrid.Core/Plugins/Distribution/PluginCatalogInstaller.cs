@@ -13,14 +13,13 @@ namespace MacroGrid.Core.Plugins.Distribution;
 public sealed class PluginCatalogInstaller(
     PluginPackageDownloader downloader,
     PluginManager pluginManager,
-    PluginInstallOriginStore originStore,
     string stagingRoot,
     OfficialCatalog? officialCatalog = null)
 {
     private static readonly JsonSerializerOptions ManifestJson = new(JsonSerializerDefaults.Web);
 
     public async Task<PluginInstallResult> InstallAsync(
-        PluginCatalogEntry entry, PluginCatalogVersion version, string sourceUrl, bool isOfficial, CancellationToken cancellationToken)
+        PluginCatalogEntry entry, PluginCatalogVersion version, string sourceUrl, bool isOfficial, CancellationToken cancellationToken, bool hold = false)
     {
         if (version.Withdrawn)
             throw new PluginDownloadException(PluginDownloadException.Withdrawn, "This version was withdrawn by its publisher.");
@@ -61,8 +60,9 @@ public sealed class PluginCatalogInstaller(
 
             CrossCheck(entry, version, manifest);
 
-            var result = await pluginManager.InstallFromFolderAsync(stagingDir);
-            originStore.Set(result.Id, new PluginInstallOrigin(sourceUrl, version.Version, isOfficial ? PluginTrust.Official : PluginTrust.ThirdParty));
+            var origin = new PluginInstallOrigin(sourceUrl, version.Version, isOfficial ? PluginTrust.Official : PluginTrust.ThirdParty,
+                Hold: hold, ContentsSigned: isOfficial && File.Exists(Path.Combine(stagingDir, "signature.json")));
+            var result = await pluginManager.InstallFromFolderAsync(stagingDir, origin);
             return result;
         }
         finally

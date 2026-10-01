@@ -193,8 +193,9 @@ public sealed partial class PluginManager(
     }
 
     /// <summary>Copies a plugin folder into <c>plugins/&lt;id&gt;/</c> and loads it right away. If a plugin with that
-    /// id is already installed it is unloaded first and its files are overwritten (its own settings files stay).</summary>
-    public async Task<PluginInstallResult> InstallFromFolderAsync(string sourceDir)
+    /// id is already installed it is unloaded first and its files are overwritten (its own settings files stay). The origin (where it came from) is recorded before the first load, or
+    /// forgotten when there is none (a folder install over a catalog plugin).</summary>
+    public async Task<PluginInstallResult> InstallFromFolderAsync(string sourceDir, PluginInstallOrigin? origin = null)
     {
         var manifest = ReadManifest(Path.Combine(sourceDir, "plugin.json"));
         if (!IsValidPluginId(manifest.Id))
@@ -217,7 +218,10 @@ public sealed partial class PluginManager(
             var destDir = Path.Combine(pluginsRoot, manifest.Id);
             var marker = Path.Combine(destDir, ".uninstall");
             if (File.Exists(marker)) File.Delete(marker);
+            RemoveCodeFiles(destDir);
             CopyDirectory(sourceDir, destDir);
+            if (origin is null) origins?.Remove(manifest.Id);
+            else origins?.Set(manifest.Id, origin);
 
             var info = await LoadFolderCoreAsync(destDir);
             logger.LogInformation(SecurityEvents.PluginInstalled, "Security: plugin {Id} {Version} ({Kind}) installed", manifest.Id, manifest.Version, manifest.Kind);
@@ -358,6 +362,7 @@ public sealed partial class PluginManager(
             widgetCatalog?.Remove(pluginId);
             widgetEvents?.Forget(pluginId);
             permissionStore.Revoke(pluginId);
+            origins?.Remove(pluginId);
             logger.LogInformation(SecurityEvents.PluginUninstalled, "Security: plugin {Id} uninstalled", SecurityEvents.ForLog(pluginId));
 
             try
@@ -440,6 +445,14 @@ public sealed partial class PluginManager(
 
         var file = new FileInfo(iconFull);
         return file.Exists && file.Length <= MaxIconBytes ? iconFull : null;
+    }
+
+    /// <summary>Deletes the loadable files and the signature files of the old version, so the new version is checked against its own list only. Data files (.json and the like) stay.</summary>
+    private static void RemoveCodeFiles(string destDir)
+    {
+        if (!Directory.Exists(destDir)) return;
+        foreach (var file in Directory.EnumerateFiles(destDir, "*", SearchOption.AllDirectories).ToList())
+            if (PluginTrustVerifier.IsCodeFile(file)) File.Delete(file);
     }
 
     private static void CopyDirectory(string sourceDir, string destDir)
