@@ -128,6 +128,12 @@ shape, same 403. Tests: `OriginGuardTests`. See `./security-risk-assessment.md`,
 `/ws` (the WebSocket the deck and phone use) is not covered: `hello` already requires a PIN or a device token, so an unpaired
 page gets nothing from it either way, and adding an Origin check there was judged not worth the complexity.
 
+## F. A plugin's connections are checked, not only its approved names
+
+Status: **implemented, unreleased.** An approved `http:<host>:<port>` used to be matched by name only. The connection itself is now checked as well: the address
+must be of the kind the name says, Macro Grid's own ports are never reachable, and headers that steer a request cannot be set. Details and the `ws:`, `storage` and
+`notify` permissions that came with it: [js-plugin-runtime.md](js-plugin-runtime.md), "Network rules".
+
 ## Not in this plan
 
 - **Code signing of the installer (threat T7):** needs a code-signing certificate or a signing service for open-source projects;

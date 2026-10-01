@@ -4,6 +4,7 @@ New features and fixes in Macro Grid. For technical details, see [CHANGELOG-deve
 
 ## Unreleased
 ### New
+- **New plugin permissions:** a JavaScript plugin can ask to keep a small amount of its own data, to show short notices in the tray, and to keep a live connection open to one address. Each one is listed and can be switched off like the others.
 - **Action lists can now make decisions:** add an If step (with an optional Otherwise) to run steps only when a condition is met or when the step before failed, and a Stop step to end the list early.
 - **A button can change its look from its own state:** while it is held, while its action is running, when it is switched on, and after its action failed. Find them under "This button" in the variable list.
 - **Your own variables:** a new "Global Variable List" in Preferences lets you define text, number and true/false variables and use them anywhere as `{user.name}`: in texts, rules and actions. You can keep a value after a restart.
