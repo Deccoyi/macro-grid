@@ -29,9 +29,10 @@ export function saveColumnWidths(widths: Record<DiagnosticColumn, number>): void
   }
 }
 
-/** The grid template for a row: every column has the width it was dragged to, and the description takes the rest of a wide panel. */
+/** The grid template for a row: every column keeps exactly the width it was dragged to, and an empty last track takes the rest of a wide panel,
+ * so widening a column pushes the ones after it to the right (and scrolls) instead of squeezing the description. */
 export function gridTemplate(widths: Record<DiagnosticColumn, number>): string {
-  return DIAGNOSTIC_COLUMNS.map((c) => (c === "description" ? `minmax(${widths[c]}px, 1fr)` : `${widths[c]}px`)).join(" ");
+  return `${DIAGNOSTIC_COLUMNS.map((c) => `${widths[c]}px`).join(" ")} 1fr`;
 }
 
 /** The width the table needs at least, so a narrow panel scrolls sideways instead of squeezing the columns. */
