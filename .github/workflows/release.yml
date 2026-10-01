@@ -62,6 +62,16 @@ jobs:
           Compress-Archive -Path artifacts/server/* -DestinationPath $zip
           "zip=$zip" >> $env:GITHUB_OUTPUT
 
+      - name: Publish and zip the plugin tool
+        id: tool
+        shell: pwsh
+        run: |
+          scripts/publish-plugin-tool.ps1
+          $version = (Get-Content artifacts/plugin-tool/version.txt -Raw).Trim()
+          $zip = "MacroGrid-PluginTool-$version-win-x64.zip"
+          Compress-Archive -Path artifacts/plugin-tool/* -DestinationPath $zip
+          "zip=$zip" >> $env:GITHUB_OUTPUT
+
       - name: Install Inno Setup
         shell: pwsh
         run: choco install innosetup --yes --no-progress
@@ -83,7 +93,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          $files = @("${{ steps.zip.outputs.zip }}")
+          $files = @("${{ steps.zip.outputs.zip }}", "${{ steps.tool.outputs.zip }}")
           if (Test-Path artifacts) { $files += (Get-ChildItem artifacts -Filter "MacroGrid-Setup-*.exe" | ForEach-Object FullName) }
           $files += (Get-ChildItem artifacts/sbom -Filter "*.cdx.json" | ForEach-Object FullName)
           gh release view $env:TAG *> $null

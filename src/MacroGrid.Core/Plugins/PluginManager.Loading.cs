@@ -136,8 +136,8 @@ public sealed partial class PluginManager
         if (!compatibility.Compatible)
             return Fail(PluginLoadStatus.Incompatible, compatibility.Reason!);
 
-        var entryPath = Path.Combine(dir, manifest.Entry);
-        if (!File.Exists(entryPath))
+        var entryPath = ResolveEntryPath(dir, manifest.Entry);
+        if (entryPath is null)
             return Fail(PluginLoadStatus.Error, $"Entry file not found: {manifest.Entry}");
 
         var variableStore = new TrackingVariableStore(variables);

@@ -512,6 +512,45 @@ public sealed class PluginManagerTests : IAsyncLifetime
         Assert.Null(await _manager.UninstallAsync("nope"));
     }
 
+    [Theory]
+    [InlineData("../outside.js")]
+    [InlineData("sub/../../outside.js")]
+    [InlineData("C:/Windows/win.ini")]
+    [InlineData("/etc/passwd")]
+    [InlineData("")]
+    public void An_entry_that_leaves_the_plugin_folder_is_not_resolved(string entry)
+    {
+        var dir = NewPluginFolder("entry-one");
+        File.WriteAllText(Path.Combine(Path.GetDirectoryName(dir)!, "outside.js"), "");
+
+        Assert.Null(PluginManager.ResolveEntryPath(dir, entry));
+    }
+
+    [Fact]
+    public void An_entry_in_a_subfolder_is_resolved_and_a_missing_one_is_not()
+    {
+        var dir = NewPluginFolder("entry-two");
+        Directory.CreateDirectory(Path.Combine(dir, "src"));
+        File.WriteAllText(Path.Combine(dir, "src", "main.js"), "");
+
+        Assert.Equal(Path.Combine(Path.GetFullPath(dir), "src", "main.js"), PluginManager.ResolveEntryPath(dir, "src/main.js"));
+        Assert.Null(PluginManager.ResolveEntryPath(dir, "src/missing.js"));
+    }
+
+    [Fact]
+    public async Task A_js_plugin_whose_entry_points_outside_its_folder_is_not_run()
+    {
+        var dir = NewPluginFolder("js-out");
+        File.WriteAllText(Path.Combine(Path.GetDirectoryName(dir)!, "outside.js"), "host.variables.set('js-out.ran', 1);");
+        WriteManifest(dir, id: "js-out", kind: "js", entry: "../outside.js");
+
+        await _manager.StartAsync(CancellationToken.None);
+
+        var plugin = Assert.Single(_manager.Plugins);
+        Assert.Equal(PluginLoadStatus.Error, plugin.Status);
+        Assert.Contains("Entry file not found", plugin.Detail);
+    }
+
     private static void WriteJsPlugin(string dir, string id, string[] permissions, string script)
     {
         var list = string.Join(", ", permissions.Select(p => "\"" + p + "\""));
