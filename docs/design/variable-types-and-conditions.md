@@ -127,6 +127,10 @@ value or writing zero.
 The phone merges widget state, so when no rule matches any more and the binding has no default, the server sends one empty `style` to drop the
 old style. A shared case table, `tests/shared/dynamic-rule-cases.json`, is read by both the server tests and the editor preview tests.
 
+A text can also show a placeholder while a variable is unavailable: `{name|format|placeholder}`, for example `CPU {system.cpu|0|--} %`.
+`{name||n/a}` keeps the default format. The placeholder is plain text (it is never read for `{}` tokens again), may contain `|`, and is cut at
+64 characters. Without a placeholder an unavailable variable shows nothing, as before.
+
 ## Quick templates
 
 The rule editor has a row of three buttons that add ready-made rules for a variable of the right type, with no plugin involved: **On / Off** (a boolean:

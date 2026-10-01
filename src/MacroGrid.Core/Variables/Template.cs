@@ -7,7 +7,7 @@ namespace MacroGrid.Core.Variables;
 
 /// <summary>
 /// A widget's <c>Text</c>, pre-parsed once and cached by its source string. Supports
-/// <c>{name}</c> and <c>{name|format}</c> tokens plus <c>{{</c>/<c>}}</c> for a literal brace.
+/// <c>{name}</c>, <c>{name|format}</c> and <c>{name|format|placeholder}</c> tokens (the placeholder is shown, as plain text, while the variable is unavailable) plus <c>{{</c>/<c>}}</c> for a literal brace.
 /// An unmatched or empty <c>{}</c> token is left as-is instead of throwing, since it is user-typed text.
 /// </summary>
 public sealed class Template
@@ -43,7 +43,12 @@ public sealed class Template
         foreach (var part in _parts)
         {
             if (part is string literal) sb.Append(literal);
-            else if (part is VariableRef v) sb.Append(FormatValue(store.Get(v.Name), v.Format));
+            else if (part is VariableRef v)
+            {
+                var value = store.Get(v.Name);
+                if (value is null && v.Placeholder is not null) sb.Append(v.Placeholder);
+                else sb.Append(FormatValue(value, v.Format));
+            }
         }
         return sb.ToString();
     }
@@ -71,7 +76,15 @@ public sealed class Template
                 if (name.Length == 0) { literal.Append(text, i, end - i + 1); i = end + 1; continue; } // "{}" -> literal
 
                 if (literal.Length > 0) { parts.Add(literal.ToString()); literal.Clear(); }
-                parts.Add(new VariableRef(name, pipe < 0 ? null : inner[(pipe + 1)..]));
+                string? format = null, placeholder = null;
+                if (pipe >= 0)
+                {
+                    var rest = inner[(pipe + 1)..];
+                    var second = rest.IndexOf('|');
+                    format = second < 0 ? rest : rest[..second];
+                    if (second >= 0) placeholder = Truncate(rest[(second + 1)..]);
+                }
+                parts.Add(new VariableRef(name, format, placeholder));
                 i = end + 1;
                 continue;
             }
@@ -83,6 +96,12 @@ public sealed class Template
         if (literal.Length > 0) parts.Add(literal.ToString());
         return parts.ToArray();
     }
+
+    /// <summary>A placeholder is literal text: it is never parsed for tokens again and is cut here so a long one cannot fill a widget.</summary>
+    private const int MaxPlaceholderLength = 64;
+
+    private static string Truncate(string placeholder) =>
+        placeholder.Length <= MaxPlaceholderLength ? placeholder : placeholder[..MaxPlaceholderLength];
 
     private static string FormatValue(object? value, string? format)
     {
@@ -116,5 +135,5 @@ public sealed class Template
         return value ? AppLanguage.Pick("On", "Açık") : AppLanguage.Pick("Off", "Kapalı");
     }
 
-    private sealed record VariableRef(string Name, string? Format);
+    private sealed record VariableRef(string Name, string? Format, string? Placeholder);
 }

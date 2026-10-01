@@ -16,6 +16,18 @@ describe("preview text", () => {
     expect(renderPreviewText("a{x}b", { x: null })).toBe("ab");
   });
 
+  it("shows the placeholder while a variable is unavailable and not when it has a value", () => {
+    expect(renderPreviewText("CPU {cpu|0|--}", {})).toBe("CPU --");
+    expect(renderPreviewText("{a||n/a}", { a: null })).toBe("n/a");
+    expect(renderPreviewText("{a||x|y}", {})).toBe("x|y");
+    expect(renderPreviewText("{cpu|0|--}", { cpu: 42.3 })).toBe("42");
+    expect(renderPreviewText("[{b||--}]", { b: "" })).toBe("[]");
+  });
+
+  it("cuts a long placeholder", () => {
+    expect(renderPreviewText("{a||" + "x".repeat(200) + "}", {})).toHaveLength(64);
+  });
+
   it("keeps escaped braces as literal braces", () => {
     expect(renderPreviewText("{{x}}", { x: 1 })).toBe("{x}");
   });
