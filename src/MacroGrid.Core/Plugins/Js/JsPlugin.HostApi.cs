@@ -70,6 +70,15 @@ public sealed partial class JsPlugin
         _host!.RegisterAction(new JsAction(this, meta));
     }
 
+    // ---- notify ----
+
+    private void Notify(string text)
+    {
+        Require(JsPermissions.Notify);
+        if (_notifications?.Post(_manifest.Id, _manifest.Name, text) == NoticeResult.Dropped)
+            ReportLimit("A plugin asked for more notices than allowed (3 in a row, then one every 30 seconds), so some were dropped.");
+    }
+
     // ---- storage ----
 
     private JsStorage Storage()

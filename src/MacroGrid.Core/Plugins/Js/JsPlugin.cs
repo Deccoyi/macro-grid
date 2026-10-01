@@ -42,6 +42,7 @@ public sealed partial class JsPlugin : IPlugin, IPluginWidgetHandler, IDisposabl
     private readonly IInputService? _input;
     private readonly ILogger _logger;
     private readonly ProblemList? _problems;
+    private readonly PluginNotifications? _notifications;
     // The last message a refused key press put on the problem list; a script that does not catch it fails the whole call with the same text, which must not be listed twice.
     private volatile string? _lastReported;
     private readonly Action<string> _onFaulted;
@@ -89,8 +90,10 @@ public sealed partial class JsPlugin : IPlugin, IPluginWidgetHandler, IDisposabl
         IActiveWindowSource? windows = null,
         Func<bool>? isElevated = null,
         ProblemList? problems = null,
-        JsNetworkPolicy? network = null)
+        JsNetworkPolicy? network = null,
+        PluginNotifications? notifications = null)
     {
+        _notifications = notifications;
         _problems = problems;
         _windows = windows;
         _isElevated = isElevated ?? JsInputPolicy.ServerIsElevated;
@@ -304,6 +307,7 @@ public sealed partial class JsPlugin : IPlugin, IPluginWidgetHandler, IDisposabl
         engine.SetValue("__storageSet", new Action<string, string>(StorageSet));
         engine.SetValue("__storageRemove", new Action<string>(StorageRemove));
         engine.SetValue("__storageKeys", new Func<string>(StorageKeys));
+        engine.SetValue("__notify", new Action<string>(Notify));
         engine.SetValue("__widgetPost", new Action<string>(WidgetPost));
         engine.SetValue("__diagnosticsReport", new Action<string, string, string?>(DiagnosticsReport));
         engine.SetValue("__diagnosticsClear", new Action(() => _host!.Diagnostics.Clear()));

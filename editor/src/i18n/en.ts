@@ -193,6 +193,7 @@ export const en: Record<DictKey, string | ((...args: string[]) => string)> = {
   "plugins.permission.actions": "Add its own actions",
   "plugins.permission.input": "Can press keys and type on your PC as if it were at your keyboard, when you press one of its buttons. Allow only for plugins you trust.",
   "plugins.permission.storage": "Keep a small amount of its own data on this computer",
+  "plugins.permission.notify": "Show short notices in the tray, with the plugin's name as the title",
   "plugins.permission.http.local": (target: string) => `Send web requests to ${target} on this computer`,
   "plugins.permission.http.lan": (target: string) => `Send web requests to ${target} on your local network`,
   "plugins.permission.http.internet": (target: string) => `Send web requests to ${target} on the internet (it can send data out of your network)`,

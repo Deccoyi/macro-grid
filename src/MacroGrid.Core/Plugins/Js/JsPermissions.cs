@@ -5,7 +5,7 @@ namespace MacroGrid.Core.Plugins.Js;
 /// <summary>
 /// The permission strings a JS plugin declares in <c>plugin.json</c> and the user approves:
 /// <c>variables</c> (read variables, publish its own), <c>actions</c> (register actions),
-/// <c>input</c> (send key presses / type text on the PC), <c>storage</c> (keep a small amount of its own data) and <c>http:&lt;host&gt;:&lt;port&gt;</c> (make HTTP
+/// <c>input</c> (send key presses / type text on the PC), <c>storage</c> (keep a small amount of its own data), <c>notify</c> (show a short notice) and <c>http:&lt;host&gt;:&lt;port&gt;</c> (make HTTP
 /// requests to exactly that host and port). Timers, settings pages, status items and logging need no permission.
 /// </summary>
 public sealed partial class JsPermissions(IEnumerable<string> granted)
@@ -14,6 +14,7 @@ public sealed partial class JsPermissions(IEnumerable<string> granted)
     public const string Actions = "actions";
     public const string Input = "input";
     public const string Storage = "storage";
+    public const string Notify = "notify";
     private const string HttpPrefix = "http:";
 
     private readonly HashSet<string> _granted = new(granted, StringComparer.OrdinalIgnoreCase);
@@ -33,6 +34,7 @@ public sealed partial class JsPermissions(IEnumerable<string> granted)
         || permission.Equals(Actions, StringComparison.OrdinalIgnoreCase)
         || permission.Equals(Input, StringComparison.OrdinalIgnoreCase)
         || permission.Equals(Storage, StringComparison.OrdinalIgnoreCase)
+        || permission.Equals(Notify, StringComparison.OrdinalIgnoreCase)
         || HttpPermission().IsMatch(permission);
 
     [GeneratedRegex(@"^http:[A-Za-z0-9.\-]+:[0-9]{1,5}$", RegexOptions.IgnoreCase)]

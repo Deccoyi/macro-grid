@@ -193,6 +193,7 @@ export const tr = {
   "plugins.permission.actions": "Kendi aksiyonlarını eklemek",
   "plugins.permission.input": "Butonlarından birine bastığında, sanki klavyenin başındaymışsın gibi bilgisayarında tuşlara basabilir ve yazı yazabilir. Yalnızca güvendiğin eklentilere izin ver.",
   "plugins.permission.storage": "Bu bilgisayarda kendi küçük verisini saklayabilir",
+  "plugins.permission.notify": "Tepside, başlığı kendi adı olan kısa bildirimler gösterebilir",
   "plugins.permission.http.local": (target: string) => `Bu bilgisayardaki ${target} adresine web istekleri göndermek`,
   "plugins.permission.http.lan": (target: string) => `Yerel ağınızdaki ${target} adresine web istekleri göndermek`,
   "plugins.permission.http.internet": (target: string) => `İnternetteki ${target} adresine web istekleri göndermek (ağınızın dışına veri gönderebilir)`,
