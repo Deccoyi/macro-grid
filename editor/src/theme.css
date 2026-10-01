@@ -384,6 +384,7 @@ label.field {
 .pf-root .color-field { font-size: 12px; height: var(--pf-ctl-h); padding: 0 8px; box-sizing: border-box; border-radius: var(--pf-radius); }
 .pf-root .color-field input[type="text"] { height: auto; padding: 0; }
 .pf-root .pf-field button:not(.ghost):not(.pf-switch):not(.pf-icon-btn), .pf-btn { height: var(--pf-ctl-h); padding-block: 0; }
+.pf-root .pf-field .seg button:not(.ghost):not(.pf-switch):not(.pf-icon-btn) { height: auto; align-self: stretch; }
 .pf-btn { width: 100%; }
 .pf-btn.ghost.small { height: 24px; margin-left: -6px; width: auto; }
 .pf-icon-btn { width: var(--pf-ctl-h); height: var(--pf-ctl-h); padding: 0; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
