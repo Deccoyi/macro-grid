@@ -1,4 +1,4 @@
-import type { JSX } from "react";
+import { useEffect, useState, type JSX } from "react";
 import { webUrlHost, type ActionBinding, type Page } from "@macro/renderer";
 import { api } from "../../api/client";
 import type { ActionInfo, OptionsResult, ProfileSummary, SettingField, VariableInfo } from "../../api/types";
@@ -189,20 +189,36 @@ function OpenUrlActionForm({ binding, onChange }: ActionFormProps) {
   );
 }
 
+/** The wait is shown in seconds; the stored setting stays in milliseconds. The text is kept as typed ("0." must not turn into "0"). */
 function DelayActionForm({ binding, onChange }: ActionFormProps) {
   const { t } = useT();
+  const ms = num(binding.settings.ms);
+  const [text, setText] = useState(() => String(ms / 1000));
+  useEffect(() => {
+    setText((current) => (Math.round(Number(current) * 1000) === ms ? current : String(ms / 1000)));
+  }, [ms]);
   return (
     <label className="field">
       {t("form.delay.label")}
       <input
         type="number"
         min={0}
-        max={60000}
-        value={num(binding.settings.ms)}
-        onChange={(e) => onChange({ ms: Number(e.target.value) })}
+        max={60}
+        step={0.1}
+        value={text}
+        onChange={(e) => {
+          setText(e.target.value);
+          const seconds = Number(e.target.value);
+          if (e.target.value !== "" && Number.isFinite(seconds)) onChange({ ms: Math.round(seconds * 1000) });
+        }}
       />
     </label>
   );
+}
+
+function StopForm() {
+  const { t } = useT();
+  return <p style={{ fontSize: 11.5, color: "var(--ms-text-secondary)", margin: 0 }}>{t("action.logic.stopNote")}</p>;
 }
 
 /** No settings to configure — the action reads the widget's live dragged value instead (core.setVolume). */
@@ -315,6 +331,7 @@ const ACTION_FORMS: Record<string, (props: ActionFormProps) => JSX.Element> = {
   "core.open": OpenApplicationForm,
   "core.openUrl": OpenUrlActionForm,
   "core.delay": DelayActionForm,
+  "core.stop": StopForm,
   "core.setVolume": NoSettingsForm,
   "core.toggleMute": NoSettingsForm,
   "core.setMute": SetMuteActionForm,
