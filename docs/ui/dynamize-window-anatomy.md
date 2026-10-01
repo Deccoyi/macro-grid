@@ -132,5 +132,6 @@ The Dynamize window is a separate tool window, so it gets **no responsive tiers*
 ## 9. As built
 
 - The rule grid is `--dz-keyword-w | 1fr`: there is no drag grip, because rules cannot be reordered (first match wins by list order). Add the grip column when reordering exists.
-- The condition grid has no bind-variable column: a condition value cannot be bound to a variable today. Columns are chip | operator | value | delete; under 360px the value wraps to a second row.
-- The Presets window is a fixed 720x420 non-modal popover (`PresetsPopover.tsx`) opened from the dashed "All presets..." chip. Click outside or Escape closes it; there is no dimming and no second modal.
+- The condition grid has no bind-variable column: a condition value cannot be bound to a variable today. The shared `ConditionEditor` still wraps its value under 360px in narrow panels; inside the Dynamize window (`.dz-window`) it never wraps.
+- The Presets window is a non-modal sheet (`PresetsPopover.tsx`) opened from the dashed "All presets..." chip. It covers the Dynamize window exactly (same 680 width, same edges, own 48px title bar and 48px footer with the hint on the left); click outside or Escape closes it; there is no dimming, no shadow and no second modal.
+- The condition grid has five columns: chip | operator | value | negate (24px icon toggle) | remove. The negate toggle takes the place of the unused bind-variable column.
