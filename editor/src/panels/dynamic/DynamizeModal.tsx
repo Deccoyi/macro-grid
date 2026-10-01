@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ArrowRight, Plus, Trash2, Variable, X } from "lucide-react";
+import { ArrowRight, CircleOff, Gauge, Plus, ToggleRight, Trash2, Variable, X } from "lucide-react";
 import type { DynamicBinding } from "@macro/renderer";
 import type { VariableInfo } from "../../api/types";
 import { ColorField } from "../fields/controls";
@@ -9,6 +9,7 @@ import type { DictKey } from "../../i18n/tr";
 import { VariablePicker } from "../VariablePicker";
 import { combinatorOf, fromConditionNode, isValueless, newCase, newCondition, toConditionNode, type EditCase, type EditCondition } from "./conditionEditing";
 import { useBackdropClose } from "../../components/useBackdropClose";
+import { applyTemplate, buildTemplate, templateKinds, variablesFor, type TemplateKind, type TemplateWords } from "./quickTemplates";
 import { allowsOrdering, fitConditionToVariable, isInvalidNumber, normalizeBoolText, valueInputFor, type ValueInput } from "./variableTypes";
 
 const OPERATOR_KEYS: Record<EditCondition["operator"], DictKey> = {
@@ -22,6 +23,9 @@ const OPERATOR_KEYS: Record<EditCondition["operator"], DictKey> = {
   unavailable: "dynamic.operator.unavailable",
   available: "dynamic.operator.available",
 };
+
+const QUICK_KEYS: Record<TemplateKind, DictKey> = { onOff: "dynamic.quick.onOff", thresholds: "dynamic.quick.thresholds", unavailable: "dynamic.quick.unavailable" };
+const QUICK_ICONS: Record<TemplateKind, typeof Gauge> = { onOff: ToggleRight, thresholds: Gauge, unavailable: CircleOff };
 
 /** What each rule's "then" value is: a free color, free text (may contain {variables}), an icon, or a fixed set of choices (e.g. animation names). */
 export type ResultKind = "color" | "text" | "icon" | { select: { value: string; label: string }[] };
@@ -65,6 +69,17 @@ export function DynamizeModal({ propertyLabel, binding, variableCatalog, resultK
     onClose();
   };
 
+  const words: TemplateWords = {
+    on: t("dynamic.quick.word.on"),
+    off: t("dynamic.quick.word.off"),
+    low: t("dynamic.quick.word.low"),
+    medium: t("dynamic.quick.word.medium"),
+    high: t("dynamic.quick.word.high"),
+    unavailable: t("dynamic.quick.word.unavailable"),
+  };
+  const addTemplate = (kind: TemplateKind, variable: VariableInfo) =>
+    setCases((prev) => applyTemplate(prev, buildTemplate(kind, variable, resultKind, words), kind));
+
   const remove = () => { onSave(null); onClose(); };
 
   return (
@@ -99,6 +114,33 @@ export function DynamizeModal({ propertyLabel, binding, variableCatalog, resultK
               {t("dynamic.unsupported")}
             </div>
           )}
+
+          <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+            <Keyword muted>{t("dynamic.quick.title")}</Keyword>
+            {templateKinds(resultKind).map((kind) => {
+              const choices = variablesFor(kind, variableCatalog);
+              const Icon = QUICK_ICONS[kind];
+              const label = (
+                <>
+                  <Icon size={12} /> {t(QUICK_KEYS[kind])}
+                </>
+              );
+              if (choices.length === 0) {
+                return (
+                  <button key={kind} type="button" className="ghost" disabled title={t("dynamic.quick.noVariable")} style={chipStyle}>{label}</button>
+                );
+              }
+              return (
+                <VariablePicker
+                  key={kind}
+                  catalog={choices}
+                  mode="bare"
+                  onInsert={(name) => { const picked = choices.find((v) => v.name === name); if (picked) addTemplate(kind, picked); }}
+                  renderTrigger={(open) => <button type="button" className="ghost" onClick={open} style={chipStyle}>{label}</button>}
+                />
+              );
+            })}
+          </div>
 
           {cases.map((c, i) => (
             <div key={i} style={{ border: "1px solid var(--ms-border)", background: "var(--ms-bg-canvas)", padding: "12px 14px", display: "flex", flexDirection: "column", gap: 9 }}>
