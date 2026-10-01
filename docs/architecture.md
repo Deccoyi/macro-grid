@@ -45,7 +45,8 @@ half-written profile).
 
 - **Profile** `{ id, name, pages[], appMatches[], previewDeviceId? }`
 - **Page** `{ id, name, cols, rows, gap, padding, alignment, widgets[] }`: a grid; a profile can have several pages.
-- **Widget** `{ id, type, x, y, w, h, text, style, customCss, props, actions, dynamic }`
+- **Widget** `{ id, type, name, x, y, w, h, text, style, customCss, props, actions, dynamic }`
+  - `name` is the instance name: 1 to 64 characters, unique on its page, always present (the server fills it in for older profiles when it loads them). It is for messages and pickers and is never a reference. See [design/diagnostics-and-repair.md](design/diagnostics-and-repair.md).
   - `type` is `button`, `toggle`, `slider`, `knob`, `label`, `image`, `web`, `plugin-widget` or `plugin-html`. A `web` widget shows a page in a sandboxed iframe; a `plugin-widget` is a
     custom widget of a plugin (`props`: `plugin`, `widget`, `settings`) whose code runs in a sandboxed worker on the device and draws to a canvas, see
     [design/plugin-widgets.md](design/plugin-widgets.md). The reserved `plugin-html` type only draws a placeholder.

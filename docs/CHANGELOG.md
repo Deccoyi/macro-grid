@@ -9,8 +9,13 @@ New features and fixes in Macro Grid. For technical details, see [CHANGELOG-deve
 - **Turn off unencrypted connections:** a new Preferences option "Allow unencrypted connections" (on by default). Turned off, other devices can only connect over the encrypted port; the browser deck and phones paired before encryption stop working.
 - **Rules can react to a variable that is not available:** for example, grey out a button when its plugin is not running. A button also goes back to its own look when no rule applies any more.
 - **A text can show a placeholder when a variable is not available:** for example `CPU {system.cpu|0|--} %`.
+- **Every widget has a name:** you can change it in Properties, and messages use it, so a faulty button is easy to find.
+- **Macro Grid checks your profile:** it lists buttons whose action, plugin or variable is missing, and marks a faulty button in red.
+- **Details for each message:** the Diagnostic Messages window shows more about a message and a button that takes you to the widget.
+- **Export messages and logs:** copy or save the message list, or export the log files from the Help menu. Personal details are removed where they can be recognized; look through the files before you share them.
 - **Quick templates in the rule editor:** on/off, low/medium/high and "grey when unavailable" in one click.
 ### Changed
+- **A button whose plugin was removed now says so:** pressing it shows an error on the phone instead of doing nothing.
 - **Web widgets can be kept loaded:** a new "Keep loaded" switch in a web widget's properties keeps its page running when you go to another page of the grid, so a chat does not reload each time. The editor warns when a page has more than 3 web widgets, since a phone runs only a few at once.
 - **The Error List is now "Diagnostic Messages":** it shows errors, warnings and information. After every save it tells you how many plugin widgets the profile has and whether a page has more than is recommended (the right number depends on the device), and "No free cell left on this page" is listed there as a warning too.
 - **Hints can be closed:** the hint boxes under a web widget's address now have a close button that asks "Close for now" or "Do not show again". "Show closed notices again" in Preferences brings the second kind back. A warning about the address you typed (not encrypted, not allowed) cannot be closed.

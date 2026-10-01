@@ -88,5 +88,7 @@ The server keeps everything in `%AppData%\MacroGrid\` (profiles, paired devices,
   native dialogs) are not translated yet.
 - **The editor's copy of the rule evaluator** (`editor/src/grid/evaluateDynamic.ts`) only drives the live preview. The server's
   `DynamicRuleEvaluator` is what really runs. If one changes, change the other, and add a row to `tests/shared/dynamic-rule-cases.json`, which both evaluators are tested against.
+- **Widget names exist twice:** the server's `WidgetNames` and the editor's `state/widgetNames.ts` follow the same rules. A change to one needs a change to the other and a row in `tests/shared/widget-name-cases.json`, which both are tested against.
+- **A new Error List code** needs a help text `errorHelp.<code>` in both language files; a test fails until it exists.
 - **The renderer exists twice:** here (`packages/renderer`, used by the editor and the browser deck) and in the client repository (used by the
   phone app). The two are deliberately independent. A widget-rendering change that both need must be made in both.

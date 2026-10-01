@@ -13,11 +13,8 @@ import { useEditorStateContext } from "../state/EditorStateContext";
 import { clampWidth, DIAGNOSTIC_COLUMNS, gridTemplate, loadColumnWidths, saveColumnWidths, tableMinWidth, type DiagnosticColumn } from "./diagnosticColumns";
 type Filter = "all" | DiagnosticSeverity;
 
-/** The Error List tool window — docs/design/docking-workspace.md ("Error List"). A table, filter row
- * and severity counts over DiagnosticsContext data. The server's problems (a plugin's refused key press, a plugin that did not load) come
- * in with a source and a count; the editor's own checks have no producer yet, so nothing is invented here.
- * Double-click-to-navigate is not built yet: it needs the document area's multi-tab open-page list
- * (phase 5), which doesn't exist, so there is nowhere to navigate TO yet. */
+/** The Error List tool window — docs/design/docking-workspace.md ("Error List") and docs/design/diagnostics-and-repair.md. A table, filter row and
+ * severity counts over DiagnosticsContext data: the server's problems, the save summary and the profile check. A row opens Details (with "Go to widget"). */
 export function ErrorListPanel() {
   const { t } = useT();
   const { diagnostics, clear } = useDiagnostics();
