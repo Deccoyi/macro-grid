@@ -72,10 +72,13 @@ internal static class ServiceRegistration
     }
 
     /// <summary>The variable store, the built-in system providers and the status registry.</summary>
-    public static IServiceCollection AddVariablesAndStatus(this IServiceCollection services)
+    public static IServiceCollection AddVariablesAndStatus(this IServiceCollection services, string dataDir)
     {
         services.AddSingleton<VariableStore>();
         services.AddSingleton<IVariableStore>(sp => sp.GetRequiredService<VariableStore>());
+        services.AddSingleton(sp => new UserVariableService(dataDir, sp.GetRequiredService<VariableStore>()));
+        services.AddHostedService(sp => sp.GetRequiredService<UserVariableService>());
+        services.AddSingleton<IVariableCatalogSource>(sp => sp.GetRequiredService<UserVariableService>());
         services.AddVariableProvider<SystemMetricsProvider>();
         services.AddVariableProvider<SystemAudioProvider>();
         var statusRegistry = new PluginStatusRegistry();

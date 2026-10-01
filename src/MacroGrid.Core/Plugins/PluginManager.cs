@@ -383,6 +383,9 @@ public sealed partial class PluginManager(
             ?? throw new JsonException("plugin.json is empty");
     }
 
+    /// <summary>Names the host uses for its own variables and actions, so no plugin can claim them.</summary>
+    private static readonly string[] ReservedIds = ["user", "system", "core", "self"];
+
     private static readonly string[] ReservedDeviceNames =
         ["CON", "PRN", "AUX", "NUL", "COM1", "COM2", "COM3", "COM4", "COM5", "COM6", "COM7", "COM8", "COM9",
          "LPT1", "LPT2", "LPT3", "LPT4", "LPT5", "LPT6", "LPT7", "LPT8", "LPT9"];
@@ -396,6 +399,7 @@ public sealed partial class PluginManager(
         if (!char.IsAsciiLetterOrDigit(id[0]) || id[^1] == '.') return false;
         foreach (var c in id)
             if (!(char.IsAsciiLetterOrDigit(c) || c is '.' or '-' or '_')) return false;
+        if (ReservedIds.Contains(id, StringComparer.OrdinalIgnoreCase)) return false;
         var stem = id.Split('.')[0];
         return !ReservedDeviceNames.Contains(stem, StringComparer.OrdinalIgnoreCase);
     }
