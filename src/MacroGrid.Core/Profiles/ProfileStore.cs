@@ -79,7 +79,11 @@ public sealed class ProfileStore
             {
                 var profile = JsonSerializer.Deserialize<Profile>(File.ReadAllText(file), FileJson);
                 if (profile is not null)
+                {
+                    // Names for old profiles are filled in memory only; the file is rewritten by the next ordinary save, so loading never touches it.
+                    WidgetNames.Ensure(profile);
                     _profiles[profile.Id] = profile;
+                }
             }
             catch (JsonException)
             {
@@ -177,6 +181,8 @@ public sealed class ProfileStore
             ],
         };
 
-        return new Profile { Name = AppLanguage.Pick("Default", "Varsayılan"), Pages = [page1, page2] };
+        var profile = new Profile { Name = AppLanguage.Pick("Default", "Varsayılan"), Pages = [page1, page2] };
+        WidgetNames.Ensure(profile);
+        return profile;
     }
 }

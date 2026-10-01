@@ -109,6 +109,7 @@ public static class ProfilePackage
         WebUrlRule.Sanitize(profile);
         // The server-made script and asset references of a plugin widget never travel in a profile; only installed plugins' code runs.
         PluginWidgetProps.Strip(profile);
+        WidgetNames.Ensure(profile);
         return profile;
     }
 

@@ -77,7 +77,7 @@ export interface ActionBinding {
 export interface Widget {
   id: string;
   type: WidgetType;
-  /** Optional name, only used to pick this widget in an action (the target of "Change web page"); unique in a profile. */
+  /** The instance name: shown in messages and pickers, unique on its page, never used as a reference. The server fills it in for old profiles. */
   name?: string;
   x: number;
   y: number;

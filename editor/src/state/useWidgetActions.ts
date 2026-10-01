@@ -9,6 +9,7 @@ import { emitDiagnostic, noFreeCellWarning } from "../diagnostics/editorEvents";
 import { setClipboard } from "./clipboard";
 import { showStatusNotice } from "./statusNotice";
 import { tempId } from "./tempId";
+import { defaultWidgetName, nameForPage } from "./widgetNames";
 import type { ProfileDocument } from "./useProfileDocument";
 
 /** Widget-level edits on the current page: add, update, move/resize, action bindings, delete, duplicate, move/copy. */
@@ -29,6 +30,7 @@ export function useWidgetActions({
       const widget: Widget = {
         id: tempId("widget"),
         type,
+        name: defaultWidgetName(type, currentPage.widgets.map((w) => w.name)),
         x: cell.x,
         y: cell.y,
         w: 1,
@@ -62,6 +64,7 @@ export function useWidgetActions({
       const widget: Widget = {
         id: tempId("widget"),
         type: "plugin-widget",
+        name: defaultWidgetName("plugin-widget", currentPage.widgets.map((w) => w.name)),
         x: cell.x,
         y: cell.y,
         w: fits ? w : 1,
@@ -124,6 +127,7 @@ export function useWidgetActions({
       const cell = findFreeCell(w.w, w.h, currentPage.widgets, currentPage.cols, currentPage.rows);
       return { ...structuredClone(w), id: tempId("widget"), x: cell?.x ?? w.x, y: cell?.y ?? w.y };
     });
+    nameForPage(clones, currentPage.widgets);
     mutatePage(currentPage.id, (p) => p.widgets.push(...clones), { label: "undo.duplicateWidgets" });
     setSelectedIds(clones.map((c) => c.id));
   }, [currentPage, mutatePage, selectedIds, selectedWidgets, setSelectedIds]);
@@ -150,7 +154,10 @@ export function useWidgetActions({
       if (targetProfileId === profile.id) {
         mutate((draft) => {
           const targetPage = draft.pages.find((p) => p.id === targetPageId);
-          if (targetPage) targetPage.widgets.push(...clones);
+          if (targetPage) {
+            nameForPage(clones, targetPage.widgets);
+            targetPage.widgets.push(...clones);
+          }
           if (mode === "move") {
             const sourcePage = draft.pages.find((p) => p.id === currentPage.id);
             if (sourcePage) sourcePage.widgets = sourcePage.widgets.filter((w) => !widgetIds.includes(w.id));
@@ -162,6 +169,7 @@ export function useWidgetActions({
         const target = await api.getProfile(targetProfileId);
         const targetPage = target.pages.find((p) => p.id === targetPageId);
         if (targetPage) {
+          nameForPage(clones, targetPage.widgets);
           targetPage.widgets.push(...clones);
           await api.saveProfile(target);
         }
@@ -198,6 +206,7 @@ export function useWidgetActions({
         showStatusNotice("undo.pastePartial", String(toPlace.length), String(widgets.length));
       }
       const clones = toPlace.map((w, i) => ({ ...structuredClone(w), id: tempId("widget"), x: cells![i]!.x, y: cells![i]!.y }));
+      nameForPage(clones, currentPage.widgets);
       mutatePage(currentPage.id, (p) => p.widgets.push(...clones), { label: "undo.pasteWidgets" });
       setSelectedIds(clones.map((c) => c.id));
     },

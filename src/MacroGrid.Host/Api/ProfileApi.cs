@@ -40,6 +40,7 @@ internal static class ProfileApi
         api.MapPost("/profiles", (ProfileStore profiles) =>
         {
             var profile = new Profile { Name = AppLanguage.Pick("New profile", "Yeni Profil"), Pages = [new Page { Name = AppLanguage.Pick("Page 1", "Sayfa 1"), Cols = 4, Rows = 3 }] };
+            WidgetNames.Ensure(profile);
             profiles.Save(profile);
             return ApiResults.Json(profile);
         });
@@ -58,6 +59,7 @@ internal static class ProfileApi
 
             WebUrlRule.Sanitize(profile, loggers.CreateLogger("MacroGrid.Security"));
             PluginWidgetProps.Strip(profile);
+            WidgetNames.Ensure(profile);
             profiles.Save(profile);
             await widgetState.BroadcastProfileAsync(profile);
             return Results.NoContent();

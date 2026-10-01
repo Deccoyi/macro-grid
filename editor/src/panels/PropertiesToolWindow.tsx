@@ -50,6 +50,7 @@ export function PropertiesToolWindow() {
       actions={state.actions}
       variableCatalog={state.variableCatalog}
       onChange={(fn) => state.selectedWidget && state.updateWidget(state.selectedWidget.id, fn)}
+      onRename={(name) => state.selectedWidget && state.updateWidget(state.selectedWidget.id, (w) => { w.name = name; }, { label: "undo.renameWidget" })}
       onDelete={() => state.selectedWidget && state.deleteWidget(state.selectedWidget.id)}
       onDeleteSelected={state.deleteSelectedWidgets}
       onDuplicateSelected={state.duplicateSelectedWidgets}

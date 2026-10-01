@@ -10,6 +10,7 @@ import { ImageFields } from "./fields/ImageFields";
 import { RangeFields } from "./fields/RangeFields";
 import { TextFields } from "./fields/TextFields";
 import { PluginWidgetFields } from "./fields/PluginWidgetFields";
+import { NameField } from "./fields/NameField";
 import { WebFields } from "./fields/WebFields";
 
 interface InspectorProps {
@@ -20,6 +21,7 @@ interface InspectorProps {
   actions: ActionInfo[];
   variableCatalog: VariableInfo[];
   onChange: (fn: (widget: Widget) => void) => void;
+  onRename: (name: string) => void;
   onDelete: () => void;
   onDeleteSelected: () => void;
   onDuplicateSelected: () => void;
@@ -42,6 +44,7 @@ export function Inspector({
   actions,
   variableCatalog,
   onChange,
+  onRename,
   onDelete,
   onDeleteSelected,
   onDuplicateSelected,
@@ -94,6 +97,8 @@ export function Inspector({
         <span style={{ fontSize: 11, color: "var(--ms-text-secondary)", textTransform: "uppercase" }}>{typeLabel(widget.type, t)}</span>
         <button className="ghost" onClick={onDelete} style={{ color: "var(--ms-danger)" }}>{t("widget.delete")}</button>
       </div>
+
+      <NameField widget={widget} siblings={page.widgets} onRename={onRename} />
 
       <CollapsibleSection id="appearance" label={t("fields.appearance.title")}>
         <AppearanceFields widget={widget} onChange={onChange} variableCatalog={variableCatalog} />

@@ -69,6 +69,21 @@ public class ProfilePackageTests
     }
 
     [Fact]
+    public void An_import_gets_names_and_repeated_names_are_repaired()
+    {
+        var profile = Sample();
+        var page = profile.Pages[0];
+        page.Widgets.Clear();
+        page.Widgets.Add(new Widget { Name = "Go", X = 0 });
+        page.Widgets.Add(new Widget { Name = "Go", X = 1 });
+        page.Widgets.Add(new Widget { X = 2 });
+
+        var content = ProfilePackage.Read(JsonSerializer.SerializeToUtf8Bytes(profile, ProtocolJson.Options));
+
+        Assert.Equal(["Go", "Go_2", "Button_1"], content.Profile.Pages[0].Widgets.Select(w => w.Name));
+    }
+
+    [Fact]
     public void A_package_from_a_newer_format_is_refused_with_a_clear_message()
     {
         var bytes = ProfilePackage.Write(Sample(), Manifest(version: ProfilePackage.CurrentFormatVersion + 1));
