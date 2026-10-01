@@ -39,6 +39,16 @@ public enum SettingFieldKind
     /// <summary>A color: the editor shows its color picker (a swatch, a hex box and preset colors). The value is a <c>#rrggbb</c> string;
     /// <see cref="SettingField.Default"/> is the color used until the person picks one.</summary>
     Color,
+
+    /// <summary>A key combination as text such as <c>ctrl+shift+s</c> (the format the input actions read); the editor captures the keys the person presses. An empty string means none.</summary>
+    Hotkey,
+
+    /// <summary>A length of time as a whole number of milliseconds. <see cref="SettingField.Min"/>, <see cref="SettingField.Max"/> and <see cref="SettingField.Default"/> are milliseconds too;
+    /// the editor lets the person type it in milliseconds, seconds or minutes.</summary>
+    Duration,
+
+    /// <summary>Several of the options at once, from <see cref="SettingField.Options"/> or <see cref="SettingField.OptionsSource"/>. The value is a <c>JsonArray</c> of option values.</summary>
+    MultiSelect,
 }
 
 /// <summary>One labeled option in a <see cref="SettingFieldKind.Select"/> or <see cref="SettingFieldKind.Segmented"/> field.
