@@ -57,7 +57,7 @@ export function App() {
 }
 
 function AppContent() {
-  const { t } = useT();
+  const { t, tn } = useT();
   useDocumentTitle("app.title");
   const { previewProfiles } = usePreferences();
   const state = useEditorState();
@@ -404,7 +404,7 @@ function AppContent() {
 
           {moveCopyOpen && currentPage && (
             <MoveCopyDialog
-              title={t("moveCopy.widgetsTitle", String(state.selectedIds.length))}
+              title={tn("moveCopy.widgetsTitle", state.selectedIds.length)}
               profiles={state.profiles}
               currentProfileId={profile.id}
               currentProfilePages={profile.pages}

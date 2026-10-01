@@ -14,7 +14,7 @@ const FALLBACK_LIMITS: Limits = { maxCount: 200, maxNameLength: 40, maxDescripti
 /** The "Global Variable List" page of the Preferences window: variables the person defines and uses as {user.name} in texts, rules and actions.
  * Every change is sent to the server as the whole list, which accepts all of it or none of it. */
 export function GlobalVariablesPage() {
-  const { t } = useT();
+  const { t, tn } = useT();
   const [list, setList] = useState<UserVariableDef[] | null>(null);
   const [limits, setLimits] = useState<Limits>(FALLBACK_LIMITS);
   const [error, setError] = useState<string | null>(null);
@@ -42,7 +42,7 @@ export function GlobalVariablesPage() {
     const { lines, more } = usageSummary(uses);
     const message = uses.length === 0
       ? t("globalVariables.delete.confirm", v.name)
-      : `${t("globalVariables.delete.used", v.name, String(uses.length))}\n${lines.join("\n")}${more > 0 ? `\n${t("globalVariables.delete.more", String(more))}` : ""}`;
+      : `${tn("globalVariables.delete.used", uses.length, v.name)}\n${lines.join("\n")}${more > 0 ? `\n${t("globalVariables.delete.more", String(more))}` : ""}`;
     if (await confirmAsync(message, { danger: true })) await save((list ?? []).filter((x) => x.name !== v.name));
   };
 

@@ -74,7 +74,9 @@ export const tr = {
   "globalVariables.description": "Açıklama (isteğe bağlı)",
   "globalVariables.delete": "Değişkeni sil",
   "globalVariables.delete.confirm": "\"{name}\" değişkeni silinsin mi?",
-  "globalVariables.delete.used": "\"{name}\" {count} yerde kullanılıyor. Yine de silinsin mi? Siz düzeltene kadar bu yerler boş görünür.",
+  "globalVariables.delete.used.one": "\"{name}\" {count} yerde kullanılıyor. Yine de silinsin mi? Siz düzeltene kadar bu yerler boş görünür.",
+
+  "globalVariables.delete.used.other": "\"{name}\" {count} yerde kullanılıyor. Yine de silinsin mi? Siz düzeltene kadar bu yerler boş görünür.",
   "globalVariables.delete.more": "…ve {count} yer daha",
   "globalVariables.name.empty": "Bir ad girin.",
   "globalVariables.name.format": "Bir harfle başlayın, sonra yalnızca harf, rakam veya _ kullanın.",
@@ -130,7 +132,9 @@ export const tr = {
   "plugins.discover.info.source": "Kaynak",
   "plugins.discover.info.category": "Kategori",
   "plugins.discover.info.access": "Erişim",
-  "plugins.discover.info.permissionsCount": "{n} izin",
+  "plugins.discover.info.permissionsCount.one": "{n} izin",
+
+  "plugins.discover.info.permissionsCount.other": "{n} izin",
   "plugins.discover.info.fullAccess": "Tam erişim",
   "plugins.discover.back": "Discover'a dön",
   "plugins.discover.homepage": "Ana sayfa",
@@ -156,8 +160,11 @@ export const tr = {
   "plugins.badge.thirdParty": "Üçüncü taraf",
   "plugins.badge.local": "Yerel",
   "plugins.updateAvailable": "Güncelleme var",
-  "status.pluginUpdates": "{n} eklenti için güncelleme gerekli",
-  "plugins.keyboardUses": "Bugün klavyeyi {count} kez kullandı",
+  "status.pluginUpdates.one": "{n} eklenti için güncelleme gerekli",
+
+  "status.pluginUpdates.other": "{n} eklenti için güncelleme gerekli",
+  "plugins.keyboardUses.one": "Bugün klavyeyi bir kez kullandı",
+  "plugins.keyboardUses.other": "Bugün klavyeyi {count} kez kullandı",
   "plugins.refresh": "Yenile",
   "plugins.none": "Yüklü eklenti yok.",
   "plugins.install.browse": "Klasörden Yükle…",
@@ -339,7 +346,7 @@ export const tr = {
   "errorList.severity.error": "Hata",
   "errorList.severity.warning": "Uyarı",
   "errorList.severity.info": "Bilgi",
-  "diag.save.total": "Kaydedildi. Bu profilde {pages} sayfada {count} plugin widget'ı var.",
+  "diag.save.total": "Kaydedildi. Bu profildeki plugin widget sayısı: {count}. Plugin widget'ı olan sayfa sayısı: {pages}.",
   "diag.check.E210": "\"{page}\" sayfası, {widget}, {event} olayı: {n}. eylem ({type}) kullanılamıyor. Plugin'i kaldırılmış veya kapatılmış olabilir.",
   "diag.check.E211": "\"{page}\" sayfası, {widget}: bu plugin widget'ı kullanılamıyor (plugin {plugin}). Plugin kaldırılmış veya kapatılmış olabilir.",
   "diag.check.E220": "\"{page}\" sayfası, {widget}, {event} olayı: {n}. eylem var olmayan bir hedefe işaret ediyor ({what}).",
@@ -382,7 +389,9 @@ export const tr = {
   "folder.rename": "Klasörü yeniden adlandır",
   "folder.renamePrompt": "Klasör adı",
   "folder.delete": "Klasörü sil",
-  "folder.deleteConfirm": "Bu klasör {count} öğe içeriyor.",
+  "folder.deleteConfirm.one": "Bu klasör {count} öğe içeriyor.",
+
+  "folder.deleteConfirm.other": "Bu klasör {count} öğe içeriyor.",
   "folder.delete.deleteAndContents": "Klasörü ve içeriğini sil",
   "folder.delete.keepContents": "İçeriği koru",
   "hierarchy.loadError": "Yüklenemedi",
@@ -447,7 +456,9 @@ export const tr = {
   "moveCopy.copy": "Kopyala",
   "moveCopy.move": "Taşı",
   "moveCopy.cancel": "Vazgeç",
-  "moveCopy.widgetsTitle": "{n} widget'ı taşı/kopyala",
+  "moveCopy.widgetsTitle.one": "{n} widget'ı taşı/kopyala",
+
+  "moveCopy.widgetsTitle.other": "{n} widget'ı taşı/kopyala",
   "moveCopy.pageTitle": "Sayfayı başka profile kopyala",
 
   // ---- Generic dialogs ----
@@ -464,7 +475,9 @@ export const tr = {
   "profile.exportFailedTitle": "Profil dışa aktarılamadı",
   "profile.importMissingTitle": "Bazı aksiyonlar henüz çalışmaz",
   "profile.importWebTitle": "Bu profildeki web sayfaları",
-  "importWeb.count": "{n} site",
+  "importWeb.count.one": "{n} site",
+
+  "importWeb.count.other": "{n} site",
   "importWeb.kind": "Telefonunuzda çalışan web sayfaları",
   "importWeb.lead": "Bu profil, web widget'larında ve butonlarında şu siteleri açar:",
   "importWeb.notEncrypted": "Şifreli değil",
@@ -520,7 +533,9 @@ export const tr = {
   "action.logic.addElse": "Değilse ekle",
   "action.logic.collapse": "Daralt",
   "action.logic.expand": "Aç",
-  "action.logic.steps": "{n} adım",
+  "action.logic.steps.one": "{n} adım",
+
+  "action.logic.steps.other": "{n} adım",
   "action.logic.unsupported": "Bu koşul editörün gösterebileceğinden karmaşık. Olduğu gibi çalışır.",
   "action.logic.stopNote": "Aksiyon listesini burada bitirir.",
   "action.logic.removeBlock": "Kaldır (içindeki adımlar kalır)",

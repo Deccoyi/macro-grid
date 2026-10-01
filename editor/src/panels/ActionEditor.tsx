@@ -256,7 +256,7 @@ interface IfRowProps {
 
 /** An If: a slim row with what it tests, "Add otherwise", and a collapse that shrinks the block to one line (what it tests, how many steps it holds). */
 function IfRow({ row, binding, bindings, collapsed, frame, setRef, variableCatalog, onToggle, onChange, onAddElse, onMove, canMove, onRemove }: IfRowProps) {
-  const { t } = useT();
+  const { t, tn } = useT();
   const when = whenOf(binding);
   const stepCount = row.endIndex === undefined ? 0 : bindings.slice(row.index + 1, row.endIndex).filter((b) => b.type !== FLOW_IF && b.type !== FLOW_ELSE && b.type !== FLOW_END).length;
   const summary = when === "condition" ? summarizeCondition(binding.settings.condition as ConditionNode | undefined, t) : t(`action.logic.when.${when}`);
@@ -269,7 +269,7 @@ function IfRow({ row, binding, bindings, collapsed, frame, setRef, variableCatal
         <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: ".04em", textTransform: "uppercase", color: "var(--ms-text-secondary)" }}>{t("action.logic.if")}</span>
         {collapsed && (
           <span style={{ flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontSize: 12, color: "var(--ms-text-secondary)" }}>
-            {summary} · {t("action.logic.steps", String(stepCount))}
+            {summary} · {tn("action.logic.steps", stepCount)}
           </span>
         )}
         <div style={{ flex: 1 }} />

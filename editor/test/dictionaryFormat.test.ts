@@ -45,3 +45,28 @@ describe("dictionaries", () => {
   });
 
 });
+
+describe("plural keys", () => {
+  const bases = Object.keys(en).filter((k) => k.endsWith(".other")).map((k) => k.slice(0, -".other".length));
+
+  it("have .one and .other in both languages", () => {
+    expect(bases.length).toBeGreaterThanOrEqual(8);
+    for (const base of bases) for (const dict of [en, tr]) {
+      expect(`${base}.one` in dict, base).toBe(true);
+      expect(`${base}.other` in dict, base).toBe(true);
+    }
+  });
+
+  it("are picked by the language's plural rules", () => {
+    const category = (lang: string, n: number) => new Intl.PluralRules(lang).select(n);
+    expect(category("en", 1)).toBe("one");
+    expect(category("en", 0)).toBe("other");
+    expect(category("en", 2)).toBe("other");
+    expect(category("tr", 1)).toBe("one");
+  });
+
+  it("say the singular wording for one", () => {
+    expect(format(en["status.pluginUpdates.one"], PARAMS["status.pluginUpdates.one"]!, ["1"])).toBe("1 plugin update needed");
+    expect(format(en["status.pluginUpdates.other"], PARAMS["status.pluginUpdates.other"]!, ["3"])).toBe("3 plugin updates needed");
+  });
+});

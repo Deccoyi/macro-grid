@@ -56,7 +56,7 @@ function StatusChip({ entry, onClick }: { entry: StatusEntry; onClick?: () => vo
  * with no registered IPluginSettingsPage just shows an empty window (see PluginSettingsWindow.tsx).
  */
 export function StatusBar({ items }: { items: StatusEntry[] }) {
-  const { t } = useT();
+  const { t, tn } = useT();
   const notice = useStatusNotice();
   const pluginUpdates = usePluginUpdateCount();
   const core = items.filter((i) => i.pluginId === "core");
@@ -75,7 +75,7 @@ export function StatusBar({ items }: { items: StatusEntry[] }) {
         ))}
         {pluginUpdates > 0 && (
           <StatusChip
-            entry={{ id: "plugin-updates", pluginId: "core", text: t("status.pluginUpdates", String(pluginUpdates)), level: "Warning", updatedAt: "" }}
+            entry={{ id: "plugin-updates", pluginId: "core", text: tn("status.pluginUpdates", pluginUpdates), level: "Warning", updatedAt: "" }}
             onClick={() => api.openToolWindow("plugins")}
           />
         )}

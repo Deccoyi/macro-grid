@@ -1,11 +1,18 @@
 {
   "en": {
-    "action.logic.steps": {
-      "zero": "0 step(s)",
-      "one": "1 step(s)",
-      "two": "2 step(s)",
-      "five": "5 step(s)",
-      "words": "Arg1 step(s)"
+    "action.logic.steps.one": {
+      "zero": "0 step",
+      "one": "1 step",
+      "two": "2 step",
+      "five": "5 step",
+      "words": "Arg1 step"
+    },
+    "action.logic.steps.other": {
+      "zero": "0 steps",
+      "one": "1 steps",
+      "two": "2 steps",
+      "five": "5 steps",
+      "words": "Arg1 steps"
     },
     "consent.http": {
       "zero": "Send web requests to 0",
@@ -141,11 +148,11 @@
       "words": "Page \"Arg1\": Arg2 widgets of \"Arg3\", a plugin that is not verified. Up to Arg4 of such a plugin are recommended at the same time."
     },
     "diag.save.total": {
-      "zero": "Saved. This profile has 0 plugin widgets on 0 page(s).",
-      "one": "Saved. This profile has 1 plugin widgets on 1 page(s).",
-      "two": "Saved. This profile has 2 plugin widgets on 2 page(s).",
-      "five": "Saved. This profile has 5 plugin widgets on 5 page(s).",
-      "words": "Saved. This profile has Arg1 plugin widgets on Arg2 page(s)."
+      "zero": "Saved. Plugin widgets in this profile: 0. Pages with plugin widgets: 0.",
+      "one": "Saved. Plugin widgets in this profile: 1. Pages with plugin widgets: 1.",
+      "two": "Saved. Plugin widgets in this profile: 2. Pages with plugin widgets: 2.",
+      "five": "Saved. Plugin widgets in this profile: 5. Pages with plugin widgets: 5.",
+      "words": "Saved. Plugin widgets in this profile: Arg1. Pages with plugin widgets: Arg2."
     },
     "edit.redoLabel": {
       "zero": "Redo 0",
@@ -168,7 +175,14 @@
       "five": "This page has 5 web widgets. A phone is recommended to run 5 at most at once (a small one 1); the rest wait with a \"Tap to load\" button.",
       "words": "This page has Arg1 web widgets. A phone is recommended to run Arg2 at most at once (a small one 1); the rest wait with a \"Tap to load\" button."
     },
-    "folder.deleteConfirm": {
+    "folder.deleteConfirm.one": {
+      "zero": "This folder contains 0 item.",
+      "one": "This folder contains 1 item.",
+      "two": "This folder contains 2 item.",
+      "five": "This folder contains 5 item.",
+      "words": "This folder contains Arg1 item."
+    },
+    "folder.deleteConfirm.other": {
       "zero": "This folder contains 0 items.",
       "one": "This folder contains 1 items.",
       "two": "This folder contains 2 items.",
@@ -189,12 +203,19 @@
       "five": "…and 5 more",
       "words": "…and Arg1 more"
     },
-    "globalVariables.delete.used": {
-      "zero": "\"0\" is used in 0 place(s). Delete it anyway? Those places will show nothing until you fix them.",
-      "one": "\"1\" is used in 1 place(s). Delete it anyway? Those places will show nothing until you fix them.",
-      "two": "\"2\" is used in 2 place(s). Delete it anyway? Those places will show nothing until you fix them.",
-      "five": "\"5\" is used in 5 place(s). Delete it anyway? Those places will show nothing until you fix them.",
-      "words": "\"Arg1\" is used in Arg2 place(s). Delete it anyway? Those places will show nothing until you fix them."
+    "globalVariables.delete.used.one": {
+      "zero": "\"0\" is used in 0 place. Delete it anyway? Those places will show nothing until you fix them.",
+      "one": "\"1\" is used in 1 place. Delete it anyway? Those places will show nothing until you fix them.",
+      "two": "\"2\" is used in 2 place. Delete it anyway? Those places will show nothing until you fix them.",
+      "five": "\"5\" is used in 5 place. Delete it anyway? Those places will show nothing until you fix them.",
+      "words": "\"Arg2\" is used in Arg1 place. Delete it anyway? Those places will show nothing until you fix them."
+    },
+    "globalVariables.delete.used.other": {
+      "zero": "\"0\" is used in 0 places. Delete it anyway? Those places will show nothing until you fix them.",
+      "one": "\"1\" is used in 1 places. Delete it anyway? Those places will show nothing until you fix them.",
+      "two": "\"2\" is used in 2 places. Delete it anyway? Those places will show nothing until you fix them.",
+      "five": "\"5\" is used in 5 places. Delete it anyway? Those places will show nothing until you fix them.",
+      "words": "\"Arg2\" is used in Arg1 places. Delete it anyway? Those places will show nothing until you fix them."
     },
     "globalVariables.full": {
       "zero": "The list is full (0 variables).",
@@ -217,7 +238,14 @@
       "five": "Search 5 icons… (e.g. \"volume\", \"play\")",
       "words": "Search Arg1 icons… (e.g. \"volume\", \"play\")"
     },
-    "importWeb.count": {
+    "importWeb.count.one": {
+      "zero": "0 site",
+      "one": "1 site",
+      "two": "2 site",
+      "five": "5 site",
+      "words": "Arg1 site"
+    },
+    "importWeb.count.other": {
       "zero": "0 sites",
       "one": "1 sites",
       "two": "2 sites",
@@ -238,12 +266,19 @@
       "five": "Version 5",
       "words": "Version Arg1"
     },
-    "moveCopy.widgetsTitle": {
-      "zero": "Move/copy 0 widget(s)",
-      "one": "Move/copy 1 widget(s)",
-      "two": "Move/copy 2 widget(s)",
-      "five": "Move/copy 5 widget(s)",
-      "words": "Move/copy Arg1 widget(s)"
+    "moveCopy.widgetsTitle.one": {
+      "zero": "Move/copy 0 widget",
+      "one": "Move/copy 1 widget",
+      "two": "Move/copy 2 widget",
+      "five": "Move/copy 5 widget",
+      "words": "Move/copy Arg1 widget"
+    },
+    "moveCopy.widgetsTitle.other": {
+      "zero": "Move/copy 0 widgets",
+      "one": "Move/copy 1 widgets",
+      "two": "Move/copy 2 widgets",
+      "five": "Move/copy 5 widgets",
+      "words": "Move/copy Arg1 widgets"
     },
     "page.deleteConfirm": {
       "zero": "Delete page \"0\"?",
@@ -287,7 +322,14 @@
       "five": "by 5",
       "words": "by Arg1"
     },
-    "plugins.discover.info.permissionsCount": {
+    "plugins.discover.info.permissionsCount.one": {
+      "zero": "0 permission",
+      "one": "1 permission",
+      "two": "2 permission",
+      "five": "5 permission",
+      "words": "Arg1 permission"
+    },
+    "plugins.discover.info.permissionsCount.other": {
       "zero": "0 permissions",
       "one": "1 permissions",
       "two": "2 permissions",
@@ -357,7 +399,14 @@
       "five": "5 installed.",
       "words": "Arg1 installed."
     },
-    "plugins.keyboardUses": {
+    "plugins.keyboardUses.one": {
+      "zero": "Used the keyboard once today",
+      "one": "Used the keyboard once today",
+      "two": "Used the keyboard once today",
+      "five": "Used the keyboard once today",
+      "words": "Used the keyboard once today"
+    },
+    "plugins.keyboardUses.other": {
       "zero": "Used the keyboard 0 times today",
       "one": "Used the keyboard 1 times today",
       "two": "Used the keyboard 2 times today",
@@ -490,12 +539,19 @@
       "five": "Page 5",
       "words": "Page Arg1"
     },
-    "status.pluginUpdates": {
-      "zero": "0 plugin update(s) needed",
-      "one": "1 plugin update(s) needed",
-      "two": "2 plugin update(s) needed",
-      "five": "5 plugin update(s) needed",
-      "words": "Arg1 plugin update(s) needed"
+    "status.pluginUpdates.one": {
+      "zero": "0 plugin update needed",
+      "one": "1 plugin update needed",
+      "two": "2 plugin update needed",
+      "five": "5 plugin update needed",
+      "words": "Arg1 plugin update needed"
+    },
+    "status.pluginUpdates.other": {
+      "zero": "0 plugin updates needed",
+      "one": "1 plugin updates needed",
+      "two": "2 plugin updates needed",
+      "five": "5 plugin updates needed",
+      "words": "Arg1 plugin updates needed"
     },
     "undo.pastePartial": {
       "zero": "Pasted 0 of 0 widgets; the rest did not fit.",
@@ -541,7 +597,14 @@
     }
   },
   "tr": {
-    "action.logic.steps": {
+    "action.logic.steps.one": {
+      "zero": "0 adım",
+      "one": "1 adım",
+      "two": "2 adım",
+      "five": "5 adım",
+      "words": "Arg1 adım"
+    },
+    "action.logic.steps.other": {
       "zero": "0 adım",
       "one": "1 adım",
       "two": "2 adım",
@@ -682,11 +745,11 @@
       "words": "\"Arg1\" sayfası: doğrulanmamış \"Arg3\" plugin'inin Arg2 widget'ı var. Böyle bir plugin için aynı anda en fazla Arg4 önerilir."
     },
     "diag.save.total": {
-      "zero": "Kaydedildi. Bu profilde 0 sayfada 0 plugin widget'ı var.",
-      "one": "Kaydedildi. Bu profilde 1 sayfada 1 plugin widget'ı var.",
-      "two": "Kaydedildi. Bu profilde 2 sayfada 2 plugin widget'ı var.",
-      "five": "Kaydedildi. Bu profilde 5 sayfada 5 plugin widget'ı var.",
-      "words": "Kaydedildi. Bu profilde Arg2 sayfada Arg1 plugin widget'ı var."
+      "zero": "Kaydedildi. Bu profildeki plugin widget sayısı: 0. Plugin widget'ı olan sayfa sayısı: 0.",
+      "one": "Kaydedildi. Bu profildeki plugin widget sayısı: 1. Plugin widget'ı olan sayfa sayısı: 1.",
+      "two": "Kaydedildi. Bu profildeki plugin widget sayısı: 2. Plugin widget'ı olan sayfa sayısı: 2.",
+      "five": "Kaydedildi. Bu profildeki plugin widget sayısı: 5. Plugin widget'ı olan sayfa sayısı: 5.",
+      "words": "Kaydedildi. Bu profildeki plugin widget sayısı: Arg1. Plugin widget'ı olan sayfa sayısı: Arg2."
     },
     "edit.redoLabel": {
       "zero": "0 işlemini yinele",
@@ -709,7 +772,14 @@
       "five": "Bu sayfada 5 web widget'ı var. Bir telefonun aynı anda en fazla 5 tanesini çalıştırması önerilir (küçük telefonlarda 1); fazlası \"Yüklemek için dokun\" düğmesiyle bekler.",
       "words": "Bu sayfada Arg1 web widget'ı var. Bir telefonun aynı anda en fazla Arg2 tanesini çalıştırması önerilir (küçük telefonlarda 1); fazlası \"Yüklemek için dokun\" düğmesiyle bekler."
     },
-    "folder.deleteConfirm": {
+    "folder.deleteConfirm.one": {
+      "zero": "Bu klasör 0 öğe içeriyor.",
+      "one": "Bu klasör 1 öğe içeriyor.",
+      "two": "Bu klasör 2 öğe içeriyor.",
+      "five": "Bu klasör 5 öğe içeriyor.",
+      "words": "Bu klasör Arg1 öğe içeriyor."
+    },
+    "folder.deleteConfirm.other": {
       "zero": "Bu klasör 0 öğe içeriyor.",
       "one": "Bu klasör 1 öğe içeriyor.",
       "two": "Bu klasör 2 öğe içeriyor.",
@@ -730,12 +800,19 @@
       "five": "…ve 5 yer daha",
       "words": "…ve Arg1 yer daha"
     },
-    "globalVariables.delete.used": {
+    "globalVariables.delete.used.one": {
       "zero": "\"0\" 0 yerde kullanılıyor. Yine de silinsin mi? Siz düzeltene kadar bu yerler boş görünür.",
       "one": "\"1\" 1 yerde kullanılıyor. Yine de silinsin mi? Siz düzeltene kadar bu yerler boş görünür.",
       "two": "\"2\" 2 yerde kullanılıyor. Yine de silinsin mi? Siz düzeltene kadar bu yerler boş görünür.",
       "five": "\"5\" 5 yerde kullanılıyor. Yine de silinsin mi? Siz düzeltene kadar bu yerler boş görünür.",
-      "words": "\"Arg1\" Arg2 yerde kullanılıyor. Yine de silinsin mi? Siz düzeltene kadar bu yerler boş görünür."
+      "words": "\"Arg2\" Arg1 yerde kullanılıyor. Yine de silinsin mi? Siz düzeltene kadar bu yerler boş görünür."
+    },
+    "globalVariables.delete.used.other": {
+      "zero": "\"0\" 0 yerde kullanılıyor. Yine de silinsin mi? Siz düzeltene kadar bu yerler boş görünür.",
+      "one": "\"1\" 1 yerde kullanılıyor. Yine de silinsin mi? Siz düzeltene kadar bu yerler boş görünür.",
+      "two": "\"2\" 2 yerde kullanılıyor. Yine de silinsin mi? Siz düzeltene kadar bu yerler boş görünür.",
+      "five": "\"5\" 5 yerde kullanılıyor. Yine de silinsin mi? Siz düzeltene kadar bu yerler boş görünür.",
+      "words": "\"Arg2\" Arg1 yerde kullanılıyor. Yine de silinsin mi? Siz düzeltene kadar bu yerler boş görünür."
     },
     "globalVariables.full": {
       "zero": "Liste dolu (0 değişken).",
@@ -758,7 +835,14 @@
       "five": "5 ikon içinde ara… (İngilizce, örn. \"volume\", \"play\")",
       "words": "Arg1 ikon içinde ara… (İngilizce, örn. \"volume\", \"play\")"
     },
-    "importWeb.count": {
+    "importWeb.count.one": {
+      "zero": "0 site",
+      "one": "1 site",
+      "two": "2 site",
+      "five": "5 site",
+      "words": "Arg1 site"
+    },
+    "importWeb.count.other": {
       "zero": "0 site",
       "one": "1 site",
       "two": "2 site",
@@ -779,7 +863,14 @@
       "five": "Sürüm 5",
       "words": "Sürüm Arg1"
     },
-    "moveCopy.widgetsTitle": {
+    "moveCopy.widgetsTitle.one": {
+      "zero": "0 widget'ı taşı/kopyala",
+      "one": "1 widget'ı taşı/kopyala",
+      "two": "2 widget'ı taşı/kopyala",
+      "five": "5 widget'ı taşı/kopyala",
+      "words": "Arg1 widget'ı taşı/kopyala"
+    },
+    "moveCopy.widgetsTitle.other": {
       "zero": "0 widget'ı taşı/kopyala",
       "one": "1 widget'ı taşı/kopyala",
       "two": "2 widget'ı taşı/kopyala",
@@ -828,7 +919,14 @@
       "five": "Yazar: 5",
       "words": "Yazar: Arg1"
     },
-    "plugins.discover.info.permissionsCount": {
+    "plugins.discover.info.permissionsCount.one": {
+      "zero": "0 izin",
+      "one": "1 izin",
+      "two": "2 izin",
+      "five": "5 izin",
+      "words": "Arg1 izin"
+    },
+    "plugins.discover.info.permissionsCount.other": {
       "zero": "0 izin",
       "one": "1 izin",
       "two": "2 izin",
@@ -898,7 +996,14 @@
       "five": "5 yüklendi.",
       "words": "Arg1 yüklendi."
     },
-    "plugins.keyboardUses": {
+    "plugins.keyboardUses.one": {
+      "zero": "Bugün klavyeyi bir kez kullandı",
+      "one": "Bugün klavyeyi bir kez kullandı",
+      "two": "Bugün klavyeyi bir kez kullandı",
+      "five": "Bugün klavyeyi bir kez kullandı",
+      "words": "Bugün klavyeyi bir kez kullandı"
+    },
+    "plugins.keyboardUses.other": {
       "zero": "Bugün klavyeyi 0 kez kullandı",
       "one": "Bugün klavyeyi 1 kez kullandı",
       "two": "Bugün klavyeyi 2 kez kullandı",
@@ -1031,7 +1136,14 @@
       "five": "Sayfa 5",
       "words": "Sayfa Arg1"
     },
-    "status.pluginUpdates": {
+    "status.pluginUpdates.one": {
+      "zero": "0 eklenti için güncelleme gerekli",
+      "one": "1 eklenti için güncelleme gerekli",
+      "two": "2 eklenti için güncelleme gerekli",
+      "five": "5 eklenti için güncelleme gerekli",
+      "words": "Arg1 eklenti için güncelleme gerekli"
+    },
+    "status.pluginUpdates.other": {
       "zero": "0 eklenti için güncelleme gerekli",
       "one": "1 eklenti için güncelleme gerekli",
       "two": "2 eklenti için güncelleme gerekli",

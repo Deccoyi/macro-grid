@@ -53,7 +53,7 @@ function mnemonicLabel(label: string, letter: string | undefined, show: boolean)
  * as real separate OS windows (ToolWindow.cs) rather than in-page modals; only File's import/export use
  * native Open/Save dialogs on the server's desktop instead of browser download/upload. */
 export function MenuBar({ profile, onImportProfile, editCommands }: MenuBarProps) {
-  const { t, lang } = useT();
+  const { t, tn, lang } = useT();
   const serverVersion = useServerVersion();
   const pluginUpdates = usePluginUpdateCount();
   const workspace = useWorkspace();
@@ -243,7 +243,7 @@ export function MenuBar({ profile, onImportProfile, editCommands }: MenuBarProps
           onMouseEnter={() => { if (openMenu && openMenu.id !== m.id) open(m.id); }}
         >
           {mnemonicLabel(m.label, mnemonics[m.id], mnemonicsVisible)}
-          {m.id === "plugins" && pluginUpdates > 0 && <span className="menu-bar-dot" title={t("status.pluginUpdates", String(pluginUpdates))} />}
+          {m.id === "plugins" && pluginUpdates > 0 && <span className="menu-bar-dot" title={tn("status.pluginUpdates", pluginUpdates)} />}
         </button>
       ))}
 
