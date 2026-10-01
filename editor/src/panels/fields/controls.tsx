@@ -282,7 +282,7 @@ interface NumberInputProps {
   onChange: (v: number) => void;
   min?: number;
   max?: number;
-  step?: number;
+  step?: number | "any";
   /** Shown dimmed inside the input on the right (px, ms). */
   unit?: string;
   disabled?: boolean;
@@ -348,8 +348,8 @@ export function RangeInput({ value, onChange, min, max, step = 1, disabled, labe
 }
 
 /** A single-line text input, 28 high, labelled by the nearest Field. */
-export function TextInput({ value, onChange, placeholder, readOnly, disabled, maxLength, label, className }: {
-  value: string; onChange?: (v: string) => void; placeholder?: string; readOnly?: boolean; disabled?: boolean; maxLength?: number; label?: string; className?: string;
+export function TextInput({ value, onChange, placeholder, readOnly, disabled, maxLength, label, className, onClick }: {
+  value: string; onChange?: (v: string) => void; placeholder?: string; readOnly?: boolean; disabled?: boolean; maxLength?: number; label?: string; className?: string; onClick?: () => void;
 }) {
   const field = useContext(FieldContext);
   return (
@@ -363,7 +363,27 @@ export function TextInput({ value, onChange, placeholder, readOnly, disabled, ma
       readOnly={readOnly}
       disabled={disabled}
       maxLength={maxLength}
+      onClick={onClick}
       onChange={(e) => onChange?.(e.target.value)}
+    />
+  );
+}
+
+/** A multi-line text input labelled by the nearest Field: controlled with `value`, or uncontrolled with `defaultValue` and `onBlur` (for JSON text). */
+export function TextAreaInput({ value, onChange, defaultValue, onBlur, rows = 2, placeholder, mono }: {
+  value?: string; onChange?: (v: string) => void; defaultValue?: string; onBlur?: (v: string) => void; rows?: number; placeholder?: string; mono?: boolean;
+}) {
+  const field = useContext(FieldContext);
+  return (
+    <textarea
+      id={field?.id}
+      rows={rows}
+      className={mono ? "pf-mono" : undefined}
+      value={value}
+      defaultValue={defaultValue}
+      placeholder={placeholder}
+      onChange={onChange ? (e) => onChange(e.target.value) : undefined}
+      onBlur={onBlur ? (e) => onBlur(e.target.value) : undefined}
     />
   );
 }

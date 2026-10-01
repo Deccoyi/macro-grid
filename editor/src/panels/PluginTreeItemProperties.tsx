@@ -61,17 +61,15 @@ export function PluginTreeItemProperties({ selection }: { selection: PluginTreeS
   };
 
   return (
-    <div
-      style={{ height: "100%", display: "flex", flexDirection: "column", overflowY: "auto", padding: 12 }}
-      onKeyDown={(e) => handleLocalUndoRedo(e, undo, redo)}
-    >
-      <div style={{ fontSize: 12.5, fontWeight: 600, color: "var(--ms-text-primary)", marginBottom: 10 }}>{title}</div>
+    <div className="pf-root" style={{ height: "100%", overflowY: "auto" }} onKeyDown={(e) => handleLocalUndoRedo(e, undo, redo)}>
+      <div className="pf-section head"><span className="pf-identity-name">{title}</span></div>
+      <div className="pf-section pf-body">
 
       {!hasSettings && (
-        <div style={{ fontSize: 12, color: "var(--ms-text-secondary)" }}>{t("pluginsTree.noSettings")}</div>
+        <span className="pf-hint">{t("pluginsTree.noSettings")}</span>
       )}
 
-      {hasSettings && loading && <div style={{ fontSize: 12, color: "var(--ms-text-secondary)" }}>{t("pairing.loading")}</div>}
+      {hasSettings && loading && <span className="pf-hint">{t("pairing.loading")}</span>}
 
       {hasSettings && !loading && fields && fields.length > 0 && (
         <>
@@ -87,21 +85,22 @@ export function PluginTreeItemProperties({ selection }: { selection: PluginTreeS
               ? (command, current) => api.runPluginSettingsCommand(selection.pluginId, command, current)
               : undefined}
           />
-          <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 14 }}>
+          <div className="pf-row">
             <button type="button" onClick={save} disabled={saving}>{t("pluginSettings.save")}</button>
-            {saved && <span style={{ fontSize: 11.5, color: "var(--ms-success, #4ade80)" }}>{t("pluginSettings.saved")}</span>}
-            {error && <span style={{ fontSize: 11.5, color: "var(--ms-danger)" }}>{error}</span>}
+            {saved && <span className="pf-hint" style={{ color: "var(--ms-success)" }}>{t("pluginSettings.saved")}</span>}
+            {error && <span className="pf-hint error">{error}</span>}
           </div>
         </>
       )}
 
       {hasSettings && !loading && (!fields || fields.length === 0) && !error && (
-        <div style={{ fontSize: 12, color: "var(--ms-text-secondary)" }}>{t("pluginSettings.none")}</div>
+        <span className="pf-hint">{t("pluginSettings.none")}</span>
       )}
 
       {error && !fields && (
-        <div style={{ fontSize: 11.5, color: "var(--ms-danger)", marginTop: 8 }}>{error}</div>
+        <span className="pf-hint error">{error}</span>
       )}
+      </div>
     </div>
   );
 }
