@@ -42,6 +42,12 @@ public static class ProblemCodes
     public const string WidgetEventDropped = "P142";
     /// <summary>A custom widget reported an error from its own code.</summary>
     public const string WidgetScriptError = "P143";
+    /// <summary>An official plugin version was switched off by the official safety list. It does not run until it is updated or removed.</summary>
+    public const string Revoked = "P111";
+    /// <summary>An installed plugin version was withdrawn by its publisher. It keeps running; the person is asked to update or remove it.</summary>
+    public const string Withdrawn = "P112";
+    /// <summary>The official safety list could not be checked for a long time. Plugins keep running.</summary>
+    public const string CatalogStale = "P113";
     /// <summary>A press ran an action whose type is not available (its plugin was removed or is switched off). Cleared when a plugin loads.</summary>
     public const string ActionMissing = "P131";
     /// <summary>A plugin reported a problem itself (<c>IPluginDiagnostics</c>).</summary>

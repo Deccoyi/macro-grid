@@ -1,6 +1,7 @@
 using System.Text.Json;
 using MacroGrid.Core.Actions;
 using MacroGrid.Core.Diagnostics;
+using MacroGrid.Core.Plugins.Distribution;
 using MacroGrid.Core.Plugins.Js;
 using MacroGrid.Core.Plugins.Widgets;
 using MacroGrid.Core.Profiles;
@@ -44,7 +45,9 @@ public sealed partial class PluginManager(
     IActiveWindowSource? windowSource = null,
     ProblemList? problems = null,
     PluginWidgetCatalog? widgetCatalog = null,
-    PluginWidgetEventHub? widgetEvents = null) : IHostedService, IPluginWidgetHost
+    PluginWidgetEventHub? widgetEvents = null,
+    OfficialCatalog? officialCatalog = null,
+    PluginInstallOriginStore? origins = null) : IHostedService, IPluginWidgetHost
 {
     private static readonly JsonSerializerOptions ManifestJson = new(JsonSerializerDefaults.Web);
     private readonly PluginTrustVerifier _trust = trustVerifier ?? PluginTrustVerifier.Official;
@@ -56,6 +59,9 @@ public sealed partial class PluginManager(
         public string Dir { get; } = dir;
         public LoadedPlugin Info { get; set; } = info;
         public Running? Running { get; set; }
+        /// <summary>Whether the saved official safety list named this id and version when the folder was last loaded
+        /// (whether or not the plugin is covered by it); lets <see cref="ApplyRevocationsAsync"/> reload only what changed.</summary>
+        public bool ListedAsRevoked { get; set; }
     }
 
     private sealed class Running(
@@ -233,6 +239,32 @@ public sealed partial class PluginManager(
     /// <summary>Reads a folder's plugin.json without installing anything — for the editor to show what it's
     /// about to install (in particular its <see cref="PluginManifest.Kind"/>) before the person confirms.</summary>
     public static PluginManifest PeekManifest(string sourceDir) => ReadManifest(Path.Combine(sourceDir, "plugin.json"));
+
+    /// <summary>Compares the saved safety list with what is loaded and reloads only the plugins whose answer changed: a plugin newly
+    /// named is switched off, one that was taken off the list starts again. Everything else keeps running as the same instance.
+    /// Reads only the saved copy; the caller refreshes it first. Returns the ids that were reloaded.</summary>
+    public async Task<IReadOnlyList<string>> ApplyRevocationsAsync()
+    {
+        var list = officialCatalog?.Revoked;
+        var changed = new List<string>();
+        await _gate.WaitAsync();
+        try
+        {
+            List<Entry> entries;
+            lock (_stateLock) entries = [.. _entries.Values];
+            foreach (var entry in entries)
+            {
+                var listed = list?.Find(entry.Info.Id, entry.Info.Version) is not null;
+                if (listed == entry.ListedAsRevoked) continue;
+                await UnloadCoreAsync(entry);
+                lock (_stateLock) _entries.Remove(entry.Info.Id);
+                await LoadFolderCoreAsync(entry.Dir);
+                changed.Add(entry.Info.Id);
+            }
+        }
+        finally { _gate.Release(); }
+        return changed;
+    }
 
     /// <summary>Unloads a plugin and loads it again from its folder (picks up a replaced DLL or changed manifest).</summary>
     public async Task<LoadedPlugin?> ReloadAsync(string pluginId)

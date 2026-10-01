@@ -104,7 +104,8 @@ internal static class ServiceRegistration
             sp.GetRequiredService<IInputService>(), sp.GetRequiredService<ILogger<PluginManager>>(),
             sp.GetRequiredService<PluginLocalizer>(), sp.GetRequiredService<ISecretProtector>(),
             windowSource: sp.GetRequiredService<IActiveWindowSource>(), problems: sp.GetRequiredService<ProblemList>(),
-            widgetCatalog: sp.GetRequiredService<PluginWidgetCatalog>(), widgetEvents: sp.GetRequiredService<PluginWidgetEventHub>()));
+            widgetCatalog: sp.GetRequiredService<PluginWidgetCatalog>(), widgetEvents: sp.GetRequiredService<PluginWidgetEventHub>(),
+            officialCatalog: sp.GetRequiredService<OfficialCatalog>(), origins: sp.GetRequiredService<PluginInstallOriginStore>()));
         services.AddSingleton<PluginWidgetCatalog>();
         services.AddSingleton(sp => new PluginWidgetEventHub(sp.GetRequiredService<ProblemList>()));
         services.AddHostedService(sp => sp.GetRequiredService<PluginManager>());
@@ -142,7 +143,8 @@ internal static class ServiceRegistration
             sp.GetRequiredService<PluginPackageDownloader>(),
             sp.GetRequiredService<PluginManager>(),
             sp.GetRequiredService<PluginInstallOriginStore>(),
-            Path.Combine(dataDir, "plugins-staging")));
+            Path.Combine(dataDir, "plugins-staging"),
+            sp.GetRequiredService<OfficialCatalog>()));
         return services;
     }
 

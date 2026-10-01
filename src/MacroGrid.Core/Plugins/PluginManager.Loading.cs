@@ -1,5 +1,6 @@
 using System.Text.Json;
 using MacroGrid.Core.Diagnostics;
+using MacroGrid.Core.Plugins.Distribution;
 using MacroGrid.Core.Plugins.Js;
 using MacroGrid.Core.Plugins.Widgets;
 using MacroGrid.Core.Variables;
@@ -72,7 +73,9 @@ public sealed partial class PluginManager
         lock (_stateLock)
             _unrecognized.RemoveAll(p => p.Id == folderName);
 
-        LoadedPlugin Fail(PluginLoadStatus status, string detail, IReadOnlyList<string>? pending = null)
+        var listedAsRevoked = officialCatalog?.Revoked?.Find(manifest.Id, manifest.Version);
+
+        LoadedPlugin Fail(PluginLoadStatus status, string detail, IReadOnlyList<string>? pending = null, string? problemCode = null)
         {
             var info = new LoadedPlugin(manifest.Id, manifest.Name, manifest.Version, status, detail, false, pending);
             if (manifest.Widgets is { Length: > 0 })
@@ -87,14 +90,14 @@ public sealed partial class PluginManager
             // Needs approval is not a fault: the Plugins window already asks for it.
             if (status != PluginLoadStatus.NeedsApproval)
                 problems?.Report(manifest.Id, manifest.Name, status == PluginLoadStatus.Incompatible ? ProblemSeverity.Warning : ProblemSeverity.Error,
-                    status switch { PluginLoadStatus.NotAllowed => ProblemCodes.NotAllowed, PluginLoadStatus.Incompatible => ProblemCodes.Incompatible, _ => ProblemCodes.LoadFailed }, detail);
+                    problemCode ?? status switch { PluginLoadStatus.NotAllowed => ProblemCodes.NotAllowed, PluginLoadStatus.Incompatible => ProblemCodes.Incompatible, _ => ProblemCodes.LoadFailed }, detail);
             lock (_stateLock)
             {
                 // A second folder with the same id must not replace the first one's entry.
                 if (_entries.TryGetValue(manifest.Id, out var existing) && !string.Equals(existing.Dir, dir, StringComparison.OrdinalIgnoreCase))
                     _unrecognized.Add(info);
                 else
-                    _entries[manifest.Id] = new Entry(dir, info);
+                    _entries[manifest.Id] = new Entry(dir, info) { ListedAsRevoked = listedAsRevoked is not null };
             }
             return info;
         }
@@ -117,6 +120,16 @@ public sealed partial class PluginManager
             }
             if (trust.Unsigned)
                 logger.LogWarning("C# plugin {Id} is not signed; loaded because this is a development build", SecurityEvents.ForLog(manifest.Id));
+        }
+
+        // The official safety list only reaches what the official project vouches for: plugins installed from the official
+        // catalog, and officially signed C# plugins. A saved list is all this reads; with none, everything loads.
+        if (listedAsRevoked is not null
+            && (origins?.Get(manifest.Id)?.Trust == PluginTrust.Official || trust is { Allowed: true, Unsigned: false }))
+        {
+            logger.LogWarning(SecurityEvents.PluginRevoked, "Security: plugin {Id} {Version} was not loaded: switched off by the official plugin list",
+                SecurityEvents.ForLog(manifest.Id), SecurityEvents.ForLog(manifest.Version));
+            return Fail(PluginLoadStatus.NotAllowed, $"Switched off by the official plugin list: {listedAsRevoked.Reason}", problemCode: ProblemCodes.Revoked);
         }
 
         var compatibility = PluginCompatibility.Check(serverVersion, manifest.MinMacroGrid, manifest.MacroGrid, manifest.SdkVersion);
@@ -198,7 +211,7 @@ public sealed partial class PluginManager
 
             localizer?.Register(manifest.Id, dir, manifest.DefaultLanguage);
             problems?.Resolve("macro-grid", ProblemCodes.ActionMissing);
-            problems?.Resolve(manifest.Id, ProblemCodes.NotAllowed, ProblemCodes.LoadFailed, ProblemCodes.Incompatible, ProblemCodes.SwitchedOff, ProblemCodes.PluginReported);
+            problems?.Resolve(manifest.Id, ProblemCodes.NotAllowed, ProblemCodes.Revoked, ProblemCodes.LoadFailed, ProblemCodes.Incompatible, ProblemCodes.SwitchedOff, ProblemCodes.PluginReported);
             var treeProvider = instance as IPluginTreeProvider;
             var info = new LoadedPlugin(manifest.Id, manifest.Name, manifest.Version, PluginLoadStatus.Loaded, null,
                 host.SettingsPage is not null, HasIcon: ResolveIconPath(dir, manifest) is not null, HasTreeItems: treeProvider is not null,
@@ -216,7 +229,7 @@ public sealed partial class PluginManager
                 running.TreeChangedHandler = parentId => TreeChanges.Record(pluginId, parentId);
                 treeProvider.TreeItemsChanged += running.TreeChangedHandler;
             }
-            var entry = new Entry(dir, info) { Running = running };
+            var entry = new Entry(dir, info) { Running = running, ListedAsRevoked = listedAsRevoked is not null };
             lock (_stateLock) _entries[manifest.Id] = entry;
             if (treeProvider is not null) TreeChanges.Record(manifest.Id, null, wholePlugin: true);
             RefreshUnsignedNotice();

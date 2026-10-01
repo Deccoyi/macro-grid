@@ -59,6 +59,12 @@ internal static class PluginCatalogApi
             try
             {
                 var index = await IndexAsync(isOfficial, owner, repo, client, official, refresh == true, cancellationToken);
+                if (isOfficial && refresh == true)
+                {
+                    // The Refresh button also looks at the safety list and applies what it says to the running plugins.
+                    await official.GetRevokedAsync(TimeSpan.FromMinutes(1), cancellationToken, ignoreBackoff: true);
+                    await plugins.ApplyRevocationsAsync();
+                }
                 return ApiResults.Json(new
                 {
                     source,
@@ -67,7 +73,7 @@ internal static class PluginCatalogApi
                     // Only the official source may ship C# plugins; a third-party source's C# entries are not offered.
                     plugins = index.Plugins
                         .Where(entry => isOfficial || !string.Equals(entry.Kind, "csharp", StringComparison.OrdinalIgnoreCase))
-                        .Select(entry => DescribeEntry(entry, plugins, origins)),
+                        .Select(entry => DescribeEntry(entry, plugins, origins, isOfficial ? official : null)),
                 });
             }
             catch (PluginCatalogException ex)
@@ -225,12 +231,13 @@ internal static class PluginCatalogApi
         return false;
     }
 
-    private static object DescribeEntry(PluginCatalogEntry entry, PluginManager plugins, PluginInstallOriginStore origins)
+    private static object DescribeEntry(PluginCatalogEntry entry, PluginManager plugins, PluginInstallOriginStore origins, OfficialCatalog? official)
     {
         var installed = plugins.Plugins.FirstOrDefault(p => p.Id == entry.Id);
         var origin = origins.Get(entry.Id);
 
-        var choice = PluginCatalogChoice.Choose(entry, ClientHub.ServerVersion, installed?.Version);
+        var choice = PluginCatalogChoice.Choose(entry, ClientHub.ServerVersion, installed?.Version,
+            official is null ? null : v => official.Revoked?.Find(entry.Id, v.Version) is not null);
         var compatible = choice.Installable;
         var latest = choice.Latest;
 

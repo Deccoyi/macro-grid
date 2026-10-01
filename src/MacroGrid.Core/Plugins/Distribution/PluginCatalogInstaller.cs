@@ -14,7 +14,8 @@ public sealed class PluginCatalogInstaller(
     PluginPackageDownloader downloader,
     PluginManager pluginManager,
     PluginInstallOriginStore originStore,
-    string stagingRoot)
+    string stagingRoot,
+    OfficialCatalog? officialCatalog = null)
 {
     private static readonly JsonSerializerOptions ManifestJson = new(JsonSerializerDefaults.Web);
 
@@ -27,6 +28,13 @@ public sealed class PluginCatalogInstaller(
         // Only the official source may ship C# code, and that is decided before anything is downloaded.
         if (!isOfficial && string.Equals(entry.Kind, "csharp", StringComparison.OrdinalIgnoreCase))
             throw new PluginDownloadException(PluginDownloadException.Refused, "Only official C# plugins can be installed.");
+
+        // The safety list is looked at before anything is downloaded. If it cannot be fetched and there is no saved copy,
+        // the install goes on: a failed fetch never blocks anything.
+        if (isOfficial && officialCatalog is not null
+            && await officialCatalog.GetRevokedAsync(TimeSpan.FromMinutes(10), cancellationToken) is { } revoked
+            && revoked.Find(entry.Id, version.Version) is { } hit)
+            throw new PluginDownloadException(PluginDownloadException.Revoked, hit.Reason);
 
         var bytes = await downloader.DownloadAsync(version, requireOfficialSignature: isOfficial, cancellationToken);
 
