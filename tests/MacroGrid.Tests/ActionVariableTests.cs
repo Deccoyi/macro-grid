@@ -37,7 +37,7 @@ public class ActionVariableTests
         return (new ActionDispatcher([handler], NullLogger<ActionDispatcher>.Instance, variables), widget, binding);
     }
 
-    private static Task<IReadOnlyList<string>> Press(ActionDispatcher dispatcher, Widget widget) =>
+    private static Task<IReadOnlyList<ActionFailure>> Press(ActionDispatcher dispatcher, Widget widget) =>
         dispatcher.DispatchAsync(widget, WidgetEvents.Press, new ActionContext("d", "p", "w", null!), CancellationToken.None);
 
     [Fact]

@@ -14,7 +14,8 @@ public sealed record JsPluginLimits(
     TimeSpan HttpTimeout,
     int MaxHttpResponseBytes,
     int MaxConsecutiveErrors,
-    TimeSpan PressWindow)
+    TimeSpan PressWindow,
+    TimeSpan ActionOutcomeTimeout)
 {
     public static JsPluginLimits Default { get; } = new(
         CallTimeout: TimeSpan.FromSeconds(2),
@@ -28,5 +29,7 @@ public sealed record JsPluginLimits(
         MaxConsecutiveErrors: 5,
         // How long keyboard input stays allowed after a button press: long enough for an action that waits for one web
         // request before it types, short enough that a press cannot be reused for input later.
-        PressWindow: TimeSpan.FromSeconds(5));
+        PressWindow: TimeSpan.FromSeconds(5),
+        // How long the host waits for an async action registered with 'outcome: true' before it reports a timeout.
+        ActionOutcomeTimeout: TimeSpan.FromSeconds(10));
 }

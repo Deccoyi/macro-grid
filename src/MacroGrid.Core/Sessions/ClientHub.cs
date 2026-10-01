@@ -358,7 +358,7 @@ public sealed class ClientHub(
     /// <summary>Surfaces a failed action both to the device that triggered it (toast, via the same "error"
     /// envelope pairing failures already use) and in the editor's status bar — a stale binding (e.g. a
     /// button pointed at a since-deleted scene of a plugin) must never fail silently.</summary>
-    private async Task ReportActionErrorsAsync(ClientSession session, IReadOnlyList<string> errors)
+    private async Task ReportActionErrorsAsync(ClientSession session, IReadOnlyList<ActionFailure> errors)
     {
         if (errors.Count == 0)
         {
@@ -366,7 +366,8 @@ public sealed class ClientHub(
             return;
         }
 
-        var message = localizer.TranslateAny(errors[0]) ?? errors[0];
+        var raw = errors[0].Message;
+        var message = PlainText.Clean(localizer.TranslateAny(raw) ?? raw, 200); // translate first (the table matches the exact text), then clean
         statusRegistry.SetCore("actionError", message, StatusLevel.Warning, "triangle-alert", lifetime: ActionErrorStatusLifetime);
         await session.SendAsync(MessageTypes.Error, new ErrorMessage("action_failed", message));
     }
