@@ -14,7 +14,11 @@ New features and fixes in Macro Grid. For technical details, see [CHANGELOG-deve
 - **Details for each message:** the Diagnostic Messages window shows more about a message and a button that takes you to the widget.
 - **Export messages and logs:** copy or save the message list, or export the log files from the Help menu. Personal details are removed where they can be recognized; look through the files before you share them.
 - **Quick templates in the rule editor:** on/off, low/medium/high and "grey when unavailable" in one click.
+- **An unsafe official plugin version can be switched off:** if an official plugin version turns out to be unsafe, Macro Grid stops it and tells you why. Nothing is switched off just because the list could not be loaded.
+- **A publisher can withdraw a version:** a withdrawn version cannot be installed, and if you have it you are asked to update or remove it. It keeps working until you do.
 ### Changed
+- **The plugin list opens faster and works from a saved copy:** if the internet is down, you still see the last list.
+- **"Check for updates automatically" also covers the plugin safety list.**
 - **A button whose plugin was removed now says so:** pressing it shows an error on the phone instead of doing nothing.
 - **Web widgets can be kept loaded:** a new "Keep loaded" switch in a web widget's properties keeps its page running when you go to another page of the grid, so a chat does not reload each time. The editor warns when a page has more than 3 web widgets, since a phone runs only a few at once.
 - **The Error List is now "Diagnostic Messages":** it shows errors, warnings and information. After every save it tells you how many plugin widgets the profile has and whether a page has more than is recommended (the right number depends on the device), and "No free cell left on this page" is listed there as a warning too.

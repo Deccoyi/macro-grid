@@ -220,16 +220,24 @@ Macro Grid is meant for a home or office network you trust. It is not hardened f
   logs); default is no, and it never asks on a silent uninstall.
 - **The server checks for updates on its own, once every few hours.** This is the one connection it makes without being asked, and it is on by
   default (Preferences, General, "Check for updates automatically"; off stops the schedule, "Check for updates" still works by hand). It reads
-  the public releases list of the project on `api.github.com` (HTTPS, an ETag so an unchanged list costs nothing, a `User-Agent` with the app
+  the public releases list of the project on `api.github.com` (HTTPS, an ETag so an unchanged list is a short answer, though it still counts against the anonymous quota; a `User-Agent` with the app
   version and nothing else) and sends nothing about the person or the PC. Nothing is downloaded or installed until the person clicks
   "Install now". The installer is fetched only from HTTPS addresses on GitHub (every redirect is checked against the same list), must match the
   SHA-256 GitHub reports for the release file, and runs only after Windows asks for administrator permission. The installer is not code-signed,
   so this protects against a broken download but **not against a compromised GitHub account** or release. Release notes are shown as text,
   never as HTML. Design: [design/auto-update.md](design/auto-update.md).
-- **Installing a plugin from Discover is the only other connection the server makes, and only when the person opens Discover or starts an
-  install** — never on its own, never in the background. It reads a fixed `raw.githubusercontent.com/<owner>/<repo>/HEAD/macrogrid-index.json`
-  (or a single plugin's `plugin.json`) and downloads the package only from `github.com/<owner>/<repo>/releases/download/...` (and the hosts that
-  redirect resolves to), never the GitHub API. A package's SHA-256 must match what the index promised; the official source
+- **The official plugin catalog is two signed files, with a saved copy.** `index.signed.json` (the list shown in Discover) and `revoked.signed.json`
+  (the safety list) are signed with the official plugin key; the server checks the signature before it reads a byte, refuses a lower sequence
+  number than it has already accepted, and keeps the last good copy on disk, so Discover opens from the copy and a failed fetch never changes
+  anything. They are read from the GitHub contents API of the plugin repository, then from its Pages site. The server looks at them on its own
+  (the revoke list every 8 hours, the index every 24, each with a random extra wait; a failure backs off from 30 minutes up to a day) only when
+  "Check for updates automatically" is on and an official plugin is installed; opening Discover or the Refresh button also uses them. **A plugin is
+  never switched off because something could not be fetched: only a verified list can switch an official plugin version off**, at load, before an
+  install and when a newer list arrives. A publisher can also withdraw a version (not installable, installed copies are warned and keep running).
+  Another source (an added repository or a pasted link) is read as before from `raw.githubusercontent.com/<owner>/<repo>/HEAD/macrogrid-index.json` (or a
+  single plugin's `plugin.json`), only when the person opens Discover or starts an install. Packages are downloaded only from
+  `github.com/<owner>/<repo>/releases/download/...` (and the hosts that redirect resolves to), or from a mirror address the signed official index lists
+  (the package signature is checked afterwards). A package's SHA-256 must match what the index promised; the official source
   (`Deccoyi/macro-grid-plugin`) additionally signs every release (ECDSA P-256) and a package that fails that signature check is refused, not
   merely warned about. Every other source is always shown as third-party, signed or not. See the plugin repository's
   `website/reference/source-index.md` for the index format and signing, and `docs/design/plugin-distribution.md` for the rollout.

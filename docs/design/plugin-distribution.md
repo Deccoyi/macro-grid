@@ -256,3 +256,25 @@ the installed folder. What each install path does:
 
 A plugin that fails the check at start, install, reload or update is not loaded and shows *Not allowed* with the reason, and a `Security:` line is logged. A build made from
 source in the Debug configuration still loads an unsigned C# plugin and says so in red in the status bar; released builds never do. There is no setting for it.
+
+## 11. Catalog lifecycle, phase 1
+
+The official source is read through `OfficialCatalog` (Core, `Plugins/Distribution`), not through the plain index client.
+
+- **Files:** `index.signed.json` and `revoked.signed.json` in `website/public/catalog/` of the plugin repository. Each is `{ "payload": base64, "signature": base64 }`;
+  the signature (ECDSA P-256, SHA-256, the official plugin key) covers the decoded payload bytes, and the reader verifies before it parses (`SignedCatalogFile`).
+  The payload has `kind` (`index` or `revoked`), `sequence` (from 1, always rising) and `issuedAt`.
+- **Sources, in order:** the GitHub contents API (`Accept: application/vnd.github.raw+json`), then the Pages site. An ETag is only sent back to the address it came from, a redirect is a
+  failure, bodies are capped (1.5 MB index, 256 KB revoke list), the timeout is 20 s. Without a token the API counts a 304 against its quota too, so the API is left alone when few calls remain
+  or after a 403/429 until it says it is over.
+- **Acceptance:** a lower sequence than the saved one is refused; the same sequence is "nothing new". The accepted envelope is saved in `plugin-catalog-state.json`
+  and re-verified when read. A computer that has never accepted a signed index falls back, once, to the plain `macrogrid-index.json`.
+- **Schedule** (`PluginCatalogPolicy`, run by `PluginCatalogService`): first look 3 minutes plus up to 10 after start; revoke list every 8 hours plus up to 60 minutes; index every 24 hours plus up to
+  120; a failure waits 30 minutes, doubling to at most 24 hours; two refreshes of one file are never closer than 60 seconds. It runs only when update checks are on and an official plugin is installed.
+- **Safety list:** `{ "formatVersion": 1, "plugins": [ { "id", "versions"?, "reason" } ] }` (no `versions` means every version). It reaches plugins installed from the official source and officially signed C# plugins; third-party and folder-installed
+  JavaScript plugins are not covered. A hit gives *Not allowed* with the reason (`P111`, security event 1107). The installer refuses a listed version before any download (`revoked`), and `PluginManager.ApplyRevocationsAsync`
+  stops or starts only the plugins whose answer changed. **With no saved list, or a failed fetch, everything loads and installs.**
+- **Withdrawn:** an index version can carry `withdrawn: true`. It is not installable (`withdrawn`), an installed copy keeps running and gets a `P112` warning. A version can list up to three download addresses (`urls`);
+  a mirror is only used when it comes from the verified signed index and the package signature is checked afterwards.
+- **Staleness:** 14 days without a successful safety-list check adds one quiet line (`P113`); nothing is switched off because of it.
+- **Plugin id:** 1 to 64 characters of letters, digits, `.`, `-`, `_`, starting with a letter or digit, no trailing dot, no reserved device names.
