@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ArrowRight, Plus, Trash2, Variable, X } from "lucide-react";
+import { ArrowRight, CircleOff, Gauge, Plus, ToggleRight, Trash2, Variable, X } from "lucide-react";
 import type { DynamicBinding } from "@macro/renderer";
 import type { VariableInfo } from "../../api/types";
 import { ColorField } from "../fields/controls";
@@ -9,7 +9,8 @@ import type { DictKey } from "../../i18n/tr";
 import { VariablePicker } from "../VariablePicker";
 import { combinatorOf, fromConditionNode, isValueless, newCase, newCondition, toConditionNode, type EditCase, type EditCondition } from "./conditionEditing";
 import { useBackdropClose } from "../../components/useBackdropClose";
-import { allowsOrdering, fitConditionToVariable, normalizeBoolText, valueInputFor, type ValueInput } from "./variableTypes";
+import { applyTemplate, buildTemplate, templateKinds, variablesFor, type TemplateKind, type TemplateWords } from "./quickTemplates";
+import { allowsOrdering, fitConditionToVariable, isInvalidNumber, normalizeBoolText, valueInputFor, type ValueInput } from "./variableTypes";
 
 const OPERATOR_KEYS: Record<EditCondition["operator"], DictKey> = {
   ">": "dynamic.operator.>",
@@ -22,6 +23,9 @@ const OPERATOR_KEYS: Record<EditCondition["operator"], DictKey> = {
   unavailable: "dynamic.operator.unavailable",
   available: "dynamic.operator.available",
 };
+
+const QUICK_KEYS: Record<TemplateKind, DictKey> = { onOff: "dynamic.quick.onOff", thresholds: "dynamic.quick.thresholds", unavailable: "dynamic.quick.unavailable" };
+const QUICK_ICONS: Record<TemplateKind, typeof Gauge> = { onOff: ToggleRight, thresholds: Gauge, unavailable: CircleOff };
 
 /** What each rule's "then" value is: a free color, free text (may contain {variables}), an icon, or a fixed set of choices (e.g. animation names). */
 export type ResultKind = "color" | "text" | "icon" | { select: { value: string; label: string }[] };
@@ -65,6 +69,17 @@ export function DynamizeModal({ propertyLabel, binding, variableCatalog, resultK
     onClose();
   };
 
+  const words: TemplateWords = {
+    on: t("dynamic.quick.word.on"),
+    off: t("dynamic.quick.word.off"),
+    low: t("dynamic.quick.word.low"),
+    medium: t("dynamic.quick.word.medium"),
+    high: t("dynamic.quick.word.high"),
+    unavailable: t("dynamic.quick.word.unavailable"),
+  };
+  const addTemplate = (kind: TemplateKind, variable: VariableInfo) =>
+    setCases((prev) => applyTemplate(prev, buildTemplate(kind, variable, resultKind, words), kind));
+
   const remove = () => { onSave(null); onClose(); };
 
   return (
@@ -100,12 +115,40 @@ export function DynamizeModal({ propertyLabel, binding, variableCatalog, resultK
             </div>
           )}
 
+          <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+            <Keyword muted>{t("dynamic.quick.title")}</Keyword>
+            {templateKinds(resultKind).map((kind) => {
+              const choices = variablesFor(kind, variableCatalog);
+              const Icon = QUICK_ICONS[kind];
+              const label = (
+                <>
+                  <Icon size={12} /> {t(QUICK_KEYS[kind])}
+                </>
+              );
+              if (choices.length === 0) {
+                return (
+                  <button key={kind} type="button" className="ghost" disabled title={t("dynamic.quick.noVariable")} style={chipStyle}>{label}</button>
+                );
+              }
+              return (
+                <VariablePicker
+                  key={kind}
+                  catalog={choices}
+                  mode="bare"
+                  onInsert={(name) => { const picked = choices.find((v) => v.name === name); if (picked) addTemplate(kind, picked); }}
+                  renderTrigger={(open) => <button type="button" className="ghost" onClick={open} style={chipStyle}>{label}</button>}
+                />
+              );
+            })}
+          </div>
+
           {cases.map((c, i) => (
             <div key={i} style={{ border: "1px solid var(--ms-border)", background: "var(--ms-bg-canvas)", padding: "12px 14px", display: "flex", flexDirection: "column", gap: 9 }}>
               <Keyword>{i === 0 ? t("dynamic.if") : t("dynamic.elseIf")}</Keyword>
 
               {c.conditions.map((cond, ci) => {
-                const valueInput = valueInputFor(variableCatalog.find((v) => v.name === cond.variable));
+                const variableInfo = variableCatalog.find((v) => v.name === cond.variable);
+                const valueInput = valueInputFor(variableInfo);
                 const operators = (Object.keys(OPERATOR_KEYS) as EditCondition["operator"][])
                   .filter((op) => allowsOrdering(valueInput) || op === "==" || op === "!=" || isValueless(op) || op === cond.operator);
                 const setValue = (field: "value" | "value2") => (v: string) => updateCase(i, (cc) => { cc.conditions[ci]![field] = v; });
@@ -166,7 +209,7 @@ export function DynamizeModal({ propertyLabel, binding, variableCatalog, resultK
                       ))}
                     </select>
 
-                    {!isValueless(cond.operator) && <ConditionValue value={cond.value} onChange={setValue("value")} input={valueInput} />}
+                    {!isValueless(cond.operator) && <ConditionValue value={cond.value} onChange={setValue("value")} input={valueInput} invalid={isInvalidNumber(variableInfo, cond.value)} />}
                     {cond.operator === "between" && (
                       <>
                         <span style={{ color: "var(--ms-text-disabled)", fontSize: 12 }}>–</span>
@@ -254,7 +297,7 @@ function Keyword({ children, muted }: { children: string; muted?: boolean }) {
 
 /** The compared value of a condition: a true/false select for a boolean, a select of the declared values,
  * or free input (with the unit as a suffix for a number). A stored value outside the choices stays visible. */
-function ConditionValue({ value, onChange, input }: { value: string; onChange: (v: string) => void; input: ValueInput }) {
+function ConditionValue({ value, onChange, input, invalid }: { value: string; onChange: (v: string) => void; input: ValueInput; invalid?: boolean }) {
   const { t } = useT();
   if (input.kind !== "free") {
     const current = input.kind === "boolean" ? normalizeBoolText(value) : value;
@@ -280,8 +323,9 @@ function ConditionValue({ value, onChange, input }: { value: string; onChange: (
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={input.unit ? `50 ${input.unit}` : t("dynamic.value.placeholder")}
-        title={t("dynamic.value.hint")}
-        style={{ width: 108, textAlign: "center", fontFamily: "ui-monospace, monospace" }}
+        title={invalid ? t("dynamic.value.notNumber") : t("dynamic.value.hint")}
+        aria-invalid={invalid || undefined}
+        style={{ width: 108, textAlign: "center", fontFamily: "ui-monospace, monospace", ...(invalid ? { borderColor: "var(--ms-danger)" } : null) }}
       />
       {input.unit && <span style={{ fontSize: 12, color: "var(--ms-text-secondary)" }}>{input.unit}</span>}
     </span>

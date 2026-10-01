@@ -126,3 +126,15 @@ value or writing zero.
 
 The phone merges widget state, so when no rule matches any more and the binding has no default, the server sends one empty `style` to drop the
 old style. A shared case table, `tests/shared/dynamic-rule-cases.json`, is read by both the server tests and the editor preview tests.
+
+## Quick templates
+
+The rule editor has a row of three buttons that add ready-made rules for a variable of the right type, with no plugin involved: **On / Off** (a boolean:
+`== true` and `== false`), **Low / Medium / High** (a number: `>= 80`, `>= 50`, `< 50`, checked in that order; the person edits the thresholds) and
+**Grey when unavailable** (any variable: one `unavailable` rule put at the top so it wins). A button is disabled with a reason when no variable of its type
+exists. Colors come from fixed presets, a text result gets short translated words, an icon result is left empty, a fixed-choice result uses its first
+option (and "grey" is not offered for those two). A template adds ordinary rules to the list (it replaces the untouched first rule) and nothing is
+saved until Apply, so it leaves no trace in the profile other than the rules.
+
+Also: a number variable's value input is marked when the text is not a number (it can still be saved), and a fresh row on a text variable starts with
+"equal" instead of "greater than".

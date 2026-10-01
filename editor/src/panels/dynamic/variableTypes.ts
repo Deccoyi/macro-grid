@@ -36,6 +36,8 @@ export function normalizeBoolText(value: string): string {
 export function fitConditionToVariable(condition: EditCondition, info: VariableInfo | undefined): void {
   if (isValueless(condition.operator)) return;
   const input = valueInputFor(info);
+  // A text variable on a fresh row (nothing typed yet) starts with "equal": ordering means nothing for text.
+  if (info?.type === "text" && input.kind === "free" && condition.value === "" && condition.operator === ">") condition.operator = "==";
   if (!allowsOrdering(input) && condition.operator !== "==" && condition.operator !== "!=") condition.operator = "==";
   if (input.kind === "boolean") {
     const normalized = normalizeBoolText(condition.value);
@@ -45,4 +47,9 @@ export function fitConditionToVariable(condition: EditCondition, info: VariableI
   } else if (info?.type === "number" && condition.value !== "" && Number.isNaN(Number(condition.value))) {
     condition.value = "";
   }
+}
+
+/** True when a number variable is compared with text that is not a number (kept as typed, only marked). */
+export function isInvalidNumber(info: VariableInfo | undefined, value: string): boolean {
+  return info?.type === "number" && value.trim() !== "" && Number.isNaN(Number(value));
 }
