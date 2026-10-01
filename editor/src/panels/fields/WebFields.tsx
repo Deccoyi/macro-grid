@@ -47,17 +47,6 @@ export function WebFields({ widget, onChange, webWidgetsOnPage = 0 }: FieldGroup
           <span><strong>{t("fields.web.experimentalTitle")}</strong> {t("fields.web.experimentalText")}</span>
         </DismissibleNote>
       )}
-      {isWeb && (
-        <label className="field">
-          {t("fields.web.name")}
-          <input
-            type="text"
-            value={widget.name ?? ""}
-            onChange={(e) => onChange((w) => { w.name = e.target.value === "" ? undefined : e.target.value; })}
-          />
-          <span style={{ fontSize: 11, color: "var(--ms-text-disabled)" }}>{t("fields.web.nameHint")}</span>
-        </label>
-      )}
       <label className="field">
         {t("fields.web.url")}
         <input
