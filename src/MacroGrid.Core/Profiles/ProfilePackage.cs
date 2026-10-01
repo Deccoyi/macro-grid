@@ -96,7 +96,7 @@ public static class ProfilePackage
         }
     }
 
-    private static Profile ParseProfile(byte[] json)
+    internal static Profile ParseProfile(byte[] json)
     {
         Profile? profile;
         try { profile = JsonSerializer.Deserialize<Profile>(json, ProtocolJson.Options); }
