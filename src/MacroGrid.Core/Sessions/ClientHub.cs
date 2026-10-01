@@ -331,6 +331,10 @@ public sealed class ClientHub(
         var widget = FindWidget(session, msg.PageId, msg.WidgetId, out _);
         if (widget is null) return;
 
+        // self.pressed is set here, on the receive loop, so a slow action waiting in the queue does not delay it.
+        if (eventName == WidgetEvents.Press) widgetState.PressBegan(session, widget.Id);
+        else if (eventName == WidgetEvents.Release) widgetState.PressEnded(session, widget.Id);
+
         var device = new SessionDeviceController(session, profiles, widgetState);
         var context = new ActionContext(session.DeviceId!, msg.PageId, msg.WidgetId, device);
 

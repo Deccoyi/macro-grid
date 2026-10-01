@@ -46,6 +46,9 @@ public sealed class WidgetStateService : IHostedService, IDisposable
     /// <summary>How long a button's actions must run before <c>self.busy</c> turns on, so a quick action never flashes.</summary>
     internal TimeSpan BusyDelay { get; set; } = TimeSpan.FromMilliseconds(150);
 
+    /// <summary>How long <c>self.pressed</c> stays on at least, so a quick tap still draws its look.</summary>
+    internal TimeSpan PressedMinimum { get; set; } = TimeSpan.FromMilliseconds(150);
+
     public WidgetStateService(VariableStore variables, SessionRegistry sessions, ProfileStore profiles, ToggleStateStore toggles, LayoutSender layouts, WebViewState webViews, ILogger<WidgetStateService> logger,
         PluginWidgetCatalog? pluginWidgets = null, LastResultStore? results = null)
     {
@@ -295,6 +298,30 @@ public sealed class WidgetStateService : IHostedService, IDisposable
                 Refresh(widgetId, session);
             }
         }
+    }
+
+    /// <summary>A finger went down on a button: <c>self.pressed</c> is on for that device.</summary>
+    public void PressBegan(ClientSession session, string widgetId)
+    {
+        session.Pressed[widgetId] = DateTime.UtcNow;
+        Refresh(widgetId, session);
+    }
+
+    /// <summary>The finger lifted. The look is cleared at once after a long hold, or when <see cref="PressedMinimum"/> has passed after a quick tap. A newer press
+    /// in between is not cleared by this release.</summary>
+    public void PressEnded(ClientSession session, string widgetId)
+    {
+        if (!session.Pressed.TryGetValue(widgetId, out var started)) return;
+        var remaining = PressedMinimum - (DateTime.UtcNow - started);
+        if (remaining <= TimeSpan.Zero)
+        {
+            if (session.Pressed.TryRemove(new KeyValuePair<string, DateTime>(widgetId, started))) Refresh(widgetId, session);
+            return;
+        }
+        _ = Task.Delay(remaining).ContinueWith(_ =>
+        {
+            if (session.Pressed.TryRemove(new KeyValuePair<string, DateTime>(widgetId, started))) Refresh(widgetId, session);
+        }, TaskScheduler.Default);
     }
 
     private void OnVariableChanged(string name)

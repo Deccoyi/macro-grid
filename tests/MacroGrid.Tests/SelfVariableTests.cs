@@ -291,4 +291,55 @@ public sealed class SelfVariableTests : IDisposable
         results.Set("w", []);
         Assert.Equal(("Success", ""), results.Get("w"));
     }
+
+    [Fact]
+    public async Task A_quick_tap_keeps_pressed_on_until_the_minimum_has_passed()
+    {
+        var (service, _, _, _, sessions) = Make();
+        using var _ = service;
+        service.PressedMinimum = TimeSpan.FromMilliseconds(150);
+        var session = Identified(new TestSocket());
+        sessions.Add(session);
+
+        service.PressBegan(session, "w");
+        service.PressEnded(session, "w");
+        Assert.True(session.Pressed.ContainsKey("w"));
+
+        await Task.Delay(400);
+        Assert.False(session.Pressed.ContainsKey("w"));
+    }
+
+    [Fact]
+    public async Task A_second_press_is_not_cleared_by_the_first_release()
+    {
+        var (service, _, _, _, sessions) = Make();
+        using var _ = service;
+        service.PressedMinimum = TimeSpan.FromMilliseconds(150);
+        var session = Identified(new TestSocket());
+        sessions.Add(session);
+
+        service.PressBegan(session, "w");
+        service.PressEnded(session, "w");
+        await Task.Delay(30);
+        service.PressBegan(session, "w");
+        await Task.Delay(300);
+
+        Assert.True(session.Pressed.ContainsKey("w"));
+    }
+
+    [Fact]
+    public async Task A_long_hold_is_cleared_at_once_on_release()
+    {
+        var (service, _, _, _, sessions) = Make();
+        using var _ = service;
+        service.PressedMinimum = TimeSpan.FromMilliseconds(30);
+        var session = Identified(new TestSocket());
+        sessions.Add(session);
+
+        service.PressBegan(session, "w");
+        await Task.Delay(100);
+        service.PressEnded(session, "w");
+
+        Assert.False(session.Pressed.ContainsKey("w"));
+    }
 }

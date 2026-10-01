@@ -45,6 +45,7 @@ public sealed class SessionDeviceController(ClientSession session, ProfileStore 
         session.PageId = page.Id;
         session.PageHistory.Clear();
         widgetState.ForgetWebViews(session);
+        session.Pressed.Clear(); // a new profile has other buttons; a finger that was down on the old one no longer counts
         session.SentTexts.Clear();
         session.SentStyles.Clear();
         session.SentValues.Clear();
