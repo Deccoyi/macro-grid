@@ -94,6 +94,12 @@ One system draws every field in the Properties panel, so a new widget, a new plu
 All numbers are CSS px and live as tokens in `theme.css`; never write a literal gap, height or padding in a component. Colors are the existing
 `--ms-*` variables.
 
+**Mockups (open the files in a browser; start with [index.html](properties-panel-mockups/index.html)).** Look at them before building or changing a field; copy the example field that matches your kind instead of inventing spacing.
+- [01-panel.html](properties-panel-mockups/01-panel.html): two complete panels at 320 px (a plugin widget with every setting kind, and a button widget with Appearance, Content and Actions).
+- [02-field-kinds.html](properties-panel-mockups/02-field-kinds.html): the catalog of all 13 field kinds (Text, Password, Number, Slider, Bool, Select, Segmented, File, List, Button, Notice, Variable, Color) with their states (empty, filled, hover, focus, disabled, invalid). Use it as the example for each kind.
+- [03-spec.html](properties-panel-mockups/03-spec.html): the measurements: token table, 2x anatomy with every px value, kind-to-layout table, grouping rules, the CSS snippet and the implementation notes.
+- [04-responsive.html](properties-panel-mockups/04-responsive.html): the same field list at 240, 320 and 440 px, showing the container-query tiers described below.
+
 ### Tokens
 
 | Token | Value | Meaning |
