@@ -146,6 +146,10 @@ otherwise (with the unit as a suffix for a number). Booleans and fixed values on
 In a condition a boolean matches `true` / `false` and `1` / `0` alike, case-insensitively; other operators never match it. `unavailable` / `available` test only whether the variable has a value (never set, removed or `null` means unavailable); a text template can show a placeholder for it, `{name|format|placeholder}`. The template words
 (`On` / `Off`, `Açık` / `Kapalı`) are display only and do not match. A number is compared numerically and anything else as text, case-insensitively.
 
+### Global Variable List
+
+The person can define variables of their own (text, number, true/false) in Preferences. `UserVariableService` publishes them into the same `VariableStore` as `user.<name>`, so every template, rule and slider works with them unchanged, and the `core.setVariable` action sets, switches, counts or resets them. The list and the values of the variables marked "keep" are saved in the data folder. See [design/user-variables.md](design/user-variables.md).
+
 ## Custom CSS
 
 Each widget renders inside its own Shadow DOM. Its custom CSS is parsed with PostCSS and sanitized: properties that would let a widget change
@@ -203,6 +207,7 @@ Macro Grid is meant for a home or office network you trust. It is not hardened f
   sites a profile opens. The editor window itself refuses new windows, downloads, other programs' links, permission prompts and script dialogs
   (`WebViewEnvironment.LockDown`), and the app pages carry a `frame-src http: https:` policy. Only host names are ever logged, never the full address (it
   may hold a secret token).
+- **A plugin cannot touch the person's own variables.** The `user.` names belong to the Global Variable List: the store a plugin writes through ignores them, and the plugin ids `user`, `system`, `core` and `self` cannot be installed.
 - **Actions run as you.** A paired device can press keys, type text and start programs on the PC, so pair only devices you trust and revoke the
   ones you do not.
 - **Only official, signed C# plugins load**, checked at every load: the plugin folder must carry `signature.json` and `signature.sig` made with
