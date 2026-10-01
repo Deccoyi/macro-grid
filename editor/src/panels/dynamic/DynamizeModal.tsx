@@ -7,7 +7,7 @@ import { IconPicker } from "../IconPicker";
 import { useT } from "../../i18n/I18nContext";
 import type { DictKey } from "../../i18n/tr";
 import { VariablePicker } from "../VariablePicker";
-import { combinatorOf, fromConditionNode, newCase, newCondition, toConditionNode, type EditCase, type EditCondition } from "./conditionEditing";
+import { combinatorOf, fromConditionNode, isValueless, newCase, newCondition, toConditionNode, type EditCase, type EditCondition } from "./conditionEditing";
 import { useBackdropClose } from "../../components/useBackdropClose";
 import { allowsOrdering, fitConditionToVariable, normalizeBoolText, valueInputFor, type ValueInput } from "./variableTypes";
 
@@ -19,6 +19,8 @@ const OPERATOR_KEYS: Record<EditCondition["operator"], DictKey> = {
   "==": "dynamic.operator.==",
   "!=": "dynamic.operator.!=",
   between: "dynamic.operator.between",
+  unavailable: "dynamic.operator.unavailable",
+  available: "dynamic.operator.available",
 };
 
 /** What each rule's "then" value is: a free color, free text (may contain {variables}), an icon, or a fixed set of choices (e.g. animation names). */
@@ -54,7 +56,7 @@ export function DynamizeModal({ propertyLabel, binding, variableCatalog, resultK
     setCases((prev) => prev.map((c, i) => (i === index ? withMutation(c, fn) : c)));
 
   const save = () => {
-    const valid = cases.filter((c) => c.conditions.every((cond) => cond.variable && cond.value));
+    const valid = cases.filter((c) => c.conditions.every((cond) => cond.variable && (cond.value || isValueless(cond.operator))));
     if (valid.length === 0) { onSave(null); onClose(); return; }
     onSave({
       cases: valid.map((c) => ({ condition: toConditionNode(c), result: c.result })),
@@ -105,7 +107,7 @@ export function DynamizeModal({ propertyLabel, binding, variableCatalog, resultK
               {c.conditions.map((cond, ci) => {
                 const valueInput = valueInputFor(variableCatalog.find((v) => v.name === cond.variable));
                 const operators = (Object.keys(OPERATOR_KEYS) as EditCondition["operator"][])
-                  .filter((op) => allowsOrdering(valueInput) || op === "==" || op === "!=" || op === cond.operator);
+                  .filter((op) => allowsOrdering(valueInput) || op === "==" || op === "!=" || isValueless(op) || op === cond.operator);
                 const setValue = (field: "value" | "value2") => (v: string) => updateCase(i, (cc) => { cc.conditions[ci]![field] = v; });
                 return (
                 <div key={ci} style={{ display: "flex", flexDirection: "column", gap: 8 }}>
@@ -152,7 +154,11 @@ export function DynamizeModal({ propertyLabel, binding, variableCatalog, resultK
 
                     <select
                       value={cond.operator}
-                      onChange={(e) => updateCase(i, (cc) => { cc.conditions[ci]!.operator = e.target.value as EditCondition["operator"]; })}
+                      onChange={(e) => updateCase(i, (cc) => {
+                        const target = cc.conditions[ci]!;
+                        target.operator = e.target.value as EditCondition["operator"];
+                        fitConditionToVariable(target, variableCatalog.find((v) => v.name === target.variable));
+                      })}
                       style={{ width: "auto" }}
                     >
                       {operators.map((op) => (
@@ -160,7 +166,7 @@ export function DynamizeModal({ propertyLabel, binding, variableCatalog, resultK
                       ))}
                     </select>
 
-                    <ConditionValue value={cond.value} onChange={setValue("value")} input={valueInput} />
+                    {!isValueless(cond.operator) && <ConditionValue value={cond.value} onChange={setValue("value")} input={valueInput} />}
                     {cond.operator === "between" && (
                       <>
                         <span style={{ color: "var(--ms-text-disabled)", fontSize: 12 }}>–</span>

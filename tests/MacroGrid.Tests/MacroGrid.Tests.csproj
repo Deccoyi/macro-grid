@@ -19,6 +19,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Content Include="../shared/dynamic-rule-cases.json" Link="shared/dynamic-rule-cases.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\..\src\MacroGrid.Core\MacroGrid.Core.csproj" />
     <ProjectReference Include="..\..\src\MacroGrid.Windows\MacroGrid.Windows.csproj" />
     <ProjectReference Include="..\MacroGrid.Tests.StubPlugin\MacroGrid.Tests.StubPlugin.csproj" />

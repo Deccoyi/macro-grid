@@ -1,6 +1,6 @@
 import type { VariableInfo, VariableType } from "../../api/types";
 import type { DictKey } from "../../i18n/tr";
-import type { EditCondition } from "./conditionEditing";
+import { isValueless, type EditCondition } from "./conditionEditing";
 
 export const VARIABLE_TYPE_KEYS: Record<VariableType, DictKey> = {
   text: "variable.type.text",
@@ -34,6 +34,7 @@ export function normalizeBoolText(value: string): string {
 
 /** After picking another variable, drop an operator or value the new variable's type cannot use. */
 export function fitConditionToVariable(condition: EditCondition, info: VariableInfo | undefined): void {
+  if (isValueless(condition.operator)) return;
   const input = valueInputFor(info);
   if (!allowsOrdering(input) && condition.operator !== "==" && condition.operator !== "!=") condition.operator = "==";
   if (input.kind === "boolean") {

@@ -254,4 +254,39 @@ public class DynamicRuleEvaluatorTests
     {
         Assert.Equal(expected, Matches(Compare("v", op, value, "9"), new VariableStore()));
     }
+
+    /// <summary>The same table is read by the editor preview tests (editor/test/evaluateDynamic.test.ts), so the two evaluators cannot drift apart.</summary>
+    public static IEnumerable<object[]> SharedCases()
+    {
+        var path = Path.Combine(AppContext.BaseDirectory, "shared", "dynamic-rule-cases.json");
+        using var doc = System.Text.Json.JsonDocument.Parse(File.ReadAllText(path));
+        foreach (var item in doc.RootElement.EnumerateArray())
+            yield return [item.GetProperty("name").GetString()!];
+    }
+
+    [Theory]
+    [MemberData(nameof(SharedCases))]
+    public void Matches_the_shared_rule_case_table(string name)
+    {
+        var path = Path.Combine(AppContext.BaseDirectory, "shared", "dynamic-rule-cases.json");
+        using var doc = System.Text.Json.JsonDocument.Parse(File.ReadAllText(path));
+        var item = doc.RootElement.EnumerateArray().Single(e => e.GetProperty("name").GetString() == name);
+
+        var store = new VariableStore();
+        foreach (var variable in item.GetProperty("variables").EnumerateObject())
+        {
+            object? value = variable.Value.ValueKind switch
+            {
+                System.Text.Json.JsonValueKind.Number => variable.Value.GetDouble(),
+                System.Text.Json.JsonValueKind.String => variable.Value.GetString(),
+                System.Text.Json.JsonValueKind.True => true,
+                System.Text.Json.JsonValueKind.False => false,
+                _ => null,
+            };
+            store.Set(variable.Name, value);
+        }
+        var condition = System.Text.Json.JsonSerializer.Deserialize<ConditionNode>(item.GetProperty("condition").GetRawText(), new System.Text.Json.JsonSerializerOptions(System.Text.Json.JsonSerializerDefaults.Web))!;
+
+        Assert.Equal(item.GetProperty("expected").GetBoolean(), Matches(condition, store));
+    }
 }
