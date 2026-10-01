@@ -1,6 +1,7 @@
 using MacroGrid.Host.Ui;
 using MacroGrid.Core;
 using MacroGrid.Core.Actions;
+using MacroGrid.Core.Automation;
 using MacroGrid.Core.Backup;
 using MacroGrid.Core.Devices;
 using MacroGrid.Core.Diagnostics;
