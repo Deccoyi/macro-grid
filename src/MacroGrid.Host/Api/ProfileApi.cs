@@ -91,7 +91,7 @@ internal static class ProfileApi
             var known = dispatcher.Handlers.Select(h => h.Type).ToHashSet(StringComparer.OrdinalIgnoreCase);
             var unknownTypes = ProfilePackage.ActionTypes(package.Profile).Where(t => !known.Contains(t)).ToList();
             var clearedBindings = PluginWidgetProps.ClearOutsideBindings(package.Profile, widgetCatalog);
-            return ApiResults.Json(new { path, profile = package.Profile, missingPlugins = missing, unknownActionTypes = unknownTypes, clearedWidgetBindings = clearedBindings });
+            return ApiResults.Json(new { path, profile = package.Profile, missingPlugins = missing, unknownActionTypes = unknownTypes, clearedWidgetBindings = clearedBindings, missingFiles = ProfileReferences.MissingFiles([package.Profile], dispatcher.Handlers) });
         });
 
         api.MapPost("/browse/export-profile", async (HttpRequest request, IUiDialogService dialogs, PluginManager plugins) =>
