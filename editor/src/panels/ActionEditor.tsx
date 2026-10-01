@@ -1,5 +1,5 @@
 import { useEffect, useState, type ElementType } from "react";
-import { Circle, CircleDot, SlidersHorizontal, Timer, ToggleLeft, ToggleRight } from "lucide-react";
+import { Circle, CircleDot, SlidersHorizontal, Timer, ToggleLeft, ToggleRight, TriangleAlert } from "lucide-react";
 import type { ActionBinding, Page, Widget, WidgetEventName } from "@macro/renderer";
 import type { ActionInfo, ProfileSummary, VariableInfo } from "../api/types";
 import { useT } from "../i18n/I18nContext";
@@ -69,11 +69,11 @@ export function ActionEditor({ widget, actions, pages, profiles, variableCatalog
   const hasPressOrRelease = (widget.actions.press?.length ?? 0) > 0 || (widget.actions.release?.length ?? 0) > 0;
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+    <>
       {/* Always 4 columns (the button's event count), regardless of how many events this widget type
          has — so a slider's single "Value changed" cell or a toggle's two cells are exactly the same size
-         as a button's, instead of stretching to fill the row. */}
-      <div style={{ display: "grid", gridTemplateColumns: `repeat(${BUTTON_EVENTS.length}, minmax(0, 1fr))`, gap: 6 }}>
+         as a button's, instead of stretching to fill the row. More events wrap to further rows. */}
+      <div className="pf-events">
         {events.map((e) => {
           const Icon = e.icon;
           const bound = (widget.actions[e.event]?.length ?? 0) > 0;
@@ -94,8 +94,9 @@ export function ActionEditor({ widget, actions, pages, profiles, variableCatalog
       </div>
 
       {widget.type !== "toggle" && hasLongOrDouble && hasPressOrRelease && (
-        <div style={{ fontSize: 11, color: "var(--ms-text-secondary)", background: "var(--ms-bg-inset)", border: "1px solid var(--ms-border)", borderRadius: 4, padding: "6px 8px" }}>
-          {t("action.warning.longDouble")}
+        <div role="note" className="pf-note">
+          <TriangleAlert size={14} />
+          <span>{t("action.warning.longDouble")}</span>
         </div>
       )}
 
@@ -110,6 +111,6 @@ export function ActionEditor({ widget, actions, pages, profiles, variableCatalog
         focusIndex={focusIndex}
         onFocusDone={() => setFocusIndex(null)}
       />
-    </div>
+    </>
   );
 }

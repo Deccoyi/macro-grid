@@ -402,7 +402,7 @@ label.field {
 .pf-switch:focus-visible { outline: 2px solid var(--ms-accent); outline-offset: 2px; }
 
 .pf-nest { margin-left: 6px; padding-left: 10px; border-left: 2px solid var(--ms-border); display: flex; flex-direction: column; gap: var(--pf-gap-field); min-width: 0; }
-.pf-root .pf-dep-input { width: 96px; }
+.pf-nest .pf-num, .pf-nest .pf-control > input[type="text"] { width: 96px; }
 .pf-group-label { height: 16px; display: flex; align-items: center; margin-top: 4px; }
 .pf-group-label:first-child { margin-top: 0; }
 .pf-note { display: flex; align-items: flex-start; gap: 8px; font-size: 11.5px; line-height: 1.4; padding: 6px 8px; border-radius: var(--pf-radius); background: rgba(250, 204, 21, .08); color: #facc15; }
@@ -412,7 +412,7 @@ label.field {
 
 .pf-list { border: 1px solid var(--ms-border); border-radius: var(--pf-radius); min-width: 0; }
 .pf-list-head { display: flex; align-items: center; gap: 4px; height: 32px; padding: 0 4px; font-size: 12px; min-width: 0; }
-.pf-list-head + .pf-list-head, .pf-list-body + .pf-list-head { border-top: 1px solid var(--ms-border); }
+.pf-list > div + div { border-top: 1px solid var(--ms-border); }
 .pf-list-head .grow { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .pf-list-body { display: flex; flex-direction: column; gap: var(--pf-gap-field); padding: 8px 8px 12px 28px; border-top: 1px solid var(--ms-border); }
 .pf-cards { display: flex; flex-direction: column; gap: 8px; }
@@ -447,3 +447,8 @@ hr.sep {
 .pf-identity-name { font-size: 12.5px; font-weight: 600; color: var(--ms-text-primary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .pf-btn.small { display: inline-flex; align-items: center; gap: 6px; }
 .pf-danger { color: var(--ms-danger); }
+.pf-icon-btn.small { width: 24px; height: 24px; }
+.pf-fill { width: 100%; }
+.pf-clickable { cursor: pointer; }
+.pf-field button.pf-ctl.pf-row { justify-content: flex-start; }
+.pf-card-name { text-align: left; justify-content: flex-start; height: 24px; padding: 0 6px; }

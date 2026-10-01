@@ -931,6 +931,8 @@ export const en: Record<DictKey, string> = {
   "undo.cutWidgets": "Cut widgets",
   "schemaForm.variable.pick": "Pick a variable",
   "schemaForm.variable.clear": "Clear",
+  "schemaForm.password.show": "Show",
+  "schemaForm.password.hide": "Hide",
   "widget.type.plugin-widget": "Plugin widget",
   "palette.pluginWidgets": "Plugin widgets",
   "palette.unverified": "Unverified",

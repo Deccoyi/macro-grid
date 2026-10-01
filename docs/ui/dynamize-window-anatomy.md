@@ -2,7 +2,7 @@
 
 Audience: a coding agent that must extend this design or build it in `editor/` (React, `lucide-react`, tokens in `editor/src/theme.css`).
 Status: mockup only, not applied. The current code is `editor/src/panels/dynamic/DynamizeModal.tsx`, `ConditionEditor.tsx`, `quickTemplates.ts`.
-Mockup sources (Design canvas artboards, `.dc.html`) are in [dynamize-window/](dynamize-window/): `Dynamize.dc.html`, `Presets.dc.html`, `canvas.json`.
+Mockups are in [dynamize-window/](dynamize-window/): open [index.html](dynamize-window/index.html) in a browser (`dynamize-window.html`, `presets-window.html`); `Dynamize.dc.html`, `Presets.dc.html` and `canvas.json` are the Design canvas sources.
 
 Read `docs/ui/ui-guidelines.md` and `docs/ui/color-bible.md` first. This design follows them: flat, hairline dividers, no cards in cards, no gradients, no
 blur, compact controls, accent only for selection, focus and the primary action.
