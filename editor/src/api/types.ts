@@ -121,6 +121,8 @@ export interface PluginInfo {
   hasTreeItems?: boolean;
   /** True only in a development build, for a C# plugin that loaded without a valid signature. */
   unsigned?: boolean;
+  /** The installed version was withdrawn by its publisher (from the saved catalog copy; no network). Missing from an older server. */
+  withdrawn?: boolean;
   /** How many button presses used the keyboard through this JavaScript plugin today. Missing from an older server. */
   keyboardUsesToday?: number;
   /** A running JavaScript plugin's approved permissions, and the ones the person switched off. Missing from an older server. */
@@ -221,6 +223,10 @@ export interface PluginCatalogEntryInfo {
   compatible: boolean;
   /** Why the latest version cannot be installed here (for example "Needs Macro Grid editor 1.3.0 or newer, this is 1.2.4"); null when compatible. */
   incompatibleReason: string | null;
+  /** True when the entry lists versions but the publisher withdrew every one (or the official list switched them off): nothing is left to install. Missing from an older server. */
+  withdrawn?: boolean;
+  /** The installed version carries the publisher's withdrawn flag. Missing from an older server. */
+  installedWithdrawn?: boolean;
   permissions: string[];
   installed: boolean;
   installedVersion: string | null;

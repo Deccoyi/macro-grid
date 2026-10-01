@@ -21,18 +21,31 @@ public sealed class PluginCatalogException(string code, string message, Exceptio
 
 /// <summary>
 /// Fetches and validates a <c>macrogrid-index.json</c> or a single-plugin <c>plugin.json</c> from a fixed
-/// <c>raw.githubusercontent.com</c> URL — never the GitHub API. The <see cref="HttpClient"/> handed in is used only
-/// when the caller asks (Discover opened, or an install started); nothing here runs on its own.
+/// <c>raw.githubusercontent.com</c> URL. This is the path for added sources and pasted links; the official catalog's signed files
+/// go through <see cref="OfficialCatalog"/>. The <see cref="HttpClient"/> handed in is used only
+/// when the caller asks (Discover opened, or an install started); nothing here runs on its own. An index is kept in memory for
+/// five minutes per repository so one Discover visit does not fetch it again for every icon.
 /// </summary>
-public sealed class PluginCatalogClient(HttpClient http)
+public sealed class PluginCatalogClient(HttpClient http, TimeProvider? clock = null)
 {
+    private static readonly TimeSpan CopyLifetime = TimeSpan.FromMinutes(5);
+    private readonly TimeProvider _clock = clock ?? TimeProvider.System;
+    private readonly System.Collections.Concurrent.ConcurrentDictionary<string, (DateTimeOffset At, PluginCatalogIndex Index)> _copies = new(StringComparer.OrdinalIgnoreCase);
+
     private const long MaxIndexBytes = 1024 * 1024;
     private const long MaxManifestBytes = 64 * 1024;
+    private const int MaxAddresses = 3;
 
-    public async Task<PluginCatalogIndex> FetchIndexAsync(string owner, string repo, CancellationToken cancellationToken)
+    /// <param name="fresh">Skip the five-minute copy (adding a source, the Refresh button).</param>
+    public async Task<PluginCatalogIndex> FetchIndexAsync(string owner, string repo, CancellationToken cancellationToken, bool fresh = false)
     {
+        var key = $"{owner}/{repo}";
+        if (!fresh && _copies.TryGetValue(key, out var copy) && _clock.GetUtcNow() - copy.At < CopyLifetime) return copy.Index;
+
         var json = await FetchTextAsync(PluginSourceUrls.IndexUrl(owner, repo), MaxIndexBytes, cancellationToken);
-        return Parse(json, owner, repo);
+        var index = Parse(json, owner, repo, signed: false);
+        _copies[key] = (_clock.GetUtcNow(), index);
+        return index;
     }
 
     /// <summary>Method 4 step 1: reads a single-plugin repository's root <c>plugin.json</c> directly (no index) —
@@ -127,7 +140,9 @@ public sealed class PluginCatalogClient(HttpClient http)
         }
     }
 
-    private static PluginCatalogIndex Parse(string json, string owner, string repo)
+    /// <summary>Parses an index. <paramref name="signed"/> is true only for the official index after its signature was verified: then a
+    /// version may list any https download address (a mirror); otherwise every address must be an own-release address of this repository.</summary>
+    internal static PluginCatalogIndex Parse(string json, string owner, string repo, bool signed)
     {
         JsonDocument document;
         try { document = JsonDocument.Parse(json); }
@@ -149,14 +164,14 @@ public sealed class PluginCatalogClient(HttpClient http)
             if (root.TryGetProperty("plugins", out var pluginsElement) && pluginsElement.ValueKind == JsonValueKind.Array)
             {
                 foreach (var pluginElement in pluginsElement.EnumerateArray())
-                    plugins.Add(ParseEntry(pluginElement, owner, repo));
+                    plugins.Add(ParseEntry(pluginElement, owner, repo, signed));
             }
 
             return new PluginCatalogIndex(formatVersion, name, author, owner, repo, plugins);
         }
     }
 
-    private static PluginCatalogEntry ParseEntry(JsonElement element, string owner, string repo)
+    private static PluginCatalogEntry ParseEntry(JsonElement element, string owner, string repo, bool signed)
     {
         var id = GetRequiredString(element, "id", "a plugin entry");
         var versions = new List<PluginCatalogVersion>();
@@ -165,7 +180,9 @@ public sealed class PluginCatalogClient(HttpClient http)
             foreach (var versionElement in versionsElement.EnumerateArray())
             {
                 var version = ParseVersion(versionElement, id);
-                if (!Uri.TryCreate(version.Url, UriKind.Absolute, out var url) || !PluginSourceUrls.BelongsToRepo(url, owner, repo))
+                if (!version.Addresses.All(address => Uri.TryCreate(address, UriKind.Absolute, out var url) && (signed
+                        ? url.Scheme == Uri.UriSchemeHttps
+                        : PluginSourceUrls.BelongsToRepo(url, owner, repo))))
                     throw new PluginCatalogException(PluginCatalogException.Invalid,
                         $"'{id}' {version.Version}: the download url does not point at {owner}/{repo}'s own releases.");
                 versions.Add(version);
@@ -202,19 +219,24 @@ public sealed class PluginCatalogClient(HttpClient http)
         if (size <= 0)
             throw new PluginCatalogException(PluginCatalogException.Invalid, $"'{pluginId}' {version}: size is required.");
 
+        var urls = GetStringArray(element, "urls")?.OfType<string>().Where(u => !string.IsNullOrWhiteSpace(u)).Take(MaxAddresses).ToList();
+        var url = urls is { Count: > 0 } ? urls[0] : GetRequiredString(element, "url", pluginId);
+
         return new PluginCatalogVersion(
             version,
             GetString(element, "minMacroGrid"),
             GetString(element, "macroGrid"),
             GetString(element, "sdkVersion"),
             GetString(element, "minServerVersion"),
-            GetRequiredString(element, "url", pluginId),
+            url,
             sha256,
             size,
             element.TryGetProperty("permissions", out var perms) && perms.ValueKind == JsonValueKind.Array
                 ? [.. perms.EnumerateArray().Where(p => p.ValueKind == JsonValueKind.String).Select(p => p.GetString()!)]
                 : null,
-            GetString(element, "signature"));
+            GetString(element, "signature"),
+            element.TryGetProperty("withdrawn", out var withdrawn) && withdrawn.ValueKind == JsonValueKind.True,
+            urls is { Count: > 0 } ? urls : null);
     }
 
     private static string GetRequiredString(JsonElement element, string name, string context) =>

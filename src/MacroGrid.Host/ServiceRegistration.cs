@@ -104,7 +104,8 @@ internal static class ServiceRegistration
             sp.GetRequiredService<IInputService>(), sp.GetRequiredService<ILogger<PluginManager>>(),
             sp.GetRequiredService<PluginLocalizer>(), sp.GetRequiredService<ISecretProtector>(),
             windowSource: sp.GetRequiredService<IActiveWindowSource>(), problems: sp.GetRequiredService<ProblemList>(),
-            widgetCatalog: sp.GetRequiredService<PluginWidgetCatalog>(), widgetEvents: sp.GetRequiredService<PluginWidgetEventHub>()));
+            widgetCatalog: sp.GetRequiredService<PluginWidgetCatalog>(), widgetEvents: sp.GetRequiredService<PluginWidgetEventHub>(),
+            officialCatalog: sp.GetRequiredService<OfficialCatalog>(), origins: sp.GetRequiredService<PluginInstallOriginStore>()));
         services.AddSingleton<PluginWidgetCatalog>();
         services.AddSingleton(sp => new PluginWidgetEventHub(sp.GetRequiredService<ProblemList>()));
         services.AddHostedService(sp => sp.GetRequiredService<PluginManager>());
@@ -132,15 +133,21 @@ internal static class ServiceRegistration
         var http = new HttpClient(new SocketsHttpHandler { AllowAutoRedirect = false }) { Timeout = TimeSpan.FromMinutes(2) };
         http.DefaultRequestHeaders.UserAgent.ParseAdd($"MacroGrid/{ClientHub.ServerVersion}");
         services.AddSingleton(new PluginCatalogClient(http));
+        services.AddSingleton(new PluginCatalogStateStore(dataDir));
+        services.AddSingleton(sp => new OfficialCatalog(http, sp.GetRequiredService<PluginCatalogStateStore>(), sp.GetRequiredService<PluginCatalogClient>()));
         services.AddSingleton(new PluginPackageDownloader(http));
         services.AddSingleton(sp => new PluginCatalogIcons(sp.GetRequiredService<PluginPackageDownloader>()));
         services.AddSingleton(new PluginInstallOriginStore(dataDir));
         services.AddSingleton(new PluginSourceStore(dataDir));
+        services.AddSingleton(sp => new PluginCatalogMonitor(sp.GetRequiredService<OfficialCatalog>(), sp.GetRequiredService<PluginManager>(),
+            sp.GetRequiredService<PluginInstallOriginStore>(), sp.GetRequiredService<ProblemList>()));
+        services.AddHostedSingleton<PluginCatalogService>();
         services.AddSingleton(sp => new PluginCatalogInstaller(
             sp.GetRequiredService<PluginPackageDownloader>(),
             sp.GetRequiredService<PluginManager>(),
             sp.GetRequiredService<PluginInstallOriginStore>(),
-            Path.Combine(dataDir, "plugins-staging")));
+            Path.Combine(dataDir, "plugins-staging"),
+            sp.GetRequiredService<OfficialCatalog>()));
         return services;
     }
 

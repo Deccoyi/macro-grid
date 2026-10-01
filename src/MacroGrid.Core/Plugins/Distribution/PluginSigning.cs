@@ -17,18 +17,25 @@ public static class PluginSigning
     internal const string PublicKeyBase64 =
         "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEeRPznqxspydIc9Iq5a56OywKWDzxY9ILuCeWBBAcfFJHM2LWIeKXvRxwVyTPHA/zayTob/+TMxn7DWVGD5tyXw==";
 
+    /// <summary>The embedded official public key (DER).</summary>
+    public static byte[] OfficialPublicKey => Convert.FromBase64String(PublicKeyBase64);
+
     /// <summary>True when <paramref name="signatureBase64"/> is a valid ECDSA P-256/SHA-256 signature (IEEE P1363,
     /// 64 bytes) over <paramref name="packageBytes"/> made by the official plugin-signing key. Any malformed input
     /// (bad base64, wrong length, ...) is treated as a failed verification, never an exception.</summary>
-    public static bool Verify(byte[] packageBytes, string? signatureBase64)
+    public static bool Verify(byte[] packageBytes, string? signatureBase64) =>
+        Verify(packageBytes, signatureBase64, Convert.FromBase64String(PublicKeyBase64));
+
+    /// <summary>Same check against a given public key (SubjectPublicKeyInfo, DER); the catalog files and the tests use it.</summary>
+    public static bool Verify(byte[] data, string? signatureBase64, byte[] publicKey)
     {
         if (string.IsNullOrWhiteSpace(signatureBase64)) return false;
         try
         {
             var signature = Convert.FromBase64String(signatureBase64);
             using var ecdsa = ECDsa.Create();
-            ecdsa.ImportSubjectPublicKeyInfo(Convert.FromBase64String(PublicKeyBase64), out _);
-            return ecdsa.VerifyData(packageBytes, signature, HashAlgorithmName.SHA256);
+            ecdsa.ImportSubjectPublicKeyInfo(publicKey, out _);
+            return ecdsa.VerifyData(data, signature, HashAlgorithmName.SHA256);
         }
         catch (Exception ex) when (ex is FormatException or CryptographicException)
         {

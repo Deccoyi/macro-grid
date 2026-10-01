@@ -10,8 +10,9 @@ public enum PluginLoadStatus
     Error,
     /// <summary>A JS plugin that declares permissions the user has not approved yet; it does not run until they do.</summary>
     NeedsApproval,
-    /// <summary>A C# plugin that is not officially signed, or whose files no longer match its signature. It never runs (the
-    /// reason is in <see cref="LoadedPlugin.Detail"/>); the person can only remove it.</summary>
+    /// <summary>A C# plugin that is not officially signed or whose files no longer match its signature, or an official plugin
+    /// version the official safety list switched off. It does not run (the reason is in <see cref="LoadedPlugin.Detail"/>);
+    /// the person can remove it, or update it when the list only names the old version.</summary>
     NotAllowed,
 }
 

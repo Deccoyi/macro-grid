@@ -15,7 +15,7 @@ internal static class PluginApi
     {
         // trust is Official / ThirdParty / Local — Local also covers a plugin installed before this feature
         // existed (from a folder), which has no recorded origin.
-        api.MapGet("/plugins", (PluginManager plugins, PluginLocalizer localizer, PluginInstallOriginStore origins) =>
+        api.MapGet("/plugins", (PluginManager plugins, PluginLocalizer localizer, PluginInstallOriginStore origins, OfficialCatalog official) =>
             plugins.Plugins.Select(p => new
             {
                 p.Id,
@@ -30,6 +30,9 @@ internal static class PluginApi
                 p.Permissions,
                 p.SwitchedOffPermissions,
                 Trust = (origins.Get(p.Id)?.Trust ?? PluginTrust.Local).ToString(),
+                // From the saved catalog copy only: this list is read often and must not use the network.
+                Withdrawn = origins.Get(p.Id)?.Trust == PluginTrust.Official
+                    && official.Index?.Plugins.FirstOrDefault(e => e.Id == p.Id)?.Versions.Any(v => v.Withdrawn && v.Version == p.Version) == true,
             }));
 
         api.MapGet("/icon-packs", (PluginManager plugins, PluginLocalizer localizer) =>

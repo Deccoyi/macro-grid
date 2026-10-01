@@ -52,6 +52,7 @@ function GetButton({ entry, busy, onGet, large = false }: { entry: PluginCatalog
   const { t } = useT();
   const pad = large ? "6px 26px" : "3px 14px";
   const font = large ? 13 : 11.5;
+  if (entry.withdrawn) return <span style={{ fontSize: 11, color: "var(--ms-warning, #facc15)", flexShrink: 0 }}>{t("plugins.discover.withdrawn")}</span>;
   if (!entry.compatible) return <span style={{ fontSize: 11, color: "var(--ms-warning, #facc15)", flexShrink: 0 }}>{t("plugins.discover.incompatibleShort")}</span>;
   if (entry.installed && !entry.updateAvailable) {
     return <span style={{ fontSize: font, color: "var(--ms-text-disabled)", flexShrink: 0, padding: pad }}>{t("plugins.discover.installed")}</span>;
@@ -133,13 +134,13 @@ export function PluginsWindow() {
     refresh();
   }, []);
 
-  const refreshCatalog = (source = selectedSource) => {
+  const refreshCatalog = (source = selectedSource, force = false) => {
     setCatalogLoading(true);
     setCatalogError(null);
     setCatalog(null);
     setSelectedEntryId(null);
     api
-      .fetchPluginCatalog(source)
+      .fetchPluginCatalog(source, force)
       .then((response) => {
         setCatalogOfficial(response.official ?? source === "official");
         if (response.error) setCatalogError(response.error);
@@ -460,6 +461,7 @@ export function PluginsWindow() {
                     )}
                   </div>
                   {p.detail && <div style={{ fontSize: 11, color: "var(--ms-text-secondary)", marginTop: 2 }}>{p.detail}</div>}
+                  {p.withdrawn && <div style={{ fontSize: 11, color: "var(--ms-warning, #facc15)", marginTop: 2 }}>{t("plugins.withdrawn.installedNote")}</div>}
                   {(p.keyboardUsesToday ?? 0) > 0 && (
                     <div style={{ fontSize: 11, color: "var(--ms-text-secondary)", marginTop: 2 }}>{t("plugins.keyboardUses", String(p.keyboardUsesToday ?? 0))}</div>
                   )}
@@ -587,10 +589,15 @@ export function PluginsWindow() {
             </>
           )}
 
-          {!selectedEntry.compatible && (
+          {selectedEntry.withdrawn ? (
+            <div style={{ fontSize: 12, color: "var(--ms-warning, #facc15)", marginBottom: 14 }}>{t("plugins.withdrawn.note")}</div>
+          ) : !selectedEntry.compatible && (
             <div style={{ fontSize: 12, color: "var(--ms-warning, #facc15)", marginBottom: 14 }}>
               {selectedEntry.incompatibleReason ?? t("plugins.discover.incompatible")}
             </div>
+          )}
+          {selectedEntry.installedWithdrawn && !selectedEntry.withdrawn && (
+            <div style={{ fontSize: 12, color: "var(--ms-warning, #facc15)", marginBottom: 14 }}>{t("plugins.withdrawn.installedNote")}</div>
           )}
 
           <SectionLabel>{t("plugins.discover.permissionsLabel")}</SectionLabel>
@@ -625,7 +632,7 @@ export function PluginsWindow() {
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
             <SectionLabel>{t("plugins.category.discover")}</SectionLabel>
             <div style={{ flex: 1 }} />
-            <button type="button" className="ghost" title={t("plugins.refresh")} onClick={() => refreshCatalog()} style={{ display: "flex", padding: 6 }}>
+            <button type="button" className="ghost" title={t("plugins.refresh")} onClick={() => refreshCatalog(selectedSource, true)} style={{ display: "flex", padding: 6 }}>
               <RefreshCw size={14} />
             </button>
           </div>
