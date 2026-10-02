@@ -19,12 +19,59 @@ public sealed class ActionDispatcher(IEnumerable<IActionHandler> handlers, ILogg
 
     /// <summary>Adds a handler at runtime (a hot-loaded plugin's action). Returns false, changing nothing,
     /// if that type id is already taken.</summary>
-    public bool Register(IActionHandler handler) => _handlers.TryAdd(handler.Type, handler);
+    public bool Register(IActionHandler handler)
+    {
+        var added = _handlers.TryAdd(handler.Type, handler);
+        if (added) HandlersChanged?.Invoke();
+        return added;
+    }
+
+    /// <summary>Raised when an action type is added or removed (a plugin switched on or off), so widgets that use it can be marked again.</summary>
+    public event Action? HandlersChanged;
 
     /// <summary>Removes a handler only if it is still the given instance, so unloading one plugin can never
     /// drop a same-named handler that belongs to something else.</summary>
-    public void Unregister(IActionHandler handler) =>
-        _handlers.TryRemove(KeyValuePair.Create(handler.Type, handler));
+    public void Unregister(IActionHandler handler)
+    {
+        if (_handlers.TryRemove(KeyValuePair.Create(handler.Type, handler))) HandlersChanged?.Invoke();
+    }
+
+    /// <summary>What the widget's action steps need and cannot get now: an action type that is not registered (its plugin is off or gone), named by its type id,
+    /// and variables read by a step's text fields that have no value (and no placeholder). Empty when the widget opts out with <c>props.hideUnavailable</c>.</summary>
+    public IReadOnlyList<string> UnavailableSources(Widget widget, IVariableStore store)
+    {
+        if (widget.Props?["hideUnavailable"]?.GetValueKind() == JsonValueKind.True) return [];
+        var names = new List<string>();
+        foreach (var binding in widget.Actions.Values.SelectMany(list => list))
+        {
+            if (ActionFlow.IsLogic(binding.Type)) continue;
+            if (!_handlers.TryGetValue(binding.Type, out var handler)) { names.Add(binding.Type); continue; }
+            foreach (var name in ReadVariables(handler, binding.Settings, withoutPlaceholderOnly: true))
+                if (!SelfVariables.IsSelfName(name) && store.Get(name) is null) names.Add(name);
+        }
+        return [.. names.Distinct()];
+    }
+
+    /// <summary>Every variable the widget's action steps read in their text fields, so a change of one can refresh the widget's unavailable mark.</summary>
+    public HashSet<string> ActionDependencies(Widget widget)
+    {
+        var names = new HashSet<string>();
+        foreach (var binding in widget.Actions.Values.SelectMany(list => list))
+            if (_handlers.TryGetValue(binding.Type, out var handler))
+                foreach (var name in ReadVariables(handler, binding.Settings, withoutPlaceholderOnly: false)) names.Add(name);
+        return names;
+    }
+
+    private static IEnumerable<string> ReadVariables(IActionHandler handler, JsonObject settings, bool withoutPlaceholderOnly)
+    {
+        if (handler is not IActionDescriptor descriptor) yield break;
+        foreach (var field in descriptor.Fields.Where(f => f.AllowVariables))
+        {
+            if (settings[field.Key] is not JsonValue value || !value.TryGetValue<string>(out var text) || !text.Contains('{')) continue;
+            var parsed = Template.Parse(text);
+            foreach (var name in withoutPlaceholderOnly ? parsed.VariablesWithoutPlaceholder : parsed.VariableNames) yield return name;
+        }
+    }
 
     /// <summary>
     /// Runs the actions bound to <paramref name="eventName"/> sequentially.
