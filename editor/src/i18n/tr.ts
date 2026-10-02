@@ -812,6 +812,8 @@ export const tr = {
   "fields.text.iconPosition.left": "Metnin solunda",
   "fields.text.iconPosition.right": "Metnin sağında",
   "fields.text.iconColor": "İkon rengi",
+  "fields.text.iconFollowsText": "İkon metin rengini kullanır. İkonu yeniden renklendirmek için metin rengini değiştirin veya dinamik yapın.",
+  "fields.text.iconColorRepick": "İkonun metin rengini izlemesi için ikonu yeniden seçin",
   "fields.text.iconColorHint": "Bu ikon eski bir sürümde eklenmiş, rengini değiştirmek için yeniden seçin",
 
   // ---- Web fields ----

@@ -1,7 +1,7 @@
 export * from "./types";
 export { Grid, gridArea, type GridProps } from "./grid/Grid";
 export { WidgetView, type WidgetViewProps } from "./widgets/WidgetView";
-export { ButtonContent, type ButtonContentProps } from "./widgets/ButtonContent";
+export { ButtonContent, ICON_TINT_MARKER, isTintableIcon, type ButtonContentProps } from "./widgets/ButtonContent";
 export { ImageContent, type ImageContentProps } from "./widgets/ImageContent";
 export { SliderContent, type SliderContentProps } from "./widgets/SliderContent";
 export { KnobContent, type KnobContentProps } from "./widgets/KnobContent";

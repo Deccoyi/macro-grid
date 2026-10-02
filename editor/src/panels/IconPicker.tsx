@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import dynamicIconImports from "lucide-react/dynamicIconImports";
+import { ICON_TINT_MARKER } from "@macro/renderer";
 import { api } from "../api/client";
 import type { IconPackInfo } from "../api/types";
 import { useT } from "../i18n/I18nContext";
@@ -44,26 +45,31 @@ async function fetchPluginSvg(packId: string, name: string): Promise<string | nu
   return svg;
 }
 
-async function lucideToDataUri(name: string, color: string): Promise<string | null> {
+async function lucideToDataUri(name: string, color: string, tint = false): Promise<string | null> {
   const load = dynamicIconImports[name as keyof typeof dynamicIconImports];
   if (!load) return null;
   const mod = await load();
   const Icon = mod.default;
   const svg = renderToStaticMarkup(<Icon color={color} size={24} strokeWidth={2} />);
-  return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
+  return `data:image/svg+xml;utf8,${encodeURIComponent(tint ? markTintable(svg) : svg)}`;
+}
+
+/** Tells the renderer this icon is a plain shape it may paint with the widget's text colour (so a dynamic text colour recolours it). */
+function markTintable(svg: string): string {
+  return svg.includes("<svg ") ? svg.replace("<svg ", `<svg ${ICON_TINT_MARKER}="1" `) : svg;
 }
 
 /** A plugin-contributed pack's SVGs use stroke="currentColor" but are rendered as a standalone image
  * (no CSS cascade from the page), so `currentColor` would otherwise fall back to black. Setting `color`
  * on the root <svg> gives that document its own current color to inherit from. */
-function coloredDataUri(svg: string, color: string): string {
+function coloredDataUri(svg: string, color: string, tint = false): string {
   const withColor = svg.includes("<svg ") ? svg.replace("<svg ", `<svg color="${color}" `) : svg;
-  return `data:image/svg+xml;utf8,${encodeURIComponent(withColor)}`;
+  return `data:image/svg+xml;utf8,${encodeURIComponent(tint ? markTintable(withColor) : withColor)}`;
 }
 
-async function pluginIconToDataUri(packId: string, name: string, color: string): Promise<string | null> {
+async function pluginIconToDataUri(packId: string, name: string, color: string, tint = false): Promise<string | null> {
   const svg = await fetchPluginSvg(packId, name);
-  return svg ? coloredDataUri(svg, color) : null;
+  return svg ? coloredDataUri(svg, color, tint) : null;
 }
 
 /** Resolves a stored icon name (from WidgetStyle.iconName) back into a colored data: URI, regardless of
@@ -162,8 +168,8 @@ export function IconPicker({ value, color, onChange }: IconPickerProps) {
                 color={effectiveColor}
                 onPick={async () => {
                   const uri = packId === LUCIDE_PACK_ID
-                    ? await lucideToDataUri(name, effectiveColor)
-                    : await pluginIconToDataUri(packId, name, effectiveColor);
+                    ? await lucideToDataUri(name, effectiveColor, true)
+                    : await pluginIconToDataUri(packId, name, effectiveColor, true);
                   if (uri) onChange(uri, name);
                   picker.closePicker();
                 }}

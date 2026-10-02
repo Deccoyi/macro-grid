@@ -8,6 +8,28 @@ function button(overrides: Partial<Widget> = {}): Widget {
 }
 
 describe("WidgetView", () => {
+  const tintable = "data:image/svg+xml;utf8," + encodeURIComponent('<svg data-mg-tint="1" viewBox="0 0 24 24"><path d="M0 0h24v24H0z"/></svg>');
+  const baked = "data:image/svg+xml;utf8," + encodeURIComponent('<svg viewBox="0 0 24 24" color="#ff0000"><path d="M0 0h24v24H0z"/></svg>');
+
+  it("paints a recolourable icon with the text colour as a mask", () => {
+    render(<WidgetView widget={button({ style: { icon: tintable } })} />);
+
+    const host = document.querySelector("[data-ms-widget-host]") as HTMLElement;
+    const tinted = host.shadowRoot!.querySelector(".ms-icon-tint") as HTMLElement;
+    expect(tinted.style.backgroundColor).toBe("currentcolor");
+    expect(tinted.style.maskImage || tinted.style.webkitMaskImage).toContain("data:image/svg+xml");
+    expect(host.shadowRoot!.querySelector("img.ms-icon")).toBeNull();
+  });
+
+  it("follows a dynamic icon rule result and keeps an old baked icon as an image", () => {
+    const { rerender } = render(<WidgetView widget={button({ style: { icon: baked } })} />);
+    const host = () => document.querySelector("[data-ms-widget-host]") as HTMLElement;
+    expect(host().shadowRoot!.querySelector("img.ms-icon")).not.toBeNull();
+
+    rerender(<WidgetView widget={button({ style: { icon: baked } })} liveStyle={{ icon: tintable }} />);
+    expect(host().shadowRoot!.querySelector(".ms-icon-tint")).not.toBeNull();
+  });
+
   it("fades an unavailable widget and shows a tappable mark that names the sources", () => {
     const onTap = vi.fn();
     const { getByRole } = render(<WidgetView widget={button()} unavailable={["obs.streaming"]} onUnavailableTap={onTap} unavailableLabel="Unavailable" />);
