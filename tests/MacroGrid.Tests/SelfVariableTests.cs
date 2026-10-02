@@ -367,4 +367,25 @@ public sealed class SelfVariableTests : IDisposable
 
         Assert.Empty(session.Pressed);
     }
+
+    [Fact]
+    public async Task Removing_a_variable_a_text_uses_tells_every_device_the_widget_is_unavailable()
+    {
+        var (service, variables, _, _, sessions) = Make(new Widget { Id = "w", Text = "{plug.value}" });
+        using var _ = service;
+        var phone = new TestSocket();
+        var browser = new TestSocket();
+        sessions.Add(Identified(phone));
+        sessions.Add(Identified(browser));
+        variables.Set("plug.value", "x");
+        await service.FlushAsync();
+        phone.Sent.Clear();
+        browser.Sent.Clear();
+
+        variables.Remove("plug.value"); // what switching a plugin off does to its variables
+        await service.FlushAsync();
+
+        foreach (var socket in new[] { phone, browser })
+            Assert.Equal("plug.value", (string?)Assert.Single(socket.Sent).Data!["unavailable"]![0]);
+    }
 }
