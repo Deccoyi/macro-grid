@@ -342,4 +342,29 @@ public sealed class SelfVariableTests : IDisposable
 
         Assert.False(session.Pressed.ContainsKey("w"));
     }
+
+    [Fact]
+    public async Task A_page_change_clears_a_held_button_and_the_look_is_resting_when_the_page_is_shown_again()
+    {
+        var button = new Widget
+        {
+            Id = "w",
+            Dynamic = new Dictionary<string, DynamicBinding>
+            {
+                ["style.background"] = new DynamicBinding { Cases = [new DynamicCase(new ConditionNode { Variable = "self.pressed", Operator = "==", Value = "true" }, "#ff0000")] },
+            },
+        };
+        var profiles = new ProfileStore(_dir);
+        profiles.Save(new Profile { Id = "p", Name = "P", Pages = [new Page { Id = "a", Widgets = [button] }, new Page { Id = "b", Widgets = [] }] });
+        using var service = new WidgetStateService(new VariableStore(), new SessionRegistry(), profiles, new ToggleStateStore(), new LayoutSender(new AssetStore()), new WebViewState(),
+            NullLogger<WidgetStateService>.Instance, results: new LastResultStore());
+        var socket = new TestSocket();
+        var session = Identified(socket);
+        var controller = new SessionDeviceController(session, profiles, service);
+
+        service.PressBegan(session, "w");
+        await controller.ShowPageAsync("b");
+
+        Assert.Empty(session.Pressed);
+    }
 }
