@@ -392,6 +392,22 @@ public sealed class SelfVariableTests : IDisposable
     }
 
     [Fact]
+    public async Task An_asset_request_for_an_unknown_hash_is_answered_with_an_empty_asset()
+    {
+        // The phone uses exactly this request as its liveness probe, so the reply is part of the contract.
+        var socket = new TestSocket();
+        var session = new ClientSession(socket);
+
+        await new LayoutSender(new AssetStore()).SendAssetsAsync(session, ["0000000000000000"]);
+
+        var reply = Assert.Single(socket.Sent);
+        Assert.Equal(MessageTypes.Asset, reply.Type);
+        var asset = reply.DataAs<AssetMessage>()!;
+        Assert.Equal("0000000000000000", asset.Hash);
+        Assert.Null(asset.Data);
+    }
+
+    [Fact]
     public async Task A_press_still_held_when_the_device_goes_is_released_once()
     {
         var handler = new ReleaseAwareHandler();
