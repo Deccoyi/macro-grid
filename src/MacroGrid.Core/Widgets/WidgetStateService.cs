@@ -26,6 +26,9 @@ public sealed class WidgetStateService : IHostedService, IDisposable
         ["style.icon"] = "icon",
     };
 
+    /// <summary>Joins the unavailable names of a widget into the string kept per session to spot a change.</summary>
+    private const char UnavailableSeparator = '|';
+
     private readonly VariableStore _variables;
     private readonly SessionRegistry _sessions;
     private readonly ProfileStore _profiles;
@@ -140,6 +143,7 @@ public sealed class WidgetStateService : IHostedService, IDisposable
                 session.SentTexts.Clear();
                 session.SentStyles.Clear();
                 session.SentValues.Clear();
+                session.SentUnavailable.Clear();
             }
             else
             {
@@ -148,6 +152,7 @@ public sealed class WidgetStateService : IHostedService, IDisposable
                     session.SentTexts.TryRemove(id, out _);
                     session.SentStyles.TryRemove(id, out _);
                     session.SentValues.TryRemove(id, out _);
+                    session.SentUnavailable.TryRemove(id, out _);
                 }
             }
 
@@ -196,6 +201,13 @@ public sealed class WidgetStateService : IHostedService, IDisposable
             {
                 session.SentValues[widget.Id] = value.Value;
                 await session.SendAsync(MessageTypes.WidgetState, new WidgetStateMessage(widget.Id, Value: value), ct);
+            }
+
+            var unavailable = DynamicText.UnavailableSources(widget, scope);
+            if (unavailable.Count > 0 || session.SentUnavailable.GetValueOrDefault(widget.Id, "").Length > 0)
+            {
+                session.SentUnavailable[widget.Id] = string.Join(UnavailableSeparator, unavailable);
+                await session.SendAsync(MessageTypes.WidgetState, new WidgetStateMessage(widget.Id, Unavailable: [.. unavailable]), ct);
             }
 
             var style = ResolveDynamicStyle(widget, scope);
@@ -402,16 +414,25 @@ public sealed class WidgetStateService : IHostedService, IDisposable
                     value = resolved;
             }
 
-            if (text is null && style is null && value is null) continue;
+            List<string>? unavailable = null;
+            if (forced || DynamicText.Dependencies(widget).Any(dirty.Contains) || (!string.IsNullOrEmpty(variableName) && dirty.Contains(variableName)))
+            {
+                var now = DynamicText.UnavailableSources(widget, scope);
+                if (string.Join(UnavailableSeparator, now) !=session.SentUnavailable.GetValueOrDefault(widget.Id, ""))
+                    unavailable = [.. now];
+            }
+
+            if (text is null && style is null && value is null && unavailable is null) continue;
 
             if (text is not null) session.SentTexts[widget.Id] = text;
             if (style is not null) session.SentStyles[widget.Id] = style;
             if (value is not null) session.SentValues[widget.Id] = value.Value;
+            if (unavailable is not null) session.SentUnavailable[widget.Id] = string.Join(UnavailableSeparator, unavailable);
 
             try
             {
                 using var timeout = new CancellationTokenSource(SendTimeout);
-                await session.SendAsync(MessageTypes.WidgetState, new WidgetStateMessage(widget.Id, Text: text, Value: value, Style: style is null ? null : _layouts.ForClient(session, style)), timeout.Token);
+                await session.SendAsync(MessageTypes.WidgetState, new WidgetStateMessage(widget.Id, Text: text, Value: value, Style: style is null ? null : _layouts.ForClient(session, style), Unavailable: unavailable), timeout.Token);
             }
             catch (OperationCanceledException)
             {

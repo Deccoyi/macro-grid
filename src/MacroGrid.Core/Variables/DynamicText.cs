@@ -47,6 +47,24 @@ public static class DynamicText
         return names;
     }
 
+    /// <summary>The variables the widget's current text needs and that have no value now, with no placeholder to cover for them
+    /// (a placeholder or an "is unavailable" rule means the person already handled it). Empty when the text uses none, or the widget opts out
+    /// with <c>props.hideUnavailable</c>.</summary>
+    public static IReadOnlyList<string> UnavailableSources(Widget widget, IVariableStore variables)
+    {
+        if (widget.Props?["hideUnavailable"]?.GetValueKind() == System.Text.Json.JsonValueKind.True) return [];
+
+        var names = new List<string>();
+        var template = IsDynamic(widget) ? ChooseTemplate(widget, variables) : widget.Text;
+        if (!string.IsNullOrEmpty(template))
+            names.AddRange(Template.Parse(template).VariablesWithoutPlaceholder);
+
+        var bound = widget.Type is WidgetTypes.Slider or WidgetTypes.Knob ? widget.Props?["valueVariable"]?.GetValue<string>() : null;
+        if (!string.IsNullOrEmpty(bound)) names.Add(bound);
+
+        return [.. names.Where(n => !SelfVariables.IsSelfName(n) && variables.Get(n) is null).Distinct()];
+    }
+
     private static string? ChooseTemplate(Widget widget, IVariableStore variables) =>
         DynamicRuleEvaluator.Evaluate(widget.Dynamic[PropertyKey], variables) ?? widget.Text;
 

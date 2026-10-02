@@ -57,6 +57,12 @@ export function App() {
   }, []);
   useEffect(() => () => widgets.runtime.dispose(), [widgets]);
   const actionErrorTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // One short message at the bottom (a failed action, or the sources an unavailable widget is missing); it clears itself.
+  const showNotice = (message: string) => {
+    if (actionErrorTimer.current) clearTimeout(actionErrorTimer.current);
+    setActionError(message);
+    actionErrorTimer.current = setTimeout(() => setActionError(null), 4000);
+  };
 
   useEffect(() => {
     const connection = new ServerConnection(getDeviceId(), t("device.name"), {
@@ -81,11 +87,7 @@ export function App() {
       },
       onProfiles: setProfiles,
       onPaired: () => {},
-      onActionError: (message) => {
-        if (actionErrorTimer.current) clearTimeout(actionErrorTimer.current);
-        setActionError(message);
-        actionErrorTimer.current = setTimeout(() => setActionError(null), 4000);
-      },
+      onActionError: (message) => showNotice(message),
       onPairingError: setPairingError,
       onPluginWidgetMessage: (type, data) => widgets.host.onMessage(type, data),
       onAsset: (hash, data) => widgets.host.onAsset(hash, data),
@@ -126,6 +128,7 @@ export function App() {
       <PluginWidgetContext.Provider value={{ runtime: widgets.runtime, host: widgets.host, texts: pluginWidgetTexts() }}>
       <div style={{ flex: 1, position: "relative" }}>
         <Grid
+          style={{ position: "absolute", inset: 0, width: "auto", height: "auto" }}
           page={page}
           renderWidget={(widget) => {
             const state = states[widget.id];
@@ -136,6 +139,9 @@ export function App() {
                 liveActive={state?.active}
                 liveValue={dragValues[widget.id] ?? state?.value}
                 liveStyle={state?.style}
+                unavailable={state?.unavailable}
+                unavailableLabel={t("widget.sourceUnavailable.hint")}
+                onUnavailableTap={(names) => showNotice(t("widget.sourceUnavailable") + names.join(", "))}
                 webUrl={state?.url}
                 webReload={state?.reload}
                 onPress={() => connectionRef.current?.send("widget.down", { pageId: page.id, widgetId: widget.id })}

@@ -8,6 +8,24 @@ function button(overrides: Partial<Widget> = {}): Widget {
 }
 
 describe("WidgetView", () => {
+  it("fades an unavailable widget and shows a tappable mark that names the sources", () => {
+    const onTap = vi.fn();
+    const { getByRole } = render(<WidgetView widget={button()} unavailable={["obs.streaming"]} onUnavailableTap={onTap} unavailableLabel="Unavailable" />);
+
+    const host = document.querySelector("[data-ms-widget-host]") as HTMLElement;
+    expect(Number(host.style.opacity)).toBeLessThan(1);
+    fireEvent.click(getByRole("button", { name: "Unavailable" }));
+    expect(onTap).toHaveBeenCalledWith(["obs.streaming"]);
+  });
+
+  it("draws no mark and no fade when nothing is unavailable", () => {
+    const { queryByRole } = render(<WidgetView widget={button()} unavailable={[]} onUnavailableTap={vi.fn()} />);
+
+    const host = document.querySelector("[data-ms-widget-host]") as HTMLElement;
+    expect(host.style.opacity).toBe("");
+    expect(queryByRole("button")).toBeNull();
+  });
+
   it("renders its text inside a shadow root", () => {
     render(<WidgetView widget={button()} />);
 

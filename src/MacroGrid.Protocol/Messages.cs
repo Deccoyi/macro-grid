@@ -56,7 +56,9 @@ public sealed record ProfilesListPayload(List<ProfileSummary> Profiles, AutoSwit
 /// <summary><paramref name="Style"/> is property name ("background"/"foreground"/"borderColor") to resolved CSS value, from dynamized properties.
 /// <paramref name="Url"/> is for a <c>web</c> widget only: the address this device shows instead of the profile's (set by a button), or an empty string
 /// to go back to the profile's. <paramref name="Reload"/> is a counter for a <c>web</c> widget; a higher number than before means "load the page again".
-/// A client that does not know these two fields ignores them.</summary>
+/// A client that does not know these two fields ignores them.
+/// <paramref name="Unavailable"/> names the variables the widget uses that have no value now (plugin off, removed, disconnected); the client fades the widget and
+/// shows a warning mark. An empty list means "all available again"; null means "no change". A client that does not know the field ignores it.</summary>
 public sealed record WidgetStateMessage(
     string WidgetId,
     string? Text = null,
@@ -64,7 +66,8 @@ public sealed record WidgetStateMessage(
     bool? Active = null,
     Dictionary<string, string>? Style = null,
     string? Url = null,
-    int? Reload = null);
+    int? Reload = null,
+    List<string>? Unavailable = null);
 /// <summary><paramref name="RetryAfterSeconds"/> is set only for <c>pairing_required</c> when the address is
 /// blocked after too many wrong PINs — a machine-readable seconds-to-wait a client can count down with, kept
 /// separate from <paramref name="Message"/> so the prose text can change (wording, translation) without

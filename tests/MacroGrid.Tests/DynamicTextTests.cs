@@ -5,6 +5,26 @@ namespace MacroGrid.Tests;
 
 public class DynamicTextTests
 {
+    [Fact]
+    public void A_variable_without_a_value_and_without_a_placeholder_is_an_unavailable_source()
+    {
+        var widget = new Widget { Text = "{obs.streaming|ON/OFF} {obs.fps|0|--} {user.x}" };
+        var store = StoreWith("user.x", "v");
+
+        Assert.Equal(["obs.streaming"], DynamicText.UnavailableSources(widget, store));
+
+        store.Set("obs.streaming", true);
+        Assert.Empty(DynamicText.UnavailableSources(widget, store));
+    }
+
+    [Fact]
+    public void A_widget_can_opt_out_of_the_unavailable_look()
+    {
+        var widget = new Widget { Text = "{a.b}", Props = new System.Text.Json.Nodes.JsonObject { ["hideUnavailable"] = true } };
+
+        Assert.Empty(DynamicText.UnavailableSources(widget, new VariableStore()));
+    }
+
     private static Widget Dynamized(string? staticText, string variable, string op, string value, string result, string? fallback = null) => new()
     {
         Text = staticText,

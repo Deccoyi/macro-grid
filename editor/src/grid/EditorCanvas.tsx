@@ -7,6 +7,7 @@ import { evaluateWidgetDynamicStyle, evaluateWidgetDynamicText } from "./evaluat
 import { renderPreviewText } from "./previewText";
 import { selfSample } from "./selfPreview";
 import { useSelfPreview } from "../state/selfPreviewStore";
+import { unavailableSources } from "./unavailableSources";
 import { usePluginWidgetPreview } from "./usePluginWidgetPreview";
 
 interface EditorCanvasProps {
@@ -158,6 +159,8 @@ export function EditorCanvas({ page, selectedIds, onSelect, onToggleSelect, onRe
                 widget={pluginPreview.withRuntime(rect === widget ? widget : { ...widget, ...rect })}
                 liveText={renderPreviewText(evaluateWidgetDynamicText(widget, widgetVariables), widgetVariables)}
                 liveStyle={evaluateWidgetDynamicStyle(widget, widgetVariables)}
+                // Fades like the phone does while a variable it uses has no value; the corner mark is the phone's (here the error marker has the corner).
+                unavailable={unavailableSources(widget, widgetVariables)}
                 haptics={false}
                 // The real page, as the phone will show it; the frame ignores the pointer so the widget can still be selected and dragged.
                 webInteractive={false}

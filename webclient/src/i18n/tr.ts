@@ -21,6 +21,8 @@ export const tr: Record<MessageKey, string> = {
   "widget.unavailable.invalid": "Widget reddedildi",
   "widget.unavailable.noWidget": "Eklentide böyle bir widget yok",
   "widget.unavailable.unsupported": "Bu uygulama eklenti widget'larını gösteremez",
+  "widget.sourceUnavailable": "Şu an kullanılamıyor: ",
+  "widget.sourceUnavailable.hint": "Bu widget'ın kullandığı bir kaynağın değeri yok",
   "widget.unavailable.off": "Bu cihazda eklenti widget'ları kapalı",
   "widget.unavailable.crashedOff": "Kapatıldı: bu eklentinin widget'ları sayfayı çökertti",
   "widget.stopped.frozen": "Durduruldu: yanıt vermiyor",

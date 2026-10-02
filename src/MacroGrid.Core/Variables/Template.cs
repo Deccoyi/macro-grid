@@ -17,6 +17,9 @@ public sealed class Template
     private readonly object[] _parts; // string (literal) or VariableRef
     public IReadOnlyList<string> VariableNames { get; }
 
+    /// <summary>The variables that have no placeholder: while one has no value the text shows a hole, so the widget counts as having an unavailable source.</summary>
+    public IReadOnlyList<string> VariablesWithoutPlaceholder { get; }
+
     /// <summary>The editor saves every intermediate text of a widget, so the cache is cleared when it grows past this
     /// (a cleared entry is only parsed again).</summary>
     private const int MaxCachedTemplates = 4096;
@@ -32,6 +35,7 @@ public sealed class Template
     {
         _parts = parts;
         VariableNames = parts.OfType<VariableRef>().Select(v => v.Name).Distinct().ToList();
+        VariablesWithoutPlaceholder = parts.OfType<VariableRef>().Where(v => v.Placeholder is null).Select(v => v.Name).Distinct().ToList();
     }
 
     public string Render(IVariableStore store)

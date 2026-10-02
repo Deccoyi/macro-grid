@@ -19,6 +19,8 @@ export const en = {
   "widget.unavailable.invalid": "The widget was refused",
   "widget.unavailable.noWidget": "The plugin has no such widget",
   "widget.unavailable.unsupported": "This app cannot show plugin widgets",
+  "widget.sourceUnavailable": "Not available now: ",
+  "widget.sourceUnavailable.hint": "A source this widget uses has no value",
   "widget.unavailable.off": "Plugin widgets are off on this device",
   "widget.unavailable.crashedOff": "Switched off: this plugin's widgets crashed the page",
   "widget.stopped.frozen": "Stopped: not responding",

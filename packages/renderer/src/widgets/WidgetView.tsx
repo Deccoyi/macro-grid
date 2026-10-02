@@ -38,6 +38,12 @@ export interface WidgetViewProps {
   webBlocked?: WebBlocked;
   /** A `plugin-widget` only: false when its page is not the one shown (its worker is stopped, or paused when it keeps itself loaded). Default true. */
   pluginLive?: boolean;
+  /** Variables this widget uses that have no value now (from widget.state). A non-empty list fades the widget; the editor preview passes it too. */
+  unavailable?: readonly string[];
+  /** When set, a small warning mark sits in the corner of an unavailable widget and this is called with the variable names when it is pressed. */
+  onUnavailableTap?: (names: readonly string[]) => void;
+  /** Accessible name and tooltip of the warning mark. */
+  unavailableLabel?: string;
   onPress?: () => void;
   onRelease?: () => void;
   onLongPress?: () => void;
@@ -68,6 +74,9 @@ export function WidgetView({
   webTexts,
   webBlocked,
   pluginLive,
+  unavailable,
+  onUnavailableTap,
+  unavailableLabel,
   onPress,
   onRelease,
   onLongPress,
@@ -91,14 +100,22 @@ export function WidgetView({
 
   const text = liveText ?? widget.text ?? "";
 
-  return (
+  const faded = unavailable !== undefined && unavailable.length > 0;
+  const hostStyle: CSSProperties = {
+    touchAction: interactive && widget.type !== "web" ? "none" : "auto",
+    cursor: interactive ? "pointer" : "default",
+    ...style,
+    ...(faded ? { opacity: Number(style?.opacity ?? 1) * UNAVAILABLE_OPACITY } : null),
+  };
+
+  const view = (
     <ShadowHost
       baseCss={baseCss}
       customCss={customCss}
       active={liveActive}
       className={className}
       // A web page scrolls and zooms inside its own frame: the widget's press handling must not claim its touches.
-      style={{ touchAction: interactive && widget.type !== "web" ? "none" : "auto", cursor: interactive ? "pointer" : "default", ...style }}
+      style={hostStyle}
       onPointerDown={interactive ? gesture.onPointerDown : undefined}
       onPointerUp={interactive ? gesture.onPointerUp : undefined}
       onPointerCancel={interactive ? gesture.onPointerCancel : undefined}
@@ -120,7 +137,45 @@ export function WidgetView({
       )}
     </ShadowHost>
   );
+
+  if (!faded || !onUnavailableTap) return view;
+  // The mark is a sibling of the (faded) widget, not part of it, so it keeps full strength and never takes the widget's own touches.
+  return (
+    <div style={{ position: "relative", width: "100%", height: "100%" }}>
+      {view}
+      <button
+        type="button"
+        title={unavailableLabel}
+        aria-label={unavailableLabel}
+        onPointerDown={(e) => e.stopPropagation()}
+        onClick={(e) => {
+          e.stopPropagation();
+          onUnavailableTap(unavailable);
+        }}
+        style={{
+          position: "absolute",
+          top: 4,
+          right: 4,
+          width: 20,
+          height: 20,
+          padding: 0,
+          border: "none",
+          borderRadius: "50%",
+          background: "#facc15",
+          color: "#1a1a1a",
+          font: "700 13px/20px system-ui, sans-serif",
+          textAlign: "center",
+          cursor: "pointer",
+        }}
+      >
+        !
+      </button>
+    </div>
+  );
 }
+
+/** How strongly an unavailable widget is faded (1 is untouched). Steady, never blinking. */
+const UNAVAILABLE_OPACITY = 0.4;
 
 function renderContent(
   widget: Widget,
