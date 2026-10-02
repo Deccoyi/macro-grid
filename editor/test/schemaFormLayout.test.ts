@@ -19,6 +19,12 @@ describe("layoutFields", () => {
     expect(shape([f("a", "Number"), f("t", "Text"), f("b", "Number"), f("c", "Number")])).toEqual(["a", "t", "grid:b+c"]);
   });
 
+  it("gives a Segmented field with three segments a row of its own, and lets one with two share", () => {
+    const three = [{ value: "a", label: "A" }, { value: "b", label: "B" }, { value: "c", label: "C" }];
+    expect(shape([f("sound", "Select"), f("mode", "Segmented", { options: three }), f("stop", "Segmented", { options: three })])).toEqual(["sound", "mode", "stop"]);
+    expect(shape([f("a", "Segmented", { options: three.slice(0, 2) }), f("b", "Segmented", { options: three.slice(0, 2) })])).toEqual(["grid:a+b"]);
+  });
+
   it("groups dependent fields into one indented block after their parent", () => {
     expect(shape([f("on", "Bool"), f("x", "Number", { visibleWhen: "on=true" }), f("y", "Text", { visibleWhen: "on=true" })])).toEqual(["on", "nest:x+y"]);
   });

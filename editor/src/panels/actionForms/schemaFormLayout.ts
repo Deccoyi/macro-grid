@@ -14,9 +14,13 @@ export function segmentedAsSelect(field: SettingField): boolean {
   return field.kind === "Segmented" && (Boolean(field.optionsSource) || (field.options?.length ?? 0) > MAX_SEGMENTS);
 }
 
-/** Kinds that can sit two to a row: Number, Color, Select and a Segmented field with few options. */
+/** Most segments that still fit in half a row; a Segmented field with three segments takes a row of its own. */
+const MAX_SHARED_SEGMENTS = 2;
+
+/** Kinds that can sit two to a row: Number, Color, Select, a Segmented field drawn as a Select, and one with at most two segments. */
 export function canShareRow(field: SettingField): boolean {
-  return field.kind === "Number" || field.kind === "Color" || field.kind === "Select" || field.kind === "Segmented";
+  if (field.kind === "Segmented") return segmentedAsSelect(field) || (field.options?.length ?? 0) <= MAX_SHARED_SEGMENTS;
+  return field.kind === "Number" || field.kind === "Color" || field.kind === "Select";
 }
 
 /**
