@@ -310,6 +310,25 @@ public sealed partial class PluginManager(
         finally { _gate.Release(); }
     }
 
+    /// <summary>Switches a plugin off (it is unloaded and stays in the list) or on again (it is loaded from its folder). The choice
+    /// is kept across restarts. Null when there is no such plugin.</summary>
+    public async Task<LoadedPlugin?> SetEnabledAsync(string pluginId, bool enabled)
+    {
+        await _gate.WaitAsync();
+        try
+        {
+            var entry = FindEntry(pluginId);
+            if (entry is null) return null;
+
+            permissionStore.SetDisabled(pluginId, disabled: !enabled);
+            logger.LogInformation("Plugin {Id} was switched {State}", SecurityEvents.ForLog(pluginId), enabled ? "on" : "off");
+            await UnloadCoreAsync(entry);
+            lock (_stateLock) _entries.Remove(pluginId);
+            return await LoadFolderCoreAsync(entry.Dir);
+        }
+        finally { _gate.Release(); }
+    }
+
     /// <summary>The user approved the permissions a JS plugin declares: remember that and start it.</summary>
     public async Task<LoadedPlugin?> ApproveAsync(string pluginId)
     {

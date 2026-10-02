@@ -199,6 +199,9 @@ export const api = {
   setPluginPermission: (id: string, permission: string, enabled: boolean): Promise<PluginInfo> =>
     send("PUT", `${pluginPath(id)}/permissions`, { permission, enabled }),
 
+  /** Switches a plugin off (unloaded, its variables become unavailable) or on again; the choice survives a restart. */
+  setPluginEnabled: (id: string, enabled: boolean): Promise<PluginInfo> => send("PUT", `${pluginPath(id)}/enabled`, { enabled }),
+
   /** Unloads a plugin and loads it again from its folder, picking up a replaced DLL or changed manifest. */
   reloadPlugin: (id: string): Promise<PluginInfo> => send("POST", `${pluginPath(id)}/reload`),
 

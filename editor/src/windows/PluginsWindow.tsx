@@ -19,6 +19,7 @@ const STATUS_COLOR: Record<PluginInfo["status"], string> = {
   Error: "var(--ms-danger)",
   NeedsApproval: "var(--ms-warning, #facc15)",
   NotAllowed: "var(--ms-danger)",
+  Disabled: "var(--ms-text-disabled)",
 };
 
 // The catalog carries no icon of its own yet (docs/roadmap.md, "A richer Discover tab" — deciding what's
@@ -112,6 +113,7 @@ export function PluginsWindow() {
   const [uninstallingId, setUninstallingId] = useState<string | null>(null);
   const [reloadingId, setReloadingId] = useState<string | null>(null);
   const [approvingId, setApprovingId] = useState<string | null>(null);
+  const [togglingId, setTogglingId] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -384,6 +386,20 @@ export function PluginsWindow() {
     }
   };
 
+  const setEnabled = async (plugin: PluginInfo, enabled: boolean) => {
+    setTogglingId(plugin.id);
+    setError(null);
+    setNotice(null);
+    try {
+      await api.setPluginEnabled(plugin.id, enabled);
+      refresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setTogglingId(null);
+    }
+  };
+
   const switchPermission = async (plugin: PluginInfo, permission: string, enabled: boolean) => {
     setError(null);
     setNotice(null);
@@ -526,6 +542,13 @@ export function PluginsWindow() {
                     </div>
                   )}
                 </div>
+                <label
+                  title={t(p.status === "Disabled" ? "plugins.enable" : "plugins.disable")}
+                  style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11.5, padding: 6, flexShrink: 0, cursor: "pointer" }}
+                >
+                  <input type="checkbox" checked={p.status !== "Disabled"} disabled={togglingId === p.id} onChange={(e) => setEnabled(p, e.target.checked)} />
+                  {t(p.status === "Disabled" ? "plugins.state.off" : "plugins.state.on")}
+                </label>
                 {p.hasSettings && (
                   <button
                     type="button"

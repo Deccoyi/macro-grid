@@ -118,6 +118,10 @@ internal static class PluginApi
             string.IsNullOrWhiteSpace(change.Permission) ? Results.BadRequest()
             : await plugins.SetPermissionAsync(id, change.Permission, change.Enabled) is { } info ? ApiResults.Json(info) : Results.NotFound());
 
+        // Switches a plugin off (unloaded, variables become unavailable) or on again; kept across restarts.
+        api.MapPut("/plugins/{id}/enabled", async (string id, PluginEnabledRequest request, PluginManager plugins) =>
+            await plugins.SetEnabledAsync(id, request.Enabled) is { } info ? ApiResults.Json(info) : Results.NotFound());
+
         api.MapPost("/plugins/{id}/reload", async (string id, PluginManager plugins) =>
             await plugins.ReloadAsync(id) is { } info ? ApiResults.Json(info) : Results.NotFound());
 
@@ -238,6 +242,8 @@ internal static class PluginApi
     private sealed record SettingsCommandRequest(string? Command, JsonObject? Values);
 
     private sealed record PluginHoldRequest(bool Hold);
+
+    private sealed record PluginEnabledRequest(bool Enabled);
 
     private sealed record PluginInstallConfirmRequest(string Path);
 

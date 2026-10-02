@@ -173,7 +173,7 @@ export interface PluginInfo {
   id: string;
   name: string;
   version: string;
-  status: "Loaded" | "Incompatible" | "Error" | "NeedsApproval" | "NotAllowed";
+  status: "Loaded" | "Incompatible" | "Error" | "NeedsApproval" | "NotAllowed" | "Disabled";
   detail: string | null;
   hasSettings: boolean;
   /** For "NeedsApproval": the permissions a JS plugin declares and is waiting to be allowed. */

@@ -11,6 +11,7 @@ public sealed class PluginPermissionStore(string dataDir)
 {
     private readonly string _path = Path.Combine(dataDir, "plugin-permissions.json");
     private readonly string _offPath = Path.Combine(dataDir, "plugin-permissions-off.json");
+    private readonly string _disabledPath = Path.Combine(dataDir, "plugin-disabled.json");
     private readonly Lock _lock = new();
 
     public bool IsGranted(string pluginId, IEnumerable<string> declared)
@@ -37,6 +38,8 @@ public sealed class PluginPermissionStore(string dataDir)
             if (all.Remove(pluginId)) Write(all);
             var off = Read(_offPath);
             if (off.Remove(pluginId)) Write(off, _offPath);
+            var disabled = Read(_disabledPath);
+            if (disabled.Remove(pluginId)) Write(disabled, _disabledPath);
         }
     }
 
@@ -54,6 +57,20 @@ public sealed class PluginPermissionStore(string dataDir)
             if (list.Count == 0) all.Remove(pluginId);
             else all[pluginId] = [.. list];
             Write(all, _offPath);
+        }
+    }
+
+    /// <summary>Whether the person switched this plugin off (it stays installed but does not run).</summary>
+    public bool IsDisabled(string pluginId) => Read(_disabledPath).ContainsKey(pluginId);
+
+    public void SetDisabled(string pluginId, bool disabled)
+    {
+        lock (_lock)
+        {
+            var all = Read(_disabledPath);
+            if (disabled) all[pluginId] = [];
+            else if (!all.Remove(pluginId)) return;
+            Write(all, _disabledPath);
         }
     }
 

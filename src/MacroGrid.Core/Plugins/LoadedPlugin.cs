@@ -14,6 +14,8 @@ public enum PluginLoadStatus
     /// version the official safety list switched off. It does not run (the reason is in <see cref="LoadedPlugin.Detail"/>);
     /// the person can remove it, or update it when the list only names the old version.</summary>
     NotAllowed,
+    /// <summary>The person switched the plugin off in the Plugins window. It stays installed but does not run until switched on.</summary>
+    Disabled,
 }
 
 /// <summary>One entry in the editor's plugin list (`GET /api/plugins`) — every folder under `plugins/`

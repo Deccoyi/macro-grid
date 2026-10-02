@@ -88,7 +88,7 @@ public sealed partial class PluginManager
             else
                 widgetCatalog?.Remove(manifest.Id);
             // Needs approval is not a fault: the Plugins window already asks for it.
-            if (status != PluginLoadStatus.NeedsApproval)
+            if (status is not (PluginLoadStatus.NeedsApproval or PluginLoadStatus.Disabled))
                 problems?.Report(manifest.Id, manifest.Name, status == PluginLoadStatus.Incompatible ? ProblemSeverity.Warning : ProblemSeverity.Error,
                     problemCode ?? status switch { PluginLoadStatus.NotAllowed => ProblemCodes.NotAllowed, PluginLoadStatus.Incompatible => ProblemCodes.Incompatible, _ => ProblemCodes.LoadFailed }, detail);
             lock (_stateLock)
@@ -107,6 +107,10 @@ public sealed partial class PluginManager
             logger.LogError("Plugin id clash: {Id} ({Folder})", manifest.Id, folderName);
             return Fail(PluginLoadStatus.Error, "This id is already used by another installed plugin");
         }
+
+        // Switched off by the person: nothing of the plugin runs, and its variables, actions and widgets disappear.
+        if (permissionStore.IsDisabled(manifest.Id))
+            return Fail(PluginLoadStatus.Disabled, "Switched off in the Plugins window");
 
         // Only official, signed C# plugins run; checked at every load. Nothing of the plugin has executed before this point.
         PluginTrustResult? trust = null;
