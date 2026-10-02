@@ -4,6 +4,7 @@ New features and fixes in Macro Grid. For technical details, see [CHANGELOG-deve
 
 ## Unreleased
 ### New
+- **Diagnostics notice missing values and bad numbers:** a widget that uses a variable with no value gets a warning in Diagnostics, unless it has a placeholder or an "is unavailable" rule. A number variable compared with text is reported as an error on the widget; the rule can still be saved.
 - **Unavailable sources show on the phone:** a widget whose variable has no value (for example its plugin is off) fades and shows a small warning mark. Tap the mark to see what is missing.
 - **Switch a plugin off and on:** the Plugins window has an On / Off switch for every plugin.
 - **Smaller variable actions:** "Set variable" is now four actions (set a value, change a number, switch True / False, reset). The variable is picked from the variable list, which shows only variables you can change. Buttons made before keep working.

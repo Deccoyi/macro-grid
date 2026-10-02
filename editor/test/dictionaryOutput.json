@@ -189,6 +189,13 @@
       "five": "Page \"5\", 5, 5 event: action 5 points to a 5 that does not exist.",
       "words": "Page \"Arg1\", Arg2, Arg3 event: action Arg4 points to a Arg5 that does not exist."
     },
+    "diag.check.E212": {
+      "zero": "Page \"0\", 0: a rule compares the number variable \"0\" with \"0\", which is not a number.",
+      "one": "Page \"1\", 1: a rule compares the number variable \"1\" with \"1\", which is not a number.",
+      "two": "Page \"2\", 2: a rule compares the number variable \"2\" with \"2\", which is not a number.",
+      "five": "Page \"5\", 5: a rule compares the number variable \"5\" with \"5\", which is not a number.",
+      "words": "Page \"Arg1\", Arg2: a rule compares the number variable \"Arg3\" with \"Arg4\", which is not a number."
+    },
     "diag.check.W221": {
       "zero": "Page \"0\", 0, 0 event: action 0, setting \"0\" is not valid (0).",
       "one": "Page \"1\", 1, 1 event: action 1, setting \"1\" is not valid (1).",
@@ -230,6 +237,13 @@
       "two": "Page \"2\", 2, 2, step 2: the If has no condition to test.",
       "five": "Page \"5\", 5, 5, step 5: the If has no condition to test.",
       "words": "Page \"Arg1\", Arg2, Arg3, step Arg4: the If has no condition to test."
+    },
+    "diag.check.W235": {
+      "zero": "Page \"0\", 0: the variable \"0\" has no value right now.",
+      "one": "Page \"1\", 1: the variable \"1\" has no value right now.",
+      "two": "Page \"2\", 2: the variable \"2\" has no value right now.",
+      "five": "Page \"5\", 5: the variable \"5\" has no value right now.",
+      "words": "Page \"Arg1\", Arg2: the variable \"Arg3\" has no value right now."
     },
     "diag.save.page": {
       "zero": "Page \"0\": 0 plugin widgets. Up to 0 are recommended at the same time; the right number depends on the device that shows the page.",
@@ -1150,6 +1164,13 @@
       "five": "\"5\" sayfası, 5, 5 olayı: 5. eylem var olmayan bir hedefe işaret ediyor (5).",
       "words": "\"Arg1\" sayfası, Arg2, Arg3 olayı: Arg4. eylem var olmayan bir hedefe işaret ediyor (Arg5)."
     },
+    "diag.check.E212": {
+      "zero": "\"0\" sayfası, 0: bir kural \"0\" sayı değişkenini sayı olmayan \"0\" ile karşılaştırıyor.",
+      "one": "\"1\" sayfası, 1: bir kural \"1\" sayı değişkenini sayı olmayan \"1\" ile karşılaştırıyor.",
+      "two": "\"2\" sayfası, 2: bir kural \"2\" sayı değişkenini sayı olmayan \"2\" ile karşılaştırıyor.",
+      "five": "\"5\" sayfası, 5: bir kural \"5\" sayı değişkenini sayı olmayan \"5\" ile karşılaştırıyor.",
+      "words": "\"Arg1\" sayfası, Arg2: bir kural \"Arg3\" sayı değişkenini sayı olmayan \"Arg4\" ile karşılaştırıyor."
+    },
     "diag.check.W221": {
       "zero": "\"0\" sayfası, 0, 0 olayı: 0. eylemin \"0\" ayarı geçerli değil (0).",
       "one": "\"1\" sayfası, 1, 1 olayı: 1. eylemin \"1\" ayarı geçerli değil (1).",
@@ -1191,6 +1212,13 @@
       "two": "\"2\" sayfası, 2, 2, 2. adım: Eğer'in sınayacağı bir koşul yok.",
       "five": "\"5\" sayfası, 5, 5, 5. adım: Eğer'in sınayacağı bir koşul yok.",
       "words": "\"Arg1\" sayfası, Arg2, Arg3, Arg4. adım: Eğer'in sınayacağı bir koşul yok."
+    },
+    "diag.check.W235": {
+      "zero": "\"0\" sayfası, 0: \"0\" değişkeninin şu anda değeri yok.",
+      "one": "\"1\" sayfası, 1: \"1\" değişkeninin şu anda değeri yok.",
+      "two": "\"2\" sayfası, 2: \"2\" değişkeninin şu anda değeri yok.",
+      "five": "\"5\" sayfası, 5: \"5\" değişkeninin şu anda değeri yok.",
+      "words": "\"Arg1\" sayfası, Arg2: \"Arg3\" değişkeninin şu anda değeri yok."
     },
     "diag.save.page": {
       "zero": "\"0\" sayfası: 0 plugin widget'ı. Aynı anda en fazla 0 önerilir; doğru sayı sayfayı gösteren cihaza göre değişir.",

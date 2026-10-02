@@ -23,6 +23,7 @@ export function ProfileCheckReporter({ profile, profiles, actions, variableCatal
   const { t } = useT();
   const live = useMemo(() => new Set(liveNames ? liveNames.split("\n") : []), [liveNames]);
   const catalogNames = useMemo(() => new Set(variableCatalog.map((v) => v.name)), [variableCatalog]);
+  const variableTypes = useMemo(() => new Map(variableCatalog.map((v) => [v.name, v.type ?? "text"])), [variableCatalog]);
 
   useEffect(() => {
     // An empty action list means "not loaded yet", and would flag every action.
@@ -30,12 +31,12 @@ export function ProfileCheckReporter({ profile, profiles, actions, variableCatal
     const timer = window.setTimeout(() => {
       const profileIds = new Set(profiles.map((p) => p.id));
       profileIds.add(profile.id);
-      report(PROFILE_CHECK_SOURCE, checkProfile(profile, { actions, variableNames: catalogNames, liveVariableNames: live, pluginWidgets, profileIds }, (e) => t(`action.event.${e}` as DictKey)));
+      report(PROFILE_CHECK_SOURCE, checkProfile(profile, { actions, variableNames: catalogNames, liveVariableNames: live, pluginWidgets, profileIds, variableTypes }, (e) => t(`action.event.${e}` as DictKey)));
     }, 300);
     return () => window.clearTimeout(timer);
     // `report` changes identity without changing what the check finds.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [profile, profiles, actions, catalogNames, live, pluginWidgets, t]);
+  }, [profile, profiles, actions, catalogNames, variableTypes, live, pluginWidgets, t]);
 
   return null;
 }
