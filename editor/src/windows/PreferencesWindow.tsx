@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Braces, Globe, SlidersHorizontal, Smartphone, Sun, Trash2, User, Zap } from "lucide-react";
 import type { ProfileSummary } from "../api/types";
 import { api } from "../api/client";
+import { DialogHost } from "../dialogs/DialogHost";
 import { useT } from "../i18n/I18nContext";
 import { useDocumentTitle } from "../i18n/useDocumentTitle";
 import { NumberInput, Seg, SelectInput, Switch, TextInput } from "../panels/fields/controls";
@@ -198,6 +199,8 @@ export function PreferencesWindow() {
 
       {category === "globalVariables" && <GlobalVariablesPage />}
       {category === "automation" && <AutomationPage />}
+      {/* A separate native window with its own React root: the confirm dialogs of the pages above need a host here. */}
+      <DialogHost />
     </SettingsShell>
   );
 }
