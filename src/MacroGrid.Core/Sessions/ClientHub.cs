@@ -232,6 +232,7 @@ public sealed class ClientHub(
 
         if (device is null)
         {
+            logger.LogDebug("Hello from {Remote} without a known token (PIN sent: {HasPin})", session.RemoteAddress, !string.IsNullOrEmpty(hello.Pin));
             var result = pairing.TryPair(hello.Pin, session.RemoteAddress);
             if (result.Outcome != PairingOutcome.Accepted)
             {
