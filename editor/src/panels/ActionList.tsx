@@ -23,6 +23,8 @@ export interface ActionListProps {
 }
 
 /** The "This button" variables work only in the button's own text and rules, so an action's fields do not offer them. */
+const LEGACY_SET_VARIABLE = "core.setVariable";
+
 function withoutSelf(catalog: VariableInfo[]): VariableInfo[] {
   return catalog.filter((v) => !v.name.toLowerCase().startsWith("self."));
 }
@@ -82,7 +84,8 @@ export function ActionList({ bindings, actions, pages, profiles, variableCatalog
     setCollapsed((prev) => { const next = new Set(prev); if (!next.delete(index)) next.add(index); return next; });
 
   // Otherwise and End are never picked by hand (an If brings them); the picker of an existing row does not offer If either.
-  const addable = actions.filter((a) => a.type !== FLOW_ELSE && a.type !== FLOW_END);
+  // The old all-in-one Set variable action still runs but is replaced by four small ones, so it is no longer offered.
+  const addable = actions.filter((a) => a.type !== FLOW_ELSE && a.type !== FLOW_END && a.type !== LEGACY_SET_VARIABLE);
   const replaceable = addable.filter((a) => a.type !== FLOW_IF);
 
   return (

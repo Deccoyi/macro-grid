@@ -20,7 +20,7 @@ export interface CheckCatalogs {
 const PAGE_ACTION = "core.page";
 const PROFILE_ACTION = "core.profile";
 const WEB_ACTION = "core.web";
-const SET_VARIABLE_ACTION = "core.setVariable";
+const SET_VARIABLE_ACTIONS = new Set(["core.setVariable", "core.variable.set", "core.variable.add", "core.variable.toggle", "core.variable.reset"]);
 const SELF_PREFIX = "self.";
 const LOGIC_TYPES = new Set([FLOW_IF, FLOW_ELSE, FLOW_END]);
 
@@ -112,7 +112,7 @@ export function checkProfile(profile: Profile, catalogs: CheckCatalogs, eventLab
           if (info.type === PAGE_ACTION && (s.mode ?? "goto") === "goto" && typeof s.pageId === "string" && s.pageId && !pageIds.has(s.pageId)) missing("page", "page");
           if (info.type === PROFILE_ACTION && typeof s.profileId === "string" && s.profileId && !catalogs.profileIds.has(s.profileId)) missing("profile", "profile");
           if (info.type === WEB_ACTION && typeof s.widgetId === "string" && s.widgetId && !webWidgetIds.has(s.widgetId)) missing("web", "web widget");
-          if (info.type === SET_VARIABLE_ACTION && typeof s.variable === "string" && s.variable && !known(s.variable)) missing("variable", "variable");
+          if (SET_VARIABLE_ACTIONS.has(info.type) && typeof s.variable === "string" && s.variable && !known(s.variable)) missing("variable", "variable");
 
           for (const field of info.fields ?? []) {
             const problem = invalidSetting(field, s[field.key]);

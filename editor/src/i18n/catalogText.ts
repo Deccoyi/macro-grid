@@ -56,6 +56,14 @@ const TR: Record<string, string> = {
   "actionDesc:core.stop": "Aksiyon listesini burada bitirir",
   "action:core.setVariable": "Değişken ayarla",
   "actionDesc:core.setVariable": "Genel Değişken Listesi'ndeki bir değişkeni ayarlar, değiştirir, sayar veya sıfırlar",
+  "action:core.variable.set": "Değişkene değer yaz",
+  "actionDesc:core.variable.set": "Bir değişkenin değerini belirler",
+  "action:core.variable.add": "Sayı değişkenini değiştir",
+  "actionDesc:core.variable.add": "Bir Sayı değişkenine ekler veya ondan çıkarır",
+  "action:core.variable.toggle": "Doğru / Yanlış değiştir",
+  "actionDesc:core.variable.toggle": "Bir Doğru / Yanlış değişkenini diğer değerine çevirir",
+  "action:core.variable.reset": "Değişkeni sıfırla",
+  "actionDesc:core.variable.reset": "Bir değişkeni başlangıç değerine döndürür",
 
 
   // ---- Built-in variables ----

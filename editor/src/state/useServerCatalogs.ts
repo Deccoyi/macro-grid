@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { api } from "../api/client";
 import type { ActionInfo, StatusEntry, VariableInfo, VariableSnapshot } from "../api/types";
 import { usePreferences } from "../preferences/PreferencesContext";
+import { USER_VARIABLES_CHANGED } from "./userVariablesEvent";
 import { invalidateIconPacks } from "../panels/IconPicker";
 
 /**
@@ -36,7 +37,11 @@ export function useServerCatalogs() {
   // action list, variable picker and icon packs. Coming back to this window is the cheap moment to refetch.
   useEffect(() => {
     window.addEventListener("focus", refreshCatalogs);
-    return () => window.removeEventListener("focus", refreshCatalogs);
+    window.addEventListener(USER_VARIABLES_CHANGED, refreshCatalogs);
+    return () => {
+      window.removeEventListener("focus", refreshCatalogs);
+      window.removeEventListener(USER_VARIABLES_CHANGED, refreshCatalogs);
+    };
   }, [refreshCatalogs]);
 
   // A plugin switched off or removed from the Plugins window changes the action list; the profile check needs to see that without a focus change.

@@ -4,6 +4,7 @@ New features and fixes in Macro Grid. For technical details, see [CHANGELOG-deve
 
 ## Unreleased
 ### New
+- **Smaller variable actions:** "Set variable" is now four actions (set a value, change a number, switch True / False, reset). The variable is picked from the variable list, which shows only variables you can change. Buttons made before keep working.
 - **Go back a version:** a plugin's page in Discover can put the previous version back.
 - **Stay on this version:** stops update reminders for one plugin. Safety warnings still appear.
 - **Shared profile files are now `.mgprofile`:** older `.msprofile` files can still be imported.
@@ -35,6 +36,7 @@ New features and fixes in Macro Grid. For technical details, see [CHANGELOG-deve
 ### Changed
 - The Dynamize window has a cleaner rule list, and a Presets list with a preview of the rules a preset adds.
 - The Properties panel has a cleaner, aligned layout and adapts to its width.
+- **The Preferences window has a new look:** pages are grouped in the side list, options use switches, variables are shown in a table and automation rules in a clear list. In a narrow window the side list becomes a drop-down.
 - **Wait is now under Logic and is set in seconds.**
 - **The plugin list opens faster and works from a saved copy:** if the internet is down, you still see the last list.
 - **"Check for updates automatically" also covers the plugin safety list.**
@@ -46,6 +48,7 @@ New features and fixes in Macro Grid. For technical details, see [CHANGELOG-deve
 - **The Toolbox can be an A to Z list:** the menu next to "Add widget" switches between plugin groups and one plain alphabetical list, and a plugin group can be folded.
 - **The Toolbox marks the web widget with a small flask icon** instead of the word "Experimental".
 ### Fixed
+- **Set variable:** typing a value no longer clears the chosen variable, and a variable you add in Preferences shows up in the action right away.
 - **A plugin whose start file points outside its own folder is no longer loaded.**
 - **Tighter limits on where a JavaScript plugin can connect:** a plugin can now only reach the kind of address you approved, and never Macro Grid itself.
 

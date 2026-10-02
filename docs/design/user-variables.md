@@ -19,7 +19,7 @@ Variables the person defines, kept by the server and used anywhere a variable ca
 - **Reserved prefix.** A plugin cannot write or remove a `user.*` name (the store a plugin gets ignores it), and the plugin ids `user`, `system`, `core` and `self` are refused at install. The prefix `self.` is reserved for a button's own state (see variable-types-and-conditions.md).
 
 ## The Set variable action
-
+Four small actions (category "Variables"), each with a `variable` (`user.<name>`) picked in the variable picker, which lists only your own (writable) variables: `core.variable.set` (`value`), `core.variable.add` (`amount`, only Number variables), `core.variable.toggle` (only True / False variables) and `core.variable.reset`. The older all-in-one `core.setVariable` (settings `variable`, `mode`, `value`, `amount`) still runs so saved buttons keep working, but the editor no longer offers it. The table shows what each mode does.
 `core.setVariable` (category "Variables"). Settings: `variable` (`user.<name>`), `mode` and, depending on the mode, `value` or `amount`.
 
 | Mode | Does | Works for |

@@ -4,8 +4,10 @@ import { api } from "../api/client";
 import type { UserVariableDef, UserVariablesResponse, UserVariableType } from "../api/types";
 import { confirmAsync } from "../dialogs/dialogStore";
 import { useT } from "../i18n/I18nContext";
-import { SectionLabel } from "../panels/fields/controls";
+import { SelectInput, Switch, TextInput } from "../panels/fields/controls";
+import { USER_VARIABLES_CHANGED } from "../state/userVariablesEvent";
 import { newVariable, nameProblem, parseStartValue, startValueText, usageSummary, USER_PREFIX, withChange } from "./globalVariables";
+import { EmptyState, InlineText, PageHeader } from "./settingsPrimitives";
 
 type Limits = UserVariablesResponse["limits"];
 
@@ -29,6 +31,7 @@ export function GlobalVariablesPage() {
     setError(null);
     try {
       await api.setUserVariables(next);
+      window.dispatchEvent(new Event(USER_VARIABLES_CHANGED));
       setList(next);
       return true;
     } catch (e) {
@@ -56,31 +59,43 @@ export function GlobalVariablesPage() {
   };
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 12, maxWidth: 640 }}>
-      <SectionLabel>{t("preferences.category.globalVariables")}</SectionLabel>
-      <p style={{ fontSize: 11.5, color: "var(--ms-text-secondary)", margin: 0 }}>{t("globalVariables.hint")}</p>
-      {error && <div role="alert" style={{ fontSize: 12, color: "var(--ms-danger)" }}>{error}</div>}
+    <>
+      <PageHeader title={t("preferences.category.globalVariables")} lead={t("globalVariables.hint")} alert={error} />
 
-      {list?.length === 0 && <div style={{ fontSize: 12, color: "var(--ms-text-secondary)" }}>{t("globalVariables.empty")}</div>}
-      {list?.map((v) => (
-        <VariableRow key={v.name} variable={v} limits={limits} onChange={(change) => save(withChange(list, v.name, change))} onRemove={() => remove(v)} />
-      ))}
+      <div className="st-bar">
+        <span className={full ? "st-count full" : "st-count"}>{t("globalVariables.count", String(list?.length ?? 0), String(limits.maxCount))}</span>
+      </div>
 
-      <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap", borderTop: "1px solid var(--ms-border)", paddingTop: 10 }}>
-        <input
-          type="text" value={name} maxLength={limits.maxNameLength + 10} placeholder={t("globalVariables.name")} aria-label={t("globalVariables.name")}
-          onChange={(e) => setName(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") void add(); }} style={{ width: 180 }}
-        />
-        <select value={type} onChange={(e) => setType(e.target.value as UserVariableType)} aria-label={t("globalVariables.type")}>
+      {list?.length === 0 && <EmptyState title={t("globalVariables.empty.title")} hint={t("globalVariables.empty.hint")} />}
+      {list && list.length > 0 && (
+        <div role="table" aria-label={t("preferences.category.globalVariables")} style={{ marginTop: 8 }}>
+          <div className="st-vt-head" role="row">
+            <span>{t("globalVariables.name")}</span>
+            <span>{t("globalVariables.type")}</span>
+            <span>{t("globalVariables.start")}</span>
+            <span>{t("globalVariables.keep")}</span>
+            <span />
+          </div>
+          {list.map((v) => (
+            <VariableRow key={v.name} variable={v} limits={limits} onChange={(change) => save(withChange(list, v.name, change))} onRemove={() => remove(v)} />
+          ))}
+        </div>
+      )}
+
+      <div className="st-add">
+        <div onKeyDown={(e) => { if (e.key === "Enter") void add(); }}>
+          <TextInput value={name} onChange={setName} maxLength={limits.maxNameLength + 10} placeholder={t("globalVariables.name")} label={t("globalVariables.name")} />
+        </div>
+        <SelectInput value={type} onChange={(v) => setType(v as UserVariableType)} label={t("globalVariables.type")}>
           <option value="number">{t("globalVariables.type.number")}</option>
           <option value="text">{t("globalVariables.type.text")}</option>
           <option value="boolean">{t("globalVariables.type.boolean")}</option>
-        </select>
-        <button type="button" className="ghost" disabled={!!problem || full || !list} onClick={() => void add()}>{t("globalVariables.add")}</button>
+        </SelectInput>
+        <button type="button" className="st-btn" disabled={!!problem || full || !list} onClick={() => void add()}>{t("globalVariables.add")}</button>
       </div>
-      {name && problem && <div style={{ fontSize: 11.5, color: "var(--ms-danger)" }}>{t(`globalVariables.name.${problem}`, String(limits.maxNameLength))}</div>}
-      {full && <div style={{ fontSize: 11.5, color: "var(--ms-text-secondary)" }}>{t("globalVariables.full", String(limits.maxCount))}</div>}
-    </div>
+      {name && problem && <div role="alert" className="st-hint error" style={{ marginTop: 4 }}>{t(`globalVariables.name.${problem}`, String(limits.maxNameLength))}</div>}
+      {full && <div className="st-hint" style={{ marginTop: 4 }}>{t("globalVariables.full", String(limits.maxCount))}</div>}
+    </>
   );
 }
 
@@ -92,7 +107,6 @@ function VariableRow({ variable: v, limits, onChange, onRemove }: {
 }) {
   const { t } = useT();
   const [start, setStart] = useState(startValueText(v));
-  const [description, setDescription] = useState(v.description);
   const [startBad, setStartBad] = useState(false);
 
   const commitStart = async (text: string) => {
@@ -103,41 +117,36 @@ function VariableRow({ variable: v, limits, onChange, onRemove }: {
   };
 
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "minmax(120px, 1fr) 90px 150px auto auto", gap: 6, alignItems: "center", padding: "6px 0", borderTop: "1px solid var(--ms-border)" }}>
-      <div style={{ fontSize: 12.5, fontFamily: "var(--ms-font-mono, monospace)", overflow: "hidden", textOverflow: "ellipsis" }} title={`{${USER_PREFIX}${v.name}}`}>
-        {USER_PREFIX}{v.name}
-      </div>
-      <div style={{ fontSize: 11.5, color: "var(--ms-text-secondary)" }}>{t(`globalVariables.type.${v.type}`)}</div>
+    <div className="st-vt-row" role="row">
+      <div className="st-var-name" title={`{${USER_PREFIX}${v.name}}`}><i>{USER_PREFIX}</i>{v.name}</div>
+      <div className="st-var-type">{t(`globalVariables.type.${v.type}`)}</div>
       {v.type === "boolean" ? (
-        <select
-          value={v.initial === true ? "true" : v.initial === false ? "false" : ""} aria-label={t("globalVariables.start")}
-          onChange={(e) => void onChange({ initial: e.target.value === "" ? null : e.target.value === "true" })}
+        <SelectInput
+          value={v.initial === true ? "true" : v.initial === false ? "false" : ""} label={t("globalVariables.start")}
+          onChange={(value) => void onChange({ initial: value === "" ? null : value === "true" })}
         >
           <option value="">{t("globalVariables.start.none")}</option>
           <option value="true">{t("globalVariables.true")}</option>
           <option value="false">{t("globalVariables.false")}</option>
-        </select>
+        </SelectInput>
       ) : (
         <input
-          type="text" value={start} aria-label={t("globalVariables.start")} placeholder={t("globalVariables.start.none")} maxLength={v.type === "text" ? limits.maxTextLength : 40}
-          style={startBad ? { borderColor: "var(--ms-danger)" } : undefined} title={startBad ? t("globalVariables.start.bad") : undefined}
+          type="text" className={startBad ? "invalid" : undefined} value={start} aria-label={t("globalVariables.start")} aria-invalid={startBad || undefined}
+          placeholder={t("globalVariables.start.none")} maxLength={v.type === "text" ? limits.maxTextLength : 40}
           onChange={(e) => setStart(e.target.value)} onBlur={() => void commitStart(start)} onKeyDown={(e) => { if (e.key === "Enter") e.currentTarget.blur(); }}
         />
       )}
-      <label style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11.5 }} title={t("globalVariables.keep.hint")}>
-        <input type="checkbox" checked={v.keep} onChange={(e) => void onChange({ keep: e.target.checked })} />
-        {t("globalVariables.keep")}
-      </label>
-      <button type="button" className="ghost" title={t("globalVariables.delete")} onClick={onRemove} style={{ padding: 5, color: "var(--ms-danger)" }}>
-        <Trash2 size={13} />
+      <div className="st-var-keep" title={t("globalVariables.keep.hint")}>
+        <Switch checked={v.keep} onChange={(keep) => void onChange({ keep })} label={t("globalVariables.keep")} />
+      </div>
+      <button type="button" className="st-ib danger" aria-label={t("globalVariables.delete")} title={t("globalVariables.delete")} onClick={onRemove}>
+        <Trash2 size={14} />
       </button>
-      <input
-        type="text" value={description} maxLength={limits.maxDescriptionLength} placeholder={t("globalVariables.description")} aria-label={t("globalVariables.description")}
-        style={{ gridColumn: "1 / -1", fontSize: 11.5 }}
-        onChange={(e) => setDescription(e.target.value)}
-        onBlur={() => { if (description !== v.description) void onChange({ description }); }}
-        onKeyDown={(e) => { if (e.key === "Enter") e.currentTarget.blur(); }}
+      <InlineText
+        value={v.description} label={t("globalVariables.description")} placeholder={t("globalVariables.description")} maxLength={limits.maxDescriptionLength}
+        onCommit={(description) => void onChange({ description })}
       />
+      {startBad && <div role="alert" className="st-row-error">{t("globalVariables.start.bad")}</div>}
     </div>
   );
 }

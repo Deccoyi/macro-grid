@@ -1,9 +1,11 @@
 import { useEffect, useState, type JSX } from "react";
+import { Variable, X } from "lucide-react";
 import { webUrlHost, type ActionBinding, type Page } from "@macro/renderer";
 import { api } from "../../api/client";
 import type { ActionInfo, OptionsResult, ProfileSummary, SettingField, VariableInfo } from "../../api/types";
 import { useT } from "../../i18n/I18nContext";
 import { Field, NumberInput, SelectInput, TextAreaInput, TextInput, useFieldId } from "../fields/controls";
+import { VariablePicker } from "../VariablePicker";
 import { WebWarning } from "../fields/WebFields";
 import { HotkeyCapture } from "./HotkeyCapture";
 import { SchemaForm } from "./SchemaForm";
@@ -224,7 +226,109 @@ function SetMuteActionForm({ binding, onChange }: ActionFormProps) {
   );
 }
 
-/** The ways a Set variable action can change a variable of each type (the server refuses the others). */
+/** Only the person's own variables can be written; system and plugin variables are read-only, so these forms never offer them. */
+function writableVariables(catalog: VariableInfo[] | undefined, type?: string): VariableInfo[] {
+  return (catalog ?? []).filter((v) => v.name.startsWith("user.") && (type === undefined || (v.type ?? "text") === type));
+}
+
+/** The variable a small variable action changes, picked the same way as everywhere else (the variable picker). Keeps the other settings. */
+function VariableTargetField({ binding, onChange, variableCatalog, type, hintKey }: ActionFormProps & { type?: string; hintKey?: "form.variable.onlyNumber" | "form.variable.onlyBoolean" }) {
+  const { t } = useT();
+  const options = writableVariables(variableCatalog, type);
+  const name = str(binding.settings.variable);
+  const known = (variableCatalog ?? []).some((v) => v.name === name);
+  const hint = options.length === 0 ? t(hintKey ?? "form.variable.none") : undefined;
+  return (
+    <Field label={t("form.variable.target")} hint={hint} error={name && !known ? t("form.variable.missing") : undefined}>
+      <div className="pf-row">
+        <div className="grow">
+          <VariablePicker
+            catalog={options}
+            mode="bare"
+            onInsert={(picked) => onChange({ ...binding.settings, variable: picked })}
+            renderTrigger={(open) => (
+              <button type="button" className="pf-ctl pf-row pf-fill" onClick={open} disabled={options.length === 0 && !name}>
+                <Variable size={14} />
+                <span className="pf-ellipsis">{name || t("form.variable.pick")}</span>
+              </button>
+            )}
+          />
+        </div>
+        {name && (
+          <button type="button" className="ghost pf-icon-btn" title={t("schemaForm.variable.clear")} aria-label={t("schemaForm.variable.clear")} onClick={() => onChange({ ...binding.settings, variable: "" })}>
+            <X size={14} />
+          </button>
+        )}
+      </div>
+    </Field>
+  );
+}
+
+/** The value field of a set: True / False for a True/False variable, a text box (with variables) otherwise. */
+function VariableValueField({ binding, onChange, variableCatalog }: ActionFormProps) {
+  const { t } = useT();
+  const type = (variableCatalog ?? []).find((v) => v.name === str(binding.settings.variable))?.type ?? "text";
+  const set = (value: unknown) => onChange({ ...binding.settings, value });
+  if (type === "boolean") {
+    const current = str(binding.settings.value).toLowerCase() === "false" ? "false" : "true";
+    return (
+      <Field label={t("form.variable.value")}>
+        <SelectInput value={current} onChange={set}>
+          <option value="true">{t("form.variable.true")}</option>
+          <option value="false">{t("form.variable.false")}</option>
+        </SelectInput>
+      </Field>
+    );
+  }
+  const valueField = { key: "value", label: t("form.variable.value"), kind: "Text", allowVariables: true, description: type === "number" ? t("form.variable.valueNumberHint") : undefined } as SettingField;
+  return (
+    <SchemaForm
+      fields={[valueField]}
+      values={binding.settings as Record<string, unknown>}
+      onChange={(values) => set(values.value)}
+      fetchOptions={() => Promise.resolve({ options: [] } as unknown as OptionsResult)}
+      variableCatalog={variableCatalog}
+    />
+  );
+}
+
+function VariableSetValueForm(props: ActionFormProps) {
+  return (
+    <>
+      <VariableTargetField {...props} />
+      <VariableValueField {...props} />
+    </>
+  );
+}
+
+function VariableAddForm(props: ActionFormProps) {
+  const { t } = useT();
+  const raw = props.binding.settings.amount;
+  return (
+    <>
+      <VariableTargetField {...props} type="number" hintKey="form.variable.onlyNumber" />
+      <Field label={t("form.variable.amount")}>
+        <NumberInput step="any" value={typeof raw === "number" ? raw : 1} onChange={(v) => props.onChange({ ...props.binding.settings, amount: v })} />
+      </Field>
+    </>
+  );
+}
+
+function VariableToggleForm(props: ActionFormProps) {
+  return <VariableTargetField {...props} type="boolean" hintKey="form.variable.onlyBoolean" />;
+}
+
+function VariableResetForm(props: ActionFormProps) {
+  const { t } = useT();
+  return (
+    <>
+      <VariableTargetField {...props} />
+      <span className="pf-hint">{t("form.variable.resetNote")}</span>
+    </>
+  );
+}
+
+/** The ways the older all-in-one Set variable action can change a variable of each type (the server refuses the others). */
 export function setVariableModes(type: string | undefined): string[] {
   if (type === "number") return ["set", "add", "reset"];
   if (type === "boolean") return ["set", "toggle", "reset"];
@@ -238,40 +342,25 @@ const SET_VARIABLE_MODE_KEYS = {
   reset: "form.setVariable.mode.reset",
 } as const;
 
-function SetVariableForm({ binding, onChange, variableCatalog }: ActionFormProps) {
+/** Only for buttons saved before the four small variable actions existed; the picker no longer offers the old action. */
+function SetVariableForm(props: ActionFormProps) {
   const { t } = useT();
-  const own = (variableCatalog ?? []).filter((v) => v.name.startsWith("user."));
-  const name = str(binding.settings.variable);
-  const current = own.find((v) => v.name === name);
+  const { binding, onChange, variableCatalog } = props;
+  const current = writableVariables(variableCatalog).find((v) => v.name === str(binding.settings.variable));
   const modes = setVariableModes(current?.type);
   const mode = modes.includes(str(binding.settings.mode, "set")) ? str(binding.settings.mode, "set") : "set";
-  const valueField = { key: "value", label: t("form.setVariable.value"), kind: "Text", allowVariables: true } as SettingField;
   return (
     <>
-      <Field label={t("form.setVariable.variable")} hint={own.length === 0 ? t("form.setVariable.none") : undefined}>
-        <SelectInput value={name} onChange={(v) => onChange({ variable: v, mode: "set" })}>
-          <option value="">{t("form.setVariable.choose")}</option>
-          {name && !current && <option value={name}>{name} {t("form.setVariable.missing")}</option>}
-          {own.map((v) => <option key={v.name} value={v.name}>{v.name}</option>)}
-        </SelectInput>
-      </Field>
+      <VariableTargetField {...props} onChange={(settings) => onChange({ ...settings, mode: "set" })} />
       <Field label={t("form.setVariable.mode")}>
-        <SelectInput value={mode} onChange={(v) => onChange({ mode: v })}>
+        <SelectInput value={mode} onChange={(v) => onChange({ ...binding.settings, mode: v })}>
           {modes.map((m) => <option key={m} value={m}>{t(SET_VARIABLE_MODE_KEYS[m as keyof typeof SET_VARIABLE_MODE_KEYS])}</option>)}
         </SelectInput>
       </Field>
-      {mode === "set" && (
-        <SchemaForm
-          fields={[valueField]}
-          values={binding.settings as Record<string, unknown>}
-          onChange={(values) => onChange({ value: values.value })}
-          fetchOptions={() => Promise.resolve({ options: [] } as unknown as OptionsResult)}
-          variableCatalog={variableCatalog}
-        />
-      )}
+      {mode === "set" && <VariableValueField {...props} />}
       {mode === "add" && (
-        <Field label={t("form.setVariable.amount")}>
-          <NumberInput step="any" value={num(binding.settings.amount, 1)} onChange={(v) => onChange({ amount: v })} />
+        <Field label={t("form.variable.amount")}>
+          <NumberInput step="any" value={num(binding.settings.amount, 1)} onChange={(v) => onChange({ ...binding.settings, amount: v })} />
         </Field>
       )}
     </>
@@ -314,6 +403,10 @@ const ACTION_FORMS: Record<string, (props: ActionFormProps) => JSX.Element> = {
   "core.toggleMute": NoSettingsForm,
   "core.setMute": SetMuteActionForm,
   "core.setVariable": SetVariableForm,
+  "core.variable.set": VariableSetValueForm,
+  "core.variable.add": VariableAddForm,
+  "core.variable.toggle": VariableToggleForm,
+  "core.variable.reset": VariableResetForm,
 };
 
 /** A plugin action with a declared schema (`ActionInfo.fields`, from IActionDescriptor) and no

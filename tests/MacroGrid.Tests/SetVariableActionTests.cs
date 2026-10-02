@@ -123,4 +123,26 @@ public sealed class SetVariableActionTests : IDisposable
 
         Assert.Equal(40.0, _store.Get("user.count"));
     }
+
+    [Fact]
+    public async Task The_small_actions_each_do_one_job_without_a_mode_setting()
+    {
+        var set = new VariableSetValueAction(_service);
+        var add = new VariableAddAction(_service);
+        var toggle = new VariableToggleAction(_service);
+        var reset = new VariableResetAction(_service);
+        Task<ActionOutcome> Run(IActionOutcomeHandler h, JsonObject s) => h.ExecuteWithOutcomeAsync(Context(), s, CancellationToken.None);
+
+        Assert.Equal(ActionOutcomeKind.Success, (await Run(set, new JsonObject { ["variable"] = "user.title", ["value"] = "hi" })).Kind);
+        Assert.Equal("hi", _store.Get("user.title"));
+        await Run(add, new JsonObject { ["variable"] = "user.count", ["amount"] = 3 });
+        Assert.Equal(8.0, _store.Get("user.count"));
+        await Run(toggle, new JsonObject { ["variable"] = "user.flag" });
+        Assert.Equal(true, _store.Get("user.flag"));
+        await Run(reset, new JsonObject { ["variable"] = "user.count" });
+        Assert.Equal(5.0, _store.Get("user.count"));
+
+        Assert.Equal(ActionFailureCode.InvalidParameter, (await Run(toggle, new JsonObject { ["variable"] = "user.count" })).Code);
+        Assert.Equal(ActionFailureCode.NotConfigured, (await Run(add, new JsonObject())).Code);
+    }
 }
