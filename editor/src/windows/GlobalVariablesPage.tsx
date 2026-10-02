@@ -22,6 +22,7 @@ export function GlobalVariablesPage() {
   const [error, setError] = useState<string | null>(null);
   const [name, setName] = useState("");
   const [type, setType] = useState<UserVariableType>("number");
+  const [query, setQuery] = useState("");
 
   useEffect(() => {
     api.getUserVariables().then((r) => { setList(r.variables); setLimits(r.limits); }).catch((e) => setError(String(e instanceof Error ? e.message : e)));
@@ -51,6 +52,8 @@ export function GlobalVariablesPage() {
     if (await confirmAsync(message, { danger: true })) await save((list ?? []).filter((x) => x.name !== v.name));
   };
 
+  const needle = query.trim().toLowerCase();
+  const shown = (list ?? []).filter((v) => needle === "" || v.name.toLowerCase().includes(needle) || v.description.toLowerCase().includes(needle));
   const problem = nameProblem(name, (list ?? []).map((v) => v.name), limits.maxNameLength);
   const full = (list?.length ?? 0) >= limits.maxCount;
   const add = async () => {
@@ -64,10 +67,15 @@ export function GlobalVariablesPage() {
 
       <div className="st-bar">
         <span className={full ? "st-count full" : "st-count"}>{t("globalVariables.count", String(list?.length ?? 0), String(limits.maxCount))}</span>
+        {list && list.length > 0 && (
+          <input type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder={t("globalVariables.search")} aria-label={t("globalVariables.search")} style={{ marginLeft: "auto", minWidth: 180 }} />
+        )}
       </div>
 
       {list?.length === 0 && <EmptyState title={t("globalVariables.empty.title")} hint={t("globalVariables.empty.hint")} />}
       {list && list.length > 0 && (
+        <>
+          {needle !== "" && shown.length === 0 && <div className="st-hint" style={{ marginTop: 8 }}>{t("globalVariables.search.none")}</div>}
         <div role="table" aria-label={t("preferences.category.globalVariables")} style={{ marginTop: 8 }}>
           <div className="st-vt-head" role="row">
             <span>{t("globalVariables.name")}</span>
@@ -76,10 +84,11 @@ export function GlobalVariablesPage() {
             <span>{t("globalVariables.keep")}</span>
             <span />
           </div>
-          {list.map((v) => (
-            <VariableRow key={v.name} variable={v} limits={limits} onChange={(change) => save(withChange(list, v.name, change))} onRemove={() => remove(v)} />
+          {shown.map((v) => (
+            <VariableRow key={v.name} variable={v} limits={limits} onChange={(change) => save(withChange(list!, v.name, change))} onRemove={() => remove(v)} />
           ))}
         </div>
+        </>
       )}
 
       <div className="st-add">

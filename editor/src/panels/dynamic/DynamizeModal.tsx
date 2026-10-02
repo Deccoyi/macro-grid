@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { ArrowRight, CircleOff, Gauge, Layers, Plus, ToggleRight, Variable, X } from "lucide-react";
+import { createPortal } from "react-dom";
+import { ArrowRight, CircleOff, Gauge, GripVertical, Layers, Plus, ToggleRight, Variable, X } from "lucide-react";
 import { DzTitleBar } from "./DzTitleBar";
 import type { DynamicBinding } from "@macro/renderer";
 import type { VariableInfo } from "../../api/types";
@@ -45,6 +46,19 @@ export function DynamizeModal({ propertyLabel, binding, variableCatalog, resultK
   );
   const [defaultValue, setDefaultValue] = useState(binding?.default ?? "");
   const [presetsOpen, setPresetsOpen] = useState(false);
+  const [dragFrom, setDragFrom] = useState<number | null>(null);
+  const [dragOver, setDragOver] = useState<number | null>(null);
+
+  const moveCase = (from: number, to: number) => {
+    if (from === to) return;
+    setCases((prev) => {
+      const next = [...prev];
+      const [moved] = next.splice(from, 1);
+      next.splice(to, 0, moved!);
+      return next;
+    });
+  };
+  const endDrag = () => { setDragFrom(null); setDragOver(null); };
 
   const updateCase = (index: number, fn: (c: EditCase) => void) =>
     setCases((prev) => prev.map((c, i) => (i === index ? withMutation(c, fn) : c)));
@@ -72,7 +86,7 @@ export function DynamizeModal({ propertyLabel, binding, variableCatalog, resultK
 
   const remove = () => { onSave(null); onClose(); };
 
-  return (
+  return createPortal(
     // Opened from a widget field inside PropertiesToolWindow — inside the docking workspace's isolated
     // stacking context (see PickerShell's comment on this), so this has to outrank dockview's own splitter
     // lines (z-index 99) there, not just the App-root dialogs it used to only need to beat.
@@ -128,8 +142,27 @@ export function DynamizeModal({ propertyLabel, binding, variableCatalog, resultK
           )}
 
           {cases.map((c, i) => (
-            <div key={i} className="dz-rule">
-              <Keyword>{i === 0 ? t("dynamic.if") : t("dynamic.elseIf")}</Keyword>
+            <div
+              key={i}
+              className={dragFrom === null ? "dz-rule" : `dz-rule${dragFrom === i ? " dragging" : ""}${dragOver === i && dragFrom !== i ? (dragFrom < i ? " drop-below" : " drop-above") : ""}`}
+              onDragOver={dragFrom === null ? undefined : (e) => { e.preventDefault(); e.dataTransfer.dropEffect = "move"; setDragOver(i); }}
+              onDrop={dragFrom === null ? undefined : (e) => { e.preventDefault(); moveCase(dragFrom, i); endDrag(); }}
+            >
+              <div className="dz-kw">
+                {cases.length > 1 && (
+                  <span
+                    className="dz-grip"
+                    draggable
+                    title={t("dynamic.dragRule")}
+                    aria-label={t("dynamic.dragRule")}
+                    onDragStart={(e) => { e.dataTransfer.effectAllowed = "move"; e.dataTransfer.setData("text/plain", String(i)); setDragFrom(i); }}
+                    onDragEnd={endDrag}
+                  >
+                    <GripVertical size={14} />
+                  </span>
+                )}
+                <Keyword>{i === 0 ? t("dynamic.if") : t("dynamic.elseIf")}</Keyword>
+              </div>
               <div className="dz-content">
                 <ConditionEditor value={c} variableCatalog={variableCatalog} onChange={(v) => updateCase(i, (cc) => { cc.combinator = v.combinator; cc.conditions = v.conditions; })} />
                 <div className="dz-then">
@@ -185,7 +218,10 @@ export function DynamizeModal({ propertyLabel, binding, variableCatalog, resultK
           <button type="button" className="primary" onClick={save}>{t("dynamic.apply")}</button>
         </div>
       </div>
-    </div>
+    </div>,
+    // Portalled to <body>: rendered inline inside a field label it inherited `.pf-actions button { color: secondary }`,
+    // which turned the Apply label grey on the accent fill (same trap as PickerShell).
+    document.body,
   );
 }
 

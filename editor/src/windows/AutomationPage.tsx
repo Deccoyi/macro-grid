@@ -9,8 +9,9 @@ import type { DictKey } from "../i18n/tr";
 import { ActionList } from "../panels/ActionList";
 import { ConditionEditor } from "../panels/dynamic/ConditionEditor";
 import { combinatorOf, fromConditionNode, newCondition, toConditionNode } from "../panels/dynamic/conditionEditing";
-import { SectionLabel, Seg } from "../panels/fields/controls";
+import { Field, NumberInput, Seg, SelectInput, Switch, TextInput } from "../panels/fields/controls";
 import { newRule, ruleProblem, stepNotes, toggleDay, triggerSummary, withChange } from "./automation";
+import { DayChip, EmptyState, PageHeader, TimeInput } from "./settingsPrimitives";
 
 type Limits = AutomationResponse["limits"];
 
@@ -83,53 +84,56 @@ export function AutomationPage() {
   const full = (rules?.length ?? 0) >= limits.maxRules;
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 12, maxWidth: 720 }}>
-      <SectionLabel>{t("preferences.category.automation")}</SectionLabel>
-      <p style={{ fontSize: 11.5, color: "var(--ms-text-secondary)", margin: 0 }}>{t("automation.hint")}</p>
-      {error && <div role="alert" style={{ fontSize: 12, color: "var(--ms-danger)" }}>{error}</div>}
+    <>
+      <PageHeader title={t("preferences.category.automation")} lead={t("automation.hint")} alert={error} />
 
-      <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
-        <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12.5 }}>
-          <input type="checkbox" checked={paused} disabled={!rules} onChange={(e) => rules && void save(rules, e.target.checked)} />
+      <div className="st-auto-bar">
+        <label className="st-pause">
+          <Switch checked={paused} disabled={!rules} onChange={(v) => rules && void save(rules, v)} label={t("automation.pause")} />
           {t("automation.pause")}
         </label>
-        <span style={{ fontSize: 11.5, color: "var(--ms-text-secondary)" }}>{t("automation.count", String(rules?.length ?? 0), String(limits.maxRules))}</span>
+        <span className={full ? "st-count full" : "st-count"}>{t("automation.count", String(rules?.length ?? 0), String(limits.maxRules))}</span>
       </div>
 
-      {rules?.length === 0 && <div style={{ fontSize: 12, color: "var(--ms-text-secondary)" }}>{t("automation.empty")}</div>}
-      {rules?.map((rule) => (
-        <div key={rule.id} style={{ borderTop: "1px solid var(--ms-border)", paddingTop: 8, display: "flex", flexDirection: "column", gap: 8 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <button type="button" className="ghost" aria-expanded={open === rule.id} title={t("automation.edit")} onClick={() => setOpen(open === rule.id ? null : rule.id)} style={{ padding: 4, display: "flex" }}>
-              {open === rule.id ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
-            </button>
-            <input type="checkbox" checked={rule.enabled} aria-label={t("automation.enabled")} title={t("automation.enabled")} onChange={(e) => void save(withChange(rules, rule.id, { enabled: e.target.checked }), paused)} />
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 12.5, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{rule.name}</div>
-              <div style={{ fontSize: 11.5, color: "var(--ms-text-secondary)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                {triggerSummary(rule, devices, t)} · {lastText(status[rule.id], t)}
+      {rules?.length === 0 && <EmptyState title={t("automation.empty.title")} hint={t("automation.empty.hint")} />}
+      {rules?.map((rule) => {
+        const st = status[rule.id];
+        const tone = st?.running ? "" : st?.lastResult === "failed" ? " danger" : st?.lastResult === "refused" ? " warning" : "";
+        return (
+          <div key={rule.id} className="st-rule">
+            <div className="st-rule-head">
+              <button type="button" className="st-ib sm" aria-expanded={open === rule.id} aria-label={t("automation.edit")} title={t("automation.edit")} onClick={() => setOpen(open === rule.id ? null : rule.id)}>
+                {open === rule.id ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+              </button>
+              <Switch checked={rule.enabled} onChange={(enabled) => void save(withChange(rules, rule.id, { enabled }), paused)} label={t("automation.enabled")} />
+              <div style={{ minWidth: 0 }}>
+                <div className="st-rule-name">{rule.name}</div>
+                <div className={`st-rule-status${tone}`}>
+                  {st?.running && <span className="dot" aria-hidden="true" />}
+                  {triggerSummary(rule, devices, t)} · {lastText(st, t)}
+                </div>
               </div>
+              <button type="button" className="st-ib" aria-label={t("automation.run")} title={t("automation.run")} disabled={ruleProblem(rule) !== null} onClick={() => void runNow(rule)}><Play size={14} /></button>
+              <button type="button" className="st-ib danger" aria-label={t("automation.delete")} title={t("automation.delete")} onClick={() => void remove(rule)}><Trash2 size={14} /></button>
             </div>
-            <button type="button" className="ghost" title={t("automation.run")} disabled={ruleProblem(rule) !== null} onClick={() => void runNow(rule)} style={{ padding: 5 }}><Play size={13} /></button>
-            <button type="button" className="ghost" title={t("automation.delete")} onClick={() => void remove(rule)} style={{ padding: 5, color: "var(--ms-danger)" }}><Trash2 size={13} /></button>
+            {open === rule.id && (
+              <RuleEditor
+                rule={rule} limits={limits} devices={devices} actions={actions} profiles={profiles} catalog={catalog}
+                onChange={(change) => void save(withChange(rules, rule.id, change), paused)}
+              />
+            )}
           </div>
-          {open === rule.id && (
-            <RuleEditor
-              rule={rule} limits={limits} devices={devices} actions={actions} profiles={profiles} catalog={catalog}
-              onChange={(change) => void save(withChange(rules, rule.id, change), paused)}
-            />
-          )}
-        </div>
-      ))}
+        );
+      })}
 
-      <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap", borderTop: "1px solid var(--ms-border)", paddingTop: 10 }}>
-        <span style={{ fontSize: 12 }}>{t("automation.add")}</span>
-        <button type="button" className="ghost" disabled={full || !rules} onClick={() => add("variable")}>{t("automation.trigger.variable")}</button>
-        <button type="button" className="ghost" disabled={full || !rules} onClick={() => add("time")}>{t("automation.trigger.time")}</button>
-        <button type="button" className="ghost" disabled={full || !rules} onClick={() => add("deviceConnect")}>{t("automation.trigger.deviceConnect")}</button>
+      <div className="st-add-rule">
+        <span>{t("automation.add")}</span>
+        <button type="button" className="st-btn" disabled={full || !rules} onClick={() => add("variable")}>{t("automation.trigger.variable")}</button>
+        <button type="button" className="st-btn" disabled={full || !rules} onClick={() => add("time")}>{t("automation.trigger.time")}</button>
+        <button type="button" className="st-btn" disabled={full || !rules} onClick={() => add("deviceConnect")}>{t("automation.trigger.deviceConnect")}</button>
       </div>
-      {full && <div style={{ fontSize: 11.5, color: "var(--ms-text-secondary)" }}>{t("automation.full", String(limits.maxRules))}</div>}
-    </div>
+      {full && <div className="st-hint" style={{ marginTop: 8 }}>{t("automation.full", String(limits.maxRules))}</div>}
+    </>
   );
 }
 
@@ -156,11 +160,10 @@ function RuleEditor({ rule, limits, devices, actions, profiles, catalog, onChang
   const userCatalog = catalog.filter((v) => !v.name.toLowerCase().startsWith("self."));
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 10, paddingLeft: 24 }}>
-      <label className="field">
-        {t("automation.name")}
-        <input type="text" value={rule.name} maxLength={limits.maxNameLength} onChange={(e) => onChange({ name: e.target.value })} />
-      </label>
+    <div className="st-rule-body">
+      <Field label={t("automation.name")}>
+        <TextInput value={rule.name} maxLength={limits.maxNameLength} onChange={(name) => onChange({ name })} />
+      </Field>
 
       <Seg
         value={trigger.kind}
@@ -179,48 +182,41 @@ function RuleEditor({ rule, limits, devices, actions, profiles, catalog, onChang
           onChange={(v) => setTrigger({ condition: toConditionNode({ ...v, result: "" }) })}
         />
       ) : (
-        <div style={{ fontSize: 11, color: "var(--ms-text-secondary)" }}>{t("action.logic.unsupported")}</div>
+        <div className="st-hint">{t("action.logic.unsupported")}</div>
       ))}
-      {trigger.kind === "variable" && <div style={{ fontSize: 11, color: "var(--ms-text-secondary)" }}>{t("automation.variable.hint")}</div>}
+      {trigger.kind === "variable" && <div className="st-hint">{t("automation.variable.hint")}</div>}
 
       {trigger.kind === "time" && (
-        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-          <label className="field">
-            {t("automation.time")}
-            <input type="time" value={trigger.time ?? ""} onChange={(e) => setTrigger({ time: e.target.value })} style={{ width: 120 }} />
-          </label>
-          <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }} role="group" aria-label={t("automation.days")}>
+        <>
+          <Field label={t("automation.time")}>
+            <TimeInput value={trigger.time ?? ""} onChange={(time) => setTrigger({ time })} />
+          </Field>
+          <div className="st-days" role="group" aria-label={t("automation.days")}>
             {DAYS.map((d) => (
-              <button
-                key={d} type="button" className={trigger.days.includes(d) ? "ghost on" : "ghost"} aria-pressed={trigger.days.includes(d)}
-                style={trigger.days.includes(d) ? { background: "var(--ms-accent-bg-muted)", color: "var(--ms-accent)" } : undefined}
-                onClick={() => setTrigger({ days: toggleDay(trigger.days, d) })}
-              >
-                {t(`automation.day.${d}` as DictKey)}
-              </button>
+              <DayChip key={d} on={trigger.days.includes(d)} label={t(`automation.day.${d}` as DictKey)} onToggle={() => setTrigger({ days: toggleDay(trigger.days, d) })} />
             ))}
           </div>
-          <div style={{ fontSize: 11, color: "var(--ms-text-secondary)" }}>{t("automation.time.hint")}</div>
-        </div>
+          <div className="st-hint">{t("automation.time.hint")}</div>
+        </>
       )}
 
       {trigger.kind === "deviceConnect" && (
-        <label className="field">
-          {t("automation.device")}
-          <select value={trigger.deviceId ?? ""} onChange={(e) => setTrigger({ deviceId: e.target.value === "" ? null : e.target.value })}>
+        <Field label={t("automation.device")}>
+          <SelectInput value={trigger.deviceId ?? ""} onChange={(v) => setTrigger({ deviceId: v === "" ? null : v })}>
             <option value="">{t("automation.device.any")}</option>
             {devices.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
-          </select>
-        </label>
+          </SelectInput>
+        </Field>
       )}
 
-      <label className="field">
-        {t("automation.cooldown")}
-        <input
-          type="number" min={0} max={limits.maxCooldownSeconds} value={rule.cooldownSeconds} style={{ width: 120 }}
-          onChange={(e) => onChange({ cooldownSeconds: Math.min(limits.maxCooldownSeconds, Math.max(0, Math.floor(Number(e.target.value) || 0))) })}
-        />
-      </label>
+      <Field label={t("automation.cooldown")}>
+        <div style={{ width: 140 }}>
+          <NumberInput
+            value={rule.cooldownSeconds} min={0} max={limits.maxCooldownSeconds} unit={t("automation.cooldown.unit")}
+            onChange={(v) => onChange({ cooldownSeconds: Math.min(limits.maxCooldownSeconds, Math.max(0, Math.floor(v || 0))) })}
+          />
+        </div>
+      </Field>
 
       <ActionList
         bindings={rule.actions}
@@ -230,9 +226,9 @@ function RuleEditor({ rule, limits, devices, actions, profiles, catalog, onChang
         variableCatalog={catalog}
         onChange={(next) => onChange({ actions: next })}
       />
-      <div style={{ fontSize: 11, color: "var(--ms-text-secondary)" }}>{t("automation.steps.limit", String(limits.maxSteps))}</div>
-      {notes.map((n) => <div key={n} style={{ fontSize: 11.5, color: "var(--ms-text-secondary)", background: "var(--ms-bg-inset)", border: "1px solid var(--ms-border)", borderRadius: 4, padding: "6px 8px" }}>{t(`automation.note.${n}` as DictKey)}</div>)}
-      {problem && <div role="status" style={{ fontSize: 11.5, color: "var(--ms-danger)" }}>{t(`automation.problem.${problem}` as DictKey)}</div>}
+      <div className="st-hint">{t("automation.steps.limit", String(limits.maxSteps))}</div>
+      {notes.map((n) => <div key={n} className="st-note">{t(`automation.note.${n}` as DictKey)}</div>)}
+      {problem && <div role="status" className="st-hint error">{t(`automation.problem.${problem}` as DictKey)}</div>}
     </div>
   );
 }

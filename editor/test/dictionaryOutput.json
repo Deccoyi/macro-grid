@@ -294,6 +294,13 @@
       "five": "This folder contains 5 items.",
       "words": "This folder contains Arg1 items."
     },
+    "globalVariables.count": {
+      "zero": "0 / 0 variables",
+      "one": "1 / 1 variables",
+      "two": "2 / 2 variables",
+      "five": "5 / 5 variables",
+      "words": "Arg1 / Arg2 variables"
+    },
     "globalVariables.delete.confirm": {
       "zero": "Delete the variable \"0\"?",
       "one": "Delete the variable \"1\"?",
@@ -1247,6 +1254,13 @@
       "two": "Bu klasör 2 öğe içeriyor.",
       "five": "Bu klasör 5 öğe içeriyor.",
       "words": "Bu klasör Arg1 öğe içeriyor."
+    },
+    "globalVariables.count": {
+      "zero": "0 / 0 değişken",
+      "one": "1 / 1 değişken",
+      "two": "2 / 2 değişken",
+      "five": "5 / 5 değişken",
+      "words": "Arg1 / Arg2 değişken"
     },
     "globalVariables.delete.confirm": {
       "zero": "\"0\" değişkeni silinsin mi?",

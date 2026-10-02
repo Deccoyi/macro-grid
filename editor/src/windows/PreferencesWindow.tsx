@@ -1,20 +1,21 @@
 import { useEffect, useState } from "react";
-import { Trash2 } from "lucide-react";
+import { Braces, Globe, SlidersHorizontal, Smartphone, Sun, Trash2, User, Zap } from "lucide-react";
 import type { ProfileSummary } from "../api/types";
 import { api } from "../api/client";
 import { useT } from "../i18n/I18nContext";
 import { useDocumentTitle } from "../i18n/useDocumentTitle";
-import { SectionLabel, Seg } from "../panels/fields/controls";
+import { NumberInput, Seg, SelectInput, Switch, TextInput } from "../panels/fields/controls";
 import { usePreferences } from "../preferences/PreferencesContext";
 import { AutomationPage } from "./AutomationPage";
 import { GlobalVariablesPage } from "./GlobalVariablesPage";
 import { LanguageSection } from "./LanguageSection";
-import { ToolWindowLayout } from "./ToolWindowLayout";
+import { SettingsShell, type SettingsGroup } from "./SettingsShell";
+import { PageHeader, SettingGroup, SettingRow } from "./settingsPrimitives";
 
 type Category = "general" | "appearance" | "language" | "previewProfiles" | "profiles" | "globalVariables" | "automation";
 
 /** The whole page of the "Tercihler" tool window (see ToolWindow.cs) — a real separate, non-modal OS
- * window, not an in-page dialog. */
+ * window, not an in-page dialog. Layout and measurements: docs/ui/settings-window-design.md. */
 export function PreferencesWindow() {
   const { t } = useT();
   useDocumentTitle("preferences.title");
@@ -45,136 +46,158 @@ export function PreferencesWindow() {
     }
   };
 
-  const categories = [
-    { id: "general", label: t("preferences.category.general") },
-    { id: "appearance", label: t("preferences.category.appearance") },
-    { id: "language", label: t("preferences.category.language") },
-    { id: "previewProfiles", label: t("preferences.category.previewProfiles") },
-    { id: "profiles", label: t("preferences.category.profiles") },
-    { id: "globalVariables", label: t("preferences.category.globalVariables") },
-    { id: "automation", label: t("preferences.category.automation") },
+  const groups: SettingsGroup[] = [
+    {
+      label: t("preferences.group.app"),
+      categories: [
+        { id: "general", label: t("preferences.category.general"), icon: SlidersHorizontal },
+        { id: "appearance", label: t("preferences.category.appearance"), icon: Sun },
+        { id: "language", label: t("preferences.category.language"), icon: Globe },
+      ],
+    },
+    {
+      label: t("preferences.group.devices"),
+      categories: [
+        { id: "previewProfiles", label: t("preferences.category.previewProfiles"), icon: Smartphone },
+        { id: "profiles", label: t("preferences.category.profiles"), icon: User },
+      ],
+    },
+    {
+      label: t("preferences.group.data"),
+      categories: [
+        { id: "globalVariables", label: t("preferences.category.globalVariables"), icon: Braces },
+        { id: "automation", label: t("preferences.category.automation"), icon: Zap },
+      ],
+    },
   ];
 
   return (
-    <ToolWindowLayout categories={categories} activeId={category} onSelect={(id) => setCategory(id as Category)}>
+    <SettingsShell
+      groups={groups} navLabel={t("preferences.nav")} activeId={category} onSelect={(id) => setCategory(id as Category)}
+    >
       {category === "general" && (
-        <div style={{ display: "flex", flexDirection: "column", gap: 16, maxWidth: 420 }}>
-          <SectionLabel>{t("preferences.category.general")}</SectionLabel>
-          <label style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <input
-              type="checkbox"
-              checked={autostart === true}
-              disabled={autostart === null}
-              onChange={(e) => changeAutostart(e.target.checked)}
+        <>
+          <PageHeader title={t("preferences.category.general")} lead={t("preferences.lead.general")} alert={autostartError} />
+          <SettingGroup title={t("preferences.general.startup")}>
+            <SettingRow
+              name={t("preferences.autostart")} hint={t("preferences.autostart.hint")} switchControl
+              control={<Switch checked={autostart === true} disabled={autostart === null} onChange={(v) => void changeAutostart(v)} label={t("preferences.autostart")} />}
             />
-            {t("preferences.autostart")}
-          </label>
-          <p style={{ fontSize: 11.5, color: "var(--ms-text-secondary)", margin: 0 }}>{t("preferences.autostart.hint")}</p>
-          {autostartError && <p style={{ fontSize: 12, color: "var(--ms-danger)", margin: 0 }}>{autostartError}</p>}
-          <label className="field">
-            {t("preferences.autostartMode")}
-            <select value={autostartMode} onChange={(e) => setAutostartMode(e.target.value as typeof autostartMode)}>
-              <option value="tray">{t("preferences.autostartMode.tray")}</option>
-              <option value="window">{t("preferences.autostartMode.window")}</option>
-            </select>
-          </label>
-          <label className="field">
-            {t("preferences.launchMode")}
-            <select value={launchMode} onChange={(e) => setLaunchMode(e.target.value as typeof launchMode)}>
-              <option value="window">{t("preferences.launchMode.window")}</option>
-              <option value="tray">{t("preferences.launchMode.tray")}</option>
-            </select>
-          </label>
-          <label style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <input type="checkbox" checked={checkForUpdates} onChange={(e) => setCheckForUpdates(e.target.checked)} />
-            {t("preferences.updates.auto")}
-          </label>
-          <p style={{ fontSize: 11.5, color: "var(--ms-text-secondary)", margin: 0 }}>{t("preferences.updates.auto.hint")}</p>
-          <label style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <input type="checkbox" checked={includePreReleases} onChange={(e) => setIncludePreReleases(e.target.checked)} />
-            {t("preferences.updates.prerelease")}
-          </label>
-          <label style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <input type="checkbox" checked={allowUnencrypted} onChange={(e) => setAllowUnencrypted(e.target.checked)} />
-            {t("preferences.unencrypted")}
-          </label>
-          <p style={{ fontSize: 11.5, color: "var(--ms-text-secondary)", margin: 0 }}>{t("preferences.unencrypted.hint")}</p>
+            <SettingRow
+              name={t("preferences.autostartMode")}
+              control={
+                <SelectInput value={autostartMode} label={t("preferences.autostartMode")} onChange={(v) => setAutostartMode(v as typeof autostartMode)}>
+                  <option value="tray">{t("preferences.autostartMode.tray")}</option>
+                  <option value="window">{t("preferences.autostartMode.window")}</option>
+                </SelectInput>
+              }
+            />
+            <SettingRow
+              name={t("preferences.launchMode")}
+              control={
+                <SelectInput value={launchMode} label={t("preferences.launchMode")} onChange={(v) => setLaunchMode(v as typeof launchMode)}>
+                  <option value="window">{t("preferences.launchMode.window")}</option>
+                  <option value="tray">{t("preferences.launchMode.tray")}</option>
+                </SelectInput>
+              }
+            />
+          </SettingGroup>
+
+          <SettingGroup title={t("preferences.general.updates")}>
+            <SettingRow
+              name={t("preferences.updates.auto")} hint={t("preferences.updates.auto.hint")} switchControl
+              control={<Switch checked={checkForUpdates} onChange={setCheckForUpdates} label={t("preferences.updates.auto")} />}
+            />
+            <SettingRow
+              name={t("preferences.updates.prerelease")} switchControl
+              control={<Switch checked={includePreReleases} onChange={setIncludePreReleases} label={t("preferences.updates.prerelease")} />}
+            />
+          </SettingGroup>
+
+          <SettingGroup title={t("preferences.general.security")}>
+            <SettingRow
+              name={t("preferences.unencrypted")} hint={t("preferences.unencrypted.hint")} switchControl
+              control={<Switch checked={allowUnencrypted} onChange={setAllowUnencrypted} label={t("preferences.unencrypted")} />}
+            />
+          </SettingGroup>
+
           {Object.keys(dismissedNotices).length > 0 && (
-            <button type="button" onClick={() => dismissNotice()} style={{ alignSelf: "flex-start" }}>{t("preferences.notices.reset")}</button>
+            <div className="st-footer">
+              <button type="button" className="st-btn" onClick={() => dismissNotice()}>{t("preferences.notices.reset")}</button>
+            </div>
           )}
-        </div>
+        </>
       )}
 
       {category === "appearance" && (
-        <div style={{ display: "flex", flexDirection: "column", gap: 16, maxWidth: 360 }}>
-          <SectionLabel>{t("preferences.category.appearance")}</SectionLabel>
-          <label className="field">
-            {t("preferences.theme")}
-            <Seg
-              value={theme}
-              onChange={setTheme}
-              options={[
-                { value: "dark", label: t("preferences.theme.dark") },
-                { value: "light", label: t("preferences.theme.light") },
-              ]}
+        <>
+          <PageHeader title={t("preferences.category.appearance")} lead={t("preferences.lead.appearance")} />
+          <SettingGroup>
+            <SettingRow
+              name={t("preferences.theme")}
+              control={
+                <Seg
+                  value={theme}
+                  onChange={setTheme}
+                  options={[
+                    { value: "dark", label: t("preferences.theme.dark") },
+                    { value: "light", label: t("preferences.theme.light") },
+                  ]}
+                />
+              }
             />
-          </label>
-        </div>
+          </SettingGroup>
+        </>
       )}
 
       {category === "language" && <LanguageSection />}
 
       {category === "previewProfiles" && (
-        <div style={{ maxWidth: 420 }}>
-          <SectionLabel>{t("preferences.previewProfiles")}</SectionLabel>
-          {previewProfiles.map((p) => (
-            <div key={p.id} style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 0", borderTop: "1px solid var(--ms-border)" }}>
-              <div style={{ flex: 1, fontSize: 12.5 }}>{p.name}</div>
-              <div style={{ fontSize: 11, color: "var(--ms-text-secondary)" }}>{p.width}×{p.height}</div>
-              <button type="button" className="ghost" title={t("preferences.previewProfiles.remove")} onClick={() => removePreviewProfile(p.id)} style={{ padding: 5, color: "var(--ms-danger)" }}>
-                <Trash2 size={13} />
-              </button>
-            </div>
-          ))}
-          <div style={{ display: "flex", gap: 6, marginTop: 8 }}>
-            <input type="text" placeholder={t("preferences.previewProfiles.name")} value={name} onChange={(e) => setName(e.target.value)} style={{ flex: 1 }} />
-            <input type="number" min={100} max={4000} value={width} onChange={(e) => setWidth(Number(e.target.value))} style={{ width: 60 }} title={t("preferences.previewProfiles.width")} />
-            <input type="number" min={100} max={4000} value={height} onChange={(e) => setHeight(Number(e.target.value))} style={{ width: 60 }} title={t("preferences.previewProfiles.height")} />
-            <button
-              type="button"
-              className="ghost"
-              disabled={!name.trim()}
-              onClick={() => { addPreviewProfile({ name: name.trim(), width, height }); setName(""); }}
-            >
+        <>
+          <PageHeader title={t("preferences.category.previewProfiles")} lead={t("preferences.lead.previewProfiles")} />
+          <SettingGroup>
+            {previewProfiles.map((p) => (
+              <div key={p.id} className="st-row" style={{ gridTemplateColumns: "minmax(0, 1fr) auto 28px", columnGap: 8 }}>
+                <div className="st-row-name">{p.name}</div>
+                <div className="st-count">{p.width}×{p.height}</div>
+                <button type="button" className="st-ib danger" aria-label={t("preferences.previewProfiles.remove")} title={t("preferences.previewProfiles.remove")} onClick={() => removePreviewProfile(p.id)}>
+                  <Trash2 size={14} />
+                </button>
+              </div>
+            ))}
+          </SettingGroup>
+          <div className="st-add" style={{ gridTemplateColumns: "minmax(0, 1fr) 80px 80px auto" }}>
+            <TextInput value={name} onChange={setName} placeholder={t("preferences.previewProfiles.name")} label={t("preferences.previewProfiles.name")} />
+            <NumberInput value={width} onChange={setWidth} min={100} max={4000} label={t("preferences.previewProfiles.width")} />
+            <NumberInput value={height} onChange={setHeight} min={100} max={4000} label={t("preferences.previewProfiles.height")} />
+            <button type="button" className="st-btn" disabled={!name.trim()} onClick={() => { addPreviewProfile({ name: name.trim(), width, height }); setName(""); }}>
               {t("preferences.previewProfiles.add")}
             </button>
           </div>
-        </div>
+        </>
       )}
 
       {category === "profiles" && (
-        <div style={{ display: "flex", flexDirection: "column", gap: 16, maxWidth: 360 }}>
-          <SectionLabel>{t("preferences.category.profiles")}</SectionLabel>
-          <label className="field">
-            {t("preferences.defaultProfile")}
-            <select
-              value={defaultProfileId ?? ""}
-              onChange={(e) => setDefaultProfileId(e.target.value || null)}
-            >
-              <option value="">{t("preferences.defaultProfile.none")}</option>
-              {profiles.map((p) => (
-                <option key={p.id} value={p.id}>{p.name}</option>
-              ))}
-            </select>
-          </label>
-          <p style={{ fontSize: 11.5, color: "var(--ms-text-secondary)", margin: 0 }}>
-            {t("preferences.defaultProfile.hint")}
-          </p>
-        </div>
+        <>
+          <PageHeader title={t("preferences.category.profiles")} lead={t("preferences.lead.profiles")} />
+          <SettingGroup>
+            <SettingRow
+              name={t("preferences.defaultProfile")} hint={t("preferences.defaultProfile.hint")}
+              control={
+                <SelectInput value={defaultProfileId ?? ""} label={t("preferences.defaultProfile")} onChange={(v) => setDefaultProfileId(v || null)}>
+                  <option value="">{t("preferences.defaultProfile.none")}</option>
+                  {profiles.map((p) => (
+                    <option key={p.id} value={p.id}>{p.name}</option>
+                  ))}
+                </SelectInput>
+              }
+            />
+          </SettingGroup>
+        </>
       )}
 
       {category === "globalVariables" && <GlobalVariablesPage />}
       {category === "automation" && <AutomationPage />}
-    </ToolWindowLayout>
+    </SettingsShell>
   );
 }

@@ -199,7 +199,7 @@ export function Seg<T extends string>({ value, options, onChange }: { value: T; 
 }
 
 interface FieldContextValue { id: string; labelId: string }
-const FieldContext = createContext<FieldContextValue | null>(null);
+export const FieldContext = createContext<FieldContextValue | null>(null);
 
 /** The id of the control inside the nearest <see cref="Field"/>, so a native input or select is labelled by the field's label. */
 export function useFieldId(): string | undefined {

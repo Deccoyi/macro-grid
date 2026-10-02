@@ -1,4 +1,4 @@
-import { Ban, Plus, Trash2, Variable } from "lucide-react";
+import { Plus, Trash2, Variable } from "lucide-react";
 import type { VariableInfo } from "../../api/types";
 import { useT } from "../../i18n/I18nContext";
 import type { DictKey } from "../../i18n/tr";
@@ -58,6 +58,15 @@ export function ConditionEditor({ value, variableCatalog, onChange }: ConditionE
               </div>
             )}
             <div className="dz-cond">
+              <button
+                type="button"
+                className={cond.negate ? "dz-not active" : "dz-not"}
+                aria-pressed={Boolean(cond.negate)}
+                title={t("dynamic.negate")}
+                onClick={() => update((cc) => { cc.conditions[ci]!.negate = !cc.conditions[ci]!.negate; })}
+              >
+                {t("dynamic.not")}
+              </button>
               <div className="dz-subject">
                 <VariablePicker
                   catalog={variableCatalog}
@@ -100,16 +109,6 @@ export function ConditionEditor({ value, variableCatalog, onChange }: ConditionE
                 )}
               </div>
 
-              <button
-                type="button"
-                className={cond.negate ? "active pf-icon-btn small" : "ghost pf-icon-btn small"}
-                aria-pressed={Boolean(cond.negate)}
-                aria-label={t("dynamic.negate")}
-                onClick={() => update((cc) => { cc.conditions[ci]!.negate = !cc.conditions[ci]!.negate; })}
-                title={t("dynamic.negate")}
-              >
-                <Ban size={13} />
-              </button>
               {value.conditions.length > 1 ? (
                 <button type="button" className="ghost pf-icon-btn small" aria-label={t("dynamic.removeCondition")} title={t("dynamic.removeCondition")} onClick={() => update((cc) => { cc.conditions.splice(ci, 1); })}>
                   <Trash2 size={13} />

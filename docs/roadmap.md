@@ -65,8 +65,8 @@ The order of the bigger pieces of work, and their plans, are in [plans/README.md
 
 - **One design language for the whole editor.** Three designs are done on paper and share one field system (28 px controls, 12 px text, 4 px radius,
   hairline rows, switches for on/off). The Properties panel design is mostly in the editor; what remains is a live comparison at 320 px and the default dock
-  width. The Settings window (General, Global variable list, Automation) is designed but not built: grouped 188 px navigation, setting rows,
-  a variable table and rule rows, with new tokens and a few new texts. The variable picker ("Add variable") overlap is fixed and its new look is in review.
+  width. The Settings window (General, Global variable list, Automation) is built from its design: grouped 188 px navigation, setting rows,
+  a variable table and rule rows, with new tokens and a few new texts; what remains is a live check of every page against a running host. The variable picker ("Add variable") overlap is fixed and its new look is in review.
   See [ui/ui-guidelines.md](ui/ui-guidelines.md), [ui/settings-window-design.md](ui/settings-window-design.md) and [ui/variable-picker-design.md](ui/variable-picker-design.md).
 - **A live-stream chat plugin** (one plugin per streaming platform, sharing one chat view): a custom widget that shows the channel's live chat, with
   a per-chatter menu (ban, or one of a few preset timeouts), plus actions for ad breaks, switching the stream category between saved favorites, and
