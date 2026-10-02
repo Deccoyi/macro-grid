@@ -1,3 +1,4 @@
+using MacroGrid.Core.Actions;
 using MacroGrid.Core.Model;
 using MacroGrid.Core.Plugins.Widgets;
 using MacroGrid.Core.Profiles;
@@ -53,8 +54,10 @@ public sealed class WidgetStateService : IHostedService, IDisposable
     internal TimeSpan PressedMinimum { get; set; } = TimeSpan.FromMilliseconds(150);
 
     public WidgetStateService(VariableStore variables, SessionRegistry sessions, ProfileStore profiles, ToggleStateStore toggles, LayoutSender layouts, WebViewState webViews, ILogger<WidgetStateService> logger,
-        PluginWidgetCatalog? pluginWidgets = null, LastResultStore? results = null)
+        PluginWidgetCatalog? pluginWidgets = null, LastResultStore? results = null, ActionDispatcher? actions = null)
     {
+        _actions = actions;
+        if (actions is not null) actions.HandlersChanged += OnActionTypesChanged;
         _results = results;
         _variables = variables;
         _sessions = sessions;
@@ -69,6 +72,28 @@ public sealed class WidgetStateService : IHostedService, IDisposable
     }
 
     private readonly PluginWidgetCatalog? _pluginWidgets;
+    private readonly ActionDispatcher? _actions;
+
+    /// <summary>An action type appeared or went away (a plugin switched on or off): every widget with actions on a shown page is looked at again for its unavailable mark.</summary>
+    private void OnActionTypesChanged()
+    {
+        foreach (var session in _sessions.All)
+        {
+            if (session.ProfileId is null || session.PageId is null) continue;
+            var page = _profiles.Get(session.ProfileId)?.FindPage(session.PageId);
+            if (page is null) continue;
+            foreach (var widget in page.Widgets.Where(w => w.Actions.Count > 0)) Refresh(widget.Id, session);
+        }
+    }
+
+    /// <summary>The sources the widget's text, bound value and action steps need and cannot get now.</summary>
+    private IReadOnlyList<string> UnavailableFor(Widget widget, IVariableStore scope)
+    {
+        var fromText = DynamicText.UnavailableSources(widget, scope);
+        if (_actions is null) return fromText;
+        var fromActions = _actions.UnavailableSources(widget, scope);
+        return fromActions.Count == 0 ? fromText : [.. fromText.Concat(fromActions).Distinct()];
+    }
 
     /// <summary>A plugin's widgets changed (approved, reloaded, switched off, removed): devices showing a profile with plugin widgets get their layout again, so a
     /// widget that could not run starts, or one that stopped draws its placeholder.</summary>
@@ -203,7 +228,7 @@ public sealed class WidgetStateService : IHostedService, IDisposable
                 await session.SendAsync(MessageTypes.WidgetState, new WidgetStateMessage(widget.Id, Value: value), ct);
             }
 
-            var unavailable = DynamicText.UnavailableSources(widget, scope);
+            var unavailable = UnavailableFor(widget, scope);
             if (unavailable.Count > 0 || session.SentUnavailable.GetValueOrDefault(widget.Id, "").Length > 0)
             {
                 session.SentUnavailable[widget.Id] = string.Join(UnavailableSeparator, unavailable);
@@ -415,9 +440,10 @@ public sealed class WidgetStateService : IHostedService, IDisposable
             }
 
             List<string>? unavailable = null;
-            if (forced || DynamicText.Dependencies(widget).Any(dirty.Contains) || (!string.IsNullOrEmpty(variableName) && dirty.Contains(variableName)))
+            if (forced || DynamicText.Dependencies(widget).Any(dirty.Contains) || (!string.IsNullOrEmpty(variableName) && dirty.Contains(variableName))
+                || (_actions is not null && _actions.ActionDependencies(widget).Any(dirty.Contains)))
             {
-                var now = DynamicText.UnavailableSources(widget, scope);
+                var now = UnavailableFor(widget, scope);
                 if (string.Join(UnavailableSeparator, now) !=session.SentUnavailable.GetValueOrDefault(widget.Id, ""))
                     unavailable = [.. now];
             }
