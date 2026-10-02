@@ -40,6 +40,29 @@ describe("WidgetView", () => {
     expect(onTap).toHaveBeenCalledWith(["obs.streaming"]);
   });
 
+  it("does not run a press on an unavailable widget, greys it, and names the sources instead", () => {
+    const onPress = vi.fn();
+    const onRelease = vi.fn();
+    const onTap = vi.fn();
+    render(<WidgetView widget={button()} unavailable={["obs.streaming"]} onUnavailableTap={onTap} onPress={onPress} onRelease={onRelease} />);
+
+    const host = document.querySelector("[data-ms-widget-host]") as HTMLElement;
+    expect(host.style.filter).toContain("grayscale");
+    fireEvent.pointerDown(host);
+    fireEvent.pointerUp(host);
+    expect(onPress).not.toHaveBeenCalled();
+    expect(onRelease).not.toHaveBeenCalled();
+    expect(onTap).toHaveBeenCalledWith(["obs.streaming"]);
+  });
+
+  it("still runs a press when the app cannot show the notice (no tap handler)", () => {
+    const onPress = vi.fn();
+    render(<WidgetView widget={button()} unavailable={["obs.streaming"]} onPress={onPress} />);
+
+    fireEvent.pointerDown(document.querySelector("[data-ms-widget-host]") as HTMLElement);
+    expect(onPress).toHaveBeenCalled();
+  });
+
   it("draws no mark and no fade when nothing is unavailable", () => {
     const { queryByRole } = render(<WidgetView widget={button()} unavailable={[]} onUnavailableTap={vi.fn()} />);
 
