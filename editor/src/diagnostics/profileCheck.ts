@@ -15,6 +15,8 @@ export interface CheckCatalogs {
   pluginWidgets: PluginWidgetInfo[];
   /** Ids of every profile (for "Switch profile"). */
   profileIds: ReadonlySet<string>;
+  /** Variable name to its type, for the checks that depend on it (a number compared with text). Missing means "unknown". */
+  variableTypes?: ReadonlyMap<string, string>;
 }
 
 const PAGE_ACTION = "core.page";
@@ -33,6 +35,26 @@ export function templateVariables(text: string | undefined): string[] {
     if (name) names.push(name);
   }
   return names;
+}
+
+/** Like {@link templateVariables}, but says for each name whether the token carries a placeholder (`{name|format|--}`), which is what is shown when it has no value. */
+export function templateUsage(text: string | undefined): { name: string; placeholder: boolean }[] {
+  if (!text || !text.includes("{")) return [];
+  const used: { name: string; placeholder: boolean }[] = [];
+  for (const m of text.matchAll(/\{\{|\}\}|\{([^{}|]+)(?:\|([^{}|]*))?(?:\|([^}]*))?\}/g)) {
+    const name = m[1]?.trim();
+    if (name) used.push({ name, placeholder: m[3] !== undefined });
+  }
+  return used;
+}
+
+/** Every comparison inside a condition tree. */
+export function conditionCompares(node: ConditionNode, into: ConditionNode[]) {
+  if (node.kind === "compare") {
+    into.push(node);
+    return;
+  }
+  for (const child of node.children ?? []) conditionCompares(child, into);
 }
 
 export function conditionVariables(node: ConditionNode, into: string[]) {
@@ -62,6 +84,8 @@ export function checkProfile(profile: Profile, catalogs: CheckCatalogs, eventLab
   };
 
   const add = (d: Omit<Diagnostic, "source" | "origin">) => list.push({ ...d, source: PROFILE_CHECK_SOURCE });
+  // Before the first values arrive nothing has a value yet; that is not a finding.
+  const noValue = (v: string) => catalogs.liveVariableNames.size > 0 && !catalogs.liveVariableNames.has(v);
 
   for (const page of profile.pages) {
     for (const widget of page.widgets) {
@@ -76,7 +100,7 @@ export function checkProfile(profile: Profile, catalogs: CheckCatalogs, eventLab
         }
       }
 
-      checkVariables(widget, page.name, name, base, known, missingVariable);
+      checkVariables(widget, page.name, name, base, known, missingVariable, noValue, add, catalogs.variableTypes);
       const sliderVariable = widget.props?.valueVariable;
       if (typeof sliderVariable === "string" && sliderVariable.toLowerCase().startsWith(SELF_PREFIX)) {
         add({ id: `W232:${widget.id}:slider:${sliderVariable}`, severity: "warning", code: "W232", messageKey: "diag.check.W232", messageArgs: [page.name, name, sliderVariable], target: base });
@@ -101,6 +125,11 @@ export function checkProfile(profile: Profile, catalogs: CheckCatalogs, eventLab
             const names: string[] = [];
             if (s.condition) conditionVariables(s.condition as ConditionNode, names);
             if (names.length === 0) add({ id: `W234:${widget.id}:${event}:${index}`, severity: "warning", code: "W234", messageKey: "diag.check.W234", messageArgs: args, target });
+            if (s.condition) {
+              for (const compare of invalidNumberCompares(s.condition as ConditionNode, catalogs.variableTypes)) {
+                add({ id: `E212:${widget.id}:${event}:${index}:${compare.variable}`, severity: "error", code: "E212", messageKey: "diag.check.E212", messageArgs: [page.name, name, compare.variable ?? "", compare.value ?? ""], target });
+              }
+            }
             for (const v of new Set(names)) {
               if (v.toLowerCase().startsWith(SELF_PREFIX)) {
                 add({ id: `W232:${widget.id}:${event}:${index}:${v}`, severity: "warning", code: "W232", messageKey: "diag.check.W232", messageArgs: [page.name, name, v], target });
@@ -134,18 +163,48 @@ export function checkProfile(profile: Profile, catalogs: CheckCatalogs, eventLab
   return list;
 }
 
+/** The comparisons of a number variable whose value (or upper bound) is not a number: they can never be true. The rule can still be saved. */
+function invalidNumberCompares(node: ConditionNode, types: ReadonlyMap<string, string> | undefined): ConditionNode[] {
+  if (!types) return [];
+  const compares: ConditionNode[] = [];
+  conditionCompares(node, compares);
+  const bad = (text: string | undefined) => text !== undefined && text.trim() !== "" && Number.isNaN(Number(text));
+  return compares.filter((c) => c.variable && c.operator !== "unavailable" && c.operator !== "available" && types.get(c.variable) === "number" && (bad(c.value) || (c.operator === "between" && bad(c.value2))));
+}
+
 function checkVariables(
   widget: Widget, pageName: string, name: string, base: { profileId: string; pageId: string; widgetId: string },
   known: (name: string) => boolean, missingVariable: (v: string, id: string, page: string, widgetName: string, target: Diagnostic["target"]) => void,
+  noValue: (v: string) => boolean, add: (d: Omit<Diagnostic, "source" | "origin">) => void, types: ReadonlyMap<string, string> | undefined,
 ) {
-  const used = new Set<string>(templateVariables(widget.text));
-  for (const binding of Object.values(widget.dynamic ?? {})) {
-    const names: string[] = [];
-    for (const c of binding.cases) conditionVariables(c.condition, names);
-    names.forEach((n) => used.add(n));
+  const used = new Set<string>();
+  // A variable the widget already handles (a placeholder in the text, an "is unavailable" / "is available" rule, or the widget's own opt-out) is not a problem.
+  const handled = new Set<string>();
+  const optedOut = widget.props?.hideUnavailable === true;
+  for (const { name: v, placeholder } of templateUsage(widget.text)) {
+    used.add(v);
+    if (placeholder || optedOut) handled.add(v);
+  }
+  for (const [property, binding] of Object.entries(widget.dynamic ?? {})) {
+    for (const [caseIndex, c] of binding.cases.entries()) {
+      const compares: ConditionNode[] = [];
+      conditionCompares(c.condition, compares);
+      for (const compare of compares) {
+        if (!compare.variable) continue;
+        used.add(compare.variable);
+        if (compare.operator === "unavailable" || compare.operator === "available") handled.add(compare.variable);
+      }
+      for (const compare of invalidNumberCompares(c.condition, types)) {
+        add({ id: `E212:${widget.id}:${property}:${caseIndex}:${compare.variable}`, severity: "error", code: "E212", messageKey: "diag.check.E212", messageArgs: [pageName, name, compare.variable ?? "", compare.value ?? ""], target: base });
+      }
+    }
   }
   for (const v of used) {
+    if (handled.has(v)) continue;
     if (!known(v)) missingVariable(v, widget.id, pageName, name, base);
+    else if (!v.toLowerCase().startsWith(SELF_PREFIX) && noValue(v)) {
+      add({ id: `W235:${widget.id}:${v}`, severity: "warning", code: "W235", messageKey: "diag.check.W235", messageArgs: [pageName, name, v], target: base });
+    }
   }
 }
 

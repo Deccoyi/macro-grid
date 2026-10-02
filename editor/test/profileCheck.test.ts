@@ -16,7 +16,7 @@ const catalogs = (over: Partial<CheckCatalogs> = {}): CheckCatalogs => ({
     { key: "level", label: "Level", kind: "Number", min: 0, max: 10 },
     { key: "text", label: "Text", kind: "Text", allowVariables: true },
   ] })],
-  variableNames: new Set(["system.cpu"]), liveVariableNames: new Set(["live.one"]), pluginWidgets: [], profileIds: new Set(["p1", "p2"]), ...over,
+  variableNames: new Set(["system.cpu"]), liveVariableNames: new Set(["live.one", "system.cpu"]), pluginWidgets: [], profileIds: new Set(["p1", "p2"]), ...over,
 });
 
 const run = (widgets: Widget[], c = catalogs()) => checkProfile(profile(widgets), c, (e) => e);
@@ -71,7 +71,7 @@ describe("checkProfile", () => {
   });
 
   it("gives a missing user variable its own code", () => {
-    const user = catalogs({ variableNames: new Set(["system.cpu", "user.count"]) });
+    const user = catalogs({ variableNames: new Set(["system.cpu", "user.count"]), liveVariableNames: new Set(["system.cpu", "user.count"]) });
     expect(run([widget({ text: "{user.count} {user.gone}" })], user).map((x) => x.code)).toEqual(["W231"]);
     expect(run([widget({ text: "{USER.Gone}" })], user).map((x) => x.code)).toEqual(["W231"]);
   });
@@ -118,6 +118,51 @@ describe("checkProfile", () => {
       expect(codes([step("core.if", cond("user.gone")), step("core.endIf")])).toEqual(["W231"]);
       expect(codes([step("core.if", cond("some.plugin")), step("core.endIf")])).toEqual(["W230"]);
       expect(codes([step("core.if", cond("self.busy")), step("core.endIf")])).toEqual(["W232"]);
+    });
+  });
+
+  describe("number conditions and variables without a value", () => {
+    const compare = (variable: string, operator: string, value?: string) => ({ kind: "compare", variable, operator, value }) as never;
+    const dyn = (condition: never) => ({ foreground: { cases: [{ condition, result: "#fff" }] } }) as never;
+    const typed = catalogs({ variableNames: new Set(["system.cpu", "n.num", "t.txt"]), liveVariableNames: new Set(["n.num", "t.txt", "system.cpu"]), variableTypes: new Map([["n.num", "number"], ["t.txt", "text"]]) });
+
+    it("flags a number variable compared with text as an error that marks the widget", () => {
+      const d = run([widget({ dynamic: dyn(compare("n.num", ">", "abc")) })], typed);
+      expect(d).toHaveLength(1);
+      expect(d[0]).toMatchObject({ code: "E212", severity: "error", messageArgs: ["Main", "Button_1", "n.num", "abc"], target: { widgetId: "w1" } });
+    });
+
+    it("accepts numbers, empty values, text variables and valueless operators", () => {
+      for (const c of [compare("n.num", ">", "5"), compare("n.num", ">", ""), compare("t.txt", "==", "abc"), compare("n.num", "unavailable")]) {
+        expect(run([widget({ dynamic: dyn(c) })], typed)).toEqual([]);
+      }
+    });
+
+    it("flags an invalid number in an If step too", () => {
+      const step = { type: "core.if", settings: { condition: compare("n.num", "<", "x") } };
+      const d = run([widget({ actions: { press: [step, { type: "core.endIf", settings: {} }] } })], catalogs({ ...typed, actions: [action("core.if"), action("core.endIf")] }));
+      expect(d.map((x) => x.code)).toEqual(["E212"]);
+    });
+
+    it("warns about a described variable that has no value, and stops when the value is back", () => {
+      const without = catalogs({ variableNames: new Set(["obs.streaming"]), liveVariableNames: new Set(["system.cpu"]) });
+      const d = run([widget({ text: "{obs.streaming}" })], without);
+      expect(d).toHaveLength(1);
+      expect(d[0]).toMatchObject({ code: "W235", severity: "warning", messageArgs: ["Main", "Button_1", "obs.streaming"] });
+      expect(run([widget({ text: "{obs.streaming}" })], catalogs({ variableNames: new Set(["obs.streaming"]), liveVariableNames: new Set(["obs.streaming"]) }))).toEqual([]);
+    });
+
+    it("does not report a variable the widget handles itself", () => {
+      const without = catalogs({ variableNames: new Set(["obs.streaming"]), liveVariableNames: new Set(["system.cpu"]) });
+      expect(run([widget({ text: "{obs.streaming|0|--}" })], without)).toEqual([]);
+      expect(run([widget({ text: "x", dynamic: dyn(compare("obs.streaming", "unavailable")) })], without)).toEqual([]);
+      expect(run([widget({ text: "{obs.streaming}", props: { hideUnavailable: true } })], without)).toEqual([]);
+      expect(run([widget({ text: "{gone.var|0|--}" })], without)).toEqual([]);
+    });
+
+    it("stays quiet before any values have arrived", () => {
+      const early = catalogs({ variableNames: new Set(["obs.streaming"]), liveVariableNames: new Set() });
+      expect(run([widget({ text: "{obs.streaming}" })], early)).toEqual([]);
     });
   });
 });

@@ -60,6 +60,8 @@ while the window is visible, so removing or switching off a plugin shows up with
 | `E220` | error | A "Switch page" to a page that is not in the profile, a "Switch profile" to a profile that does not exist, a "Change web page" to a web widget that does not exist. |
 | `W221` | warning | A setting of a described action is not one of its fixed options or is outside `min` / `max`. Fields whose options come from the plugin at run time are not checked. |
 | `W230` | warning | A variable used in a text, a rule or an action text that no plugin provides right now. |
+| `E212` | error | A rule (in a widget or an If step) compares a number variable with a value that is not a number. It marks the widget; the profile can still be saved. |
+| `W235` | warning | A widget uses a variable that is described but has no value right now (plugin off, removed or set to nothing). Not reported when the text has a placeholder (`{name\|0\|--}`), the widget has an "is unavailable" / "is available" rule on it, or the widget opts out of the unavailable look. Clears by itself when the value returns. |
 
 Nothing is changed in the profile: reinstalling the plugin makes the lines disappear at the next refresh, and the buttons work again.
 
