@@ -96,6 +96,8 @@ export function WidgetView({
   const baseCss = useMemo(() => widgetBaseCss(effectiveStyle), [effectiveStyle]);
   const { css: customCss } = useMemo(() => sanitizeWidgetCss(widget.customCss), [widget.customCss]);
   const interactive = !NON_INTERACTIVE_TYPES.has(widget.type);
+  // A widget shown as unavailable does not run its actions: a press only names the missing sources (when the app can show that).
+  const blocked = unavailable !== undefined && unavailable.length > 0 && onUnavailableTap !== undefined;
   const gesture = usePressGesture({ onPress, onRelease, onLongPress, onDoubleTap, haptics });
 
   const text = liveText ?? widget.text ?? "";
@@ -105,7 +107,7 @@ export function WidgetView({
     touchAction: interactive && widget.type !== "web" ? "none" : "auto",
     cursor: interactive ? "pointer" : "default",
     ...style,
-    ...(faded ? { opacity: Number(style?.opacity ?? 1) * UNAVAILABLE_OPACITY } : null),
+    ...(faded ? { opacity: Number(style?.opacity ?? 1) * UNAVAILABLE_OPACITY, ...(blocked ? { filter: "grayscale(1)" } : null) } : null),
   };
 
   const view = (
@@ -116,9 +118,9 @@ export function WidgetView({
       className={className}
       // A web page scrolls and zooms inside its own frame: the widget's press handling must not claim its touches.
       style={hostStyle}
-      onPointerDown={interactive ? gesture.onPointerDown : undefined}
-      onPointerUp={interactive ? gesture.onPointerUp : undefined}
-      onPointerCancel={interactive ? gesture.onPointerCancel : undefined}
+      onPointerDown={blocked ? () => onUnavailableTap(unavailable) : interactive ? gesture.onPointerDown : undefined}
+      onPointerUp={interactive && !blocked ? gesture.onPointerUp : undefined}
+      onPointerCancel={interactive && !blocked ? gesture.onPointerCancel : undefined}
     >
       {widget.type === "web" ? (
         <WebContent
@@ -133,7 +135,7 @@ export function WidgetView({
       ) : widget.type === "plugin-widget" ? (
         <PluginWidgetContent widget={widget} live={pluginLive} />
       ) : (
-        renderContent(widget, text, effectiveStyle, liveValue, onValueChange, onValueCommit)
+        renderContent(widget, text, effectiveStyle, liveValue, blocked ? undefined : onValueChange, blocked ? undefined : onValueCommit)
       )}
     </ShadowHost>
   );
