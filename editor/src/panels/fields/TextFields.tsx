@@ -1,6 +1,6 @@
 import { forwardRef, useRef } from "react";
 import { AlignCenter, AlignLeft, AlignRight, AlignVerticalJustifyCenter, AlignVerticalJustifyEnd, AlignVerticalJustifyStart, Variable } from "lucide-react";
-import type { Align, IconPosition, VAlign, WidgetStyle } from "@macro/renderer";
+import { isTintableIcon, type Align, type IconPosition, type VAlign, type WidgetStyle } from "@macro/renderer";
 import type { VariableInfo } from "../../api/types";
 import { useT } from "../../i18n/I18nContext";
 import { IconPicker, iconToDataUri } from "../IconPicker";
@@ -128,17 +128,22 @@ export function TextFields({ widget, onChange, variableCatalog, showIcon = true 
                   </SelectInput>
                 </Field>
               </FieldGrid>
-              <Field single label={t("fields.text.iconColor")} hint={style.iconName ? undefined : t("fields.text.iconColorHint")}>
-                <ColorField
-                  disabled={!style.iconName}
-                  value={/^#([0-9a-f]{6})$/i.test(style.foreground ?? "") ? style.foreground : "#e6e7ea"}
-                  onChange={async (hex) => {
-                    if (!style.iconName) return;
-                    const uri = await iconToDataUri(style.iconName, hex);
-                    if (uri) set((s) => { s.icon = uri; });
-                  }}
-                />
-              </Field>
+              {isTintableIcon(style.icon) ? (
+                // The icon is painted with the text colour, so the Text color field (and a dynamic text colour) recolours it.
+                <span className="pf-hint">{t("fields.text.iconFollowsText")}</span>
+              ) : (
+                <Field single label={t("fields.text.iconColor")} hint={style.iconName ? t("fields.text.iconColorRepick") : t("fields.text.iconColorHint")}>
+                  <ColorField
+                    disabled={!style.iconName}
+                    value={/^#([0-9a-f]{6})$/i.test(style.foreground ?? "") ? style.foreground : "#e6e7ea"}
+                    onChange={async (hex) => {
+                      if (!style.iconName) return;
+                      const uri = await iconToDataUri(style.iconName, hex);
+                      if (uri) set((s) => { s.icon = uri; });
+                    }}
+                  />
+                </Field>
+              )}
             </>
           )}
         </>

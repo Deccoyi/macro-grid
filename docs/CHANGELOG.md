@@ -4,6 +4,7 @@ New features and fixes in Macro Grid. For technical details, see [CHANGELOG-deve
 
 ## Unreleased
 ### New
+- **Icons follow the text colour:** an icon you pick now takes the colour of the widget's text, so a dynamic text colour recolours the icon too, also when the icon itself changes with a rule. Icons picked earlier keep their colour until you pick them again.
 - **Diagnostics notice missing values and bad numbers:** a widget that uses a variable with no value gets a warning in Diagnostics, unless it has a placeholder or an "is unavailable" rule. A number variable compared with text is reported as an error on the widget; the rule can still be saved.
 - **Unavailable sources show on the phone:** a widget whose variable has no value (for example its plugin is off) fades and shows a small warning mark. Tap the mark to see what is missing.
 - **Switch a plugin off and on:** the Plugins window has an On / Off switch for every plugin.

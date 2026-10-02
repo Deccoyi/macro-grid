@@ -788,6 +788,8 @@ export const en: Record<DictKey, string> = {
   "fields.text.iconPosition.left": "Left of text",
   "fields.text.iconPosition.right": "Right of text",
   "fields.text.iconColor": "Icon color",
+  "fields.text.iconFollowsText": "The icon uses the text color. Change the text color, or make it dynamic, to recolor the icon.",
+  "fields.text.iconColorRepick": "Pick the icon again to let it follow the text color",
   "fields.text.iconColorHint": "This icon was added in an older version — pick it again to change its color",
 
   "notice.dismiss": "Close",
