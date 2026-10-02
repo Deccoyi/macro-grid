@@ -67,9 +67,22 @@ function coloredDataUri(svg: string, color: string, tint = false): string {
   return `data:image/svg+xml;utf8,${encodeURIComponent(tint ? markTintable(withColor) : withColor)}`;
 }
 
+/** A pack icon may be recoloured only when it is a current-colour shape: it uses `currentColor` and sets no other paint
+ * (a fill or stroke value besides none / currentColor, a gradient, a stop colour). Painted under a mask, anything else
+ * would become a flat silhouette or a solid square. */
+export function isCurrentColorShape(svg: string): boolean {
+  if (!/currentColor/i.test(svg)) return false;
+  if (/<(linearGradient|radialGradient|pattern|image)\b/i.test(svg)) return false;
+  for (const m of svg.matchAll(/\b(?:fill|stroke|stop-color|flood-color)\s*[:=]\s*["']?\s*([^"';\s>}]+)/gi)) {
+    const value = m[1]!.toLowerCase();
+    if (value !== "none" && value !== "currentcolor") return false;
+  }
+  return true;
+}
+
 async function pluginIconToDataUri(packId: string, name: string, color: string, tint = false): Promise<string | null> {
   const svg = await fetchPluginSvg(packId, name);
-  return svg ? coloredDataUri(svg, color, tint) : null;
+  return svg ? coloredDataUri(svg, color, tint && isCurrentColorShape(svg)) : null;
 }
 
 /** Resolves a stored icon name (from WidgetStyle.iconName) back into a colored data: URI, regardless of
