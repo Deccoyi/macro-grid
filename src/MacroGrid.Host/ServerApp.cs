@@ -91,7 +91,8 @@ internal static class ServerApp
             await next();
         });
 
-        app.UseWebSockets(new WebSocketOptions { KeepAliveInterval = TimeSpan.FromSeconds(15) });
+        // The timeout makes the server drop a phone whose connection died silently (screen locked, out of range), which ends its session and releases what it held.
+        app.UseWebSockets(new WebSocketOptions { KeepAliveInterval = TimeSpan.FromSeconds(15), KeepAliveTimeout = TimeSpan.FromSeconds(30) });
         app.Map("/ws", async (HttpContext http, ClientHub hub) =>
         {
             if (!http.WebSockets.IsWebSocketRequest)

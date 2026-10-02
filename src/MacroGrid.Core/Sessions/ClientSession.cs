@@ -49,6 +49,10 @@ public sealed class ClientSession(WebSocket socket)
     internal ConcurrentDictionary<string, bool> Busy { get; } = new();
     internal ConcurrentDictionary<string, DateTime> Pressed { get; } = new();
 
+    /// <summary>Widgets this device has pressed and not yet released (widget id to page id). Unlike <see cref="Pressed"/>, which is only a look and lingers after a quick tap,
+    /// this is what the server still owes a release for when the device disappears.</summary>
+    internal ConcurrentDictionary<string, string> Held { get; } = new();
+
     /// <summary>Optional protocol features this client announced in its <c>hello</c> (see <see cref="ClientCapabilities"/>).</summary>
     internal HashSet<string> Capabilities { get; set; } = [];
 
