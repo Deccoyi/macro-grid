@@ -132,7 +132,7 @@ Every field is `stacked` (label row above the control), `inline` (label left, co
 | `Slider` | stacked | no | Track grows, then a 56 px editable value box. |
 | `Bool` | inline | no | Label left, small toggle (28x16) right. A description goes under the label. |
 | `Select` | stacked | yes (2 per row) | Native select with a chevron. Refresh icon in the label row when options load dynamically. |
-| `Segmented` | stacked | yes (2 per row, three options at most) | Selected segment has a 2 px accent line at the bottom. More than three options or long labels: use `Select`. |
+| `Segmented` | stacked | two options: yes (2 per row); three options: no, a row of its own | Selected segment has a 2 px accent line at the bottom. More than three options or long labels: use `Select`. |
 | `Color` | stacked | yes (2 or 3 per row) | Swatch plus mono hex, palette in a portal popover. |
 | `File` | stacked | no | Read-only path (grows) and a Browse button, 6 px apart. |
 | `Variable` | stacked | no | Picker button (grows) and a 28x28 clear button at the end of the row. |
