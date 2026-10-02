@@ -4,6 +4,8 @@ New features and fixes in Macro Grid. For technical details, see [CHANGELOG-deve
 
 ## Unreleased
 ### New
+- **Unavailable sources show on the phone:** a widget whose variable has no value (for example its plugin is off) fades and shows a small warning mark. Tap the mark to see what is missing.
+- **Switch a plugin off and on:** the Plugins window has an On / Off switch for every plugin.
 - **Smaller variable actions:** "Set variable" is now four actions (set a value, change a number, switch True / False, reset). The variable is picked from the variable list, which shows only variables you can change. Buttons made before keep working.
 - **Go back a version:** a plugin's page in Discover can put the previous version back.
 - **Stay on this version:** stops update reminders for one plugin. Safety warnings still appear.
