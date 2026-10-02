@@ -77,6 +77,8 @@ public sealed class SessionDeviceController(ClientSession session, ProfileStore 
             session.PageHistory.Push(session.PageId);
 
         session.PageId = pageId;
+        // The finger that pressed a button of the old page may never report its release (the button is gone from the screen), so nothing stays held across a page change.
+        session.Pressed.Clear();
         await session.SendAsync(MessageTypes.PageShow, new PageShowMessage(pageId));
         await widgetState.SendInitialAsync(session, page, CancellationToken.None);
     }
