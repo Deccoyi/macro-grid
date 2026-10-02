@@ -82,6 +82,7 @@ public sealed class ClientHub(
         }
         finally
         {
+            ReleaseHeld(session, queue.Writer);
             queue.Writer.TryComplete();
             await worker;
             widgetRouter.Forget(session);
@@ -332,8 +333,8 @@ public sealed class ClientHub(
         if (widget is null) return;
 
         // self.pressed is set here, on the receive loop, so a slow action waiting in the queue does not delay it.
-        if (eventName == WidgetEvents.Press) widgetState.PressBegan(session, widget.Id);
-        else if (eventName == WidgetEvents.Release) widgetState.PressEnded(session, widget.Id);
+        if (eventName == WidgetEvents.Press) { session.Held[widget.Id] = msg.PageId; widgetState.PressBegan(session, widget.Id); }
+        else if (eventName == WidgetEvents.Release) { session.Held.TryRemove(widget.Id, out _); widgetState.PressEnded(session, widget.Id); }
 
         var device = new SessionDeviceController(session, profiles, widgetState);
         var context = new ActionContext(session.DeviceId!, msg.PageId, msg.WidgetId, device);
@@ -355,6 +356,20 @@ public sealed class ClientHub(
         {
             await RunAsync(session, widget, eventName, context, msg.PageId);
         });
+    }
+
+    /// <summary>Ends what a device that is gone had still held down: the release of each of its presses runs once, so a "while held" action stops
+    /// and the widget's release actions run instead of waiting for a finger that will never report lifting.</summary>
+    internal void ReleaseHeld(ClientSession session, ChannelWriter<Func<Task>> queue)
+    {
+        foreach (var (widgetId, pageId) in session.Held.ToArray())
+        {
+            if (!session.Held.TryRemove(widgetId, out _) || session.DeviceId is null) continue;
+            var widget = FindWidget(session, pageId, widgetId, out _);
+            if (widget is null) continue;
+            var context = new ActionContext(session.DeviceId, pageId, widgetId, new SessionDeviceController(session, profiles, widgetState));
+            queue.TryWrite(() => RunAsync(session, widget, WidgetEvents.Release, context, pageId));
+        }
     }
 
     /// <summary>Runs one event's action list and reports its failures. A list that takes a while makes the button busy on this device.

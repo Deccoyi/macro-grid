@@ -1,7 +1,9 @@
 using System.Net.WebSockets;
 using System.Text;
+using System.Threading.Channels;
 using MacroGrid.Core.Actions;
 using MacroGrid.Core.Model;
+using MacroGrid.Core.Plugins;
 using MacroGrid.Core.Profiles;
 using MacroGrid.Core.Sessions;
 using MacroGrid.Core.Variables;
@@ -387,5 +389,29 @@ public sealed class SelfVariableTests : IDisposable
 
         foreach (var socket in new[] { phone, browser })
             Assert.Equal("plug.value", (string?)Assert.Single(socket.Sent).Data!["unavailable"]![0]);
+    }
+
+    [Fact]
+    public async Task A_press_still_held_when_the_device_goes_is_released_once()
+    {
+        var handler = new ReleaseAwareHandler();
+        var button = new Widget { Id = "w", Actions = { [WidgetEvents.Press] = [new ActionBinding(handler.Type, [])] } };
+        var profiles = new ProfileStore(_dir);
+        profiles.Save(new Profile { Id = "p", Name = "P", Pages = [new Page { Id = "a", Widgets = [button] }] });
+        using var service = new WidgetStateService(new VariableStore(), new SessionRegistry(), profiles, new ToggleStateStore(), new LayoutSender(new AssetStore()), new WebViewState(),
+            NullLogger<WidgetStateService>.Instance, results: new LastResultStore());
+        var hub = new ClientHub(new SessionRegistry(), profiles, new ActionDispatcher([handler], NullLogger<ActionDispatcher>.Instance), new ToggleStateStore(), service,
+            new LastResultStore(), null!, null!, new PluginStatusRegistry(), null!, null!, NullLogger<ClientHub>.Instance, null!, null!, null!);
+        var session = Identified(new TestSocket());
+        session.Held["w"] = "a"; // the device pressed the button and vanished before it reported the release
+        var queue = Channel.CreateUnbounded<Func<Task>>();
+
+        hub.ReleaseHeld(session, queue.Writer);
+        hub.ReleaseHeld(session, queue.Writer); // a second call finds nothing left to release
+        queue.Writer.Complete();
+        await foreach (var work in queue.Reader.ReadAllAsync()) await work();
+
+        Assert.Equal(["release"], handler.Calls);
+        Assert.Empty(session.Held);
     }
 }
