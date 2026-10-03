@@ -49,3 +49,13 @@ describe("fields that hide their selection range", () => {
     }
   });
 });
+
+describe("remembered copy", () => {
+  it("keeps the last non-empty copy for Paste", async () => {
+    const { copiedText, rememberCopied } = await import("../src/panels/textFieldActions");
+    expect(copiedText()).toBe("");
+    rememberCopied("abc");
+    rememberCopied("");
+    expect(copiedText()).toBe("abc");
+  });
+});
