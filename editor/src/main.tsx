@@ -1,6 +1,7 @@
 import { createRoot } from "react-dom/client";
 import { App } from "./App";
 import { PreferencesProvider } from "./preferences/PreferencesContext";
+import { TextFieldMenu } from "./panels/TextFieldMenu";
 import { suppressBrowserMenu } from "./suppressBrowserMenu";
 import "./theme.css";
 import { HelpWindow } from "./windows/HelpWindow";
@@ -34,5 +35,6 @@ suppressBrowserMenu();
 createRoot(document.getElementById("root")!).render(
   <PreferencesProvider>
     <Root />
+    <TextFieldMenu />
   </PreferencesProvider>,
 );
