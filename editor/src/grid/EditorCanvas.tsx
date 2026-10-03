@@ -196,7 +196,7 @@ export function EditorCanvas({ page, selectedIds, onSelect, onToggleSelect, onRe
                 <div
                   title={problemWidgets.get(widget.id)?.texts.join(" · ")}
                   onPointerDown={(e) => { e.stopPropagation(); if (!isSelected) onSelect([widget.id]); }}
-                  style={{ position: "absolute", top: 3, right: 3, display: "flex", color: problemWidgets.get(widget.id)?.level === "error" ? "var(--ms-danger)" : "var(--ms-warning, #facc15)", background: "var(--ms-bg-surface)", borderRadius: "50%" }}
+                  style={{ position: "absolute", top: 3, right: 3, display: "flex", color: problemWidgets.get(widget.id)?.level === "error" ? "var(--ms-danger)" : "var(--ms-warning)", background: "var(--ms-bg-surface)", borderRadius: "50%" }}
                 >
                   {problemWidgets.get(widget.id)?.level === "error" ? <CircleAlert size={14} strokeWidth={2.25} /> : <TriangleAlert size={14} strokeWidth={2.25} />}
                 </div>
