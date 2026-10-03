@@ -1,6 +1,7 @@
 import { createRoot } from "react-dom/client";
 import { App } from "./App";
 import { PreferencesProvider } from "./preferences/PreferencesContext";
+import { suppressBrowserMenu } from "./suppressBrowserMenu";
 import "./theme.css";
 import { HelpWindow } from "./windows/HelpWindow";
 import { PairingWindow } from "./windows/PairingWindow";
@@ -27,6 +28,8 @@ function Root() {
   }
   return <App />;
 }
+
+suppressBrowserMenu();
 
 createRoot(document.getElementById("root")!).render(
   <PreferencesProvider>
