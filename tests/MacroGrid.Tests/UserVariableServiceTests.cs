@@ -35,6 +35,32 @@ public sealed class UserVariableServiceTests : IDisposable
     }
 
     [Fact]
+    public void Giving_an_empty_number_its_start_value_later_puts_it_into_the_store()
+    {
+        var service = New();
+        MustReplace(service, Num("ssss")); // saved while the start value was still empty
+        Assert.Null(_store.Get("user.ssss"));
+
+        MustReplace(service, Num("ssss", 1));
+
+        Assert.Equal(1.0, _store.Get("user.ssss"));
+    }
+
+    [Fact]
+    public void Editing_the_start_value_applies_it_but_a_kept_running_value_is_left_alone()
+    {
+        var service = New();
+        MustReplace(service, Num("a", 1), Num("b", 1, keep: true));
+        service.Add("user.a", 5);
+        service.Add("user.b", 5);
+
+        MustReplace(service, Num("a", 2), Num("b", 2, keep: true));
+
+        Assert.Equal(2.0, _store.Get("user.a"));
+        Assert.Equal(6.0, _store.Get("user.b"));
+    }
+
+    [Fact]
     public void A_number_without_a_start_value_is_unavailable()
     {
         var service = New();
