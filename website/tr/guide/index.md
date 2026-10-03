@@ -29,15 +29,15 @@ Devamı: [Cihaz eşleştirme](/tr/guide/pairing).
 
 1. **Araç Kutusu**'nda **Buton**'a tıklayın. Buton, ızgaranın boş bir hücresine yerleşir.
 2. Butonu seçin ve **Metin** alanını doldurun, örneğin `CPU {system.cpu|0}%`. `{...}` kısmı canlı bir değerdir.
-3. **Aksiyonlar** bölümünde **Basınca** olayı için **+ Aksiyon ekle**'ye tıklayıp **Kısayol**'u seçin. Alana tıklayın ve tuş kombinasyonuna basın, örneğin `Ctrl+Shift+S`.
+3. **Eylemler** bölümünde **Basınca** olayı için **+ Eylem ekle**'ye tıklayıp **Kısayol**'u seçin. Alana tıklayın ve tuş kombinasyonuna basın, örneğin `Ctrl+Shift+S`.
 4. **Kaydet**'e tıklayın. Telefon hemen güncellenir. Butona basın, bilgisayar kısayolu alır.
 
-::: tip İpucu: Birden fazla aksiyon, tek makro
-Aynı olaya daha fazla aksiyon ekleyin, sırayla çalışırlar. Bir program zamana ihtiyaç duyuyorsa aralarına **Gecikme** koyun.
+::: tip İpucu: Birden fazla eylem, tek makro
+Aynı olaya daha fazla eylem ekleyin, sırayla çalışırlar. Bir program zamana ihtiyaç duyuyorsa aralarına **Gecikme** koyun.
 :::
 
 ## Sırada ne var
 
-- Araçları öğrenin: [Düzenleyici](/tr/guide/editor), [Widget'lar](/tr/guide/widgets), [Aksiyonlar](/tr/guide/actions).
+- Araçları öğrenin: [Düzenleyici](/tr/guide/editor), [Widget'lar](/tr/guide/widgets), [Eylemler](/tr/guide/actions).
 - Bir öğretici izleyin: [ses slider'ı](/tr/tutorials/volume-slider) veya [OBS ile yayın deck'i](/tr/tutorials/obs-deck).
 - Bir şey çalışmıyor mu? [Sorun giderme](/tr/guide/troubleshooting).

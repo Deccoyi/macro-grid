@@ -24,8 +24,8 @@ features:
     details: Düzenleyicide widget'ları sürükleyin, renkler, simgeler ve animasyonla biçimlendirin, sonucu canlı önizlemede kontrol edin.
     link: /tr/guide/editor
   - icon: { src: /icons/keyboard.svg }
-    title: Aksiyonlar ve makrolar
-    details: Kısayollar, metin yazma, program ve web sitesi açma, gecikmeler, ses, sayfa ve profil değiştirme. Bir butona birkaç aksiyon bağlayınca makro olur.
+    title: Eylemler ve makrolar
+    details: Kısayollar, metin yazma, program ve web sitesi açma, gecikmeler, ses, sayfa ve profil değiştirme. Bir butona birkaç eylem bağlayınca makro olur.
     link: /tr/guide/actions
   - icon: { src: /icons/activity.svg }
     title: Canlı değerler ve kurallar

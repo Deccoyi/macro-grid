@@ -1,6 +1,6 @@
 # Kısayol tuş adları
 
-**Kısayol tuşu** aksiyonunda normalde alana tıklar ve tuşlara basarsınız. Saklanan metin, `+` ile birleştirilmiş tuşlardır, örneğin:
+**Kısayol tuşu** eyleminde normalde alana tıklar ve tuşlara basarsınız. Saklanan metin, `+` ile birleştirilmiş tuşlardır, örneğin:
 
 ```text
 ctrl+shift+s

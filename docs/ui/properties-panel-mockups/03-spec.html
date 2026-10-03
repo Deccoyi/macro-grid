@@ -55,7 +55,7 @@ li b{color:var(--tx);font-weight:600}
 <tr><td><code>--pf-section-head</code></td><td class="v">28</td><td>Katlanır başlık yüksekliği, 13 px / 600, caret 14 px, başlık–içerik arası 8.</td></tr>
 <tr><td><code>--pf-gap-field</code></td><td class="v">12</td><td>Dikeyde alan ile alan arası (şu an 10). Her yerde tek değer.</td></tr>
 <tr><td><code>--pf-gap-col</code></td><td class="v">8</td><td>Yan yana alanlar (2'li / 3'lü grid) arası.</td></tr>
-<tr><td><code>--pf-label-h</code></td><td class="v">18</td><td>Etiket satırı yüksekliği, 12 px, <code>--ms-text-secondary</code>. Sağdaki aksiyonlar (Değişken, Dinamik, Yenile) bu satırda, 18 px yüksekliğinde.</td></tr>
+<tr><td><code>--pf-label-h</code></td><td class="v">18</td><td>Etiket satırı yüksekliği, 12 px, <code>--ms-text-secondary</code>. Sağdaki eylemler (Değişken, Dinamik, Yenile) bu satırda, 18 px yüksekliğinde.</td></tr>
 <tr><td><code>--pf-gap-label</code> / <code>--pf-gap-hint</code></td><td class="v">4 / 4</td><td>Etiket–kontrol ve kontrol–ipucu arası. İpucu 11 px / 1.4.</td></tr>
 <tr><td><code>--pf-ctl-h</code></td><td class="v">28</td><td>Input, select, color, segmented, button, file satırı: hepsi aynı yükseklik. Metin alanı (textarea) hariç. İç yatay boşluk 8.</td></tr>
 <tr><td><code>--pf-group-h</code></td><td class="v">16</td><td>Grup etiketi (10.5 px, büyük harf). Üstünde ek 4 (toplam 16), ilk grupta yok.</td></tr>
@@ -77,7 +77,7 @@ li b{color:var(--tx);font-weight:600}
 <div class="band lab" style="height:36px">sonraki alan</div>
 </div>
 <div class="leg" style="padding-top:24px">
-<div style="height:36px"><b>18</b>etiket (solda ad, sağda aksiyon)</div>
+<div style="height:36px"><b>18</b>etiket (solda ad, sağda eylem)</div>
 <div style="height:8px;border-color:var(--mg)"></div>
 <div style="height:56px;border-color:var(--gr)"><b>28</b>kontrol, sabit</div>
 <div style="height:8px;border-color:var(--mg)"></div>
@@ -108,18 +108,18 @@ li b{color:var(--tx);font-weight:600}
 </div>
 
 <div class="sec">
-<h2><span>04</span>Gruplama ve aksiyonlar</h2>
+<h2><span>04</span>Gruplama ve eylemler</h2>
 <div style="display:grid;grid-template-columns:1fr 1fr;gap:32px">
 <ul>
-<li><b>Sıra her widget için aynı:</b> Ad → (kimlik / bildirimler) → Görünüm → İçerik veya Widget ayarları → Veri → Aksiyonlar → Özel CSS (kapalı).</li>
+<li><b>Sıra her widget için aynı:</b> Ad → (kimlik / bildirimler) → Görünüm → İçerik veya Widget ayarları → Veri → Eylemler → Özel CSS (kapalı).</li>
 <li><b>Gruplar:</b> uzun ayar listesinde <code>SectionLabel</code> ile Kaynak / Görünüm / Bağlantı gibi bölün. Bir grupta 6'dan fazla alan olmasın.</li>
 <li><b>Bildirim bandı:</b> sadece kimlik bölümünde ve ilgili alanın hemen üstünde. Aynı anda en çok 2.</li>
 <li><b>Dinamik (şimşek) simgesi:</b> etiket satırının sağında, 18 px. Bağlıysa turuncu dolu.</li>
 </ul>
 <ul>
 <li><b>Olay hücreleri:</b> 4 sütun, kare, 6 aralık. Özel widget 4'ten fazla olay bildirirse alt satıra akar; sütun sayısı hep 4 kalır.</li>
-<li><b>Aksiyon kartı:</b> başlık 32 (numara + ad + kaldır), gövde 8 iç boşluk, alanlar 12 aralık. Kartlar arası 8.</li>
-<li><b>"Aksiyon ekle":</b> ghost, 24 px, sola dayalı, sol kenar 6 negatif marj ile yazı hizası korunur.</li>
+<li><b>Eylem kartı:</b> başlık 32 (numara + ad + kaldır), gövde 8 iç boşluk, alanlar 12 aralık. Kartlar arası 8.</li>
+<li><b>"Eylem ekle":</b> ghost, 24 px, sola dayalı, sol kenar 6 negatif marj ile yazı hizası korunur.</li>
 <li><b>Uzun etiket:</b> iki satıra bölme, kes (ellipsis) ve <code>title</code> ver.</li>
 </ul>
 </div>
@@ -156,7 +156,7 @@ li b{color:var(--tx);font-weight:600}
 .pf-hint      { font-size: 11px; line-height: 1.4;
                 color: var(--ms-text-secondary); }</pre>
 <ul style="font-size:12.5px">
-<li><b>controls.tsx:</b> <code>Field</code> (etiket, sağ aksiyon yuvası, ipucu, hata), <code>FieldGrid cols=2|3</code>, <code>Switch</code>, <code>NumberInput unit</code>, <code>RangeInput</code> bileşenleri. Dağınık <code>style={{display:"grid"…}}</code> blokları bunlara taşınır.</li>
+<li><b>controls.tsx:</b> <code>Field</code> (etiket, sağ eylem yuvası, ipucu, hata), <code>FieldGrid cols=2|3</code>, <code>Switch</code>, <code>NumberInput unit</code>, <code>RangeInput</code> bileşenleri. Dağınık <code>style={{display:"grid"…}}</code> blokları bunlara taşınır.</li>
 <li><b>Inspector.tsx:</b> <code>hr.sep</code> + <code>gap:14</code> yerine <code>.pf-section</code>; üstte başlık satırı 36 px.</li>
 <li><b>SchemaForm.tsx:</b> tüm tipler <code>Field</code> üzerinden; Bool → <code>Switch</code>; Number → birimli; Slider → yazılabilir değer; Variable temizle düğmesi satır sonuna; List satırı 32.</li>
 <li><b>PluginWidgetFields.tsx:</b> seçenek onay kutuları → <code>Switch</code> satırları (açıklama altta).</li>
