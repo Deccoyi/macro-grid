@@ -82,13 +82,7 @@ public sealed class UserVariableService : IVariableCatalogSource, IHostedService
                 _values.Remove(name);
                 _store.Remove(UserVariables.Prefix + name);
             }
-            foreach (var v in normalized)
-            {
-                // A new variable gets its start value now. So does one that has no value yet (an earlier save of the list left it empty), and one
-                // whose start value was edited, unless it keeps its value between runs: that one is a running count and is left alone.
-                var changed = previous.TryGetValue(v.Name, out var before) && !Equals(before.Initial, v.Initial);
-                if (!_values.TryGetValue(v.Name, out var current) || current is null || (changed && !v.Keep)) Publish(v, v.Initial);
-            }
+            foreach (var v in normalized) Settle(v, previous.GetValueOrDefault(v.Name), restored: null);
             WriteFile(_definitionsPath, new DefinitionsFile(1, normalized));
             ScheduleValueSave();
         }
@@ -197,6 +191,18 @@ public sealed class UserVariableService : IVariableCatalogSource, IHostedService
         return UserVariables.IsUserName(fullName) && _definitions.TryGetValue(fullName[UserVariables.Prefix.Length..], out definition!);
     }
 
+    /// <summary>The one place that decides what a definition's variable holds after the list was loaded or replaced, so startup and a change made
+    /// while the server runs cannot drift apart. <paramref name="before"/> is the definition it replaces (null for a new one at startup or a new
+    /// name); <paramref name="restored"/> is a kept value read from the values file. A new variable, one without a value yet and one whose start
+    /// value was edited start from the start value; a kept variable keeps its running value when only the start value was edited.</summary>
+    private void Settle(UserVariable def, UserVariable? before, object? restored)
+    {
+        _values.TryGetValue(def.Name, out var current);
+        var value = restored
+            ?? (before is null || current is null || (!Equals(before.Initial, def.Initial) && !def.Keep) ? def.Initial : current);
+        Publish(def, value);
+    }
+
     private void Publish(UserVariable def, object? value)
     {
         _values[def.Name] = value;
@@ -228,10 +234,10 @@ public sealed class UserVariableService : IVariableCatalogSource, IHostedService
             var def = new UserVariable(v.Name, v.Type, initial, v.Keep, PlainText.Clean(v.Description, UserVariables.MaxDescriptionLength));
             _definitions[def.Name] = def;
             _order.Add(def.Name);
-            var current = initial;
-            if (def.Keep && values is not null && values.TryGetValue(def.Name, out var saved) && UserVariables.TryConvert(def.Type, saved, out var restored))
-                current = restored;
-            Publish(def, current);
+            object? restored = null;
+            if (def.Keep && values is not null && values.TryGetValue(def.Name, out var saved) && !UserVariables.TryConvert(def.Type, saved, out restored))
+                restored = null;
+            Settle(def, before: null, restored);
         }
     }
 

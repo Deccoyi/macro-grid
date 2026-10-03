@@ -61,6 +61,19 @@ public sealed class UserVariableServiceTests : IDisposable
     }
 
     [Fact]
+    public void Renaming_or_deleting_a_variable_leaves_no_old_value_behind()
+    {
+        var service = New();
+        MustReplace(service, Num("old", 3), Num("gone", 4));
+
+        MustReplace(service, Num("new", 3)); // "old" renamed, "gone" deleted
+
+        Assert.Equal(3.0, _store.Get("user.new"));
+        Assert.DoesNotContain("user.old", _store.Snapshot().Keys);
+        Assert.DoesNotContain("user.gone", _store.Snapshot().Keys);
+    }
+
+    [Fact]
     public void A_number_without_a_start_value_is_unavailable()
     {
         var service = New();
