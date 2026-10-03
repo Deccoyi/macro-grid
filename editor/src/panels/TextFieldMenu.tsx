@@ -1,15 +1,15 @@
 import { useEffect, useState } from "react";
 import { useT } from "../i18n/I18nContext";
 import { ContextMenu, type ContextMenuEntry } from "./ContextMenu";
-import { fieldState, selectedText, textFieldAt, type FieldState, type TextField } from "./textFieldActions";
+import { copiedText, fieldState, rememberCopied, selectedText, textFieldAt, type FieldState, type TextField } from "./textFieldActions";
 
 interface Open {
   x: number;
   y: number;
   field: TextField;
   state: FieldState;
-  /** False only when the clipboard was read and is empty; an unreadable clipboard leaves Paste on. */
-  clipboardHasText: boolean;
+  /** What reading the system clipboard said: its text, nothing in it, or a refusal (the embedded view never allows it). */
+  clipboard: "text" | "empty" | "refused";
 }
 
 /** The editor's own right-click menu for text fields (Undo, Redo, Cut, Copy, Paste, Select all), in place of the browser's. Mounted once for the
@@ -24,14 +24,25 @@ export function TextFieldMenu() {
       const field = textFieldAt(e.target);
       if (!field) return;
       e.preventDefault();
-      setOpen({ x: e.clientX, y: e.clientY, field, state: fieldState(field), clipboardHasText: true });
+      setOpen({ x: e.clientX, y: e.clientY, field, state: fieldState(field), clipboard: "refused" });
       navigator.clipboard?.readText().then(
-        (text) => setOpen((current) => (current && current.field === field ? { ...current, clipboardHasText: text.length > 0 } : current)),
+        (text) => setOpen((current) => (current && current.field === field ? { ...current, clipboard: text.length > 0 ? "text" : "empty" } : current)),
         () => {},
       );
     };
+    // Every Copy and Cut in the editor (menu or Ctrl+C / Ctrl+X) is remembered, for Paste when the system clipboard cannot be read.
+    const onCopy = (e: ClipboardEvent) => {
+      const field = textFieldAt(e.target);
+      rememberCopied(field ? selectedText(field) : (window.getSelection()?.toString() ?? ""));
+    };
     document.addEventListener("contextmenu", onContextMenu);
-    return () => document.removeEventListener("contextmenu", onContextMenu);
+    document.addEventListener("copy", onCopy);
+    document.addEventListener("cut", onCopy);
+    return () => {
+      document.removeEventListener("contextmenu", onContextMenu);
+      document.removeEventListener("copy", onCopy);
+      document.removeEventListener("cut", onCopy);
+    };
   }, []);
 
   if (!open) return null;
@@ -42,17 +53,23 @@ export function TextFieldMenu() {
   };
 
   const copyText = async () => {
-    if (!document.execCommand("copy")) await navigator.clipboard?.writeText(selectedText(field)).catch(() => {});
-  };
-  const paste = async () => {
-    try {
-      const text = await navigator.clipboard.readText();
-      // insertText keeps the field's undo history and fires the usual input event, so the form sees the change.
-      if (text && !document.execCommand("insertText", false, text)) document.execCommand("paste");
-    } catch {
-      document.execCommand("paste"); // refused here: nothing more to do, the Ctrl+V shortcut still works in the field
+    if (!document.execCommand("copy")) {
+      rememberCopied(selectedText(field));
+      await navigator.clipboard?.writeText(selectedText(field)).catch(() => {});
     }
   };
+  const paste = async () => {
+    // insertText keeps the field's undo history and fires the usual input event, so the form sees the change.
+    const insert = (text: string) => text.length > 0 && document.execCommand("insertText", false, text);
+    try {
+      if (insert(await navigator.clipboard.readText())) return;
+    } catch {
+      // The embedded view refuses clipboard reads: use what was last copied inside the editor.
+    }
+    insert(copiedText());
+  };
+  // Only when the clipboard cannot be read and nothing was copied here is Paste unavailable; Ctrl+V still works natively in the field.
+  const pasteNeedsShortcut = open.clipboard === "refused" && copiedText().length === 0;
   const selectAll = () => {
     if (field instanceof HTMLInputElement || field instanceof HTMLTextAreaElement) field.select();
     else document.execCommand("selectAll");
@@ -64,7 +81,7 @@ export function TextFieldMenu() {
     { divider: true },
     { label: t("edit.cut"), disabled: !state.editable || !state.hasSelection, onSelect: run(() => void document.execCommand("cut")) },
     { label: t("edit.copy"), disabled: !state.hasSelection, onSelect: run(copyText) },
-    { label: t("edit.paste"), disabled: !state.editable || !open.clipboardHasText, onSelect: run(paste) },
+    { label: pasteNeedsShortcut ? `${t("edit.paste")} (Ctrl+V)` : t("edit.paste"), disabled: !state.editable || open.clipboard === "empty" || pasteNeedsShortcut, onSelect: run(paste) },
     { divider: true },
     { label: t("edit.selectAll"), disabled: !state.hasText, onSelect: run(selectAll) },
   ];
