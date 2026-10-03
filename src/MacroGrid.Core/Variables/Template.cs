@@ -17,7 +17,7 @@ public sealed class Template
     private readonly object[] _parts; // string (literal) or VariableRef
     public IReadOnlyList<string> VariableNames { get; }
 
-    /// <summary>The variables that have no placeholder: while one has no value the text shows a hole, so the widget counts as having an unavailable source.</summary>
+    /// <summary>The variables that have no placeholder of their own: an action step reading one with no value cannot run properly.</summary>
     public IReadOnlyList<string> VariablesWithoutPlaceholder { get; }
 
     /// <summary>The editor saves every intermediate text of a widget, so the cache is cleared when it grows past this
@@ -38,7 +38,10 @@ public sealed class Template
         VariablesWithoutPlaceholder = parts.OfType<VariableRef>().Where(v => v.Placeholder is null).Select(v => v.Name).Distinct().ToList();
     }
 
-    public string Render(IVariableStore store)
+    /// <summary>What a widget's text shows for a variable that has no value and no placeholder of its own. Action fields leave it empty instead.</summary>
+    public const string MissingValue = "n/a";
+
+    public string Render(IVariableStore store, string missing = "")
     {
         if (_parts.Length == 0) return "";
         if (_parts is [string only]) return only; // fast path: no variables at all
@@ -51,6 +54,7 @@ public sealed class Template
             {
                 var value = store.Get(v.Name);
                 if (value is null && v.Placeholder is not null) sb.Append(v.Placeholder);
+                else if (value is null) sb.Append(missing);
                 else sb.Append(FormatValue(value, v.Format));
             }
         }
