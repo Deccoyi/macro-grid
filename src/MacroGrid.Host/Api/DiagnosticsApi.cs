@@ -33,8 +33,7 @@ internal static class DiagnosticsApi
                 ClientHub.ServerVersion, RuntimeInformation.OSDescription, RuntimeInformation.FrameworkDescription, preferences.Get().Language,
                 plugins.Plugins.Select(p => new LogExportPlugin(p.Id, p.Name, p.Version, p.Status.ToString())).ToList(),
                 all.Count, all.Sum(p => p.Pages.Count), devices.All.Count,
-                problems.Snapshot().Select(p => new ExportLine(
-                    p.Severity.ToString().ToLowerInvariant(), p.Code, p.Message, p.SourceName, p.Count, FirstAt: p.FirstAt, LastAt: p.LastAt)).ToList(),
+                problems.Snapshot().Select(ExportLine.From).ToList(),
                 now);
 
             // Built off the request thread: reading and redacting up to 10 MB of text takes a moment. The Save dialog comes last.
