@@ -435,6 +435,7 @@ export const en: Record<DictKey, string> = {
   "errorHelp.P122": "The plugin failed and was switched off. Switch it on again in the Plugins window after updating it; the logs show what failed.",
   "errorHelp.P130": "One call of a plugin (an action or a timer) failed. If it keeps happening, check the plugin's settings or update it.",
   "errorHelp.P131": "A button was pressed but one of its actions is not available, because its plugin was removed or switched off. Install or switch the plugin on again, or choose another action for the button.",
+  "errorHelp.P132": "An action of this button failed when it ran. Check the action's settings and the thing it controls. The line goes away the next time the button runs without a failure.",
   "errorHelp.P140": "A custom widget of the plugin was refused because its files or settings are not valid. The rest of the plugin works. Update the plugin.",
   "errorHelp.P141": "A custom widget asked its plugin for something and the call failed or took too long. Try again; update the plugin if it keeps happening.",
   "errorHelp.P142": "A plugin sent its widgets more updates than they can take, so some were dropped. The widget may show old data until the next update.",

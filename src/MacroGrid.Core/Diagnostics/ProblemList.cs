@@ -55,6 +55,8 @@ public static class ProblemCodes
     public const string FilesChanged = "P114";
     /// <summary>A press ran an action whose type is not available (its plugin was removed or is switched off). Cleared when a plugin loads.</summary>
     public const string ActionMissing = "P131";
+    /// <summary>An action of a press failed (not a missing type). One line per widget and event; cleared when that event next runs without a failure.</summary>
+    public const string ActionFailed = "P132";
     /// <summary>A plugin reported a problem itself (<c>IPluginDiagnostics</c>).</summary>
     public const string PluginReported = "P150";
     /// <summary>A step of an automation rule failed. Cleared when the rule next runs without a failure.</summary>

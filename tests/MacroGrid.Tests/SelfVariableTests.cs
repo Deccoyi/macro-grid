@@ -2,6 +2,7 @@ using System.Net.WebSockets;
 using System.Text;
 using System.Threading.Channels;
 using MacroGrid.Core.Actions;
+using MacroGrid.Core.Diagnostics;
 using MacroGrid.Core.Model;
 using MacroGrid.Core.Plugins;
 using MacroGrid.Core.Profiles;
@@ -417,7 +418,7 @@ public sealed class SelfVariableTests : IDisposable
         using var service = new WidgetStateService(new VariableStore(), new SessionRegistry(), profiles, new ToggleStateStore(), new LayoutSender(new AssetStore()), new WebViewState(),
             NullLogger<WidgetStateService>.Instance, results: new LastResultStore());
         var hub = new ClientHub(new SessionRegistry(), profiles, new ActionDispatcher([handler], NullLogger<ActionDispatcher>.Instance), new ToggleStateStore(), service,
-            new LastResultStore(), null!, null!, new PluginStatusRegistry(), null!, null!, NullLogger<ClientHub>.Instance, null!, null!, null!);
+            new LastResultStore(), null!, null!, null!, null!, NullLogger<ClientHub>.Instance, null!, null!, new ProblemList());
         var session = Identified(new TestSocket());
         session.Held["w"] = "a"; // the device pressed the button and vanished before it reported the release
         var queue = Channel.CreateUnbounded<Func<Task>>();
@@ -429,5 +430,49 @@ public sealed class SelfVariableTests : IDisposable
 
         Assert.Equal(["release"], handler.Calls);
         Assert.Empty(session.Held);
+    }
+
+    private sealed class FailingHandler(bool fail) : IActionHandler
+    {
+        public bool Fail { get; set; } = fail;
+        public string Type => "test.failing";
+        public string DisplayName => "Failing";
+        public Task ExecuteAsync(ActionContext context, System.Text.Json.Nodes.JsonObject settings, CancellationToken cancellationToken) =>
+            Fail ? throw new InvalidOperationException("boom") : Task.CompletedTask;
+    }
+
+    [Fact]
+    public async Task A_failed_action_is_one_counted_Error_List_line_that_the_next_success_removes()
+    {
+        var handler = new FailingHandler(true);
+        var button = new Widget { Id = "w", Name = "Btn", Actions = { [WidgetEvents.Release] = [new ActionBinding(handler.Type, [])] } };
+        var profiles = new ProfileStore(_dir);
+        profiles.Save(new Profile { Id = "p", Name = "P", Pages = [new Page { Id = "a", Name = "Main", Widgets = [button] }] });
+        using var service = new WidgetStateService(new VariableStore(), new SessionRegistry(), profiles, new ToggleStateStore(), new LayoutSender(new AssetStore()), new WebViewState(),
+            NullLogger<WidgetStateService>.Instance, results: new LastResultStore());
+        var problems = new ProblemList();
+        var hub = new ClientHub(new SessionRegistry(), profiles, new ActionDispatcher([handler], NullLogger<ActionDispatcher>.Instance), new ToggleStateStore(), service,
+            new LastResultStore(), null!, null!, null!, null!, NullLogger<ClientHub>.Instance, new PluginLocalizer(() => "en"), null!, problems);
+
+        async Task ReleaseOnce()
+        {
+            var session = Identified(new TestSocket());
+            session.Held["w"] = "a";
+            var queue = Channel.CreateUnbounded<Func<Task>>();
+            hub.ReleaseHeld(session, queue.Writer);
+            queue.Writer.Complete();
+            await foreach (var work in queue.Reader.ReadAllAsync()) await work();
+        }
+
+        await ReleaseOnce();
+        await ReleaseOnce();
+        var line = Assert.Single(problems.Snapshot());
+        Assert.Equal(ProblemCodes.ActionFailed, line.Code);
+        Assert.Equal(2, line.Count);
+        Assert.Equal("w", line.Target?.WidgetId);
+
+        handler.Fail = false;
+        await ReleaseOnce();
+        Assert.Empty(problems.Snapshot());
     }
 }

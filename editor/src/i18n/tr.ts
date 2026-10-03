@@ -438,6 +438,7 @@ export const tr = {
   "errorHelp.P122": "Plugin hata verdi ve kapatıldı. Güncelledikten sonra Plugin'ler penceresinden tekrar açın; günlükler neyin hata verdiğini gösterir.",
   "errorHelp.P130": "Bir plugin çağrısı (bir eylem veya zamanlayıcı) başarısız oldu. Sürekli olursa plugin ayarlarını kontrol edin veya güncelleyin.",
   "errorHelp.P131": "Bir düğmeye basıldı ama eylemlerinden biri kullanılamıyor; plugin'i kaldırılmış veya kapatılmış. Plugin'i kurun veya açın, ya da düğme için başka bir eylem seçin.",
+  "errorHelp.P132": "Bu düğmenin bir eylemi çalışırken başarısız oldu. Eylemin ayarlarına ve kontrol ettiği şeye bakın. Düğme bir sonraki sefer hatasız çalışınca bu satır kalkar.",
   "errorHelp.P140": "Plugin'in özel bir widget'ı dosyaları veya ayarları geçersiz olduğu için reddedildi. Plugin'in geri kalanı çalışır. Plugin'i güncelleyin.",
   "errorHelp.P141": "Özel bir widget plugin'inden bir şey istedi ve çağrı başarısız oldu veya çok uzun sürdü. Tekrar deneyin; sürekli olursa plugin'i güncelleyin.",
   "errorHelp.P142": "Bir plugin widget'larına alabileceklerinden fazla güncelleme gönderdi, bazıları atıldı. Widget bir sonraki güncellemeye kadar eski veriyi gösterebilir.",
