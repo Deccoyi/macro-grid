@@ -62,4 +62,20 @@ public class ActionUnavailableTests
         optOut.Props = new JsonObject { ["hideUnavailable"] = true };
         Assert.Empty(dispatcher.UnavailableSources(optOut, new VariableStore()));
     }
+
+    [Fact]
+    public void A_deleted_page_profile_or_web_widget_target_is_an_unavailable_source()
+    {
+        var dispatcher = new ActionDispatcher([new PageAction(), new ProfileAction()], NullLogger<ActionDispatcher>.Instance);
+        var store = new VariableStore();
+        var profile = new Profile { Id = "p", Name = "P", Pages = [new Page { Id = "home", Name = "Home" }] };
+        Widget With(string type, JsonObject settings) => new() { Actions = { [WidgetEvents.Press] = [new ActionBinding(type, settings)] } };
+
+        Assert.Empty(dispatcher.UnavailableSources(With(PageAction.TypeId, PageAction.Goto("home")), store, profile));
+        Assert.Equal(["deleted page"], dispatcher.UnavailableSources(With(PageAction.TypeId, PageAction.Goto("gone")), store, profile));
+        Assert.Empty(dispatcher.UnavailableSources(With(PageAction.TypeId, PageAction.Next()), store, profile));
+        Assert.Empty(dispatcher.UnavailableSources(With(PageAction.TypeId, PageAction.Goto("gone")), store)); // no profile known: no judgement
+        Assert.Equal(["deleted profile"], dispatcher.UnavailableSources(With(ProfileAction.TypeId, ProfileAction.Settings("x")), store, profile, _ => false));
+        Assert.Empty(dispatcher.UnavailableSources(With(ProfileAction.TypeId, ProfileAction.Settings("x")), store, profile, _ => true));
+    }
 }

@@ -37,8 +37,9 @@ public sealed class ActionDispatcher(IEnumerable<IActionHandler> handlers, ILogg
     }
 
     /// <summary>What the widget's action steps need and cannot get now: an action type that is not registered (its plugin is off or gone), named by its type id,
-    /// and variables read by a step's text fields that have no value (and no placeholder). Empty when the widget opts out with <c>props.hideUnavailable</c>.</summary>
-    public IReadOnlyList<string> UnavailableSources(Widget widget, IVariableStore store)
+    /// variables read by a step's text fields that have no value (and no placeholder), and, when the widget's <paramref name="profile"/> is given, a page, profile or web widget
+    /// the step points to that was deleted. Empty when the widget opts out with <c>props.hideUnavailable</c>.</summary>
+    public IReadOnlyList<string> UnavailableSources(Widget widget, IVariableStore store, Profile? profile = null, Func<string, bool>? profileExists = null)
     {
         if (widget.Props?["hideUnavailable"]?.GetValueKind() == JsonValueKind.True) return [];
         var names = new List<string>();
@@ -46,10 +47,28 @@ public sealed class ActionDispatcher(IEnumerable<IActionHandler> handlers, ILogg
         {
             if (ActionFlow.IsLogic(binding.Type)) continue;
             if (!_handlers.TryGetValue(binding.Type, out var handler)) { names.Add(binding.Type); continue; }
+            if (MissingTarget(binding, profile, profileExists) is { } missing) names.Add(missing);
             foreach (var name in ReadVariables(handler, binding.Settings, withoutPlaceholderOnly: true))
                 if (!SelfVariables.IsSelfName(name) && store.Get(name) is null) names.Add(name);
         }
         return [.. names.Distinct()];
+    }
+
+    /// <summary>The page, profile or web widget a step points to when it no longer exists, so a press that could only fail is marked instead.</summary>
+    private static string? MissingTarget(ActionBinding binding, Profile? profile, Func<string, bool>? profileExists)
+    {
+        string? Id(string key) => binding.Settings[key] is JsonValue v && v.TryGetValue<string>(out var text) && text.Length > 0 ? text : null;
+        switch (binding.Type)
+        {
+            case PageAction.TypeId when profile is not null && (Id("mode") ?? "goto") == "goto" && Id("pageId") is { } page:
+                return profile.FindPage(page) is null ? "deleted page" : null;
+            case ProfileAction.TypeId when profileExists is not null && Id("profileId") is { } target:
+                return profileExists(target) ? null : "deleted profile";
+            case WebAction.TypeId when profile is not null && Id("widgetId") is { } web:
+                return profile.Pages.SelectMany(p => p.Widgets).Any(w => w.Id == web && w.Type == WidgetTypes.Web) ? null : "deleted web widget";
+            default:
+                return null;
+        }
     }
 
     /// <summary>Every variable the widget's action steps read in their text fields, so a change of one can refresh the widget's unavailable mark.</summary>
