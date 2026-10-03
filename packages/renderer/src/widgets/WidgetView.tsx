@@ -163,8 +163,8 @@ export function WidgetView({
           padding: 0,
           border: "none",
           borderRadius: "50%",
-          background: "#e5584a",
-          color: "#fff",
+          background: UNAVAILABLE_MARK_BACKGROUND,
+          color: UNAVAILABLE_MARK_COLOR,
           font: "700 13px/20px system-ui, sans-serif",
           textAlign: "center",
           cursor: "pointer",
@@ -175,6 +175,10 @@ export function WidgetView({
     </div>
   );
 }
+
+/** The unavailable mark's colours, in one place. An app (or a theme) sets the CSS variables on a parent element to change them; the fallback is the editor's error red with white text. */
+const UNAVAILABLE_MARK_BACKGROUND = "var(--mg-unavailable-mark-bg, #e5584a)";
+const UNAVAILABLE_MARK_COLOR = "var(--mg-unavailable-mark-fg, #fff)";
 
 /** How strongly an unavailable widget is faded (1 is untouched). Steady, never blinking. */
 const UNAVAILABLE_OPACITY = 0.4;
