@@ -26,7 +26,6 @@ public sealed class ClientHub(
     LastResultStore results,
     DeviceStore devices,
     PairingService pairing,
-    PluginStatusRegistry statusRegistry,
     PreferencesStore preferences,
     AutoProfileSwitcher autoSwitcher,
     ILogger<ClientHub> logger,
@@ -399,24 +398,33 @@ public sealed class ClientHub(
         await ReportActionErrorsAsync(session, errors, pageId, widget, eventName);
     }
 
-    /// <summary>How long a failed action stays in the status bar if nothing else clears it.</summary>
-    private static readonly TimeSpan ActionErrorStatusLifetime = TimeSpan.FromSeconds(15);
-
     /// <summary>Surfaces a failed action both to the device that triggered it (toast, via the same "error"
-    /// envelope pairing failures already use) and in the editor's status bar — a stale binding (e.g. a
-    /// button pointed at a since-deleted scene of a plugin) must never fail silently.</summary>
+    /// envelope pairing failures already use) and as a line in the Error List — a stale binding (e.g. a
+    /// button pointed at a since-deleted scene of a plugin) must never fail silently. The line is one per widget and event,
+    /// counted when it repeats, and taken back when that event next runs without a failure. It is not a plugin failure, so it never counts towards switching a plugin off.</summary>
     private async Task ReportActionErrorsAsync(ClientSession session, IReadOnlyList<ActionFailure> errors, string pageId, Widget widget, string eventName)
     {
+        var runKey = $"run:{widget.Id}:{eventName}";
         if (errors.Count == 0)
         {
-            statusRegistry.RemoveCore("actionError"); // the next action that works clears the old failure
+            problems.ResolveKey("macro-grid", runKey); // the next run that works clears the old failure
             return;
         }
 
         var raw = errors[0].Message;
         var message = PlainText.Clean(localizer.TranslateAny(raw) ?? raw, 200); // translate first (the table matches the exact text), then clean
-        statusRegistry.SetCore("actionError", message, StatusLevel.Warning, "triangle-alert", lifetime: ActionErrorStatusLifetime);
         await session.SendAsync(MessageTypes.Error, new ErrorMessage("action_failed", message));
+
+        // A missing action type has its own line below; every other failure is one line per widget and event.
+        var failed = errors.FirstOrDefault(e => !e.Missing);
+        if (failed is not null)
+        {
+            var failedText = PlainText.Clean(localizer.TranslateAny(failed.Message) ?? failed.Message, 200);
+            var pageLabel = session.ProfileId is null ? null : profiles.Get(session.ProfileId)?.FindPage(pageId)?.Name;
+            problems.Report("macro-grid", "Macro Grid", ProblemSeverity.Warning, ProblemCodes.ActionFailed,
+                $"{widget.Name} on page {pageLabel}: {failedText}", runKey, 100,
+                new ProblemTarget(session.ProfileId ?? "", pageId, widget.Id, eventName));
+        }
 
         // An action that is not there at all is also a line in the Error List (one per widget and type, counted), so it is found without a press.
         foreach (var missing in errors.Where(e => e.Missing))
