@@ -40,13 +40,13 @@ function StatusChip({ entry, onClick }: { entry: StatusEntry; onClick?: () => vo
       className={onClick ? "ghost" : undefined}
       disabled={!onClick}
       style={{
-        display: "flex", alignItems: "center", gap: 5, fontSize: 11.5, padding: "2px 6px",
+        display: "flex", alignItems: "center", gap: 5, fontSize: 11.5, padding: "2px 6px", minWidth: 0,
         color: "var(--ms-text-secondary)", background: "none", border: "none",
         cursor: onClick ? "pointer" : "default",
       }}
     >
       <StatusIcon name={entry.icon} />
-      <span>{entry.text}</span>
+      <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{entry.text}</span>
       <Circle size={7} fill={LEVEL_COLOR[entry.level]} color={LEVEL_COLOR[entry.level]} />
     </button>
   );
@@ -61,7 +61,7 @@ function LanguagePackMark() {
   const pack = usePack();
   if (isBuiltIn(lang)) return null;
   return (
-    <span style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11.5, padding: "0 6px", color: "var(--ms-warning, #facc15)" }}>
+    <span style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11.5, padding: "0 6px", flexShrink: 0, color: "var(--ms-warning)" }}>
       <span>{`Unofficial language pack: ${pack?.tag === lang ? pack.name : lang}`}</span>
       <button type="button" className="ghost" style={{ fontSize: 11.5, padding: "0 6px" }} onClick={() => setLang("en")}>English</button>
     </span>
@@ -81,7 +81,7 @@ export function StatusBar({ items }: { items: StatusEntry[] }) {
   const core = items.filter((i) => i.pluginId === "core");
   const { statusBarPlugins } = usePreferences();
   // Plugin items show only for the plugins the person switched on in the Plugins window.
-  const plugins = items.filter((i) => i.pluginId !== "core" && statusBarPlugins[i.pluginId]);
+  const plugins = items.filter((i) => i.pluginId !== "core" && (statusBarPlugins ?? {})[i.pluginId]);
 
   return (
     <footer
@@ -90,7 +90,7 @@ export function StatusBar({ items }: { items: StatusEntry[] }) {
         padding: "0 8px", height: 26, background: "var(--ms-bg-surface)", whiteSpace: "nowrap", overflow: "hidden",
       }}
     >
-      <div style={{ display: "flex", alignItems: "center" }}>
+      <div style={{ display: "flex", alignItems: "center", flexShrink: 0 }}>
         <LanguagePackMark />
         {core.map((entry) => (
           <StatusChip key={entry.id} entry={entry} onClick={entry.id === "update" ? () => api.openToolWindow("update") : undefined} />
@@ -108,7 +108,7 @@ export function StatusBar({ items }: { items: StatusEntry[] }) {
         </div>
       )}
       <div style={{ flex: 1 }} />
-      <div style={{ display: "flex", alignItems: "center" }}>
+      <div style={{ display: "flex", alignItems: "center", minWidth: 0, overflow: "hidden" }}>
         {plugins.map((entry) => (
           <StatusChip key={`${entry.pluginId}.${entry.id}`} entry={entry} onClick={() => api.openPluginSettingsWindow(entry.pluginId)} />
         ))}

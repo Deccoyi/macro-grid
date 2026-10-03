@@ -108,6 +108,15 @@ function PluginAvatar({ id, name, size = 36, iconUrl }: { id: string; name: stri
 export function PluginsWindow() {
   const { t, tn } = useT();
   const { statusBarPlugins, setPluginInStatusBar } = usePreferences();
+  // The "Status bar" switch only makes sense for a plugin that has a status item right now (or was switched on before).
+  const [pluginsWithStatus, setPluginsWithStatus] = useState<Set<string>>(new Set());
+  useEffect(() => {
+    let stopped = false;
+    const load = () => api.getStatus().then((list) => { if (!stopped) setPluginsWithStatus(new Set(list.filter((i) => i.pluginId !== "core").map((i) => i.pluginId))); }).catch(() => {});
+    load();
+    const timer = window.setInterval(load, 4000);
+    return () => { stopped = true; window.clearInterval(timer); };
+  }, []);
   useDocumentTitle("plugins.title");
   const [category, setCategory] = useState<Category>("installed");
   const [plugins, setPlugins] = useState<PluginInfo[] | null>(null);
@@ -551,13 +560,13 @@ export function PluginsWindow() {
                   <input type="checkbox" checked={p.status !== "Disabled"} disabled={togglingId === p.id} onChange={(e) => setEnabled(p, e.target.checked)} />
                   {t(p.status === "Disabled" ? "plugins.state.off" : "plugins.state.on")}
                 </label>
-                <label
+                {(pluginsWithStatus.has(p.id) || statusBarPlugins?.[p.id]) && <label
                   title={t("plugins.statusBar.hint")}
                   style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11.5, padding: 6, flexShrink: 0, cursor: "pointer" }}
                 >
-                  <input type="checkbox" checked={!!statusBarPlugins[p.id]} onChange={(e) => setPluginInStatusBar(p.id, e.target.checked)} />
+                  <input type="checkbox" checked={!!statusBarPlugins?.[p.id]} onChange={(e) => setPluginInStatusBar(p.id, e.target.checked)} />
                   {t("plugins.statusBar")}
-                </label>
+                </label>}
                 {p.hasSettings && (
                   <button
                     type="button"
