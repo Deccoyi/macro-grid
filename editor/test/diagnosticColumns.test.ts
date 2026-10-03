@@ -28,3 +28,23 @@ describe("diagnostic columns", () => {
     expect(tableMinWidth(DEFAULT_COLUMN_WIDTHS)).toBe(1050);
   });
 });
+
+describe("hidden columns and auto-fit", () => {
+  it("remembers the hidden columns and always keeps one", async () => {
+    const { loadHiddenColumns, saveHiddenColumns, visibleColumns, DIAGNOSTIC_COLUMNS } = await import("../src/panels/diagnosticColumns");
+    expect(loadHiddenColumns()).toEqual([]);
+    saveHiddenColumns(["code", "details"]);
+    expect(loadHiddenColumns()).toEqual(["code", "details"]);
+    expect(visibleColumns(["code", "details"])).toEqual(["severity", "description", "source", "screen", "location"]);
+    expect(visibleColumns([...DIAGNOSTIC_COLUMNS])).toEqual(["description"]);
+    localStorage.setItem("macro-grid.editor.diagnosticHiddenColumns", "{bad");
+    expect(loadHiddenColumns()).toEqual([]);
+  });
+
+  it("fits a column to its widest text plus padding, inside the allowed range", async () => {
+    const { fitWidth } = await import("../src/panels/diagnosticColumns");
+    const measure = (text: string) => text.length * 7;
+    expect(fitWidth(["ab", "abcdef"], measure, 20)).toBe(62);
+    expect(fitWidth([], measure, 0)).toBe(MIN_COLUMN_WIDTH);
+  });
+});

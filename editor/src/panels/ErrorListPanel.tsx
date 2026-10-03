@@ -10,7 +10,8 @@ import { confirmRichAsync } from "../dialogs/dialogStore";
 import { useT } from "../i18n/I18nContext";
 import { DiagnosticDetails } from "./DiagnosticDetails";
 import { useEditorStateContext } from "../state/EditorStateContext";
-import { clampWidth, DIAGNOSTIC_COLUMNS, gridTemplate, loadColumnWidths, saveColumnWidths, tableMinWidth, type DiagnosticColumn } from "./diagnosticColumns";
+import { clampWidth, DIAGNOSTIC_COLUMNS, fitWidth, gridTemplate, loadColumnWidths, loadHiddenColumns, saveColumnWidths, saveHiddenColumns, tableMinWidth, visibleColumns, type DiagnosticColumn } from "./diagnosticColumns";
+import { ContextMenu, type ContextMenuEntry } from "./ContextMenu";
 type Filter = "all" | DiagnosticSeverity;
 
 /** The Error List tool window — docs/design/docking-workspace.md ("Error List") and docs/design/diagnostics-and-repair.md. A table, filter row and
@@ -23,7 +24,10 @@ export function ErrorListPanel() {
   const [filter, setFilter] = useState<Filter>("all");
   const [query, setQuery] = useState("");
   const [widths, setWidths] = useState(loadColumnWidths);
-  const template = gridTemplate(widths);
+  const [hidden, setHidden] = useState(loadHiddenColumns);
+  const columns = visibleColumns(hidden);
+  const template = gridTemplate(widths, columns);
+  const [columnMenu, setColumnMenu] = useState<{ x: number; y: number } | null>(null);
   const [exportState, setExportState] = useState<"copied" | "saved" | "failed" | null>(null);
   const drag = useRef<{ column: DiagnosticColumn; startX: number; startWidth: number } | null>(null);
 
@@ -42,6 +46,44 @@ export function ErrorListPanel() {
     if (!drag.current) return;
     drag.current = null;
     saveColumnWidths(widths);
+  };
+
+  const toggleColumn = (column: DiagnosticColumn) => {
+    const next = hidden.includes(column) ? hidden.filter((c) => c !== column) : [...hidden, column];
+    if (column === "description") return; // the description always stays
+    setHidden(next);
+    saveHiddenColumns(next);
+  };
+  const columnMenuItems: ContextMenuEntry[] = DIAGNOSTIC_COLUMNS.map((column) => ({
+    label: t(`errorList.col.${column}`),
+    checked: columns.includes(column),
+    disabled: column === "description",
+    onSelect: () => toggleColumn(column),
+  }));
+
+  /** Double-click on a column's border: the column takes the width of its widest text, like a spreadsheet. */
+  const fitColumn = (column: DiagnosticColumn) => {
+    const context = document.createElement("canvas").getContext("2d");
+    if (!context) return;
+    context.font = "12px system-ui, sans-serif";
+    const measure = (text: string) => context.measureText(text).width;
+    const cell = (d: Diagnostic): string => {
+      const place = where(d, profile);
+      switch (column) {
+        case "severity": return t(`errorList.severity.${d.severity}`);
+        case "code": return d.code;
+        case "description": return `${textOf(d)}${(d.count ?? 1) > 1 ? `  ×${d.count}` : ""}`;
+        case "source": return d.sourceName ?? t("errorList.source.editor");
+        case "screen": return place.page;
+        case "location": return place.location;
+        default: return t("errorList.col.details");
+      }
+    };
+    const extra = column === "severity" ? 38 : 20; // padding, and the icon in front of the severity
+    const width = fitWidth([t(`errorList.col.${column}`), ...filtered.map(cell)], measure, extra);
+    const next = { ...widths, [column]: width };
+    setWidths(next);
+    saveColumnWidths(next);
   };
 
   const textOf = (d: Diagnostic) => d.message ?? (d.messageKey ? t(d.messageKey, ...(d.messageArgs ?? [])) : "");
@@ -122,9 +164,11 @@ export function ErrorListPanel() {
       </div>
 
       <div style={{ flex: "1 1 auto", overflow: "auto" }}>
-        <div style={{ minWidth: tableMinWidth(widths) }}>
-          <div style={{ position: "sticky", top: 0, zIndex: 1, display: "grid", gridTemplateColumns: template, height: 24, alignItems: "center", padding: "0 10px", color: "var(--ms-text-disabled)", background: "var(--ms-bg-surface)", fontSize: 11, borderBottom: "1px solid var(--ms-border)" }}>
-            {DIAGNOSTIC_COLUMNS.map((column) => (
+        <div style={{ minWidth: tableMinWidth(widths, columns) }}>
+          <div style={{ position: "sticky", top: 0, zIndex: 1, display: "grid", gridTemplateColumns: template, height: 24, alignItems: "center", padding: "0 10px", color: "var(--ms-text-disabled)", background: "var(--ms-bg-surface)", fontSize: 11, borderBottom: "1px solid var(--ms-border)" }}
+            onContextMenu={(e) => { e.preventDefault(); setColumnMenu({ x: e.clientX, y: e.clientY }); }}
+          >
+            {columns.map((column) => (
               <span key={column} style={{ position: "relative", height: "100%", display: "flex", alignItems: "center", overflow: "hidden", whiteSpace: "nowrap" }}>
                 {t(`errorList.col.${column}`)}
                 <span
@@ -135,6 +179,7 @@ export function ErrorListPanel() {
                   onPointerMove={moveDrag}
                   onPointerUp={endDrag}
                   onPointerCancel={endDrag}
+                  onDoubleClick={() => fitColumn(column)}
                   style={{ position: "absolute", top: 0, right: 0, width: 7, height: "100%", cursor: "col-resize", borderRight: "1px solid var(--ms-border)", touchAction: "none" }}
                 />
               </span>
@@ -143,10 +188,11 @@ export function ErrorListPanel() {
           {filtered.length === 0 ? (
             <div style={{ padding: "16px 10px", color: "var(--ms-text-secondary)", fontSize: 12 }}>{t("errorList.empty")}</div>
           ) : (
-            filtered.map((d) => <Row key={d.id} d={d} template={template} profile={profile} onDetails={() => void showDetails(d)} />)
+            filtered.map((d) => <Row key={d.id} d={d} template={template} columns={columns} profile={profile} onDetails={() => void showDetails(d)} />)
           )}
         </div>
       </div>
+      {columnMenu && <ContextMenu x={columnMenu.x} y={columnMenu.y} items={columnMenuItems} onClose={() => setColumnMenu(null)} />}
     </div>
   );
 }
@@ -166,25 +212,30 @@ function where(d: Diagnostic, profile: Profile | null): { page: string; location
 
 const toolButton: React.CSSProperties = { display: "flex", alignItems: "center", gap: 5, color: "var(--ms-text-secondary)", fontSize: 11.5, background: "transparent", border: "none", cursor: "pointer" };
 
-function Row({ d, template, profile, onDetails }: { d: Diagnostic; template: string; profile: Profile | null; onDetails: () => void }) {
+function Row({ d, template, columns, profile, onDetails }: { d: Diagnostic; template: string; columns: readonly DiagnosticColumn[]; profile: Profile | null; onDetails: () => void }) {
   const { t } = useT();
   const { page, location } = where(d, profile);
   const Icon = d.severity === "error" ? CircleAlert : d.severity === "warning" ? TriangleAlert : Info;
   const color = d.severity === "error" ? "var(--ms-danger)" : "var(--ms-text-secondary)";
   const text = d.message ?? (d.messageKey ? t(d.messageKey, ...(d.messageArgs ?? [])) : "");
   const label = d.severity === "error" ? t("errorList.severity.error") : d.severity === "warning" ? t("errorList.severity.warning") : t("errorList.severity.info");
-  return (
-    <div onDoubleClick={onDetails} style={{ display: "grid", gridTemplateColumns: template, height: 24, alignItems: "center", padding: "0 10px", fontSize: 12, borderBottom: "1px solid var(--ms-bg-canvas)" }}>
-      <span style={{ display: "flex", alignItems: "center", gap: 6, color }}><Icon size={12} strokeWidth={2.25} />{label}</span>
-      <span style={{ color: "var(--ms-text-secondary)", fontFamily: "Consolas, monospace" }}>{d.code}</span>
-      <span style={{ color: "var(--ms-text-primary)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={text}>
+  const cellFor: Record<DiagnosticColumn, React.ReactNode> = {
+    severity: <span key="severity" style={{ display: "flex", alignItems: "center", gap: 6, color }}><Icon size={12} strokeWidth={2.25} />{label}</span>,
+    code: <span key="code" style={{ color: "var(--ms-text-secondary)", fontFamily: "Consolas, monospace" }}>{d.code}</span>,
+    description: (
+      <span key="description" style={{ color: "var(--ms-text-primary)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={text}>
         {text}
         {(d.count ?? 1) > 1 && <span style={{ marginLeft: 8, color: "var(--ms-text-secondary)", fontFamily: "Consolas, monospace" }}>×{d.count}</span>}
       </span>
-      <span style={{ color: "var(--ms-text-secondary)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{d.sourceName ?? t("errorList.source.editor")}</span>
-      <span style={{ color: "var(--ms-text-secondary)" }}>{page}</span>
-      <span style={{ color: "var(--ms-text-secondary)", fontFamily: "Consolas, monospace" }}>{location}</span>
-      <button type="button" onClick={onDetails} style={{ ...toolButton, justifySelf: "start", padding: "0 4px", textDecoration: "underline" }}>{t("errorList.col.details")}</button>
+    ),
+    source: <span key="source" style={{ color: "var(--ms-text-secondary)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{d.sourceName ?? t("errorList.source.editor")}</span>,
+    screen: <span key="screen" style={{ color: "var(--ms-text-secondary)" }}>{page}</span>,
+    location: <span key="location" style={{ color: "var(--ms-text-secondary)", fontFamily: "Consolas, monospace" }}>{location}</span>,
+    details: <button key="details" type="button" onClick={onDetails} style={{ ...toolButton, justifySelf: "start", padding: "0 4px", textDecoration: "underline" }}>{t("errorList.col.details")}</button>,
+  };
+  return (
+    <div onDoubleClick={onDetails} style={{ display: "grid", gridTemplateColumns: template, height: 24, alignItems: "center", padding: "0 10px", fontSize: 12, borderBottom: "1px solid var(--ms-bg-canvas)" }}>
+      {columns.map((column) => cellFor[column])}
     </div>
   );
 }
