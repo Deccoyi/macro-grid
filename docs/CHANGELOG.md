@@ -9,6 +9,7 @@ New features and fixes in Macro Grid. For technical details, see [CHANGELOG-deve
 - **Unavailable sources show on the phone:** a widget whose variable has no value (for example its plugin is off) fades and shows a small warning mark. Tap the mark to see what is missing. The widget turns grey and a press does nothing; it shows what is missing instead. This also covers a plugin action that is switched off and a variable an action reads.
 - **Switch a plugin off and on:** the Plugins window has an On / Off switch for every plugin.
 - **Failed button actions in Diagnostics:** when a button's action fails, it now shows as a line in Diagnostics (one per button, counted) and goes away when the button next works. The warning triangle in the status bar is gone.
+- **No browser menu in the editor:** right-clicking an empty place no longer opens the browser's own menu. Text fields keep their normal menu.
 - **Smaller variable actions:** "Set variable" is now four actions (set a value, change a number, switch True / False, reset). The variable is picked from the variable list, which shows only variables you can change. Buttons made before keep working.
 - **Go back a version:** a plugin's page in Discover can put the previous version back.
 - **Stay on this version:** stops update reminders for one plugin. Safety warnings still appear.
