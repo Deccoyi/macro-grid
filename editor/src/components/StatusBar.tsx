@@ -8,6 +8,7 @@ import { isBuiltIn } from "../i18n/language";
 import { usePack } from "../i18n/packStore";
 import { useStatusNotice } from "../state/statusNotice";
 import { usePluginUpdateCount } from "../state/pluginUpdates";
+import { usePreferences } from "../preferences/PreferencesContext";
 
 const LEVEL_COLOR: Record<StatusLevel, string> = {
   Idle: "var(--ms-text-disabled)",
@@ -78,13 +79,15 @@ export function StatusBar({ items }: { items: StatusEntry[] }) {
   const notice = useStatusNotice();
   const pluginUpdates = usePluginUpdateCount();
   const core = items.filter((i) => i.pluginId === "core");
-  const plugins = items.filter((i) => i.pluginId !== "core");
+  const { statusBarPlugins } = usePreferences();
+  // Plugin items show only for the plugins the person switched on in the Plugins window.
+  const plugins = items.filter((i) => i.pluginId !== "core" && statusBarPlugins[i.pluginId]);
 
   return (
     <footer
       style={{
         display: "flex", alignItems: "center", borderTop: "1px solid var(--ms-border)",
-        padding: "0 8px", height: 26, background: "var(--ms-bg-surface)",
+        padding: "0 8px", height: 26, background: "var(--ms-bg-surface)", whiteSpace: "nowrap", overflow: "hidden",
       }}
     >
       <div style={{ display: "flex", alignItems: "center" }}>

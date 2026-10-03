@@ -68,6 +68,10 @@ public sealed class AppPreferences
     /// Only closed notes are stored, by a short id. Warnings about a problem with the current input are never closable and never stored here.</summary>
     public Dictionary<string, bool> DismissedNotices { get; set; } = [];
 
+    /// <summary>Plugins whose status items the person chose to show in the editor's status bar (plugin id to true). Plugins are hidden there by
+    /// default, so an id that is missing means "not shown"; the core items (server version, devices) always show.</summary>
+    public Dictionary<string, bool> StatusBarPlugins { get; set; } = [];
+
     /// <summary>The docking workspace arrangement the user last left the editor in (see
     /// <see cref="DockLayoutProfile.LayoutJson"/> for the format) — restored on the next launch instead of
     /// always rebuilding the built-in default. Empty until the user changes the layout at least once.</summary>

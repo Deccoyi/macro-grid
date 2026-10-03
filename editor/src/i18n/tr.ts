@@ -304,6 +304,8 @@ export const tr = {
   "plugins.enable": "Bu eklentiyi aç",
   "plugins.disable": "Bu eklentiyi kapat",
   "plugins.state.on": "Açık",
+  "plugins.statusBar": "Durum çubuğu",
+  "plugins.statusBar.hint": "Bu eklentinin durum öğelerini editörün durum çubuğunda göster. Varsayılan olarak gizlidir.",
   "plugins.state.off": "Kapalı",
   "plugins.approve": "İzin ver ve etkinleştir",
   "plugins.approve.intro": "Bu eklenti çalışmak için şu izinleri istiyor:",

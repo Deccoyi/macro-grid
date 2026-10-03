@@ -14,6 +14,7 @@ const DEFAULTS: AppPreferences = {
   previewProfiles: [],
   collapsedInspectorSections: {},
   dismissedNotices: {},
+  statusBarPlugins: {},
   defaultProfileId: null,
   launchMode: "window",
   autostartMode: "tray",
@@ -39,6 +40,9 @@ interface PreferencesContextValue {
   dismissedNotices: Record<string, boolean>;
   /** Closes one note for good ("do not show again"); `undefined` for the id shows every closed note again. */
   dismissNotice: (id?: string) => void;
+  /** Plugins whose status items show in the status bar (id to true). */
+  statusBarPlugins: Record<string, boolean>;
+  setPluginInStatusBar: (pluginId: string, shown: boolean) => void;
   defaultProfileId: string | null;
   setDefaultProfileId: (id: string | null) => void;
   launchMode: AppPreferences["launchMode"];
@@ -171,6 +175,15 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
     [persist],
   );
 
+  const setPluginInStatusBar = useCallback(
+    (pluginId: string, shown: boolean) => {
+      const next = { ...latest.current.statusBarPlugins };
+      if (shown) next[pluginId] = true; else delete next[pluginId];
+      persist({ ...latest.current, statusBarPlugins: next });
+    },
+    [persist],
+  );
+
   const setDefaultProfileId = useCallback(
     (defaultProfileId: string | null) => persist({ ...latest.current, defaultProfileId }),
     [persist],
@@ -247,6 +260,8 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
       setInspectorSectionCollapsed,
       dismissedNotices: prefs.dismissedNotices,
       dismissNotice,
+      statusBarPlugins: prefs.statusBarPlugins,
+      setPluginInStatusBar,
       defaultProfileId: prefs.defaultProfileId,
       setDefaultProfileId,
       launchMode: prefs.launchMode,
@@ -268,7 +283,7 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
     }),
     [
       prefs, savedLanguage, loadedState, setTheme, setLanguage, addPreviewProfile, removePreviewProfile,
-      setInspectorSectionCollapsed, dismissNotice, setDefaultProfileId, setLaunchMode, setAutostartMode, setCheckForUpdates,
+      setInspectorSectionCollapsed, dismissNotice, setPluginInStatusBar, setDefaultProfileId, setLaunchMode, setAutostartMode, setCheckForUpdates,
       setIncludePreReleases, setAllowUnencrypted, setDockLayoutJson, saveDockLayoutProfile, deleteDockLayoutProfile,
     ],
   );

@@ -5,6 +5,7 @@ import type { PluginCatalogEntryInfo, PluginInfo, PluginLinkInspectResult, Plugi
 import { DialogHost } from "../dialogs/DialogHost";
 import { confirmAsync, confirmRichAsync, promptAsync } from "../dialogs/dialogStore";
 import { useT } from "../i18n/I18nContext";
+import { usePreferences } from "../preferences/PreferencesContext";
 import { useDocumentTitle } from "../i18n/useDocumentTitle";
 import { SectionLabel } from "../panels/fields/controls";
 import { ToolWindowLayout } from "./ToolWindowLayout";
@@ -106,6 +107,7 @@ function PluginAvatar({ id, name, size = 36, iconUrl }: { id: string; name: stri
  * install (from a folder), reload or remove a plugin. All of it takes effect immediately — no restart. */
 export function PluginsWindow() {
   const { t, tn } = useT();
+  const { statusBarPlugins, setPluginInStatusBar } = usePreferences();
   useDocumentTitle("plugins.title");
   const [category, setCategory] = useState<Category>("installed");
   const [plugins, setPlugins] = useState<PluginInfo[] | null>(null);
@@ -548,6 +550,13 @@ export function PluginsWindow() {
                 >
                   <input type="checkbox" checked={p.status !== "Disabled"} disabled={togglingId === p.id} onChange={(e) => setEnabled(p, e.target.checked)} />
                   {t(p.status === "Disabled" ? "plugins.state.off" : "plugins.state.on")}
+                </label>
+                <label
+                  title={t("plugins.statusBar.hint")}
+                  style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11.5, padding: 6, flexShrink: 0, cursor: "pointer" }}
+                >
+                  <input type="checkbox" checked={!!statusBarPlugins[p.id]} onChange={(e) => setPluginInStatusBar(p.id, e.target.checked)} />
+                  {t("plugins.statusBar")}
                 </label>
                 {p.hasSettings && (
                   <button
