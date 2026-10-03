@@ -87,11 +87,11 @@ public sealed class WidgetStateService : IHostedService, IDisposable
     }
 
     /// <summary>The sources the widget's text, bound value and action steps need and cannot get now.</summary>
-    private IReadOnlyList<string> UnavailableFor(Widget widget, IVariableStore scope)
+    private IReadOnlyList<string> UnavailableFor(Widget widget, IVariableStore scope, Profile? profile)
     {
         var fromText = DynamicText.UnavailableSources(widget, scope);
         if (_actions is null) return fromText;
-        var fromActions = _actions.UnavailableSources(widget, scope);
+        var fromActions = _actions.UnavailableSources(widget, scope, profile, id => _profiles.Get(id) is not null);
         return fromActions.Count == 0 ? fromText : [.. fromText.Concat(fromActions).Distinct()];
     }
 
@@ -200,6 +200,7 @@ public sealed class WidgetStateService : IHostedService, IDisposable
     /// <summary>Sends the current rendered text and toggle state of every relevant widget on a page, e.g. right after a layout is shown.</summary>
     public async Task SendInitialAsync(ClientSession session, Page page, CancellationToken ct)
     {
+        var profile = session.ProfileId is null ? null : _profiles.Get(session.ProfileId);
         foreach (var widget in page.Widgets)
         {
             var scope = ScopeFor(session, widget);
@@ -228,7 +229,7 @@ public sealed class WidgetStateService : IHostedService, IDisposable
                 await session.SendAsync(MessageTypes.WidgetState, new WidgetStateMessage(widget.Id, Value: value), ct);
             }
 
-            var unavailable = UnavailableFor(widget, scope);
+            var unavailable = UnavailableFor(widget, scope, profile);
             if (unavailable.Count > 0 || session.SentUnavailable.GetValueOrDefault(widget.Id, "").Length > 0)
             {
                 session.SentUnavailable[widget.Id] = string.Join(UnavailableSeparator, unavailable);
@@ -407,7 +408,8 @@ public sealed class WidgetStateService : IHostedService, IDisposable
         if (!session.IsIdentified || session.ProfileId is null || session.PageId is null) return;
         var marked = marks.Where(m => m.SessionId is null || m.SessionId == session.Id).Select(m => m.WidgetId).ToHashSet();
         if (dirty.Count == 0 && marked.Count == 0) return;
-        var page = _profiles.Get(session.ProfileId)?.FindPage(session.PageId);
+        var profile = _profiles.Get(session.ProfileId);
+        var page = profile?.FindPage(session.PageId);
         if (page is null) return;
 
         foreach (var widget in page.Widgets)
@@ -443,7 +445,7 @@ public sealed class WidgetStateService : IHostedService, IDisposable
             if (forced || DynamicText.Dependencies(widget).Any(dirty.Contains) || (!string.IsNullOrEmpty(variableName) && dirty.Contains(variableName))
                 || (_actions is not null && _actions.ActionDependencies(widget).Any(dirty.Contains)))
             {
-                var now = UnavailableFor(widget, scope);
+                var now = UnavailableFor(widget, scope, profile);
                 if (string.Join(UnavailableSeparator, now) !=session.SentUnavailable.GetValueOrDefault(widget.Id, ""))
                     unavailable = [.. now];
             }
