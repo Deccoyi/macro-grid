@@ -53,10 +53,13 @@ public sealed class WidgetStateService : IHostedService, IDisposable
     /// <summary>How long <c>self.pressed</c> stays on at least, so a quick tap still draws its look.</summary>
     internal TimeSpan PressedMinimum { get; set; } = TimeSpan.FromMilliseconds(150);
 
+    private readonly UserVariableService? _userVariables;
+
     public WidgetStateService(VariableStore variables, SessionRegistry sessions, ProfileStore profiles, ToggleStateStore toggles, LayoutSender layouts, WebViewState webViews, ILogger<WidgetStateService> logger,
-        PluginWidgetCatalog? pluginWidgets = null, LastResultStore? results = null, ActionDispatcher? actions = null)
+        PluginWidgetCatalog? pluginWidgets = null, LastResultStore? results = null, ActionDispatcher? actions = null, UserVariableService? userVariables = null)
     {
         _actions = actions;
+        _userVariables = userVariables;
         if (actions is not null) actions.HandlersChanged += OnActionTypesChanged;
         _results = results;
         _variables = variables;
@@ -91,7 +94,7 @@ public sealed class WidgetStateService : IHostedService, IDisposable
     {
         var fromText = DynamicText.UnavailableSources(widget, scope);
         if (_actions is null) return fromText;
-        var fromActions = _actions.UnavailableSources(widget, scope, profile, id => _profiles.Get(id) is not null);
+        var fromActions = _actions.UnavailableSources(widget, scope, profile, id => _profiles.Get(id) is not null, _userVariables is null ? null : name => _userVariables.Find(name) is not null);
         return fromActions.Count == 0 ? fromText : [.. fromText.Concat(fromActions).Distinct()];
     }
 
