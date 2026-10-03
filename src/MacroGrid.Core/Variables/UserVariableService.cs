@@ -73,6 +73,7 @@ public sealed class UserVariableService : IVariableCatalogSource, IHostedService
             }
 
             var removed = _definitions.Keys.Where(n => !seen.Contains(n)).ToList();
+            var previous = new Dictionary<string, UserVariable>(_definitions, StringComparer.OrdinalIgnoreCase);
             _definitions.Clear();
             foreach (var v in normalized) _definitions[v.Name] = v;
             _order = [.. normalized.Select(v => v.Name)];
@@ -82,7 +83,12 @@ public sealed class UserVariableService : IVariableCatalogSource, IHostedService
                 _store.Remove(UserVariables.Prefix + name);
             }
             foreach (var v in normalized)
-                if (!_values.ContainsKey(v.Name)) Publish(v, v.Initial);
+            {
+                // A new variable gets its start value now. So does one that has no value yet (an earlier save of the list left it empty), and one
+                // whose start value was edited, unless it keeps its value between runs: that one is a running count and is left alone.
+                var changed = previous.TryGetValue(v.Name, out var before) && !Equals(before.Initial, v.Initial);
+                if (!_values.TryGetValue(v.Name, out var current) || current is null || (changed && !v.Keep)) Publish(v, v.Initial);
+            }
             WriteFile(_definitionsPath, new DefinitionsFile(1, normalized));
             ScheduleValueSave();
         }
