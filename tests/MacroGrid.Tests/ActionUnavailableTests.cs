@@ -78,4 +78,16 @@ public class ActionUnavailableTests
         Assert.Equal(["deleted profile"], dispatcher.UnavailableSources(With(ProfileAction.TypeId, ProfileAction.Settings("x")), store, profile, _ => false));
         Assert.Empty(dispatcher.UnavailableSources(With(ProfileAction.TypeId, ProfileAction.Settings("x")), store, profile, _ => true));
     }
+
+    [Fact]
+    public void A_variable_action_on_a_deleted_user_variable_is_an_unavailable_source()
+    {
+        var dispatcher = new ActionDispatcher([new VariableToggleAction(null!)], NullLogger<ActionDispatcher>.Instance);
+        var store = new VariableStore();
+        var widget = new Widget { Actions = { [WidgetEvents.Press] = [new ActionBinding(VariableToggleAction.TypeId, new JsonObject { ["variable"] = "user.flag" })] } };
+
+        Assert.Equal(["deleted variable"], dispatcher.UnavailableSources(widget, store, userVariableExists: _ => false));
+        Assert.Empty(dispatcher.UnavailableSources(widget, store, userVariableExists: _ => true));
+        Assert.Contains("user.flag", dispatcher.ActionDependencies(widget));
+    }
 }
