@@ -1,6 +1,6 @@
 # Sunucuyu kurun
 
-Sunucu, Windows'ta çalışan bir sistem tepsisi uygulamasıdır. Profillerinizi saklar, deck ile **9820 numaralı port** üzerinden WebSocket ile konuşur, aksiyonları çalıştırır ve düzenleyiciyi barındırır.
+Sunucu, Windows'ta çalışan bir sistem tepsisi uygulamasıdır. Profillerinizi saklar, deck ile **9820 numaralı port** üzerinden WebSocket ile konuşur, eylemleri çalıştırır ve düzenleyiciyi barındırır.
 
 ## Gereksinimler
 

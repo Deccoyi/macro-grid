@@ -1704,11 +1704,11 @@
       "words": "\"Arg1\" profili silinsin mi?"
     },
     "profile.importMissing.actions": {
-      "zero": "Bu sunucuda karşılığı olmayan aksiyonlar: 0.",
-      "one": "Bu sunucuda karşılığı olmayan aksiyonlar: 1.",
-      "two": "Bu sunucuda karşılığı olmayan aksiyonlar: 2.",
-      "five": "Bu sunucuda karşılığı olmayan aksiyonlar: 5.",
-      "words": "Bu sunucuda karşılığı olmayan aksiyonlar: Arg1."
+      "zero": "Bu sunucuda karşılığı olmayan eylemler: 0.",
+      "one": "Bu sunucuda karşılığı olmayan eylemler: 1.",
+      "two": "Bu sunucuda karşılığı olmayan eylemler: 2.",
+      "five": "Bu sunucuda karşılığı olmayan eylemler: 5.",
+      "words": "Bu sunucuda karşılığı olmayan eylemler: Arg1."
     },
     "profile.importMissing.plugins": {
       "zero": "Bu profil yüklü olmayan eklentilere ihtiyaç duyuyor: 0. Eklentiler penceresinden kurunca düğmeleri çalışır.",
@@ -1830,11 +1830,11 @@
       "words": "Bu yedek Arg1 eklentisine ihtiyaç duyuyor, ama kurulu değil."
     },
     "restore.warn.unknownActionType": {
-      "zero": "Bu sunucuda karşılığı olmayan aksiyonlar: 0.",
-      "one": "Bu sunucuda karşılığı olmayan aksiyonlar: 1.",
-      "two": "Bu sunucuda karşılığı olmayan aksiyonlar: 2.",
-      "five": "Bu sunucuda karşılığı olmayan aksiyonlar: 5.",
-      "words": "Bu sunucuda karşılığı olmayan aksiyonlar: Arg1."
+      "zero": "Bu sunucuda karşılığı olmayan eylemler: 0.",
+      "one": "Bu sunucuda karşılığı olmayan eylemler: 1.",
+      "two": "Bu sunucuda karşılığı olmayan eylemler: 2.",
+      "five": "Bu sunucuda karşılığı olmayan eylemler: 5.",
+      "words": "Bu sunucuda karşılığı olmayan eylemler: Arg1."
     },
     "restore.warn.missingFile": {
       "zero": "Dosya bu bilgisayarda bulunamadı (0, 0): 0",
@@ -1872,11 +1872,11 @@
       "words": "Bunlar geri yüklenemedi: Arg1"
     },
     "profile.importMissing.files": {
-      "zero": "Bu aksiyonların kullandığı dosyalar bu bilgisayarda yok: 0.",
-      "one": "Bu aksiyonların kullandığı dosyalar bu bilgisayarda yok: 1.",
-      "two": "Bu aksiyonların kullandığı dosyalar bu bilgisayarda yok: 2.",
-      "five": "Bu aksiyonların kullandığı dosyalar bu bilgisayarda yok: 5.",
-      "words": "Bu aksiyonların kullandığı dosyalar bu bilgisayarda yok: Arg1."
+      "zero": "Bu eylemlerin kullandığı dosyalar bu bilgisayarda yok: 0.",
+      "one": "Bu eylemlerin kullandığı dosyalar bu bilgisayarda yok: 1.",
+      "two": "Bu eylemlerin kullandığı dosyalar bu bilgisayarda yok: 2.",
+      "five": "Bu eylemlerin kullandığı dosyalar bu bilgisayarda yok: 5.",
+      "words": "Bu eylemlerin kullandığı dosyalar bu bilgisayarda yok: Arg1."
     },
     "schemaForm.untitledRow": {
       "zero": "0. öğe",

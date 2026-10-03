@@ -13,7 +13,7 @@ interface RangeFieldsProps extends FieldGroupProps {
 }
 
 /** For "slider"/"knob": the value range they sweep, which live variable (if any) drives its position
- * from the server side, and — via the shared Inspector "Aksiyonlar" section below this — what a drag
+ * from the server side, and — via the shared Inspector "Eylemler" section below this — what a drag
  * commit actually does (bind "valueChange" there, e.g. to "Ana ses seviyesi"). */
 export function RangeFields({ widget, onChange, variableCatalog }: RangeFieldsProps) {
   const { t } = useT();

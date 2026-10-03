@@ -4,7 +4,7 @@ Widget, bir sayfanın ızgarasındaki tek bir öğedir. Eklerken türünü seçe
 
 | Tür | Ne için kullanılır |
 |---|---|
-| **Buton** | Basılınca, bırakılınca, uzun basılınca veya çift dokunulunca aksiyon çalıştırır. |
+| **Buton** | Basılınca, bırakılınca, uzun basılınca veya çift dokunulunca eylem çalıştırır. |
 | **Toggle** | Açık/kapalı anahtarı. Bir basış, Basınca olayını tetiklemek yerine durumu çevirir. |
 | **Etiket** | Metin veya canlı değer gösterir, etkileşim gerekmez. |
 | **Görsel** | Bir `https://` URL'sinden veya `data:image/...` URL'sinden resim gösterir, isteğe bağlı altyazıyla. |
@@ -15,7 +15,7 @@ Widget, bir sayfanın ızgarasındaki tek bir öğedir. Eklerken türünü seçe
 
 ## Olaylar
 
-Her widget türü farklı olaylar tetikleyebilir. [Aksiyonları](/tr/guide/actions) **Aksiyonlar** bölümünde bunlara bağlarsınız.
+Her widget türü farklı olaylar tetikleyebilir. [Eylemleri](/tr/guide/actions) **Eylemler** bölümünde bunlara bağlarsınız.
 
 | Widget | Olaylar |
 |---|---|
@@ -24,7 +24,7 @@ Her widget türü farklı olaylar tetikleyebilir. [Aksiyonları](/tr/guide/actio
 | Slider, Knob | Değer değişti |
 
 ::: warning Uyarı: Uzun basma ve çift dokunma, Basma'ya eklenir
-Her dokunuş aynı zamanda bir basıştır. Bu yüzden **Uzun basınca** ve **Çift dokununca**, Basınca ve Bırakınca'nın yerine değil, onlara *ek olarak* çalışır. Bunları kullanıyorsanız Basınca aksiyonunu zararsız tutun ya da boş bırakın.
+Her dokunuş aynı zamanda bir basıştır. Bu yüzden **Uzun basınca** ve **Çift dokununca**, Basınca ve Bırakınca'nın yerine değil, onlara *ek olarak* çalışır. Bunları kullanıyorsanız Basınca eylemini zararsız tutun ya da boş bırakın.
 :::
 
 ## Metin, simgeler ve yerleşim
@@ -35,10 +35,10 @@ Her dokunuş aynı zamanda bir basıştır. Bu yüzden **Uzun basınca** ve **Ç
 
 ## Slider ve knob'lar
 
-**Min**, **Maks** ve **Adım** değerlerini ayarlayın. Bağlı "Değer değişti" aksiyonu, sürükleme bittiğinde (bırakınca) çalışır, örneğin **Ana ses**.
+**Min**, **Maks** ve **Adım** değerlerini ayarlayın. Bağlı "Değer değişti" eylemi, sürükleme bittiğinde (bırakınca) çalışır, örneğin **Ana ses**.
 
 Kontrolün bilgisayardan bir değeri *göstermesi* için `system.audio.master` gibi **konumunu belirleyen bir değişken** seçin. Konum artık bu değişkeni izler, başka bir cihazdan ya da Windows'un kendisinden değişse bile. Değişken yoksa konum, yalnızca o cihazdaki son sürüklemeyi yansıtır.
 
 ## Toggle'lar
 
-Bir toggle'ın sunucunun takip ettiği bir durumu (açık veya kapalı) vardır. Aksiyonları **Açılınca** ve **Kapanınca** olaylarına bağlayın, örneğin sesi kapatma ve açma. Görünümünü gerçekle uyumlu tutmak için (örneğin başka yerde kapatılmış bir mikrofon), bir değişkene dayalı [dinamik kural](/tr/guide/dynamic) kullanın.
+Bir toggle'ın sunucunun takip ettiği bir durumu (açık veya kapalı) vardır. Eylemleri **Açılınca** ve **Kapanınca** olaylarına bağlayın, örneğin sesi kapatma ve açma. Görünümünü gerçekle uyumlu tutmak için (örneğin başka yerde kapatılmış bir mikrofon), bir değişkene dayalı [dinamik kural](/tr/guide/dynamic) kullanın.

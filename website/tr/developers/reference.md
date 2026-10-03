@@ -1,8 +1,8 @@
 # Teknik başvuru
 
-## Aksiyon türleri
+## Eylem türleri
 
-Yerleşik türler `core.*`, eklenti aksiyonları `<eklenti kimliği>.*` biçimindedir.
+Yerleşik türler `core.*`, eklenti eylemleri `<eklenti kimliği>.*` biçimindedir.
 
 | Tür | Ayarlar |
 |---|---|

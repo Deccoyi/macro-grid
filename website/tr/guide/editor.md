@@ -15,7 +15,7 @@ Düzenleyici, istediğiniz gibi düzenleyebileceğiniz panellerden oluşan bir �
 - **Sayfa sekmeleri ve tuval:** açtığınız her sayfa bir sekme olur. Tuval ızgaradır: widget'ları sürükleyin, köşeden boyutlandırın, sağ tıklayarak menü açın.
 - **Özellikler:** seçtiğiniz şeyin özellikleri: bir widget, sayfa ya da profil.
 - **Hata Listesi:** önem derecesine göre süzülebilen sorun listesi. Pencerenin alt kenarında durur, tıklayınca yukarı açılır. Şimdilik bir şey bildirmedikçe "Sorun yok" gösterir.
-- **Durum çubuğu:** sunucu sürümü, bağlı cihazlar, eklenti durumu ve aksiyon hataları.
+- **Durum çubuğu:** sunucu sürümü, bağlı cihazlar, eklenti durumu ve eylem hataları.
 
 ## Panelleri düzenleme
 
@@ -30,7 +30,7 @@ Düzenleyici, istediğiniz gibi düzenleyebileceğiniz panellerden oluşan bir �
 
 ## Izgarada çalışma
 
-Bir widget seçtiğinizde sağdaki Özellikler paneli görünümünü, içeriğini ve aksiyonlarını gösterir:
+Bir widget seçtiğinizde sağdaki Özellikler paneli görünümünü, içeriğini ve eylemlerini gösterir:
 
 ![Seçili bir widget için denetçi](/img/editor-inspector.png)
 

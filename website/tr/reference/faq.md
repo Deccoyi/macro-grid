@@ -19,7 +19,7 @@ Evet: `http://<bilgisayar adresi>:9820/deck/`. Telefon uygulaması kiosk modu, �
 Henüz hayır. **Web** ve **Eklenti** widget türleri yer tutucudur.
 
 ## Hangi dilde?
-Düzenleyici Türkçe (varsayılan) veya İngilizce. Telefon uygulaması ve tarayıcı deck'i şu an yalnızca Türkçe. Bazı yerleşik aksiyon adları ve sistem tepsisi menüsü yalnızca Türkçe.
+Düzenleyici Türkçe (varsayılan) veya İngilizce. Telefon uygulaması ve tarayıcı deck'i şu an yalnızca Türkçe. Bazı yerleşik eylem adları ve sistem tepsisi menüsü yalnızca Türkçe.
 
 ## Kendi eklentimi yapabilir miyim?
 Evet, JavaScript veya C# ile. Bkz. [eklenti dokümantasyonu](https://deccoyi.github.io/macro-grid-plugin/).

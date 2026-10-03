@@ -17,13 +17,13 @@ OBS'te **Araçlar → WebSocket Sunucu Ayarları**'nı açın, **WebSocket sunuc
 
 ## 3. Sahne butonları
 
-Her sahne için bir **Buton** ekleyin. Metin: sahnenin adı. **Basınca** olayına sahne değiştiren OBS aksiyonunu ekleyin ve sahneyi listeden seçin (liste OBS'in kendisinden doldurulur).
+Her sahne için bir **Buton** ekleyin. Metin: sahnenin adı. **Basınca** olayına sahne değiştiren OBS eylemini ekleyin ve sahneyi listeden seçin (liste OBS'in kendisinden doldurulur).
 
 Etkin sahneyi öne çıkarın: dinamik bir **Arka plan** kuralı ekleyin, **Eğer** `obs.scene.current` **eşitse** `Game` **İse** sarı.
 
 ## 4. Yayına geçin
 
-OBS yayın aç/kapat aksiyonuna sahip bir buton ekleyin ve şu metni verin:
+OBS yayın aç/kapat eylemine sahip bir buton ekleyin ve şu metni verin:
 
 ```text
 {obs.streaming|LIVE/OFFLINE} {obs.stream.duration}
@@ -33,8 +33,8 @@ Dinamik kurallar ekleyin: **Eğer** `obs.streaming` **eşitse** `true` **İse** 
 
 ## 5. Ses
 
-- Mikrofonunuz için OBS sessize alma aksiyonlarına sahip bir **Toggle**.
-- **Min** `0`, **Maks** `100` olan ve **Değer değişti** olayında OBS ses düzeyi aksiyonuna sahip bir **Slider**. Sürüklenen canlı değeri kullanır.
+- Mikrofonunuz için OBS sessize alma eylemlerine sahip bir **Toggle**.
+- **Min** `0`, **Maks** `100` olan ve **Değer değişti** olayında OBS ses düzeyi eylemine sahip bir **Slider**. Sürüklenen canlı değeri kullanır.
 
 ## 6. Kullanışlı ekstralar
 
