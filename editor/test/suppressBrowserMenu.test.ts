@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { suppressBrowserMenu } from "../src/suppressBrowserMenu";
-import { fieldState, textFieldAt } from "../src/panels/textFieldActions";
+import { fieldState, selectedText, textFieldAt } from "../src/panels/textFieldActions";
 
 function rightClick(el: Element): boolean {
   const e = new MouseEvent("contextmenu", { bubbles: true, cancelable: true });
@@ -30,5 +30,22 @@ describe("browser menu", () => {
     input.setSelectionRange(1, 3);
     expect(fieldState(input).hasSelection).toBe(true);
     expect(fieldState(get("r") as HTMLInputElement).editable).toBe(false);
+  });
+});
+
+describe("fields that hide their selection range", () => {
+  it("reads the page selection for a number input (selectionStart is null there)", () => {
+    document.body.innerHTML = '<input id="n" type="number" value="12">';
+    const input = document.getElementById("n") as HTMLInputElement;
+    expect(input.selectionStart).toBeNull();
+    expect(fieldState(input).hasSelection).toBe(false);
+    const original = window.getSelection;
+    window.getSelection = (() => ({ toString: () => "12" })) as unknown as typeof window.getSelection;
+    try {
+      expect(fieldState(input).hasSelection).toBe(true);
+      expect(selectedText(input)).toBe("12");
+    } finally {
+      window.getSelection = original;
+    }
   });
 });
