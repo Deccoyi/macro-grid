@@ -29,6 +29,20 @@ public class ProblemExportTests
     }
 
     [Fact]
+    public void A_server_line_carries_the_page_and_widget_ids_of_its_target()
+    {
+        var problems = new ProblemList();
+        problems.Report("macro-grid", "Macro Grid", ProblemSeverity.Warning, "P132", "failed", "run:w:press", 10, new ProblemTarget("p", "page1", "w", "press"));
+
+        var json = ProblemExport.Build([], problems.Snapshot(), Redact, DateTimeOffset.UtcNow, "1");
+
+        using var doc = JsonDocument.Parse(json);
+        var line = doc.RootElement.GetProperty("lines")[0];
+        Assert.Equal("page1", line.GetProperty("page").GetString());
+        Assert.Equal("w", line.GetProperty("widget").GetString());
+    }
+
+    [Fact]
     public void Text_is_cleaned_and_cut()
     {
         var editor = new[] { new ExportLine("error", "E1", new string('x', 1000) + "\u0000", "Editor") };

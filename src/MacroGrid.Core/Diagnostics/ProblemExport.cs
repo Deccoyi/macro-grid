@@ -5,7 +5,12 @@ namespace MacroGrid.Core.Diagnostics;
 /// <summary>One line of an exported Error List, already written out as text. The editor sends its own lines in this shape.</summary>
 public sealed record ExportLine(
     string? Severity, string? Code, string? Message, string? Source, int Count = 1, string? Page = null, string? Widget = null,
-    DateTimeOffset? FirstAt = null, DateTimeOffset? LastAt = null);
+    DateTimeOffset? FirstAt = null, DateTimeOffset? LastAt = null)
+{
+    /// <summary>The server's own line, with the page and widget ids of its target (ids only, no names).</summary>
+    public static ExportLine From(Problem p) => new(
+        p.Severity.ToString().ToLowerInvariant(), p.Code, p.Message, p.SourceName, p.Count, p.Target?.PageId, p.Target?.WidgetId, p.FirstAt, p.LastAt);
+}
 
 /// <summary>Builds the document of the Error List export: the editor's lines plus the server's own, every text cleaned and redacted.</summary>
 public static class ProblemExport
@@ -23,8 +28,7 @@ public static class ProblemExport
     public static string Build(IEnumerable<ExportLine> editorLines, IEnumerable<Problem> serverProblems, Redactor redactor, DateTimeOffset now, string version)
     {
         var lines = new List<ExportLine>();
-        lines.AddRange(serverProblems.Select(p => new ExportLine(
-            p.Severity.ToString().ToLowerInvariant(), p.Code, p.Message, p.SourceName, p.Count, FirstAt: p.FirstAt, LastAt: p.LastAt)));
+        lines.AddRange(serverProblems.Select(ExportLine.From));
         lines.AddRange(editorLines);
 
         var document = new
