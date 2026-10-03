@@ -372,7 +372,7 @@ public sealed class SelfVariableTests : IDisposable
     }
 
     [Fact]
-    public async Task Removing_a_variable_a_text_uses_tells_every_device_the_widget_is_unavailable()
+    public async Task Removing_a_variable_a_text_uses_shows_n_a_on_every_device_and_does_not_mark_the_widget()
     {
         var (service, variables, _, _, sessions) = Make(new Widget { Id = "w", Text = "{plug.value}" });
         using var _ = service;
@@ -389,7 +389,11 @@ public sealed class SelfVariableTests : IDisposable
         await service.FlushAsync();
 
         foreach (var socket in new[] { phone, browser })
-            Assert.Equal("plug.value", (string?)Assert.Single(socket.Sent).Data!["unavailable"]![0]);
+        {
+            var message = Assert.Single(socket.Sent).Data!;
+            Assert.Equal("n/a", (string?)message["text"]);
+            Assert.Null(message["unavailable"]);
+        }
     }
 
     [Fact]

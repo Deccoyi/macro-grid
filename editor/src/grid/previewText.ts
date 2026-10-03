@@ -1,6 +1,9 @@
 /** Same cut as the server's template (shown while a variable is unavailable). */
 const MAX_PLACEHOLDER = 64;
 
+/** What the text shows for a variable with no value and no placeholder of its own: the server's Template.MissingValue. */
+const MISSING_VALUE = "n/a";
+
 /**
  * Best-effort local substitution of {name|format} tokens using the one-shot variable snapshot, so a
  * template widget shows something close to what the server's Template.Render would produce, rather
@@ -14,7 +17,7 @@ export function renderPreviewText(text: string | undefined, variables: Record<st
     if (match === "}}") return "}";
     if (!name) return match;
     const value = variables[name.trim()];
-    if (value === undefined || value === null) return placeholder === undefined ? "" : placeholder.slice(0, MAX_PLACEHOLDER);
+    if (value === undefined || value === null) return placeholder === undefined ? MISSING_VALUE : placeholder.slice(0, MAX_PLACEHOLDER);
     return formatPreviewValue(value, format);
   });
 }

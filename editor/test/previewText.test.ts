@@ -12,8 +12,8 @@ describe("preview text", () => {
   });
 
   it("renders a missing or null variable as empty text", () => {
-    expect(renderPreviewText("a{x}b", {})).toBe("ab");
-    expect(renderPreviewText("a{x}b", { x: null })).toBe("ab");
+    expect(renderPreviewText("a{x}b", {})).toBe("an/ab");
+    expect(renderPreviewText("a{x}b", { x: null })).toBe("an/ab");
   });
 
   it("shows the placeholder while a variable is unavailable and not when it has a value", () => {

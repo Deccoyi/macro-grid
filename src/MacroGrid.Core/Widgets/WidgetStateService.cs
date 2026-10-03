@@ -89,14 +89,10 @@ public sealed class WidgetStateService : IHostedService, IDisposable
         }
     }
 
-    /// <summary>The sources the widget's text, bound value and action steps need and cannot get now.</summary>
-    private IReadOnlyList<string> UnavailableFor(Widget widget, IVariableStore scope, Profile? profile)
-    {
-        var fromText = DynamicText.UnavailableSources(widget, scope);
-        if (_actions is null) return fromText;
-        var fromActions = _actions.UnavailableSources(widget, scope, profile, id => _profiles.Get(id) is not null, _userVariables is null ? null : name => _userVariables.Find(name) is not null);
-        return fromActions.Count == 0 ? fromText : [.. fromText.Concat(fromActions).Distinct()];
-    }
+    /// <summary>What the widget's action steps need and cannot get now. A variable with no value used only in the text or look is not here: the
+    /// text shows "n/a" and the press runs.</summary>
+    private IReadOnlyList<string> UnavailableFor(Widget widget, IVariableStore scope, Profile? profile) =>
+        _actions?.UnavailableSources(widget, scope, profile, id => _profiles.Get(id) is not null, _userVariables is null ? null : name => _userVariables.Find(name) is not null) ?? [];
 
     /// <summary>A plugin's widgets changed (approved, reloaded, switched off, removed): devices showing a profile with plugin widgets get their layout again, so a
     /// widget that could not run starts, or one that stopped draws its placeholder.</summary>
@@ -445,8 +441,7 @@ public sealed class WidgetStateService : IHostedService, IDisposable
             }
 
             List<string>? unavailable = null;
-            if (forced || DynamicText.Dependencies(widget).Any(dirty.Contains) || (!string.IsNullOrEmpty(variableName) && dirty.Contains(variableName))
-                || (_actions is not null && _actions.ActionDependencies(widget).Any(dirty.Contains)))
+            if (forced || (_actions is not null && _actions.ActionDependencies(widget).Any(dirty.Contains)))
             {
                 var now = UnavailableFor(widget, scope, profile);
                 if (string.Join(UnavailableSeparator, now) !=session.SentUnavailable.GetValueOrDefault(widget.Id, ""))
