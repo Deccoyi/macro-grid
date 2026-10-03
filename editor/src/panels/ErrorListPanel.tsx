@@ -50,13 +50,14 @@ export function ErrorListPanel() {
 
   const toggleColumn = (column: DiagnosticColumn) => {
     const next = hidden.includes(column) ? hidden.filter((c) => c !== column) : [...hidden, column];
-    if (visibleColumns(next).length === 0 || (next.length >= DIAGNOSTIC_COLUMNS.length)) return; // the last column stays
+    if (column === "description") return; // the description always stays
     setHidden(next);
     saveHiddenColumns(next);
   };
   const columnMenuItems: ContextMenuEntry[] = DIAGNOSTIC_COLUMNS.map((column) => ({
     label: t(`errorList.col.${column}`),
     checked: columns.includes(column),
+    disabled: column === "description",
     onSelect: () => toggleColumn(column),
   }));
 

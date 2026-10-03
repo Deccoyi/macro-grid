@@ -60,10 +60,9 @@ export function saveHiddenColumns(hidden: readonly DiagnosticColumn[]): void {
   }
 }
 
-/** The columns shown, in table order. At least one stays, so the table never goes blank. */
+/** The columns shown, in table order. The description always stays, so the table never goes blank. */
 export function visibleColumns(hidden: readonly DiagnosticColumn[]): DiagnosticColumn[] {
-  const shown = DIAGNOSTIC_COLUMNS.filter((c) => !hidden.includes(c));
-  return shown.length > 0 ? shown : [DIAGNOSTIC_COLUMNS[0]];
+  return DIAGNOSTIC_COLUMNS.filter((c) => c === "description" || !hidden.includes(c));
 }
 
 /** The width a column needs for its widest text (header included): `measure` gives the pixel width of a text, `extra` is the padding and icons around it. */

@@ -36,7 +36,7 @@ describe("hidden columns and auto-fit", () => {
     saveHiddenColumns(["code", "details"]);
     expect(loadHiddenColumns()).toEqual(["code", "details"]);
     expect(visibleColumns(["code", "details"])).toEqual(["severity", "description", "source", "screen", "location"]);
-    expect(visibleColumns([...DIAGNOSTIC_COLUMNS])).toEqual(["severity"]);
+    expect(visibleColumns([...DIAGNOSTIC_COLUMNS])).toEqual(["description"]);
     localStorage.setItem("macro-grid.editor.diagnosticHiddenColumns", "{bad");
     expect(loadHiddenColumns()).toEqual([]);
   });

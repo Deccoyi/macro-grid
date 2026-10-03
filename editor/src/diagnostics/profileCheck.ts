@@ -149,10 +149,14 @@ export function checkProfile(profile: Profile, catalogs: CheckCatalogs, eventLab
               add({ id: `W221:${widget.id}:${event}:${index}:${field.key}`, severity: "warning", code: "W221", messageKey: "diag.check.W221", messageArgs: [...args, field.label, problem], target });
             }
             if (field.allowVariables && typeof s[field.key] === "string") {
-              for (const v of templateVariables(s[field.key] as string)) {
+              for (const { name: v, placeholder } of templateUsage(s[field.key] as string)) {
                 if (v.toLowerCase().startsWith(SELF_PREFIX)) {
                   add({ id: `W232:${widget.id}:${event}:${index}:${v}`, severity: "warning", code: "W232", messageKey: "diag.check.W232", messageArgs: [page.name, name, v], target });
                 } else if (!known(v)) missingVariable(v, `${widget.id}:${event}:${index}`, page.name, name, target);
+                else if (!placeholder && widget.props?.hideUnavailable !== true && noValue(v)) {
+                  // The phone greys the button for this (a step reads a variable that has no value), so the Error List says so too.
+                  add({ id: `W235:${widget.id}:${event}:${index}:${v}`, severity: "warning", code: "W235", messageKey: "diag.check.W235", messageArgs: [page.name, name, v], target });
+                }
               }
             }
           }

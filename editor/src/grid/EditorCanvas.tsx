@@ -1,5 +1,5 @@
 import { useCallback, useRef, useState } from "react";
-import { CircleAlert } from "lucide-react";
+import { CircleAlert, TriangleAlert } from "lucide-react";
 import { Grid, PluginWidgetContext, WidgetView, gridArea, type Page, type Widget } from "@macro/renderer";
 import { useT } from "../i18n/I18nContext";
 import { canPlace, canPlaceExcluding, clamp, overlappingWidgets } from "./collision";
@@ -8,6 +8,7 @@ import { renderPreviewText } from "./previewText";
 import { selfSample } from "./selfPreview";
 import { useSelfPreview } from "../state/selfPreviewStore";
 import { unavailableSources } from "./unavailableSources";
+import type { WidgetProblems } from "../diagnostics/problemWidgets";
 import { usePluginWidgetPreview } from "./usePluginWidgetPreview";
 
 interface EditorCanvasProps {
@@ -19,7 +20,7 @@ interface EditorCanvasProps {
   onContextMenu: (x: number, y: number, widgetId: string) => void;
   variables: Record<string, unknown>;
   /** Widgets with an error line, with the line's text: each gets a small red marker (drawn in the overlay, never inside the widget). */
-  problemWidgets?: ReadonlyMap<string, string>;
+  problemWidgets?: ReadonlyMap<string, WidgetProblems>;
 }
 
 type DragMode = "move" | "resize";
@@ -193,11 +194,11 @@ export function EditorCanvas({ page, selectedIds, onSelect, onToggleSelect, onRe
               />
               {problemWidgets?.has(widget.id) && (
                 <div
-                  title={problemWidgets.get(widget.id)}
+                  title={problemWidgets.get(widget.id)?.texts.join(" · ")}
                   onPointerDown={(e) => { e.stopPropagation(); if (!isSelected) onSelect([widget.id]); }}
-                  style={{ position: "absolute", top: 3, right: 3, display: "flex", color: "var(--ms-danger)", background: "var(--ms-bg-surface)", borderRadius: "50%" }}
+                  style={{ position: "absolute", top: 3, right: 3, display: "flex", color: problemWidgets.get(widget.id)?.level === "error" ? "var(--ms-danger)" : "var(--ms-warning, #facc15)", background: "var(--ms-bg-surface)", borderRadius: "50%" }}
                 >
-                  <CircleAlert size={14} strokeWidth={2.25} />
+                  {problemWidgets.get(widget.id)?.level === "error" ? <CircleAlert size={14} strokeWidth={2.25} /> : <TriangleAlert size={14} strokeWidth={2.25} />}
                 </div>
               )}
               {isSelected && (
