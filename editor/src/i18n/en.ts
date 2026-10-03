@@ -301,6 +301,8 @@ export const en: Record<DictKey, string> = {
   "plugins.enable": "Switch this plugin on",
   "plugins.disable": "Switch this plugin off",
   "plugins.state.on": "On",
+  "plugins.statusBar": "Status bar",
+  "plugins.statusBar.hint": "Show this plugin's status items in the editor's status bar. They are hidden by default.",
   "plugins.state.off": "Off",
   "plugins.approve": "Allow and enable",
   "plugins.approve.intro": "This plugin asks for these permissions to run:",

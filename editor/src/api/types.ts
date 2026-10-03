@@ -479,6 +479,8 @@ export interface AppPreferences {
   includePreReleases: boolean;
   /** Whether other devices may connect without encryption (the plain port, which the browser deck needs). On by default. */
   allowUnencrypted: boolean;
+  /** Plugins whose status items show in the status bar (id to true). A plugin that is not listed is hidden there. */
+  statusBarPlugins: Record<string, boolean>;
   /** The docking workspace arrangement last left in — see DockLayoutProfile's `layoutJson`. Empty until
    * the user changes the layout at least once. */
   dockLayoutJson: string;
