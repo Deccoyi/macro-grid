@@ -35,3 +35,15 @@ export function fieldState(field: TextField): FieldState {
   }
   return { editable: true, hasSelection: selectedText(field).length > 0, hasText: (field.textContent ?? "").length > 0 };
 }
+
+let lastCopied = "";
+
+/** The text of the last Copy or Cut done inside the editor. The embedded view refuses to let the page read the system clipboard, so the menu's
+ * Paste inserts this instead; text copied in another program only pastes with Ctrl+V. */
+export function rememberCopied(text: string): void {
+  if (text.length > 0) lastCopied = text;
+}
+
+export function copiedText(): string {
+  return lastCopied;
+}
