@@ -16,20 +16,22 @@ export interface FieldState {
   hasText: boolean;
 }
 
+/** The selected text of an input or textarea. Some input types (number, email) do not expose their selection range (the browser gives null),
+ * so the page's own selection is read instead. */
+export function selectedText(field: TextField): string {
+  if (field instanceof HTMLInputElement || field instanceof HTMLTextAreaElement) {
+    if (field.selectionStart === null || field.selectionEnd === null) return window.getSelection()?.toString() ?? "";
+    return field.value.slice(field.selectionStart, field.selectionEnd);
+  }
+  return window.getSelection()?.toString() ?? "";
+}
+
 /** What the menu may offer for a field right now: Cut and Paste need an editable field, Cut and Copy a selection, Select all some text. */
 export function fieldState(field: TextField): FieldState {
   if (field instanceof HTMLInputElement || field instanceof HTMLTextAreaElement) {
-    const start = field.selectionStart ?? 0;
-    const end = field.selectionEnd ?? 0;
     // A password field never offers Cut or Copy.
     const secret = field instanceof HTMLInputElement && field.type === "password";
-    return { editable: !field.readOnly && !field.disabled, hasSelection: !secret && end > start, hasText: field.value.length > 0 };
+    return { editable: !field.readOnly && !field.disabled, hasSelection: !secret && selectedText(field).length > 0, hasText: field.value.length > 0 };
   }
-  const text = window.getSelection()?.toString() ?? "";
-  return { editable: true, hasSelection: text.length > 0, hasText: (field.textContent ?? "").length > 0 };
-}
-
-export function selectedText(field: TextField): string {
-  if (field instanceof HTMLInputElement || field instanceof HTMLTextAreaElement) return field.value.slice(field.selectionStart ?? 0, field.selectionEnd ?? 0);
-  return window.getSelection()?.toString() ?? "";
+  return { editable: true, hasSelection: selectedText(field).length > 0, hasText: (field.textContent ?? "").length > 0 };
 }
