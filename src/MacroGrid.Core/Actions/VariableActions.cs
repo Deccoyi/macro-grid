@@ -15,9 +15,9 @@ public sealed class SetVariableAction(UserVariableService variables) : IActionHa
     public const string TypeId = "core.setVariable";
 
     public string Type => TypeId;
-    public string DisplayName => "Set variable";
-    public string Category => "Variables";
-    public string? Description => "Sets, switches, counts or resets a variable from the Global Variable List";
+    public string DisplayName => "Set variable (old)";
+    public string Category => "Variable";
+    public string? Description => "The older all-in-one action: sets, switches, counts or resets a variable from the Global Variable List";
     public string? Icon => "variable";
 
     // Only "value" is declared so the dispatcher fills its {templates}; the editor form draws the rest.
@@ -86,7 +86,7 @@ public abstract class VariableActionBase(UserVariableService variables, string m
     public abstract string Type { get; }
     public abstract string DisplayName { get; }
     public abstract string? Description { get; }
-    public string Category => "Variables";
+    public string Category => "Variable";
     public string? Icon => "variable";
     public virtual IReadOnlyList<SettingField> Fields => [];
 
@@ -102,7 +102,7 @@ public sealed class VariableSetValueAction(UserVariableService variables) : Vari
 {
     public const string TypeId = "core.variable.set";
     public override string Type => TypeId;
-    public override string DisplayName => "Set variable to a value";
+    public override string DisplayName => "Set variable";
     public override string? Description => "Puts a value into a variable";
 
     // Only "value" is declared so the dispatcher fills its {templates}; the editor form draws the rest.
@@ -115,8 +115,8 @@ public sealed class VariableAddAction(UserVariableService variables) : VariableA
 {
     public const string TypeId = "core.variable.add";
     public override string Type => TypeId;
-    public override string DisplayName => "Change a number variable";
-    public override string? Description => "Adds to or subtracts from a Number variable";
+    public override string DisplayName => "Add to or subtract from number";
+    public override string? Description => "Adds or subtracts a number (for example +1 or -5) on a Number variable";
 }
 
 /// <summary>Settings: { "variable": "user.flag" }.</summary>
@@ -124,7 +124,7 @@ public sealed class VariableToggleAction(UserVariableService variables) : Variab
 {
     public const string TypeId = "core.variable.toggle";
     public override string Type => TypeId;
-    public override string DisplayName => "Switch True / False variable";
+    public override string DisplayName => "Toggle variable";
     public override string? Description => "Flips a True/False variable to the other value";
 }
 
@@ -133,6 +133,6 @@ public sealed class VariableResetAction(UserVariableService variables) : Variabl
 {
     public const string TypeId = "core.variable.reset";
     public override string Type => TypeId;
-    public override string DisplayName => "Reset variable";
+    public override string DisplayName => "Reset to start value";
     public override string? Description => "Puts a variable back to its start value";
 }
