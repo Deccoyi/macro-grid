@@ -2,6 +2,7 @@ using System.Net.WebSockets;
 using System.Text;
 using System.Threading.Channels;
 using MacroGrid.Core.Actions;
+using MacroGrid.Core.Devices;
 using MacroGrid.Core.Diagnostics;
 using MacroGrid.Core.Model;
 using MacroGrid.Core.Plugins;
@@ -478,5 +479,43 @@ public sealed class SelfVariableTests : IDisposable
         handler.Fail = false;
         await ReleaseOnce();
         Assert.Empty(problems.Snapshot());
+    }
+
+    [Fact]
+    public async Task A_connected_device_gets_the_profile_list_again_when_a_profile_is_added_renamed_or_deleted()
+    {
+        var profiles = new ProfileStore(_dir);
+        var devices = new DeviceStore(_dir);
+        var paired = devices.Pair("phone-1", "Phone");
+        var socket = new TestSocket();
+        var sessions = new SessionRegistry();
+        sessions.Add(new ClientSession(socket) { DeviceId = paired.Id, ProfileId = profiles.First().Id });
+        var hub = new ClientHub(sessions, profiles, new ActionDispatcher([], NullLogger<ActionDispatcher>.Instance), new ToggleStateStore(), null!,
+            new LastResultStore(), devices, null!, null!, null!, NullLogger<ClientHub>.Instance, null!, null!, new ProblemList());
+        hub.ListenForProfileChanges(); // the hub starts listening on the first connection; here it is started directly
+
+        async Task<ProfilesListPayload> NextList(Action change)
+        {
+            socket.Sent.Clear();
+            change();
+            for (var i = 0; i < 100 && socket.Sent.Count == 0; i++) await Task.Delay(20);
+            var message = Assert.Single(socket.Sent);
+            Assert.Equal(MessageTypes.ProfilesList, message.Type);
+            return message.DataAs<ProfilesListPayload>()!;
+        }
+
+        var added = await NextList(() => profiles.Save(new Profile { Id = "new", Name = "Streaming", Pages = [new Page { Id = "a", Name = "Main" }] }));
+        Assert.Contains(added.Profiles, p => p.Id == "new" && p.Name == "Streaming");
+
+        var renamed = await NextList(() => profiles.Save(new Profile { Id = "new", Name = "Gaming", Pages = [new Page { Id = "a", Name = "Main" }] }));
+        Assert.Contains(renamed.Profiles, p => p.Id == "new" && p.Name == "Gaming");
+
+        var deleted = await NextList(() => profiles.Delete("new"));
+        Assert.DoesNotContain(deleted.Profiles, p => p.Id == "new");
+
+        socket.Sent.Clear();
+        profiles.Save(new Profile { Id = profiles.First().Id, Name = profiles.First().Name, Pages = [new Page { Id = "b", Name = "Other" }] }); // content only
+        await Task.Delay(100);
+        Assert.Empty(socket.Sent);
     }
 }

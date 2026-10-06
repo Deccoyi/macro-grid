@@ -30,6 +30,9 @@ public sealed class ProfileStore
 #endif
         Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "MacroGrid");
 
+    /// <summary>Raised after a profile was added, renamed or deleted (not for every ordinary save of a profile's content), outside the lock.</summary>
+    public event Action? ListChanged;
+
     public IReadOnlyList<Profile> All
     {
         get { lock (_lock) return _profiles.Values.OrderBy(p => p.Name).ToList(); }
@@ -53,8 +56,9 @@ public sealed class ProfileStore
             _profiles.Remove(id);
             var path = PathFor(id);
             if (File.Exists(path)) File.Delete(path);
-            return true;
         }
+        ListChanged?.Invoke();
+        return true;
     }
 
     public void Save(Profile profile)
@@ -62,13 +66,16 @@ public sealed class ProfileStore
         var json = JsonSerializer.Serialize(profile, FileJson);
         var path = PathFor(profile.Id);
         var tmp = path + ".tmp";
+        bool listChanged;
         lock (_lock)
         {
             // Write-then-rename so a crash never leaves a half written profile.
             File.WriteAllText(tmp, json);
             File.Move(tmp, path, overwrite: true);
+            listChanged = !_profiles.TryGetValue(profile.Id, out var before) || before.Name != profile.Name;
             _profiles[profile.Id] = profile;
         }
+        if (listChanged) ListChanged?.Invoke();
     }
 
     private void Load()
