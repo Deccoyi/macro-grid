@@ -48,6 +48,7 @@ public sealed class ClientHub(
 
     public async Task HandleAsync(WebSocket socket, string remoteAddress, CancellationToken cancellationToken)
     {
+        ListenForProfileChanges();
         var session = new ClientSession(socket) { RemoteAddress = remoteAddress };
         sessions.Add(session);
         logger.LogInformation("Client {Session} connected from {Remote}", session.Id, remoteAddress);
@@ -309,6 +310,33 @@ public sealed class ClientHub(
         PairingOutcome.WrongPin => "Wrong PIN. Enter the PIN shown in the Pairing window of the Macro Grid editor on the computer.",
         _ => "Pairing is required. Open the Pairing window in the Macro Grid editor on the computer and enter the PIN shown there.",
     };
+
+    private int _listening;
+
+    /// <summary>Starts, once, to push the profile list to connected devices whenever a profile is added, renamed or deleted. The hub is created by the
+    /// first connection, and no device is connected before that, so nothing is missed.</summary>
+    internal void ListenForProfileChanges()
+    {
+        if (Interlocked.Exchange(ref _listening, 1) == 0) profiles.ListChanged += () => _ = PushProfilesListAsync();
+    }
+
+    /// <summary>Sends the current profile list to every connected, identified device (it is tiny and changes rarely). A device that cannot take it is left alone.</summary>
+    internal async Task PushProfilesListAsync()
+    {
+        foreach (var session in sessions.All)
+        {
+            if (!session.IsIdentified || devices.All.FirstOrDefault(d => d.Id == session.DeviceId) is not { } device) continue;
+            try
+            {
+                using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+                await SendProfilesListAsync(session, device, timeout.Token);
+            }
+            catch (Exception ex) when (ex is not OutOfMemoryException)
+            {
+                logger.LogDebug(ex, "Could not send the profile list to {Session}", session.Id);
+            }
+        }
+    }
 
     private Task SendProfilesListAsync(ClientSession session, PairedDevice device, CancellationToken ct) =>
         session.SendAsync(MessageTypes.ProfilesList, new ProfilesListPayload(
