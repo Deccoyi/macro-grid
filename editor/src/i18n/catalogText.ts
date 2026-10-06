@@ -60,7 +60,7 @@ const TR: Record<string, string> = {
   "actionDesc:core.variable.set": "Bir değişkenin değerini belirler",
   "action:core.variable.add": "Sayı değişkenini değiştir",
   "actionDesc:core.variable.add": "Bir Sayı değişkenine ekler veya ondan çıkarır",
-  "action:core.variable.toggle": "Doğru / Yanlış değiştir",
+  "action:core.variable.toggle": "Ters çevir",
   "actionDesc:core.variable.toggle": "Bir Doğru / Yanlış değişkenini diğer değerine çevirir",
   "action:core.variable.reset": "Değişkeni sıfırla",
   "actionDesc:core.variable.reset": "Bir değişkeni başlangıç değerine döndürür",

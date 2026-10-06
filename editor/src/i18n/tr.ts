@@ -949,7 +949,7 @@ export const tr = {
   "form.setVariable.mode": "Ne yapılsın",
   "form.setVariable.mode.set": "Bir değere ayarla",
   "form.setVariable.mode.add": "Sayı ekle",
-  "form.setVariable.mode.toggle": "Doğru / Yanlış değiştir",
+  "form.setVariable.mode.toggle": "Ters çevir",
   "form.setVariable.mode.reset": "Başlangıç değerine döndür",
   "form.variable.target": "Değişken",
   "form.variable.pick": "Değişken seç",
