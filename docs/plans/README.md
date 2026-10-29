@@ -17,7 +17,7 @@ Each plan exists once. If the same text exists in another repository or on the D
 
 | # | Work | Repositories | Plan | Why here |
 |---|---|---|---|---|
-| 1 | [Crash report dialog](crash-report-dialog.md): a native window after a crash (needs a decision on how the report is sent) | `macro-grid` | [crash-report-dialog.md](crash-report-dialog.md) | The owner has to choose the sending mechanism; a saved report file needs nothing. |
+| 1 | [Crash report dialog](crash-report-dialog.md): a native window after a crash that shows the report and lets the person save or copy it (nothing is sent) | `macro-grid` | [crash-report-dialog.md](crash-report-dialog.md) | Ready to build; two small questions for the owner do not block it. |
 | 2 | [Discover: icons, screenshots](discover-store-fields.md) | `macro-grid`, `macro-grid-plugin` | [discover-store-fields.md](discover-store-fields.md) | Icon first; nobody is blocked. |
 | 3 | [Live-stream chat plugin](live-stream-chat-plugin.md) | `macro-grid-plugin` | [live-stream-chat-plugin.md](live-stream-chat-plugin.md) | Needs a platform that fits the two conditions in the plan. |
 
