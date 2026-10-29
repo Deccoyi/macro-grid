@@ -1,4 +1,5 @@
 using MacroGrid.Core.Backup;
+using MacroGrid.Core.Devices;
 using MacroGrid.Core.Diagnostics;
 using MacroGrid.Core.Plugins;
 using MacroGrid.Core.Preferences;
@@ -37,6 +38,36 @@ internal static class Program
         if (!AgreementGate.EnsureAccepted(AppContext.BaseDirectory, new AgreementRecord()))
             return;
 
+        // A crash last time: the report text is built before anything is deleted, and the marker files are deleted before the window shows,
+        // so a crash inside the window or in the next run can never show the same report again and again.
+        var dataDir = ProfileStore.DefaultDataDir;
+        var crashMarkers = CrashMarkers.Read(Path.Combine(dataDir, CrashMarkers.FolderName));
+        PendingCrashReport? crashReport = null;
+        Exception? crashReportError = null;
+        if (crashMarkers.Files.Count > 0)
+        {
+            try
+            {
+                var redactor = new Redactor(RedactionContext.ForThisPc(dataDir, DeviceStore.ReadNames(dataDir)));
+                crashReport = new PendingCrashReport(
+                    CrashReport.Build(crashMarkers, Path.Combine(dataDir, "logs"), redactor, AppContext.BaseDirectory), crashMarkers.Files);
+            }
+            catch (Exception ex)
+            {
+                // A broken report must never stop the app: it is logged below, the markers go, and the app starts normally.
+                crashReportError = ex;
+                CrashMarkers.Delete(crashMarkers.Files);
+            }
+        }
+
+        // A crash while starting is shown before the server starts, even on autostart: a start that crashes every time never reaches the tray.
+        if (crashReport is not null && CrashReportPolicy.When(crashMarkers, editorOpensAtStart: false) == CrashReportTiming.BeforeServer)
+        {
+            CrashMarkers.Delete(crashReport.Files);
+            using (var dialog = new CrashReportDialog(crashReport.Text)) dialog.ShowDialog();
+            crashReport = null;
+        }
+
         // Captured here (on the real UI thread, before the message loop even starts) so API handlers
         // running on Kestrel's thread pool can still marshal a native dialog (OpenFileDialog, ...) onto it.
         var ui = SynchronizationContext.Current ?? new WindowsFormsSynchronizationContext();
@@ -45,6 +76,8 @@ internal static class Program
 
         var server = ServerApp.Build(args, dialogs, windows);
         HostText.Bind(server.Services.GetRequiredService<PreferencesStore>());
+        if (crashReportError is not null)
+            server.Services.GetRequiredService<ILoggerFactory>().CreateLogger("CrashReport").LogWarning(crashReportError, "The crash report could not be built");
         // Before anything starts: if the app hangs while starting, this is the last line in the log.
         StartupDiagnostics.LogStarting(server.Services, args);
         try
@@ -75,7 +108,7 @@ internal static class Program
         server.Services.GetRequiredService<UpdateInstaller>().CleanUpDownloads();
 
         var openEditor = StartupPolicy.ShouldOpenEditor(args, server.Services.GetRequiredService<PreferencesStore>().Get());
-        Application.Run(new TrayContext(server, openEditor, updated));
+        Application.Run(new TrayContext(server, openEditor, updated, crashReport, CrashReportPolicy.When(crashMarkers, openEditor)));
 
         // The tray icon is gone at this point. If stopping the server hangs (for example a hosted service waiting for
         // the UI thread, whose message loop has just ended) or a foreground thread survives, the process would stay
