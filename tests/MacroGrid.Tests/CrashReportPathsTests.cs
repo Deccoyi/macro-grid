@@ -54,6 +54,11 @@ public sealed class CrashReportPathsTests
     [InlineData(@"Could not find file 'C:\Users\Jane Doe\AppData\Roaming\MacroGrid\profiles\Work.json'.", "Could not find file '<path>'.")]
     [InlineData(@"Opened C:\Users\Jane Doe\AppData\Roaming\MacroGrid\logs\macro-grid-20261029.log", @"Opened <data>\logs\macro-grid-20261029.log")]
     [InlineData(@"in <data>\\x\y", "in <path>")]
+    [InlineData(@"Opened <data>\logs\..\profiles\Work.json", "Opened <path>")]
+    [InlineData("Opened <data>/logs/../profiles/Work.json", "Opened <path>")]
+    [InlineData(@"Opened <data>\logs\sub/..\..\profiles\Work.json", "Opened <path>")]
+    [InlineData(@"Opened <data>\LOGS\macro-grid-20261029.log", @"Opened <data>\LOGS\macro-grid-20261029.log")]
+    [InlineData("Opened <data>/logs/macro-grid-20261029.log", "Opened <data>/logs/macro-grid-20261029.log")]
     public void A_path_under_home_or_data_is_removed_except_the_log_folder(string input, string expected)
     {
         Assert.Equal(expected, Both(input));
@@ -67,6 +72,12 @@ public sealed class CrashReportPathsTests
     [InlineData("http://127.0.0.1:5000/api/ping", "http://127.0.0.1:5000/api/ping")]
     [InlineData("http://localhost:5000/x", "http://localhost:5000/x")]
     [InlineData("took 12.30:45 s", "took 12.30:45 s")]
+    [InlineData("http://LOCALHOST/p/Work", "http://LOCALHOST/p/Work")]
+    [InlineData("http://[::1]:5000/p/Work", "http://[::1]:5000/p/Work")]
+    [InlineData("http://localhost.evil.lan/p/Work", "http://<host>")]
+    [InlineData("http://127.0.0.1.nip.io/x", "http://<host>")]
+    [InlineData("http://localhost.evil.lan:5000/p/Work", "http://<host>")]
+    [InlineData("http://127.0.0.1x/p/Work", "http://<host>")]
     public void The_host_of_a_url_or_a_host_and_port_is_removed(string input, string expected)
     {
         Assert.Equal(expected, Both(input));

@@ -27,7 +27,7 @@ public static partial class CrashReportPaths
         }
 
         line = LabelledPath().Replace(line, m =>
-            m.Groups["label"].Value == "data" && LogsFolder().IsMatch(m.Groups["rest"].Value) ? m.Value : "<path>");
+            m.Groups["label"].Value == "data" && LogsFolder().IsMatch(m.Groups["rest"].Value) && !ParentSegment().IsMatch(m.Groups["rest"].Value) ? m.Value : "<path>");
         line = DrivePath().Replace(line, "<path>");
         line = UncPath().Replace(line, "${before}<path>");
         line = Url().Replace(line, m => IsLocal(m.Groups["host"].Value) ? m.Value : m.Groups["scheme"].Value + "<host>");
@@ -35,9 +35,20 @@ public static partial class CrashReportPaths
         return Mac().Replace(line, "<mac>");
     }
 
-    private static bool IsLocal(string host) =>
-        host.StartsWith("127.", StringComparison.Ordinal) || host.StartsWith("[::1]", StringComparison.Ordinal)
-        || host.StartsWith("localhost", StringComparison.OrdinalIgnoreCase);
+    // Exact match after the port is cut off, so "localhost.evil.lan" and "127.0.0.1.nip.io" do not count as local.
+    private static bool IsLocal(string host)
+    {
+        var end = host.StartsWith('[') ? host.IndexOf(']') + 1 : host.LastIndexOf(':');
+        var name = end > 0 ? host[..end] : host;
+        return name.Equals("localhost", StringComparison.OrdinalIgnoreCase) || name == "[::1]" || Loopback4().IsMatch(name);
+    }
+
+    [GeneratedRegex(@"^127(?:\.\d{1,3}){3}$", Linear)]
+    private static partial Regex Loopback4();
+
+    // A ".." segment lets a path climb out of the log folder.
+    [GeneratedRegex(@"(?:^|[\\/])\.\.(?:[\\/]|$)", Linear)]
+    private static partial Regex ParentSegment();
 
     // Folder names may hold spaces; the last part ends at the first whitespace, quote, angle bracket, pipe or colon (so ":line 42" stays).
     private const string Rest = @"(?:[^\\/\r\n""'<>|:]+[\\/])*[^\s\\/""'<>|:]*";

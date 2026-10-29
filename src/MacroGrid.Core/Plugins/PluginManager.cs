@@ -102,12 +102,12 @@ public sealed partial class PluginManager(
     public IReadOnlyList<LoadedPlugin>? TryGetPlugins()
     {
         if (!_stateLock.TryEnter()) return null;
-        try { return Snapshot(); }
+        try { return Snapshot(wait: false); }
         finally { _stateLock.Exit(); }
     }
 
-    private List<LoadedPlugin> Snapshot() =>
-        [.. _entries.Values.Select(e => e.Running?.Instance is JsPlugin js ? e.Info with { KeyboardUsesToday = js.KeyboardUsesToday } : e.Info), .. _unrecognized];
+    private List<LoadedPlugin> Snapshot(bool wait = true) =>
+        [.. _entries.Values.Select(e => e.Running?.Instance is JsPlugin js ? e.Info with { KeyboardUsesToday = wait ? js.KeyboardUsesToday : js.KeyboardUsesTodayNoWait() } : e.Info), .. _unrecognized];
 
     public IReadOnlyList<IIconPackSource> IconPacks
     {
