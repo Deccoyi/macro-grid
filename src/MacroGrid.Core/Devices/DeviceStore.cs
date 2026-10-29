@@ -32,6 +32,27 @@ public sealed class DeviceStore
         Load();
     }
 
+    /// <summary>The names of the paired devices, read straight from <c>devices.json</c> without a protector (names are plain JSON there; only
+    /// the tokens are protected). Read-only: it never writes and never moves a broken file. Empty on any error. For a crash report that is built
+    /// before the stores exist.</summary>
+    public static IReadOnlyList<string> ReadNames(string dataDir)
+    {
+        try
+        {
+            var path = Path.Combine(dataDir, "devices.json");
+            if (!File.Exists(path) || JsonNode.Parse(File.ReadAllText(path)) is not JsonArray array) return [];
+            var key = FileJson.PropertyNamingPolicy?.ConvertName(nameof(PairedDevice.Name)) ?? nameof(PairedDevice.Name);
+            return array.OfType<JsonObject>()
+                .Select(d => d[key] is JsonValue v && v.TryGetValue<string>(out var name) ? name : null)
+                .OfType<string>()
+                .ToList();
+        }
+        catch (Exception)
+        {
+            return [];
+        }
+    }
+
     /// <summary>Devices dropped at load because their token could not be decrypted here.</summary>
     public int UnreadableOnLoad { get; private set; }
 
