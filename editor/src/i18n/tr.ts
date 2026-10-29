@@ -712,6 +712,13 @@ export const tr = {
   "action.logic.unsupported": "Bu koşul editörün gösterebileceğinden karmaşık. Olduğu gibi çalışır.",
   "action.logic.stopNote": "Eylem listesini burada bitirir.",
   "action.logic.removeBlock": "Kaldır (içindeki adımlar kalır)",
+  "action.logic.emptyIf": "Eğer içinde henüz eylem yok.",
+  "action.logic.emptyElse": "Değilse içinde henüz eylem yok.",
+  "action.addHere": "Buraya eylem ekle",
+  "action.drag": "Taşımak için sürükle",
+  "action.drop.here": "Buraya taşı",
+  "action.drop.insideIf": "Eğer içine",
+  "action.drop.insideElse": "Değilse içine",
 
   // ---- Action picker ----
   "actionPicker.title": "Eylem seç",

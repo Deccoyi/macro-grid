@@ -4,6 +4,7 @@ New features and fixes in Macro Grid. For technical details, see [CHANGELOG-deve
 
 ## Unreleased
 ### New
+- **If blocks are easier to build:** add an action straight into an If or Otherwise, drag actions between blocks, and condition rows no longer overlap in a narrow panel.
 - **Crash report:** after a crash, Macro Grid shows a report on the next start that you can save or copy. Nothing is sent.
 - **New setting types for plugins:** plugin settings can now have a shortcut key field, a time field (milliseconds, seconds or minutes) and a field where you tick several choices.
 - **Icons follow the text colour:** an icon you pick now takes the colour of the widget's text, so a dynamic text colour recolours the icon too, also when the icon itself changes with a rule. Icons picked earlier keep their colour until you pick them again.

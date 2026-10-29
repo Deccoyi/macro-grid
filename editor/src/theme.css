@@ -521,6 +521,40 @@ hr.sep {
   .dz-cond { grid-template-columns: 44px minmax(0, 1fr) 128px 24px; }
   .dz-cond .dz-value { grid-column: 2 / span 2; grid-row: 2; }
 }
+/* Narrower still: the variable keeps its own line, the operator and the value get full lines, so no two fields overlap. */
+@container (max-width: 279px) {
+  .dz-cond { grid-template-columns: 44px minmax(0, 1fr) 24px; }
+  .dz-cond > :nth-child(3), .dz-cond .dz-value { grid-column: 1 / -1; }
+  .dz-cond > :nth-child(3) { grid-row: 2; }
+  .dz-cond .dz-value { grid-row: 3; }
+  .dz-cond > :last-child { grid-column: 3; grid-row: 1; }
+}
+/* If / Otherwise / End in the action list: insertion points, empty block bodies, drag handle and drop zones. */
+.pf-flow { gap: 0; }
+.pf-flow-row { min-width: 0; }
+.pf-dim { opacity: .4; }
+.pf-grip { display: inline-flex; align-items: center; flex-shrink: 0; padding: 2px; color: var(--ms-text-disabled); cursor: grab; }
+.pf-grip:hover { color: var(--ms-text-secondary); }
+.pf-grip:active { cursor: grabbing; }
+.pf-tag { flex-shrink: 0; padding: 1px 6px; border-radius: 3px; font-size: 11px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; background: var(--ms-accent); color: var(--ms-accent-on); }
+.pf-tag.neutral { background: var(--ms-bg-surface-raised); color: var(--ms-text-secondary); border: 1px solid var(--ms-border-strong); }
+.pf-slot { height: 14px; min-width: 0; display: flex; align-items: stretch; }
+.pf-slot-inner { position: relative; flex: 1; min-width: 0; display: flex; align-items: center; justify-content: center; }
+.pf-slot-inner::before { content: ""; position: absolute; left: 0; right: 0; top: 50%; height: 1px; background: var(--ms-accent); opacity: 0; }
+.pf-slot-btn { position: relative; width: 16px; height: 16px; padding: 0; border-radius: 50%; border: 1px solid var(--ms-border); background: var(--ms-bg-surface); color: var(--ms-text-disabled); font-size: 13px; line-height: 14px; opacity: .6; }
+.pf-slot.quiet .pf-slot-btn { opacity: 0; }
+.pf-slot:hover .pf-slot-inner::before, .pf-slot:focus-within .pf-slot-inner::before { opacity: 1; }
+.pf-slot:hover .pf-slot-btn, .pf-slot-btn:focus-visible { opacity: 1; color: var(--ms-accent); border-color: var(--ms-accent); }
+.pf-slot.drop { height: 26px; padding-block: 2px; box-sizing: border-box; }
+.pf-slot.drop .pf-slot-inner { border: 1px dashed var(--ms-accent); border-radius: var(--pf-radius); background: var(--ms-accent-bg-muted); }
+.pf-slot.drop .pf-slot-inner::before { display: none; }
+.pf-slot-label { font-size: 11px; font-weight: 600; color: var(--ms-accent); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 0 6px; }
+.pf-slot.over .pf-slot-inner, .pf-empty.over { background: var(--ms-accent); border-style: solid; }
+.pf-slot.over .pf-slot-label, .pf-empty.over .pf-empty-text { color: var(--ms-accent-on); }
+.pf-empty { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 8px; margin: 2px 0; padding: 4px 8px; border: 1px dashed var(--ms-border-strong); border-radius: var(--pf-radius); font-size: 12px; color: var(--ms-text-secondary); min-width: 0; }
+.pf-empty .pf-empty-add { margin-left: auto; margin-right: 0; }
+.pf-empty.drop { border-color: var(--ms-accent); background: var(--ms-accent-bg-muted); color: var(--ms-accent); font-weight: 600; }
+
 .dz-seg { width: 168px; max-width: 100%; }
 .dz-seg .seg { min-width: 0; }
 .dz-seg .seg button { padding: 0 8px; flex: 1 0 auto; }
