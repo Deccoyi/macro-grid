@@ -86,6 +86,9 @@ internal sealed class TrayContext : ApplicationContext
             _icon.ShowBalloonTip(5000, "Macro Grid", HostText.Get("tray.updated", ClientHub.ServerVersion), ToolTipIcon.Info);
         else if (!openEditor)
             _icon.ShowBalloonTip(3000, HostText.Get("tray.running"), HostText.Get("tray.connectFrom", addressText), ToolTipIcon.Info);
+
+        // Last, so a crash while the constructor runs still counts as a start-up crash.
+        CrashCapture.MarkRunning();
     }
 
     private void ApplyLanguage()

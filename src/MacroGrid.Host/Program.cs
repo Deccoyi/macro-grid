@@ -1,5 +1,8 @@
 using MacroGrid.Core.Backup;
+using MacroGrid.Core.Diagnostics;
+using MacroGrid.Core.Plugins;
 using MacroGrid.Core.Preferences;
+using MacroGrid.Core.Profiles;
 using MacroGrid.Core.Sessions;
 using MacroGrid.Core.Updates;
 using MacroGrid.Host.Ui;
@@ -13,6 +16,9 @@ internal static class Program
     [STAThread]
     private static void Main(string[] args)
     {
+        // First: a crash anywhere after this line leaves a marker for the next start (see CrashCapture).
+        CrashCapture.Install(ProfileStore.DefaultDataDir);
+
         using var mutex = new Mutex(initiallyOwned: true, @"Local\MacroGrid.Server", out var isFirstInstance);
 #if DEBUG
         if (Environment.GetEnvironmentVariable("MACROGRID_ALLOW_SECOND_INSTANCE") == "1")
@@ -51,6 +57,10 @@ internal static class Program
                 MessageBoxButtons.OK, MessageBoxIcon.Error);
             return;
         }
+
+        // The plugins are loaded now; from here on a crash marker lists them.
+        var pluginManager = server.Services.GetRequiredService<PluginManager>();
+        CrashCapture.Plugins = () => [.. pluginManager.Plugins.Select(p => new CrashPlugin(p.Id, p.Version, p.Status.ToString()))];
 
         // What the data folder holds against what was loaded from it (see StartupDiagnostics).
         StartupDiagnostics.LogStarted(server.Services);
