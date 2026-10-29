@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using MacroGrid.Core.Diagnostics;
 using MacroGrid.Core.Plugins;
 using MacroGrid.Core.Preferences;
 using MacroGrid.Core.Profiles;
@@ -25,8 +26,12 @@ internal sealed class TrayContext : ApplicationContext
     // What a click on the balloon does; set by whoever showed it, so a balloon that has nothing to open leaves it empty.
     private Action? _balloonClick;
 
-    public TrayContext(WebApplication server, bool openEditor, bool updated = false)
+    // The report of a crash last time that has not been shown yet; null once it was (or when there is none).
+    private PendingCrashReport? _crashReport;
+
+    public TrayContext(WebApplication server, bool openEditor, bool updated = false, PendingCrashReport? crashReport = null, CrashReportTiming crashTiming = CrashReportTiming.None)
     {
+        _crashReport = crashReport;
         _ui = SynchronizationContext.Current ?? new WindowsFormsSynchronizationContext();
         _hub = server.Services.GetRequiredService<ClientHub>();
         _updates = server.Services.GetRequiredService<UpdateService>();
@@ -82,10 +87,37 @@ internal sealed class TrayContext : ApplicationContext
 
         if (openEditor)
             OpenEditor();
-        if (updated)
+        if (crashTiming == CrashReportTiming.WithEditor)
+            ShowCrashReport();
+
+        if (crashTiming == CrashReportTiming.OnTrayMenu && _crashReport is not null)
+        {
+            // Nothing pops up on an unattended sign-in: the balloon replaces the usual one, and the first opening of the menu (cancelled) shows the window.
+            menu.Opening += (_, e) =>
+            {
+                if (_crashReport is null) return;
+                e.Cancel = true;
+                ShowCrashReport();
+            };
+            _balloonClick = ShowCrashReport;
+            _icon.ShowBalloonTip(8000, HostText.Get("tray.crashReady"), HostText.Get("tray.crashReadyHint"), ToolTipIcon.Warning);
+        }
+        else if (updated)
             _icon.ShowBalloonTip(5000, "Macro Grid", HostText.Get("tray.updated", ClientHub.ServerVersion), ToolTipIcon.Info);
         else if (!openEditor)
             _icon.ShowBalloonTip(3000, HostText.Get("tray.running"), HostText.Get("tray.connectFrom", addressText), ToolTipIcon.Info);
+
+        // Last, so a crash while the constructor runs still counts as a start-up crash.
+        CrashCapture.MarkRunning();
+    }
+
+    /// <summary>Shows the crash report once: the marker files are deleted first, so it never comes back after this.</summary>
+    private void ShowCrashReport()
+    {
+        if (_crashReport is not { } report) return;
+        _crashReport = null;
+        CrashMarkers.Delete(report.Files);
+        new CrashReportDialog(report.Text).Show();
     }
 
     private void ApplyLanguage()

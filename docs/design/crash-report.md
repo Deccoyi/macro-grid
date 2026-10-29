@@ -1,8 +1,10 @@
 # Crash report dialog
 
-> Status: **planned, ready to build.** The sending question is settled: nothing is sent automatically (option c). Two small questions for the owner
-> remain at the end; the build can start without them. **Repositories:** `macro-grid` only. No change to the plugin SDK, the WebSocket protocol or
-> the security model.
+> Status: **built** (unreleased). Nothing is sent automatically. The owner settled both open questions: no link to an issue tracker (the window says
+> only "share it with the developers"), and the UI-thread behavior change is accepted. Differences from the first plan: the plugin list is wired
+> after the plugins are loaded (not right after `ServerApp.Build`, where it would be empty), and two redaction rows follow what `Redactor` gives
+> (`Authorization: <redacted> <redacted>`, `GET /api?token=<redacted>`). **Repositories:** `macro-grid` only. No change to the plugin SDK, the
+> WebSocket protocol or the security model.
 
 After the server crashes, the next start shows a native window (WinForms, not the editor and not a browser tab). It shows the exact report text and
 offers **Save to a file**, **Copy** and **Close**. The app never sends anything, holds no credentials and opens no network connection for this.
@@ -315,10 +317,10 @@ contains the user name, the PC name and `D:\Private\test.txt`, so redaction is v
 - Bump the version, tag, push, merge or release anything.
 - Name third-party products in code, comments, docs or commits.
 
-## Open questions for the owner
+## Open questions for the owner (answered)
 
-1. Should the window say **where** to share the report (for example "open an issue on the project's issue tracker"), and should it link there?
+1. Answered: no link, no place named. Original question: should the window say **where** to share the report (for example "open an issue on the project's issue tracker"), and should it link there?
    A link would put a hosting site's address into the code, and a link opens a browser. The build leaves it out until the owner says yes; the intro
    text then says only "share it with the developers".
-2. The UI-thread behavior change (see Decisions and Risks): accept it as planned? The alternative is to keep the old "continue or quit" box for
+2. Answered: accepted. Original question: the UI-thread behavior change (see Decisions and Risks): accept it as planned? The alternative is to keep the old "continue or quit" box for
    UI-thread errors and report only crashes from other threads.

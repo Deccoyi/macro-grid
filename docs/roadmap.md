@@ -58,6 +58,8 @@ Where the project stands. The server and the SDK are at 1.0.0 and under active d
 - **Security hardening:** an encrypted connection (TLS, see "Done" above), device tokens and plugin secrets encrypted at rest, pairing rate limits and
   a security log, a security event log, dependency vulnerability scanning and an SBOM in CI, and only official signed C# plugins load
   ([design/security-hardening.md](design/security-hardening.md)).
+- **Crash report window:** after a crash, the next start shows the report in a native window that the person saves or copies and shares; nothing is sent
+  ([design/crash-report.md](design/crash-report.md)).
 
 ## Next
 
@@ -83,7 +85,6 @@ The order of the bigger pieces of work, and their plans, are in [plans/README.md
   open, and each needs a catalog field first: screenshots, and (later) install counts or a rating. Needs deciding what's worth adding to
   `macrogrid-index.json` (author-supplied vs. computed by the release workflow) versus what stays editor-only presentation,
   since every new field is something plugin authors have to fill in and the host has to validate and cap. See [plans/discover-store-fields.md](plans/discover-store-fields.md).
-- **A crash report dialog:** when the server crashes, show the person a native confirmation window (WinForms, not a browser tab or the editor) with what would be sent — the log files and basic diagnostic info — and a choice to send it or not. On "send", the app itself emails the report to `macrogrid.app@gmail.com`; it must not open the person's own mail client or send them to a webmail site. Needs deciding how a crashed process reliably shows this window and mails from it (a small always-present watchdog process, or a next-start check for a previous crash marker), what "basic diagnostic info" contains, and the sending mechanism (SMTP with a project-owned account vs. a small backend). See [plans/crash-report-dialog.md](plans/crash-report-dialog.md).
 
 ## Release status
 

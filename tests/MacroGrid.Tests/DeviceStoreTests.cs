@@ -175,4 +175,32 @@ public sealed class DeviceStoreTests : IDisposable
         Assert.Null(protector.Unprotect("not base64!"));
         Assert.Null(protector.Unprotect(Convert.ToBase64String(new byte[] { 1, 2, 3 })));
     }
+
+    [Fact]
+    public void ReadNames_reads_the_names_without_a_protector_and_does_not_touch_the_file()
+    {
+        new DeviceStore(_dir, new TestProtector()).Pair("device-1", "Jane's Phone");
+        new DeviceStore(_dir, new TestProtector()).Pair("device-2", "Tab (2)");
+        var before = File.ReadAllBytes(DevicesFile);
+        var written = File.GetLastWriteTimeUtc(DevicesFile);
+
+        var names = DeviceStore.ReadNames(_dir);
+
+        Assert.Equal(["Jane's Phone", "Tab (2)"], names.Order());
+        Assert.Equal(before, File.ReadAllBytes(DevicesFile));
+        Assert.Equal(written, File.GetLastWriteTimeUtc(DevicesFile));
+    }
+
+    [Fact]
+    public void ReadNames_is_empty_for_a_missing_or_broken_file_and_leaves_a_broken_file_in_place()
+    {
+        Assert.Empty(DeviceStore.ReadNames(_dir));
+        Assert.Empty(DeviceStore.ReadNames(Path.Combine(_dir, "nothing")));
+
+        Directory.CreateDirectory(_dir);
+        File.WriteAllText(DevicesFile, "{ not json");
+        Assert.Empty(DeviceStore.ReadNames(_dir));
+        Assert.True(File.Exists(DevicesFile));
+        Assert.False(File.Exists(DevicesFile + ".broken"));
+    }
 }
