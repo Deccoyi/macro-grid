@@ -446,6 +446,7 @@ export const en: Record<DictKey, string> = {
   "errorHelp.P160": "A step of an automation rule did not work. Open Preferences, Automation, and check that step. The rule runs again the next time its trigger happens.",
   "errorHelp.P161": "An automation rule started too often, so some starts were dropped. Check what triggers it, or give it a longer pause between runs.",
   "errorHelp.P162": "An automation rule kept starting and was switched off to protect your computer. Fix what triggers it, then switch it on again in Preferences, Automation.",
+  "errorHelp.P163": "An automation rule uses a global variable that does not exist (it may have been deleted). Open Preferences, Automation, and pick another variable in that rule, or add the variable again in Global Variables.",
   "errorHelp.W300": "The editor could not do what was asked, for example there was no free cell on the page. Make room or choose another page and try again.",
   "errorHelp.E210": "A button runs an action whose plugin is not available. Install or switch the plugin on again, or choose another action. Nothing was deleted from the profile.",
   "errorHelp.E211": "A plugin widget on the page is not available because its plugin is removed or switched off. Install or switch the plugin on again, or delete the widget.",

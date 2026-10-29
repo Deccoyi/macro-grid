@@ -65,6 +65,8 @@ public static class ProblemCodes
     public const string AutomationDropped = "P161";
     /// <summary>An automation rule kept starting too often and was switched off.</summary>
     public const string AutomationSwitchedOff = "P162";
+    /// <summary>An automation rule uses a user variable that is not in the Global Variable List. Cleared when the variable exists again or the rule changes.</summary>
+    public const string AutomationVariableMissing = "P163";
 }
 
 /// <summary>

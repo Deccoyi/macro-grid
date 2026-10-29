@@ -62,6 +62,13 @@ public sealed class SetVariableActionTests : IDisposable
     }
 
     [Fact]
+    public async Task An_empty_value_for_a_True_False_variable_means_True_like_the_editor_shows()
+    {
+        Assert.Equal(ActionOutcomeKind.Success, (await Run(S("user.flag", "set", ""))).Kind);
+        Assert.Equal(true, _store.Get("user.flag"));
+    }
+
+    [Fact]
     public async Task An_empty_value_clears_a_text_variable_but_fails_for_a_number()
     {
         await Run(S("user.title", "set", ""));
