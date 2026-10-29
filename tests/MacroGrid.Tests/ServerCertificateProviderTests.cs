@@ -33,6 +33,17 @@ public sealed partial class ServerCertificateProviderTests : IDisposable
     }
 
     [Fact]
+    public void A_data_folder_that_does_not_exist_yet_is_created()
+    {
+        var fresh = Path.Combine(_dir, "not-there-yet");
+
+        var provider = new ServerCertificateProvider(fresh, new TestProtector());
+
+        Assert.True(File.Exists(Path.Combine(fresh, "tls-cert.dat")));
+        Assert.Matches(LowercaseSha256Hex(), provider.Fingerprint);
+    }
+
+    [Fact]
     public void The_same_data_folder_reloads_the_same_certificate()
     {
         var first = new ServerCertificateProvider(_dir, new TestProtector());
