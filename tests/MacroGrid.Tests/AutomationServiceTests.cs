@@ -63,6 +63,7 @@ public sealed class AutomationServiceTests : IDisposable
     private readonly AutomationStore _store;
     private readonly Probe _ok = new("t.ok");
     private readonly Probe _keys = new("core.hotkey");
+    private readonly UserVariableService _userVariables;
     private readonly AutomationService _service;
 
     public AutomationServiceTests()
@@ -70,10 +71,11 @@ public sealed class AutomationServiceTests : IDisposable
         Directory.CreateDirectory(_dir);
         _store = new AutomationStore(_dir);
         var dispatcher = new ActionDispatcher([_ok, _keys], NullLogger<ActionDispatcher>.Instance, _variables);
+        _userVariables = new UserVariableService(_dir, _variables);
         var profiles = new ProfileStore(_dir);
         var widgetState = new WidgetStateService(_variables, _sessions, profiles, new ToggleStateStore(), new LayoutSender(new AssetStore()), new WebViewState(),
             NullLogger<WidgetStateService>.Instance);
-        _service = new AutomationService(_store, _variables, _sessions, dispatcher, _problems, profiles, widgetState, NullLogger<AutomationService>.Instance, _clock);
+        _service = new AutomationService(_store, _variables, _sessions, dispatcher, _problems, profiles, widgetState, NullLogger<AutomationService>.Instance, _clock, _userVariables);
     }
 
     public void Dispose()
@@ -333,6 +335,25 @@ public sealed class AutomationServiceTests : IDisposable
         Assert.Empty(_ok.Runs);
         Assert.Equal("failed", _service.Status()["a"].LastResult);
         Assert.Contains(_problems.Snapshot(), p => p.Code == ProblemCodes.AutomationStepFailed && p.Message.Contains("press keys"));
+    }
+
+    [Fact]
+    public async Task A_rule_that_uses_a_deleted_variable_gets_a_line_that_clears_when_the_variable_is_back()
+    {
+        Assert.True(_userVariables.TryReplace([new("count", VariableType.Number, 0)], out _));
+        Save(false, When("a", "user.count", ">", "1"), When("b", "user.other", ">", "1"));
+        await TickAsync();
+
+        Assert.DoesNotContain(_problems.Snapshot(), p => p.Key == "P163:a");
+        Assert.Contains(_problems.Snapshot(), p => p.Code == ProblemCodes.AutomationVariableMissing && p.Key == "P163:b" && p.Message.Contains("user.other"));
+
+        Assert.True(_userVariables.TryReplace([], out _));
+        await TickAsync();
+        Assert.Contains(_problems.Snapshot(), p => p.Key == "P163:a");
+
+        Assert.True(_userVariables.TryReplace([new("count", VariableType.Number, 0), new("other", VariableType.Number, 0)], out _));
+        await TickAsync();
+        Assert.DoesNotContain(_problems.Snapshot(), p => p.Code == ProblemCodes.AutomationVariableMissing);
     }
 
     [Fact]

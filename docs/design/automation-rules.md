@@ -52,6 +52,7 @@ The Error List (source `automation`, one line per rule and kind) shows:
 | `P160` | a step failed (the first failure's text) | after a later successful run |
 | `P161` | starts were dropped because the rule started too often | when the rule is deleted |
 | `P162` | the rule was switched off because it kept starting | when the rule is deleted |
+| `P163` | the rule uses a user variable that is not in the Global Variable List (checked when rules are saved and when a variable is deleted) | when the variable exists again or the rule changes |
 
 The numbers (50 rules, 20 steps, 5 and 20 starts, 10 refusals in 60 s, 4 at once) are first guesses and live in `AutomationLimits` and the service constants. There is no separate write limiter for variables: rule starts are capped, each start has at most 20 steps, and unchanged writes are silent.
 

@@ -44,6 +44,8 @@ public sealed class SetVariableAction(UserVariableService variables) : IActionHa
         {
             case "set":
                 var text = settings["value"]?.ToString() ?? "";
+                // The editor shows "True" for a True/False variable that was never changed and does not save it.
+                if (text.Length == 0 && definition.Type == VariableType.Boolean && context.Value is null) text = "true";
                 if (text.Length == 0 && context.Value is { } dragged)
                     result = variables.Set(name, dragged);
                 else if (text.Length == 0 && definition.Type != VariableType.Text)

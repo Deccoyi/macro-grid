@@ -64,6 +64,7 @@ New features and fixes in Macro Grid. For technical details, see [CHANGELOG-deve
 - **The Toolbox can be an A to Z list:** the menu next to "Add widget" switches between plugin groups and one plain alphabetical list, and a plugin group can be folded.
 - **The Toolbox marks the web widget with a small flask icon** instead of the word "Experimental".
 ### Fixed
+- **Automation rules:** a rule that sets a True / False variable without you changing the value now works instead of failing. Long messages in the Automation window wrap instead of being cut off. A rule that uses a deleted variable shows a warning in the Error List. A "show page" step in a rule now asks for a profile first, then the page.
 - **Set variable:** typing a value no longer clears the chosen variable, and a variable you add in Preferences shows up in the action right away.
 - **A plugin whose start file points outside its own folder is no longer loaded.**
 - **Tighter limits on where a JavaScript plugin can connect:** a plugin can now only reach the kind of address you approved, and never Macro Grid itself.

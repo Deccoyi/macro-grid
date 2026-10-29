@@ -449,6 +449,7 @@ export const tr = {
   "errorHelp.P160": "Bir otomasyon kuralının adımı çalışmadı. Tercihler > Otomasyon bölümünde o adımı kontrol edin. Kural, tetikleyicisi bir sonraki gerçekleştiğinde yeniden çalışır.",
   "errorHelp.P161": "Bir otomasyon kuralı çok sık başladı, bu yüzden bazı başlatmalar atlandı. Kuralı neyin tetiklediğine bakın ya da çalışmalar arasına daha uzun bir bekleme koyun.",
   "errorHelp.P162": "Bir otomasyon kuralı sürekli başladığı için bilgisayarınızı korumak adına kapatıldı. Kuralı tetikleyen şeyi düzeltin, sonra Tercihler > Otomasyon bölümünden yeniden açın.",
+  "errorHelp.P163": "Bir otomasyon kuralı var olmayan bir genel değişken kullanıyor (silinmiş olabilir). Tercihler > Otomasyon bölümünde o kuralda başka bir değişken seçin ya da değişkeni Genel Değişkenler bölümünde yeniden ekleyin.",
   "errorHelp.W300": "Düzenleyici istenen işi yapamadı, örneğin sayfada boş hücre yoktu. Yer açın veya başka bir sayfa seçip tekrar deneyin.",
   "errorHelp.E210": "Bir düğme, plugin'i kullanılamayan bir eylemi çalıştırıyor. Plugin'i kurun veya açın, ya da başka bir eylem seçin. Profilden hiçbir şey silinmedi.",
   "errorHelp.E211": "Sayfadaki bir plugin widget'ı, plugin'i kaldırılmış veya kapatılmış olduğu için kullanılamıyor. Plugin'i kurun veya açın, ya da widget'ı silin.",

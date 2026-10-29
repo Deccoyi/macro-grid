@@ -1,6 +1,7 @@
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using MacroGrid.Core.Actions;
 using MacroGrid.Core.Diagnostics;
 using MacroGrid.Core.Profiles;
@@ -25,7 +26,7 @@ public enum AutomationRunResult { Started, NotFound, Refused }
 /// 250 ms tick, which a test can also call by hand. A rule never runs without these limits: no overlap with itself, a cooldown, a bucket
 /// of its own and one for all rules, and at most four lists at once.
 /// </summary>
-public sealed class AutomationService : BackgroundService
+public sealed partial class AutomationService : BackgroundService
 {
     private static readonly TimeSpan TickInterval = TimeSpan.FromMilliseconds(250);
     private static readonly TimeSpan MinCooldown = TimeSpan.FromSeconds(1);
@@ -61,6 +62,7 @@ public sealed class AutomationService : BackgroundService
     private readonly WidgetStateService _widgetState;
     private readonly ILogger<AutomationService> _logger;
     private readonly TimeProvider _clock;
+    private readonly UserVariableService? _userVariables;
 
     private readonly Lock _lock = new();
     private readonly Dictionary<string, RuleState> _state = new(StringComparer.Ordinal);
@@ -76,7 +78,8 @@ public sealed class AutomationService : BackgroundService
 
     public AutomationService(
         AutomationStore store, VariableStore variables, SessionRegistry sessions, ActionDispatcher dispatcher, ProblemList problems,
-        ProfileStore profiles, WidgetStateService widgetState, ILogger<AutomationService> logger, TimeProvider? clock = null)
+        ProfileStore profiles, WidgetStateService widgetState, ILogger<AutomationService> logger, TimeProvider? clock = null,
+        UserVariableService? userVariables = null)
     {
         _store = store;
         _variables = variables;
@@ -87,6 +90,7 @@ public sealed class AutomationService : BackgroundService
         _widgetState = widgetState;
         _logger = logger;
         _clock = clock ?? TimeProvider.System;
+        _userVariables = userVariables;
         // Only noted here; the tick decides. Hooked up in the constructor so a test that calls Tick by hand sees the same events.
         _store.Changed += OnRulesChanged;
         _variables.Changed += OnVariableChanged;
@@ -139,6 +143,7 @@ public sealed class AutomationService : BackgroundService
 
         lock (_lock)
         {
+            var rebuilt = _rulesChanged;
             if (_rulesChanged)
             {
                 _rulesChanged = false;
@@ -146,6 +151,8 @@ public sealed class AutomationService : BackgroundService
             }
             var dirty = _dirtyVariables.ToList();
             _dirtyVariables.Clear();
+            // Deleting a variable removes its value, which arrives here as a change of that name.
+            if (rebuilt || dirty.Any(UserVariables.IsUserName)) CheckMissingVariables(rules);
             var sessionsChanged = _sessionsChanged;
             _sessionsChanged = false;
 
@@ -256,6 +263,24 @@ public sealed class AutomationService : BackgroundService
         if (!_devicesKnown) { _devices = CurrentDevices(); _devicesKnown = true; }
     }
 
+    [GeneratedRegex(@"(?<![A-Za-z0-9_.])user.[A-Za-z][A-Za-z0-9_]*", RegexOptions.CultureInvariant)]
+    private static partial Regex UserVariableName();
+
+    /// <summary>Called under the lock. A rule that mentions a user variable that is not in the Global Variable List gets a warning (P163); it clears when the variable is back or the rule changes.</summary>
+    private void CheckMissingVariables(IReadOnlyList<AutomationRule> rules)
+    {
+        if (_userVariables is null) return;
+        foreach (var rule in rules)
+        {
+            var text = JsonSerializer.Serialize(rule.Trigger, ProtocolJson.Options) + JsonSerializer.Serialize(rule.Actions, ProtocolJson.Options);
+            var missing = UserVariableName().Matches(text).Select(m => m.Value).FirstOrDefault(name => _userVariables.Find(name) is null);
+            var key = $"{ProblemCodes.AutomationVariableMissing}:{rule.Id}";
+            if (missing is null) _problems.ResolveKey(Source, key);
+            else _problems.Report(Source, rule.Name, ProblemSeverity.Warning, ProblemCodes.AutomationVariableMissing,
+                $"This rule uses the variable '{missing}', which does not exist.", key, int.MaxValue);
+        }
+    }
+
     private HashSet<string> CurrentDevices() => [.. _sessions.All.Select(s => s.DeviceId).OfType<string>()];
 
     private static bool TimeMatches(AutomationTrigger trigger, DateTimeOffset local) =>
@@ -354,7 +379,7 @@ public sealed class AutomationService : BackgroundService
 
     private void ResolveAll(string id)
     {
-        foreach (var code in new[] { ProblemCodes.AutomationStepFailed, ProblemCodes.AutomationDropped, ProblemCodes.AutomationSwitchedOff })
+        foreach (var code in new[] { ProblemCodes.AutomationStepFailed, ProblemCodes.AutomationDropped, ProblemCodes.AutomationSwitchedOff, ProblemCodes.AutomationVariableMissing })
             _problems.ResolveKey(Source, $"{code}:{id}");
     }
 
