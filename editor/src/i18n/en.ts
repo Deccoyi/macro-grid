@@ -696,6 +696,13 @@ export const en: Record<DictKey, string> = {
   "action.logic.unsupported": "This condition is more complex than the editor can show. It runs as it is.",
   "action.logic.stopNote": "Ends the action list here.",
   "action.logic.removeBlock": "Remove (the steps inside stay)",
+  "action.logic.emptyIf": "Nothing in If yet.",
+  "action.logic.emptyElse": "Nothing in Otherwise yet.",
+  "action.addHere": "Add action here",
+  "action.drag": "Drag to move",
+  "action.drop.here": "Move here",
+  "action.drop.insideIf": "Inside If",
+  "action.drop.insideElse": "Inside Otherwise",
 
   // ---- Action picker ----
   "actionPicker.title": "Choose an action",

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { ActionBinding } from "@macro/renderer";
-import { MAX_DEPTH, addElse, addIf, isWellFormed, layout, move, remove } from "../src/panels/actionFlow";
+import { MAX_DEPTH, addElse, addIf, insertAt, isWellFormed, laneStacks, layout, move, moveTo, remove } from "../src/panels/actionFlow";
 
 /** "if" "else" "end" are the markers; anything else is a plain step named by the text. */
 const MARKER: Record<string, string> = { if: "core.if", else: "core.else", end: "core.endIf" };
@@ -108,5 +108,53 @@ describe("move", () => {
     const l = list("a", "b");
     expect(move(l, 0, -1)).toBe(l);
     expect(move(l, 1, 1)).toBe(l);
+  });
+});
+
+describe("laneStacks", () => {
+  it("tells which lane every insertion point is in", () => {
+    const stacks = laneStacks(list("a", "if", "b", "else", "c", "end", "d"));
+    expect(stacks.map((s) => s.join("/"))).toEqual(["", "", "if", "if", "else", "else", "", ""]);
+  });
+});
+
+describe("insertAt", () => {
+  it("inserts inside an empty If, inside an Otherwise, and after a block", () => {
+    expect(names(insertAt(list("if", "end"), 1, "t.x"))).toBe("if x end");
+    expect(names(insertAt(list("if", "a", "else", "end"), 3, "t.x"))).toBe("if a else x end");
+    expect(names(insertAt(list("if", "end"), 2, "t.x"))).toBe("if end x");
+  });
+
+  it("brings an End with an If, and refuses one that nests too deep", () => {
+    expect(names(insertAt(list("a"), 0, "core.if"))).toBe("if end a");
+    const deep = list("if", "if", "if", "end", "end", "end");
+    expect(insertAt(deep, 3, "core.if")).toBe(deep);
+  });
+});
+
+describe("moveTo", () => {
+  it("moves a step into a block, out of it and past another block", () => {
+    expect(names(moveTo(list("a", "if", "end"), 0, 2))).toBe("if a end");
+    expect(names(moveTo(list("if", "a", "else", "b", "end"), 1, 3))).toBe("if else a b end");
+    expect(names(moveTo(list("if", "a", "end", "b"), 1, 4))).toBe("if end b a");
+    expect(names(moveTo(list("a", "if", "end"), 0, 3))).toBe("if end a");
+  });
+
+  it("moves a whole block", () => {
+    expect(names(moveTo(list("if", "a", "end", "b"), 0, 4))).toBe("b if a end");
+    expect(names(moveTo(list("a", "if", "b", "end"), 1, 0))).toBe("if b end a");
+  });
+
+  it("refuses a drop into itself, onto its own place, or onto an Otherwise or End", () => {
+    const l = list("if", "a", "end", "b");
+    expect(moveTo(l, 0, 2)).toBe(l);
+    expect(moveTo(l, 1, 1)).toBe(l);
+    expect(moveTo(l, 1, 2)).toBe(l);
+    expect(moveTo(l, 2, 0)).toBe(l);
+  });
+
+  it("refuses a block that would nest too deep", () => {
+    const l = list("if", "if", "if", "end", "end", "end", "if", "end");
+    expect(moveTo(l, 6, 3)).toBe(l);
   });
 });

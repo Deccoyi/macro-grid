@@ -128,3 +128,47 @@ function blockStart(rows: FlowRow[], endIndex: number): number {
   const owner = rows.find((r) => r.kind === "if" && r.endIndex === endIndex);
   return owner ? owner.index : endIndex;
 }
+
+export type Lane = "if" | "else";
+
+/**
+ * The lanes (If body or Otherwise body) an insertion point sits in, outermost first, for every position 0..bindings.length.
+ * Position p means "before row p"; the result for p lists the blocks that row p is drawn inside.
+ */
+export function laneStacks(bindings: readonly ActionBinding[]): Lane[][] {
+  const stack: Lane[] = [];
+  const out: Lane[][] = [[]];
+  bindings.forEach((b, i) => {
+    out[i] = [...stack];
+    if (b.type === FLOW_IF) stack.push("if");
+    else if (b.type === FLOW_ELSE) { if (stack.length) stack[stack.length - 1] = "else"; }
+    else if (b.type === FLOW_END) stack.pop();
+  });
+  out[bindings.length] = [...stack];
+  return out;
+}
+
+/** Puts a new step (an If brings its End) at position <paramref name="pos"/>, inside whichever block that position is in. Refused (same list back) when it would nest too deep. */
+export function insertAt(bindings: readonly ActionBinding[], pos: number, type: string): ActionBinding[] {
+  const at = Math.max(0, Math.min(pos, bindings.length));
+  const items: ActionBinding[] = type === FLOW_IF ? [{ type: FLOW_IF, settings: { when: "condition" } }, { type: FLOW_END, settings: {} }] : [{ type, settings: {} }];
+  const next = [...bindings.slice(0, at), ...items, ...bindings.slice(at)];
+  return isWellFormed(next) || !isWellFormed(bindings) ? next : (bindings as ActionBinding[]);
+}
+
+/**
+ * Moves a step, or a whole If block, so that it sits before row <paramref name="pos"/> of the current list (bindings.length = the very end).
+ * An Otherwise or End never moves on its own. Dropping a block into itself, a move that changes nothing, and a move that would leave the
+ * list not well formed (or nested too deep) are refused: the same list comes back.
+ */
+export function moveTo(bindings: readonly ActionBinding[], from: number, pos: number): ActionBinding[] {
+  const row = layout(bindings)[from];
+  if (!row || row.kind === "else" || row.kind === "end") return bindings as ActionBinding[];
+  const to = row.kind === "if" ? row.endIndex : from;
+  if (to === undefined || pos < 0 || pos > bindings.length || (pos >= from && pos <= to + 1)) return bindings as ActionBinding[];
+  const unit = bindings.slice(from, to + 1);
+  const rest = [...bindings.slice(0, from), ...bindings.slice(to + 1)];
+  const at = pos > to ? pos - unit.length : pos;
+  const next = [...rest.slice(0, at), ...unit, ...rest.slice(at)];
+  return isWellFormed(next) || !isWellFormed(bindings) ? next : (bindings as ActionBinding[]);
+}
