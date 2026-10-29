@@ -226,6 +226,14 @@ public sealed partial class JsPlugin : IPlugin, IPluginWidgetHandler, IDisposabl
         }
     }
 
+    /// <summary>Like <see cref="KeyboardUsesToday"/> but never waits: 0 when another thread holds the usage lock (for the crash path).</summary>
+    internal int KeyboardUsesTodayNoWait()
+    {
+        if (!_usageLock.TryEnter()) return 0;
+        try { return _usageDay == DateOnly.FromDateTime(DateTime.Now) ? _usesToday : 0; }
+        finally { _usageLock.Exit(); }
+    }
+
     public void Dispose()
     {
         if (_disposed) return;
