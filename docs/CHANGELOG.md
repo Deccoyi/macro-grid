@@ -64,6 +64,8 @@ New features and fixes in Macro Grid. For technical details, see [CHANGELOG-deve
 - **The Toolbox can be an A to Z list:** the menu next to "Add widget" switches between plugin groups and one plain alphabetical list, and a plugin group can be folded.
 - **The Toolbox marks the web widget with a small flask icon** instead of the word "Experimental".
 ### Fixed
+- **Imported profiles show at once:** after importing a shared profile, the profile list in the editor updates without a reload.
+- **First start on a new PC:** the very first start no longer stops with a crash report.
 - **Set variable:** typing a value no longer clears the chosen variable, and a variable you add in Preferences shows up in the action right away.
 - **A plugin whose start file points outside its own folder is no longer loaded.**
 - **Tighter limits on where a JavaScript plugin can connect:** a plugin can now only reach the kind of address you approved, and never Macro Grid itself.

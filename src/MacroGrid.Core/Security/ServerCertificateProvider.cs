@@ -23,6 +23,8 @@ public sealed class ServerCertificateProvider
 
     public ServerCertificateProvider(string dataDir, ISecretProtector protector)
     {
+        // The first start on a clean data folder gets here before any store has created it.
+        Directory.CreateDirectory(dataDir);
         var path = Path.Combine(dataDir, FileName);
         Certificate = Load(path, protector) ?? Create(path, protector);
         Fingerprint = Convert.ToHexStringLower(Certificate.GetCertHash(HashAlgorithmName.SHA256));

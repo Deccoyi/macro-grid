@@ -308,7 +308,10 @@ function AppContent() {
     <div style={{ display: "grid", gridTemplateRows: "auto auto 1fr auto", height: "100%" }}>
       <MenuBar
         profile={profile}
-        onImportProfile={(data: Profile) => state.importProfileFromJson(data)}
+        onImportProfile={async (data: Profile) => {
+          await state.importProfileFromJson(data);
+          await profileTree.refresh();
+        }}
         confirmDiscardIfDirty={state.confirmDiscardIfDirty}
         editCommands={editCommands}
       />
