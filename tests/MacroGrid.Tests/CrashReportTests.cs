@@ -60,8 +60,8 @@ public sealed class CrashReportTests : IDisposable
     }
 
     [Theory]
-    [InlineData(@"   at Plugin.Run() in C:\Users\Jane Doe\source\p\Run.cs:line 42", @"   at Plugin.Run() in <home>\source\p\Run.cs:line 42")]
-    [InlineData(@"Loaded C:\Users\Jane Doe\AppData\Roaming\MacroGrid\plugins\a\a.dll", @"Loaded <data>\plugins\a\a.dll")]
+    [InlineData(@"   at Plugin.Run() in C:\Users\Jane Doe\source\p\Run.cs:line 42", @"   at Plugin.Run() in <path>:line 42")]
+    [InlineData(@"Loaded C:\Users\Jane Doe\AppData\Roaming\MacroGrid\plugins\a\a.dll", "Loaded <path>")]
     [InlineData(@"Loaded C:\Program Files\Macro Grid\MacroGrid.Core.dll", @"Loaded <app>\MacroGrid.Core.dll")]
     [InlineData(@"   at X.Y() in D:\build\agent\src\X.cs:line 7", @"   at X.Y() in <path>:line 7")]
     [InlineData(@"Launch D:\Private\taxes.xlsx failed", "Launch <path> failed")]
@@ -75,7 +75,7 @@ public sealed class CrashReportTests : IDisposable
     [InlineData("Authorization: Bearer eyJhbGciOi", "Authorization: <redacted> <redacted>")]
     [InlineData("pairing pin: 482913", "pairing pin: <redacted>")]
     [InlineData("mail jane@example.com", "mail <email>")]
-    [InlineData("see https://example.com/docs", "see https://example.com/docs")]
+    [InlineData("see https://example.com/docs", "see https://<host>")]
     public void The_redaction_table_holds_end_to_end_for_the_error_and_the_log(string input, string expected)
     {
         WriteLog([input]);

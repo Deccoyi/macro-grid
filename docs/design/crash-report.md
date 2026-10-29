@@ -20,7 +20,7 @@ offers **Save to a file**, **Copy** and **Close**. The app never sends anything,
 | Language of the report text | English, always. Only the window around it follows the language preference. | The report is read by the maintainers. The same crash gives the same text on every PC. |
 | Silent or autostart start | When the editor does not open at start, the window waits: a balloon says a report is ready, and the window opens when the person opens the tray menu or clicks the balloon. | Nothing pops up on an unattended sign-in. |
 | A crash while starting | Shown before the server starts, even on autostart. | If the start crashes every time, a window that waits for the tray never appears. |
-| Which exceptions count | Only the ones that end the process: `AppDomain.CurrentDomain.UnhandledException`, and UI-thread exceptions routed there. | `TaskScheduler.UnobservedTaskException` does not end the process on current .NET. A marker for it would report a crash that never happened. |
+| Which exceptions count | Only the ones that end the process: `AppDomain.CurrentDomain.UnhandledException`, and UI-thread exceptions routed there. | `TaskScheduler.UnobservedTaskException` is not hooked: since .NET Framework 4.5 an unobserved task exception no longer ends the process (the event only reports it), so a marker for it would report a crash that never happened. |
 | UI-thread exceptions | `Application.SetUnhandledExceptionMode(UnhandledExceptionMode.ThrowException)` as the first line of `Main`. | One path for every crash. **Behavior change:** today an exception on the UI thread shows the default WinForms "continue or quit" box, and the person can continue in a broken state. After this change the app ends and the report shows on the next start. |
 | `MacroGrid.Windows` | Gets nothing. | Everything Windows-only here is WinForms (the form, the clipboard, the Save dialog, the UI-thread mode), and only `MacroGrid.Host` uses WinForms. The handler hookup uses `AppDomain`, which is plain .NET. An interface with one caller would only add code. |
 
@@ -110,7 +110,8 @@ The handler runs while the process is dying. It must be small and must never mak
 
 - Install it first thing in `Main`, before the single-instance check, the agreement gate and the server.
 - It does not touch dependency injection, `HostText`, preferences, the logger or the UI. It writes one file synchronously and returns.
-- **Crash in the crash:** a static flag (`Interlocked.Exchange`) lets only the first crash write. A second crash on another thread returns at once.
+- **Crash in the crash:** a static flag (`Interlocked.Exchange`) lets only the first crash write. A second crash on another thread returns at once. Single crash wins: only the first crash of a process is recorded, and a second one that follows it is lost.
+- **No blocking in the handler:** the plugin list is read with `PluginManager.TryGetPlugins` (`Lock.TryEnter`, no waiting). If another thread holds the lock, the marker says "not known" like a crash before the plugins were loaded.
   The whole handler body is inside `try { } catch { }`. `ex.ToString()` gets its own `try`; when it throws, `details` holds the type name only.
   The plugin snapshot gets its own `try`; when it throws, `plugins` is `null`.
 - **Marker write fails** (folder cannot be created, disk full, no access): the handler gives up silently. The next start shows nothing. The log
@@ -150,9 +151,12 @@ outside the app's own folders is shown, and `Redactor` today leaves such paths a
 Crash-only path rule (after `Redactor`, so `<home>` and `<data>` are already in place):
 
 - A path under the install folder (`AppContext.BaseDirectory`) becomes `<app>\` plus the rest. Those are the app's own files.
+- A path under `<home>` or `<data>` becomes `<path>` as well (the rest of it can hold a document name or a profile name). Only `<data>\logs\` stays.
 - Any other absolute path (`X:\...` or `\\server\share\...`) becomes `<path>`. Folder names may hold spaces; the last part ends at the first
   whitespace, quote, `<`, `>`, `|` or `:` (so `:line 42` in a stack trace stays). Best effort: a file name with spaces can leave its tail behind.
-- A label already in place (`<home>`, `<data>`, `<app>`) is never touched again.
+- A label already in place (`<app>`, `<data>\logs\`) is never touched again.
+- The host of any `scheme://host[:port]` URL becomes `<host>` and the URL loses its path and query (loopback hosts stay). A dotted name with a port (`nas.home.lan:443`) becomes `<host>`. A MAC address (`:` or `-` form) becomes `<mac>`. There is no general host-name rule.
+- The report builds its `Redactor` with `minNameLength: 2`, so a two-letter user name or PC name is removed too (the other exports keep 3).
 - Linear-time regex (`RegexOptions.NonBacktracking`), like the rest of `Redactor`.
 
 Test cases (redaction context: home `C:\Users\Jane Doe`, data `C:\Users\Jane Doe\AppData\Roaming\MacroGrid`, user `janedoe`, PC `OFFICE-PC`,
@@ -160,8 +164,8 @@ devices `Jane's Phone`, `Tab (2)`; install folder `C:\Program Files\Macro Grid\`
 
 | Input | Expected |
 |---|---|
-| `   at Plugin.Run() in C:\Users\Jane Doe\source\p\Run.cs:line 42` | `   at Plugin.Run() in <home>\source\p\Run.cs:line 42` |
-| `Loaded C:\Users\Jane Doe\AppData\Roaming\MacroGrid\plugins\a\a.dll` | `Loaded <data>\plugins\a\a.dll` |
+| `   at Plugin.Run() in C:\Users\Jane Doe\source\p\Run.cs:line 42` | `   at Plugin.Run() in <path>:line 42` |
+| `Loaded C:\Users\Jane Doe\AppData\Roaming\MacroGrid\plugins\a\a.dll` | `Loaded <path>` |
 | `Loaded C:\Program Files\Macro Grid\MacroGrid.Core.dll` | `Loaded <app>\MacroGrid.Core.dll` |
 | `   at X.Y() in D:\build\agent\src\X.cs:line 7` | `   at X.Y() in <path>:line 7` |
 | `Launch D:\Private\taxes.xlsx failed` | `Launch <path> failed` |
@@ -251,7 +255,7 @@ Native shell texts live in `HostText.cs` as `(En, Tr)` pairs, not in the editor'
 - `Delete` ignores a locked or missing file.
 
 `CrashReportPathsTests`
-- The path rows of the table. A line with `<home>` or `<data>` stays. A line of 8000 characters runs in well under a second.
+- The path rows of the table. A path under `<home>` or `<data>` becomes `<path>` except the log folder; URL hosts, `host:port` and MAC addresses are removed. A line of 8000 characters runs in well under a second.
 
 `CrashReportTests`
 - The whole redaction table, end to end through `Build`.

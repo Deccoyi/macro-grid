@@ -13,14 +13,14 @@ public sealed class CrashReportPathsTests
     private static string Both(string line) => CrashReportPaths.Clean(Redact.Line(line), Install);
 
     [Theory]
-    [InlineData(@"   at Plugin.Run() in C:\Users\Jane Doe\source\p\Run.cs:line 42", @"   at Plugin.Run() in <home>\source\p\Run.cs:line 42")]
-    [InlineData(@"Loaded C:\Users\Jane Doe\AppData\Roaming\MacroGrid\plugins\a\a.dll", @"Loaded <data>\plugins\a\a.dll")]
+    [InlineData(@"   at Plugin.Run() in C:\Users\Jane Doe\source\p\Run.cs:line 42", @"   at Plugin.Run() in <path>:line 42")]
+    [InlineData(@"Loaded C:\Users\Jane Doe\AppData\Roaming\MacroGrid\plugins\a\a.dll", @"Loaded <path>")]
     [InlineData(@"Loaded C:\Program Files\Macro Grid\MacroGrid.Core.dll", @"Loaded <app>\MacroGrid.Core.dll")]
     [InlineData(@"   at X.Y() in D:\build\agent\src\X.cs:line 7", @"   at X.Y() in <path>:line 7")]
     [InlineData(@"Launch D:\Private\taxes.xlsx failed", "Launch <path> failed")]
     [InlineData(@"Open \\nas\share\notes.txt", "Open <path>")]
     [InlineData("listening on 127.0.0.1", "listening on 127.0.0.1")]
-    [InlineData("see https://example.com/docs", "see https://example.com/docs")]
+    [InlineData("see https://example.com/docs", "see https://<host>")]
     public void The_path_rows_of_the_plan_give_the_expected_text(string input, string expected)
     {
         Assert.Equal(expected, Both(input));
@@ -39,14 +39,55 @@ public sealed class CrashReportPathsTests
     }
 
     [Theory]
-    [InlineData(@"in <home>\source\Run.cs:line 4")]
-    [InlineData(@"Loaded <data>\plugins\a.dll")]
+    [InlineData(@"Loaded <data>\logs\macro-grid-20261029.log")]
     [InlineData(@"Loaded <app>\a.dll")]
-    [InlineData(@"in <data>\\x\y")]
     [InlineData("in <path>:line 7")]
     public void A_label_already_in_place_is_never_touched_again(string line)
     {
         Assert.Equal(line, CrashReportPaths.Clean(line, Install));
+    }
+
+    [Theory]
+    [InlineData(@"   at Reader.Open() in C:\Users\Jane Doe\Documents\Tax 2026.pdf:line 9", "   at Reader.Open() in <path>:line 9")]
+    [InlineData(@"Could not find file 'C:\Users\Jane Doe\Documents\Tax 2026.pdf'.", "Could not find file '<path>'.")]
+    [InlineData(@"   at Profiles.Load() in C:\Users\Jane Doe\AppData\Roaming\MacroGrid\profiles\Work.json:line 3", "   at Profiles.Load() in <path>:line 3")]
+    [InlineData(@"Could not find file 'C:\Users\Jane Doe\AppData\Roaming\MacroGrid\profiles\Work.json'.", "Could not find file '<path>'.")]
+    [InlineData(@"Opened C:\Users\Jane Doe\AppData\Roaming\MacroGrid\logs\macro-grid-20261029.log", @"Opened <data>\logs\macro-grid-20261029.log")]
+    [InlineData(@"in <data>\\x\y", "in <path>")]
+    public void A_path_under_home_or_data_is_removed_except_the_log_folder(string input, string expected)
+    {
+        Assert.Equal(expected, Both(input));
+    }
+
+    [Theory]
+    [InlineData("No such host is known. (nas.home.lan:443)", "No such host is known. (<host>)")]
+    [InlineData("HttpRequestException: GET https://nas.home.lan:8443/api/profiles/Work?x=1 failed", "HttpRequestException: GET https://<host> failed")]
+    [InlineData("connect ws://printer.local/ws failed", "connect ws://<host> failed")]
+    [InlineData("connect to 192.168.1.20:8765 failed", "connect to <ip>:8765 failed")]
+    [InlineData("http://127.0.0.1:5000/api/ping", "http://127.0.0.1:5000/api/ping")]
+    [InlineData("http://localhost:5000/x", "http://localhost:5000/x")]
+    [InlineData("took 12.30:45 s", "took 12.30:45 s")]
+    public void The_host_of_a_url_or_a_host_and_port_is_removed(string input, string expected)
+    {
+        Assert.Equal(expected, Both(input));
+    }
+
+    [Theory]
+    [InlineData("adapter 00:1A:2b:3C:4d:5E up", "adapter <mac> up")]
+    [InlineData("adapter 00-1A-2B-3C-4D-5E up", "adapter <mac> up")]
+    [InlineData("time 12:34:56 stays", "time 12:34:56 stays")]
+    public void A_mac_address_is_removed(string input, string expected)
+    {
+        Assert.Equal(expected, Both(input));
+    }
+
+    [Fact]
+    public void A_two_letter_user_name_and_pc_name_are_removed_only_when_asked()
+    {
+        var context = new RedactionContext(UserName: "jo", MachineName: "pc");
+        const string line = "user jo on PC, jolly projects";
+        Assert.Equal(line, new Redactor(context).Line(line));
+        Assert.Equal("user <user> on <pc>, jolly projects", new Redactor(context, minNameLength: 2).Line(line));
     }
 
     [Fact]
