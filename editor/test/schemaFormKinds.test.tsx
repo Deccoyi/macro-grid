@@ -38,3 +38,52 @@ describe("Hotkey field", () => {
     expect(onChange).toHaveBeenCalledWith({ k: "ctrl+shift+s" });
   });
 });
+
+describe("Duration field", () => {
+  const field: SettingField = { key: "d", label: "Wait", kind: "Duration", min: 0, max: 5000 };
+
+  it("saves milliseconds for the unit typed in, and keeps the stored value when the unit changes", () => {
+    const { onChange, container } = draw([field], { d: 1000 });
+    const number = container.querySelector("input")!;
+    const unit = container.querySelector("select")!;
+    expect((unit as HTMLSelectElement).value).toBe("s");
+    fireEvent.change(number, { target: { value: "2" } });
+    expect(onChange).toHaveBeenLastCalledWith({ d: 2000 });
+    fireEvent.change(unit, { target: { value: "ms" } });
+    expect(onChange).toHaveBeenCalledTimes(1);
+    expect(number.value).toBe("1000");
+  });
+
+  it("clamps to the maximum when the box loses focus", () => {
+    const { onChange, container } = draw([field], { d: 6000 });
+    fireEvent.blur(container.querySelector("input")!);
+    expect(onChange).toHaveBeenCalledWith({ d: 5000 });
+  });
+});
+
+describe("MultiSelect field", () => {
+  const field: SettingField = { key: "m", label: "Tags", kind: "MultiSelect", options: [{ value: "a", label: "A" }, { value: "b", label: "B" }, { value: "c", label: "C" }] };
+
+  it("saves the ticked values in option order", () => {
+    const { onChange, container } = draw([field], { m: ["c"] });
+    const boxes = container.querySelectorAll<HTMLInputElement>("input[type=checkbox]");
+    expect([...boxes].map((b) => b.checked)).toEqual([false, false, true]);
+    fireEvent.click(boxes[0]!);
+    expect(onChange).toHaveBeenCalledWith({ m: ["a", "c"] });
+  });
+
+  it("shows a value that is no longer an option and lets it be removed", () => {
+    const { onChange, container } = draw([field], { m: ["a", "gone"] });
+    const boxes = container.querySelectorAll<HTMLInputElement>("input[type=checkbox]");
+    expect(boxes).toHaveLength(4);
+    expect(container.textContent).toContain("gone (not found)");
+    fireEvent.click(boxes[3]!);
+    expect(onChange).toHaveBeenCalledWith({ m: ["a"] });
+  });
+
+  it("reads a single saved text as one item", () => {
+    const { container } = draw([field], { m: "b" });
+    const boxes = container.querySelectorAll<HTMLInputElement>("input[type=checkbox]");
+    expect([...boxes].map((b) => b.checked)).toEqual([false, true, false]);
+  });
+});

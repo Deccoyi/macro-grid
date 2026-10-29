@@ -5,6 +5,7 @@ import type { OptionsResult, SettingField, SettingOption, VariableInfo } from ".
 import { useT } from "../../i18n/I18nContext";
 import { VariablePicker } from "../VariablePicker";
 import { HotkeyCapture } from "./HotkeyCapture";
+import { clampDuration, joinDuration, splitDuration, type DurationUnit } from "./duration";
 import { ColorField, Field, NumberInput, RangeInput, Seg, SelectInput, Switch, TextInput, useFieldId } from "../fields/controls";
 import { layoutFields, segmentedAsSelect } from "./schemaFormLayout";
 
@@ -54,6 +55,12 @@ export function SchemaForm({ fields, values, onChange, fetchOptions, variableCat
       })}
     </div>
   );
+}
+
+/** A MultiSelect value as a list: a plugin that switched a field from Select to MultiSelect may still have a single text saved. */
+function asChosen(value: unknown): string[] {
+  if (Array.isArray(value)) return value.map(String);
+  return typeof value === "string" && value !== "" ? [value] : [];
 }
 
 function isVisible(field: SettingField, values: Record<string, unknown>): boolean {
@@ -239,6 +246,53 @@ function SchemaFieldRow({
     );
   }
 
+  if (field.kind === "Duration") {
+    return (
+      <Field single label={field.label} hint={hint}>
+        <DurationInput field={field} value={value} onChange={onChange} />
+      </Field>
+    );
+  }
+
+  if (field.kind === "MultiSelect") {
+    const chosen = asChosen(value ?? field.default);
+    const known = new Set(opts.options.map((o) => o.value));
+    const stale = chosen.filter((v) => !known.has(v));
+    // The saved array follows the option order; a value that is no longer an option stays, last, so it can be unticked.
+    const toggle = (optionValue: string, on: boolean) => {
+      const next = new Set(chosen);
+      if (on) next.add(optionValue); else next.delete(optionValue);
+      onChange([...opts.options.map((o) => o.value).filter((v) => next.has(v)), ...stale.filter((v) => next.has(v))]);
+    };
+    return (
+      <Field
+        label={field.label}
+        hint={hint}
+        error={opts.error ?? undefined}
+        action={field.optionsSource && (
+          <button type="button" className="ghost" title={t("schemaForm.refresh")} aria-label={t("schemaForm.refresh")} onClick={opts.refresh} disabled={opts.loading}>
+            <RefreshCw size={12} className={opts.loading ? "spin" : undefined} />
+          </button>
+        )}
+      >
+        <div role="group" aria-label={field.label} style={{ maxHeight: 160, overflowY: "auto", display: "flex", flexDirection: "column", gap: 4 }}>
+          {opts.options.map((o) => (
+            <label key={o.value} style={{ display: "flex", gap: 6, alignItems: "center" }}>
+              <input type="checkbox" checked={chosen.includes(o.value)} onChange={(e) => toggle(o.value, e.target.checked)} />
+              {o.group ? `${o.group} › ${o.label}` : o.label}
+            </label>
+          ))}
+          {stale.map((v) => (
+            <label key={v} style={{ display: "flex", gap: 6, alignItems: "center" }}>
+              <input type="checkbox" checked onChange={(e) => toggle(v, e.target.checked)} />
+              {`${v} ${t("schemaForm.notFound")}`}
+            </label>
+          ))}
+        </div>
+      </Field>
+    );
+  }
+
   if (field.kind === "Bool") {
     return (
       <Field inline label={field.label} hint={hint}>
@@ -341,6 +395,58 @@ function SchemaFieldRow({
     >
       <TextValue field={field} value={strValue} onChange={onChange} inputRef={textRef} />
     </Field>
+  );
+}
+
+/** The stored value is whole milliseconds; the person types it in the unit they choose. The typed text is kept as typed ("1." must not turn into "1"). */
+function DurationInput({ field, value, onChange }: { field: SettingField; value: unknown; onChange: (v: unknown) => void }) {
+  const { t } = useT();
+  const id = useFieldId();
+  const stored = typeof value === "number" && Number.isFinite(value) ? value : typeof field.default === "number" ? field.default : field.min ?? 0;
+  const [unit, setUnit] = useState<DurationUnit>(() => splitDuration(stored).unit);
+  const [text, setText] = useState(() => String(splitDuration(stored).amount));
+  const factor = { ms: 1, s: 1000, min: 60000 }[unit];
+
+  useEffect(() => {
+    // Something else changed the stored value: show it, unless the text already means it.
+    setText((current) => (joinDuration(Number(current), unit) === stored ? current : String(stored / factor)));
+  }, [stored, unit, factor]);
+
+  const pickUnit = (next: DurationUnit) => {
+    setUnit(next);
+    setText(String(stored / { ms: 1, s: 1000, min: 60000 }[next]));
+  };
+
+  return (
+    <div style={{ display: "flex", gap: 6 }}>
+      <div className="pf-num" style={{ flex: 1 }}>
+        <input
+          type="number"
+          id={id}
+          min={field.min != null ? field.min / factor : undefined}
+          max={field.max != null ? field.max / factor : undefined}
+          step={unit === "ms" ? field.step ?? undefined : "any"}
+          value={text}
+          onChange={(e) => {
+            setText(e.target.value);
+            const amount = Number(e.target.value);
+            if (e.target.value !== "" && Number.isFinite(amount)) onChange(joinDuration(amount, unit));
+          }}
+          onBlur={() => {
+            const clamped = clampDuration(stored, field.min, field.max);
+            if (clamped !== stored) onChange(clamped);
+          }}
+        />
+      </div>
+      <div className="pf-sel" style={{ width: 72 }}>
+        <select value={unit} onChange={(e) => pickUnit(e.target.value as DurationUnit)} aria-label={field.label}>
+          <option value="ms">{t("schemaForm.duration.ms")}</option>
+          <option value="s">{t("schemaForm.duration.s")}</option>
+          <option value="min">{t("schemaForm.duration.min")}</option>
+        </select>
+        <span className="chev" aria-hidden="true"><ChevronDown size={14} /></span>
+      </div>
+    </div>
   );
 }
 

@@ -4,6 +4,7 @@ New features and fixes in Macro Grid. For technical details, see [CHANGELOG-deve
 
 ## Unreleased
 ### New
+- **New setting types for plugins:** plugin settings can now have a shortcut key field, a time field (milliseconds, seconds or minutes) and a field where you tick several choices.
 - **Icons follow the text colour:** an icon you pick now takes the colour of the widget's text, so a dynamic text colour recolours the icon too, also when the icon itself changes with a rule. Icons picked earlier keep their colour until you pick them again.
 - **Diagnostics notice missing values and bad numbers:** a widget that uses a variable with no value gets a warning in Diagnostics (its text shows "n/a"), unless it has a placeholder or an "is unavailable" rule. A number variable compared with text is reported as an error on the widget; the rule can still be saved.
 - **Unavailable buttons show on the phone:** a button whose action cannot work right now (a plugin action that is switched off, a variable an action reads that has no value, a deleted page, profile, web widget or variable) turns grey with a small warning mark, and a press tells you what is missing. A variable with no value that is only shown in the text now shows "n/a" instead, and the button keeps working.
