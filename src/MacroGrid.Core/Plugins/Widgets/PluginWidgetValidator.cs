@@ -1,4 +1,5 @@
 using System.Text.RegularExpressions;
+using MacroGrid.Core.Input;
 using MacroGrid.Plugin.Abstractions;
 
 namespace MacroGrid.Core.Plugins.Widgets;
@@ -85,6 +86,9 @@ public static partial class PluginWidgetValidator
                 if (!keys.Add(field.Key)) return $"The setting key '{field.Key}' is used twice";
                 if (field.Kind is SettingFieldKind.Password or SettingFieldKind.File)
                     return $"The setting '{field.Key}' cannot be a {field.Kind} field (widget settings are saved in the profile, which people share)";
+                // The same rules the input actions apply when they press the keys, so a default the editor shows is one the server accepts.
+                if (field.Kind == SettingFieldKind.Hotkey && field.Default is { } hotkey && hotkey.ToString() is { Length: > 0 } combo && !HotkeyParser.TryParse(combo, out _, out var hotkeyError))
+                    return $"The setting '{field.Key}' has an invalid default hotkey: {hotkeyError}";
             }
         }
 
