@@ -261,6 +261,19 @@ public sealed class PluginWidgetTests : IAsyncLifetime
     }
 
     [Fact]
+    public void A_hotkey_default_must_be_a_combo_the_input_actions_can_press()
+    {
+        var good = Widget("g") with { Settings = [new SettingField("k", "Key", SettingFieldKind.Hotkey) { Default = JsonValue.Create("ctrl+shift+s") }] };
+        var empty = Widget("e") with { Settings = [new SettingField("k", "Key", SettingFieldKind.Hotkey) { Default = JsonValue.Create("") }] };
+        var bad = Widget("b") with { Settings = [new SettingField("k", "Key", SettingFieldKind.Hotkey) { Default = JsonValue.Create("ctrl+nokey") }] };
+
+        var result = Validate(Dir(), Manifest(good, empty, bad));
+
+        Assert.Equal(["g", "e"], result.Widgets.Select(w => w.Manifest.Id));
+        Assert.Contains("invalid default hotkey", Assert.Single(result.Problems).Reason);
+    }
+
+    [Fact]
     public void An_unknown_option_is_refused()
     {
         var widget = Widget() with { Options = new() { ["network"] = new PluginWidgetOption() } };

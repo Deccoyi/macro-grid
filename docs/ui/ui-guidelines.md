@@ -134,6 +134,9 @@ Every field is `stacked` (label row above the control), `inline` (label left, co
 | `Select` | stacked | yes (2 per row) | Native select with a chevron. Refresh icon in the label row when options load dynamically. |
 | `Segmented` | stacked | two options: yes (2 per row); three options: no, a row of its own | Selected segment has a 2 px accent line at the bottom. More than three options or long labels: use `Select`. |
 | `Color` | stacked | yes (2 or 3 per row) | Swatch plus mono hex, palette in a portal popover. |
+| `Hotkey` | stacked | no | Key-capture box: focus it and press the keys. Same control as the hotkey action. |
+| `Duration` | stacked | no | Number box (grows) and a 72 px unit select (ms, s, min); the value is stored in milliseconds. |
+| `MultiSelect` | stacked | no | Checkbox list, at most 160 px high, then it scrolls. Refresh icon in the label row when options load dynamically. |
 | `File` | stacked | no | Read-only path (grows) and a Browse button, 6 px apart. |
 | `Variable` | stacked | no | Picker button (grows) and a 28x28 clear button at the end of the row. |
 | `List` | stacked | no | Row header 32 px (chevron, title, remove); an open row has 8 px padding, 12 px between its fields, and is indented 28 px on the left. "Add row" is a ghost button. |
