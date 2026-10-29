@@ -4,6 +4,7 @@ New features and fixes in Macro Grid. For technical details, see [CHANGELOG-deve
 
 ## Unreleased
 ### New
+- **Crash report:** after a crash, Macro Grid shows a report on the next start that you can save or copy. Nothing is sent.
 - **New setting types for plugins:** plugin settings can now have a shortcut key field, a time field (milliseconds, seconds or minutes) and a field where you tick several choices.
 - **Icons follow the text colour:** an icon you pick now takes the colour of the widget's text, so a dynamic text colour recolours the icon too, also when the icon itself changes with a rule. Icons picked earlier keep their colour until you pick them again.
 - **Diagnostics notice missing values and bad numbers:** a widget that uses a variable with no value gets a warning in Diagnostics (its text shows "n/a"), unless it has a placeholder or an "is unavailable" rule. A number variable compared with text is reported as an error on the widget; the rule can still be saved.
