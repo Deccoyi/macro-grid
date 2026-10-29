@@ -85,7 +85,7 @@ internal static class PluginCatalogApi
         });
 
         // A catalog plugin's icon, fetched by the host (the editor never loads a remote image itself). 404 when there is none.
-        api.MapGet("/plugin-catalog/icon", async (string? source, string? id, PluginCatalogClient client, OfficialCatalog official, PluginCatalogIcons icons, PluginSourceStore sources, CancellationToken cancellationToken) =>
+        api.MapGet("/plugin-catalog/icon", async (string? source, string? id, PluginCatalogClient client, OfficialCatalog official, PluginCatalogIcons icons, PluginSourceStore sources, HttpContext context, CancellationToken cancellationToken) =>
         {
             if (!TryResolveSource(source, sources, out var owner, out var repo, out var isOfficial) || string.IsNullOrWhiteSpace(id)) return Results.NotFound();
             try
@@ -94,6 +94,7 @@ internal static class PluginCatalogApi
                 var index = isOfficial && official.Index is { } copy ? copy : await IndexAsync(isOfficial, owner, repo, client, official, fresh: false, cancellationToken);
                 var entry = index.Plugins.FirstOrDefault(p => p.Id == id);
                 if (entry is null || await icons.GetAsync(owner, repo, entry, cancellationToken) is not { } icon) return Results.NotFound();
+                ApiResults.SandboxIcon(context);
                 return Results.File(icon.Data, icon.ContentType);
             }
             catch (PluginCatalogException)

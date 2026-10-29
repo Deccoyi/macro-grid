@@ -209,6 +209,7 @@ Macro Grid is meant for a home or office network you trust. It is not hardened f
   `Origin` on a `GET`, so `/api` also answers `403` unless the `Host` header is a loopback name with one of the server's ports (`HostGuard`).
   `/ws` refuses a browser `Origin` that is neither the server's own origin (the browser deck) nor the phone app's (`WebSocketOriginGuard`); a
   request without `Origin` (a native client) is unaffected. Both refusals are logged as security events.
+- **Plugin icons are served sandboxed.** `GET /api/plugin-catalog/icon` and `GET /api/plugins/{id}/icon` send `Content-Security-Policy: default-src 'none'; style-src 'unsafe-inline'; sandbox` and `X-Content-Type-Options: nosniff` (`PluginIconResponse`), so an author-written SVG opened directly as a URL cannot run a script on the editor's origin.
 - **The `web` widget shows untrusted pages, so it is locked in two places.** The iframe has a `sandbox` without popups, downloads, top navigation,
   dialogs, orientation or pointer lock, an empty `allow` (no camera, location, clipboard, ...) and `no-referrer`. An address must be `http` or `https`,
   without a user name or password, and never this computer or the app's own origin in any loopback form (`WebUrlRule` on the server, `isSafeWebUrl`
