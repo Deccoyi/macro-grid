@@ -56,11 +56,12 @@ internal static class PluginApi
 
         // The manifest's optional logo (LoadedPlugin.HasIcon) — the editor's Plugins window shows this
         // instead of the generic category glyph when present.
-        api.MapGet("/plugins/{id}/icon", (string id, PluginManager plugins) =>
+        api.MapGet("/plugins/{id}/icon", (string id, PluginManager plugins, HttpContext context) =>
         {
             var path = plugins.GetPluginIconPath(id);
             if (path is null) return Results.NotFound();
             var contentType = Path.GetExtension(path).Equals(".svg", StringComparison.OrdinalIgnoreCase) ? "image/svg+xml" : "image/png";
+            ApiResults.SandboxIcon(context);
             return Results.File(path, contentType);
         });
 
