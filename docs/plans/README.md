@@ -18,7 +18,7 @@ Each plan exists once. If the same text exists in another repository or on the D
 | # | Work | Repositories | Plan | Why here |
 |---|---|---|---|---|
 | 1 | [Crash report dialog](crash-report-dialog.md): a native window after a crash that shows the report and lets the person save or copy it (nothing is sent) | `macro-grid` | [crash-report-dialog.md](crash-report-dialog.md) | Ready to build; two small questions for the owner do not block it. |
-| 2 | [Discover: icons, screenshots](discover-store-fields.md) | `macro-grid`, `macro-grid-plugin` | [discover-store-fields.md](discover-store-fields.md) | Icon first; nobody is blocked. |
+| 2 | [Discover: screenshots and leftovers](discover-store-fields.md) | `macro-grid`, `macro-grid-plugin` | [discover-store-fields.md](discover-store-fields.md) | Icon, category and tags are built. Five small leftovers can be done now; screenshots wait for a trigger the owner confirms. |
 | 3 | [Live-stream chat plugin](live-stream-chat-plugin.md) | `macro-grid-plugin` | [live-stream-chat-plugin.md](live-stream-chat-plugin.md) | Needs a platform that fits the two conditions in the plan. |
 
 Done and no longer listed: the `web` widget (iframe with popups, downloads and navigation blocked; crash guard, recommended live number and Keep loaded on the phone), the branded installer, the plugin manifest field rename (`macroGrid` is now `minMacroGrid`, the old name still read), version unification — one version for the server and the SDK, a `macroGrid` field for every plugin and
