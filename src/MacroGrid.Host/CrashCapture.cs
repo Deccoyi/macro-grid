@@ -17,8 +17,11 @@ internal static class CrashCapture
     private static int _handled;
     private static volatile bool _running;
 
-    /// <summary>The loaded plugins at the moment of the crash; set once the plugins are loaded, so a crash before that records "not known yet".</summary>
-    public static Func<IReadOnlyList<CrashPlugin>>? Plugins { get; set; }
+    /// <summary>
+    /// The loaded plugins at the moment of the crash; set once the plugins are loaded, so a crash before that records "not known yet". It must not
+    /// block: it returns null when the plugin list is busy, and the marker then says "not known" too.
+    /// </summary>
+    public static Func<IReadOnlyList<CrashPlugin>?>? Plugins { get; set; }
 
     /// <summary>Call first thing in <c>Main</c>. Exceptions on the UI thread are routed to the same handler as every other crash.</summary>
     public static void Install(string dataDir)

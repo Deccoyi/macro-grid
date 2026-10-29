@@ -39,13 +39,15 @@ public sealed partial class Redactor
 
     private readonly List<(Regex Pattern, string Replacement)> _known = [];
 
-    public Redactor(RedactionContext context)
+    /// <param name="context">What is known about this PC.</param>
+    /// <param name="minNameLength">The shortest user name or PC name that is looked for. The crash report passes 2, like device names.</param>
+    public Redactor(RedactionContext context, int minNameLength = MinNameLength)
     {
         // The data folder usually sits inside the home folder, so it goes first to keep the more specific label.
         AddFolder(context.DataFolder, "<data>");
         AddFolder(context.HomeFolder, "<home>");
-        AddWord(context.UserName, "<user>");
-        AddWord(context.MachineName, "<pc>");
+        AddWord(context.UserName, "<user>", minNameLength);
+        AddWord(context.MachineName, "<pc>", minNameLength);
 
         var devices = (context.DeviceNames ?? [])
             .Select((name, i) => (Name: name?.Trim() ?? "", Label: $"<device {i + 1}>"))

@@ -84,6 +84,23 @@ public sealed class PluginManagerTests : IAsyncLifetime
     public void Plugin_id_rule(string id, bool valid) => Assert.Equal(valid, PluginManager.IsValidPluginId(id));
 
     [Fact]
+    public async Task TryGetPlugins_returns_the_list_when_free_and_null_when_the_lock_is_busy()
+    {
+        Assert.NotNull(_manager.TryGetPlugins());
+
+        var stateLock = (System.Threading.Lock)typeof(PluginManager)
+            .GetField("_stateLock", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)!.GetValue(_manager)!;
+        var held = new ManualResetEventSlim();
+        var release = new ManualResetEventSlim();
+        var holder = Task.Run(() => { lock (stateLock) { held.Set(); release.Wait(); } });
+        held.Wait();
+        try { Assert.Null(_manager.TryGetPlugins()); }
+        finally { release.Set(); await holder; }
+
+        Assert.NotNull(_manager.TryGetPlugins());
+    }
+
+    [Fact]
     public void Plugin_id_longer_than_64_characters_is_refused()
     {
         Assert.True(PluginManager.IsValidPluginId(new string('a', 64)));

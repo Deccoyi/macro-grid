@@ -48,7 +48,7 @@ internal static class Program
         {
             try
             {
-                var redactor = new Redactor(RedactionContext.ForThisPc(dataDir, DeviceStore.ReadNames(dataDir)));
+                var redactor = new Redactor(RedactionContext.ForThisPc(dataDir, DeviceStore.ReadNames(dataDir)), minNameLength: 2);
                 crashReport = new PendingCrashReport(
                     CrashReport.Build(crashMarkers, Path.Combine(dataDir, "logs"), redactor, AppContext.BaseDirectory), crashMarkers.Files);
             }
@@ -93,7 +93,7 @@ internal static class Program
 
         // The plugins are loaded now; from here on a crash marker lists them.
         var pluginManager = server.Services.GetRequiredService<PluginManager>();
-        CrashCapture.Plugins = () => [.. pluginManager.Plugins.Select(p => new CrashPlugin(p.Id, p.Version, p.Status.ToString()))];
+        CrashCapture.Plugins = () => pluginManager.TryGetPlugins()?.Select(p => new CrashPlugin(p.Id, p.Version, p.Status.ToString())).ToList();
 
         // What the data folder holds against what was loaded from it (see StartupDiagnostics).
         StartupDiagnostics.LogStarted(server.Services);
