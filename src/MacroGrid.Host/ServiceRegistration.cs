@@ -40,10 +40,12 @@ internal static class ServiceRegistration
         services.AddSingleton(new ProfileStore(dataDir));
         services.AddSingleton(new ProfileTreeStore(dataDir));
         var preferencesStore = new PreferencesStore(dataDir);
+        var languagePacks = new LanguagePackStore(dataDir);
+        languagePacks.ResetMissingLanguage(preferencesStore);
         AppLanguage.Current = preferencesStore.Get().Language;
         preferencesStore.Changed += () => AppLanguage.Current = preferencesStore.Get().Language;
         services.AddSingleton(preferencesStore);
-        services.AddSingleton(new LanguagePackStore(dataDir));
+        services.AddSingleton(languagePacks);
         services.AddSingleton(new LegalDocuments(AppContext.BaseDirectory));
         services.AddSingleton(new AutostartService(Environment.ProcessPath ?? Application.ExecutablePath));
         return services;

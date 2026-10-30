@@ -107,6 +107,19 @@ public sealed partial class LanguagePackStore
         }
     }
 
+    /// <summary>The development-only pseudo language is built in the editor and has no file, so it is never reset.</summary>
+    private const string PseudoTag = "qps-ploc";
+
+    /// <summary>At startup: when the saved language is a pack whose file is gone (deleted while the app was closed), saves English instead.</summary>
+    public void ResetMissingLanguage(Preferences.PreferencesStore preferences)
+    {
+        var current = preferences.Get();
+        var language = current.Language;
+        if (language is "tr" or "en" or PseudoTag || Read(language) is not null) return;
+        current.Language = "en";
+        preferences.Save(current);
+    }
+
     public bool Delete(string tag)
     {
         if (!IsValidTag(tag)) return false;

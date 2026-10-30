@@ -143,6 +143,37 @@ public sealed class LanguagePackStoreTests : IDisposable
         Assert.Empty(new LanguagePackStore(_dir).List());
         Assert.Null(new LanguagePackStore(_dir).Read("de"));
     }
+
+    [Fact]
+    public void A_saved_language_whose_pack_is_gone_goes_back_to_English()
+    {
+        var preferences = new MacroGrid.Core.Preferences.PreferencesStore(_dir);
+        var store = new LanguagePackStore(_dir);
+        store.Save("de", Pack("de"));
+        var saved = preferences.Get();
+        saved.Language = "de";
+        preferences.Save(saved);
+
+        store.ResetMissingLanguage(preferences);
+        Assert.Equal("de", new MacroGrid.Core.Preferences.PreferencesStore(_dir).Get().Language);
+
+        store.Delete("de");
+        store.ResetMissingLanguage(preferences);
+        Assert.Equal("en", new MacroGrid.Core.Preferences.PreferencesStore(_dir).Get().Language);
+    }
+
+    [Fact]
+    public void A_built_in_saved_language_is_left_alone()
+    {
+        var preferences = new MacroGrid.Core.Preferences.PreferencesStore(_dir);
+        var saved = preferences.Get();
+        saved.Language = "tr";
+        preferences.Save(saved);
+
+        new LanguagePackStore(_dir).ResetMissingLanguage(preferences);
+
+        Assert.Equal("tr", preferences.Get().Language);
+    }
 }
 
 public sealed class LanguageCsvFileTests : IDisposable
