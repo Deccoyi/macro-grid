@@ -179,6 +179,7 @@ export const en: Record<DictKey, string> = {
   "languagePack.report.summary": "{accepted} accepted, {empty} left empty, {refused} refused.",
   "languagePack.report.row": "Line {line}: {key} ({reason})",
   "languagePack.report.more": "…and {count} more",
+  "languagePack.rtlNote": "This language is written right to left. The editor layout is not adapted for it, so texts may look out of place.",
   "languagePack.report.save": "Save pack",
   "languagePack.reason.unknownKey": "unknown key",
   "languagePack.reason.placeholders": "placeholders differ from English",

@@ -64,6 +64,7 @@ New features and fixes in Macro Grid. For technical details, see [CHANGELOG-deve
 - **The Toolbox can be an A to Z list:** the menu next to "Add widget" switches between plugin groups and one plain alphabetical list, and a plugin group can be folded.
 - **The Toolbox marks the web widget with a small flask icon** instead of the word "Experimental".
 ### Fixed
+- **Language packs:** long names no longer spill over the rows below. A right-to-left language now shows a note that the layout is not adapted. If a language pack file is gone, Macro Grid goes back to English and remembers it.
 - **Imported profiles show at once:** after importing a shared profile, the profile list in the editor updates without a reload.
 - **First start on a new PC:** the very first start no longer stops with a crash report.
 - **Automation rules:** a rule that sets a True / False variable without you changing the value now works instead of failing. Long messages in the Automation window wrap instead of being cut off. A rule that uses a deleted variable shows a warning in the Diagnostic Messages. A "show page" step in a rule now asks for a profile first, then the page.

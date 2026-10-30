@@ -1,4 +1,4 @@
-import { renderHook, waitFor } from "@testing-library/react";
+import { fireEvent, render, renderHook, screen, waitFor } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { en } from "../src/i18n/en";
@@ -24,6 +24,7 @@ vi.mock("../src/api/client", () => ({
 
 import { useT } from "../src/i18n/I18nContext";
 import { PreferencesProvider } from "../src/preferences/PreferencesContext";
+import { LanguageSection } from "../src/windows/LanguageSection";
 
 const wrapper = ({ children }: { children: ReactNode }) => <PreferencesProvider>{children}</PreferencesProvider>;
 const pack = (strings: Record<string, string>, tag = "de") => ({ meta: { format: 1, tag, name: "Deutsch", version: 1 }, strings });
@@ -143,6 +144,19 @@ describe("language tags", () => {
   });
 });
 
+describe("LanguageSection", () => {
+  it("warns about a right-to-left tag and about nothing else", async () => {
+    server.language = "en";
+    render(<LanguageSection />, { wrapper });
+    const tag = await screen.findByLabelText(en["languagePack.tag"]);
+
+    fireEvent.change(tag, { target: { value: "de" } });
+    expect(screen.queryByText(en["languagePack.rtlNote"])).toBeNull();
+    fireEvent.change(tag, { target: { value: "ar" } });
+    expect(screen.getByText(en["languagePack.rtlNote"])).toBeTruthy();
+  });
+});
+
 describe("t with a language pack", () => {
   beforeEach(() => {
     server.language = "de";
@@ -162,6 +176,14 @@ describe("t with a language pack", () => {
     await waitFor(() => expect(result.current.t("app.loading")).toBe("Laden…"));
     expect(result.current.t("app.title")).toBe(en["app.title"]);
     expect(result.current.t("diag.save.total", "a", "b")).toContain("⁨");
+  });
+
+  it("shows a different valid text as typed, and English for a text with a changed placeholder", async () => {
+    server.pack = pack({ "consent.http": "Anfragen an {target} senden", "diag.save.total": "{pages} / {cnt}", "app.loading": "Anders" });
+    const { result } = renderHook(() => useT(), { wrapper });
+
+    await waitFor(() => expect(result.current.t("app.loading")).toBe("Anders"));
+    expect(result.current.t("diag.save.total", "a", "b")).not.toContain("⁨");
   });
 
   it("keeps a hostile text as text", async () => {

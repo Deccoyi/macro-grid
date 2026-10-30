@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { api } from "../api/client";
 import type { LanguagePackFile, LanguagePackInfo } from "../api/types";
 import { useT } from "../i18n/I18nContext";
-import { canonicalTag } from "../i18n/language";
+import { canonicalTag, isRightToLeft } from "../i18n/language";
 import { ensurePack } from "../i18n/packStore";
 import { buildTemplate, coverage, importTable, type ImportReport } from "../i18n/pack/template";
 import { checkPack } from "../i18n/pack/validate";
@@ -126,7 +126,7 @@ export function LanguageSection() {
         {packs.length === 0 && <div className="st-row"><div className="st-hint">{t("languagePack.none")}</div></div>}
         {packs.map((p) => (
           <div key={p.tag} className="st-row" style={{ gridTemplateColumns: "minmax(0, 1fr) auto", columnGap: 12, rowGap: 6 }}>
-            <div>
+            <div style={{ minWidth: 0, overflowWrap: "anywhere" }}>
               <div className="st-row-name">{p.name} <span className="st-hint">({p.tag})</span></div>
               <div className="st-row-hint">
                 {t("languagePack.coverage", String(p.done), String(p.total))}
@@ -158,7 +158,7 @@ export function LanguageSection() {
       </SettingGroup>
 
       <SettingGroup title={t("languagePack.new")}>
-        <SettingRow name={t("languagePack.tag")} control={<TextInput value={tag} onChange={setTag} maxLength={35} label={t("languagePack.tag")} />} hint={tagInvalid ? <span className="st-hint error">{t("languagePack.tagInvalid")}</span> : undefined} />
+        <SettingRow name={t("languagePack.tag")} control={<TextInput value={tag} onChange={setTag} maxLength={35} label={t("languagePack.tag")} />} hint={tagInvalid ? <span className="st-hint error">{t("languagePack.tagInvalid")}</span> : newTag && isRightToLeft(newTag) ? <span className="st-hint">{t("languagePack.rtlNote")}</span> : undefined} />
         <SettingRow name={t("languagePack.name")} control={<TextInput value={name} onChange={setName} maxLength={40} label={t("languagePack.name")} />} />
       </SettingGroup>
       <div className="st-footer" style={{ display: "flex", gap: 8 }}>
@@ -173,11 +173,12 @@ export function LanguageSection() {
       </div>
 
       {pending && (
-        <div role="region" className="st-note" style={{ marginTop: 16, display: "flex", flexDirection: "column", gap: 6, padding: 10 }}>
+        <div role="region" className="st-note" style={{ marginTop: 16, display: "flex", flexDirection: "column", gap: 6, padding: 10, overflowWrap: "anywhere" }}>
           <div style={{ fontSize: 12, fontWeight: 600, color: "var(--ms-text-primary)" }}>{t("languagePack.report.title", pending.pack.meta.name)}</div>
           <div style={{ fontSize: 12 }}>
             {t("languagePack.report.summary", String(pending.report.accepted), String(pending.report.empty), String(pending.report.refused.length))}
           </div>
+          {isRightToLeft(pending.pack.meta.tag) && <div className="st-hint">{t("languagePack.rtlNote")}</div>}
           {pending.report.refused.slice(0, REPORT_ROWS_SHOWN).map((row) => (
             <div key={`${row.line}:${row.key}`} className="st-hint">
               {t("languagePack.report.row", String(row.line), row.key, t(`languagePack.reason.${row.reason}` as DictKey))}

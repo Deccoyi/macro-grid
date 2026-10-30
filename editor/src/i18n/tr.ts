@@ -180,6 +180,7 @@ export const tr = {
   "languagePack.report.summary": "{accepted} kabul edildi, {empty} boş bırakıldı, {refused} reddedildi.",
   "languagePack.report.row": "Satır {line}: {key} ({reason})",
   "languagePack.report.more": "…ve {count} tane daha",
+  "languagePack.rtlNote": "Bu dil sağdan sola yazılır. Düzenleyici arayüzü buna uyarlanmamıştır, metinler yerinde görünmeyebilir.",
   "languagePack.report.save": "Paketi kaydet",
   "languagePack.reason.unknownKey": "bilinmeyen anahtar",
   "languagePack.reason.placeholders": "yer tutucular İngilizce ile farklı",
