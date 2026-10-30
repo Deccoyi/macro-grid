@@ -106,7 +106,8 @@ public sealed partial class JsPlugin
             try { (code, reason, error) = await ReadSocketAsync(id, connection, token); }
             finally { connection.Outgoing.Writer.TryComplete(); await writer.ConfigureAwait(false); }
         }
-        catch (Exception ex) when (ex is WebSocketException or IOException or HttpRequestException or TimeoutException or OperationCanceledException or ObjectDisposedException)
+        // Any failure must still end in a close event: the socket runs on its own task, so an exception type this list missed (a raw SocketException on some platforms) would end the task silently and the script would never hear about it.
+        catch (Exception ex)
         {
             error = connection.ClosedByScript ? null : DescribeFailure(ex);
         }
