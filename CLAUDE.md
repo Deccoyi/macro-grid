@@ -18,7 +18,7 @@
 - Tags and plugin or APK releases are outward-facing: ask the owner before each one. The SDK is no longer published to NuGet.
 
 ## Signing folder
-- The signing material lives in `%USERPROFILE%signing` (release keystore, plugin signing keys). Never delete, change, move, regenerate or overwrite anything there, never run a script that signs (`release-plugin.ps1`, `publish-catalog.ps1`, `build-release-apk.ps1`) and never read key contents, unless the owner has approved that exact action in chat. Listing file names is the most you may do, and only to answer a question.
+- The signing material lives in `%USERPROFILE%signing` (release keystore, plugin signing keys). Never delete, change, move, regenerate or overwrite anything there, never run a script that signs (`release-plugin.ps1`, `publish-catalog.ps1`, `build-release-apk.ps1`) and never read key contents, unless the owner has approved that exact action in chat. Listing file names is the most you may do, and only to answer a question. Releases are signed with the keys in that folder exactly as they are; they are never replaced, regenerated or edited.
 
 ## Merging dev into main
 - Preparing the release content is part of sending `dev` to `main`, in EVERY repository (server, phone app, plugins). The owner has asked for this more than once: do it before the `dev` to `main` pull request is opened, never after, and never wait to be asked.
