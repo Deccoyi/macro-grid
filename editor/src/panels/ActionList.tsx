@@ -6,7 +6,7 @@ import { useCatalogText } from "../i18n/catalogText";
 import { useT } from "../i18n/I18nContext";
 import { ActionPicker } from "./ActionPicker";
 import { formFor } from "./actionForms/forms";
-import { FLOW_ELSE, FLOW_END, FLOW_IF, addElse, carryCollapsed, insertAt, laneStacks, layout, move as moveRow, moveTo, remove as removeRow, type FlowRow, type Lane } from "./actionFlow";
+import { FLOW_ELSE, FLOW_END, FLOW_IF, MAX_DEPTH, addElse, carryCollapsed, insertAt, laneStacks, layout, move as moveRow, moveTo, remove as removeRow, type FlowRow, type Lane } from "./actionFlow";
 import { IfStepEditor, whenOf } from "./IfStepEditor";
 import { summarizeCondition } from "./dynamic/conditionSummary";
 
@@ -57,7 +57,8 @@ export function ActionList({ bindings, actions, pages, profiles, variableCatalog
   const rows = layout(bindings);
   const stacks = laneStacks(bindings);
   const hidden = (index: number) => rows.some((r) => r.kind === "if" && collapsed.has(r.index) && index > r.index && index <= (r.endIndex ?? bindings.length - 1));
-  const reshape = (next: ActionBinding[]) => { setCollapsed(carryCollapsed(bindings, next, collapsed)); onChange(next); };
+  const [notice, setNotice] = useState<string | null>(null);
+  const reshape = (next: ActionBinding[]) => { setNotice(null); setCollapsed(carryCollapsed(bindings, next, collapsed)); onChange(next); };
 
   // Drag and drop: the step (or whole If block) being dragged and the insertion point under the pointer. The up/down buttons stay as the keyboard way to move.
   const [drag, setDrag] = useState<number | null>(null);
@@ -104,7 +105,12 @@ export function ActionList({ bindings, actions, pages, profiles, variableCatalog
     onChange(copy);
   };
 
-  const insertBinding = (pos: number) => (type: string) => reshape(insertAt(bindings, pos, type));
+  // An If that would nest too deep is refused by insertAt (same list back); say so instead of doing nothing.
+  const insertBinding = (pos: number) => (type: string) => {
+    const next = insertAt(bindings, pos, type);
+    if (next === bindings) setNotice(t("action.logic.tooDeep", String(MAX_DEPTH)));
+    else reshape(next);
+  };
 
   const removeBinding = (index: number) => reshape(removeRow(bindings, index));
 
@@ -257,6 +263,7 @@ export function ActionList({ bindings, actions, pages, profiles, variableCatalog
         onPick={insertBinding(bindings.length)}
         renderTrigger={(open) => <button type="button" className="ghost pf-btn small" onClick={open} disabled={addable.length === 0}>{t("action.add")}</button>}
       />
+      {notice && <p className="pf-hint error" role="alert" style={{ position: "sticky", bottom: 0, padding: "4px 0", background: "var(--ms-bg-surface, var(--ms-bg-canvas))" }}>{notice}</p>}
     </div>
   );
 }

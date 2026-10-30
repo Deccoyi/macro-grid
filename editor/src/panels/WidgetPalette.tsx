@@ -7,7 +7,7 @@ import { usePluginWidgets } from "../state/usePluginWidgets";
 import type { DictKey } from "../i18n/tr";
 import { ContextMenu, type ContextMenuEntry } from "./ContextMenu";
 import { matchesSearch } from "./paletteSearch";
-import { groupToolbox, SEARCH_MIN_TILES, type ToolboxEntry, type ToolboxView } from "./toolboxLayout";
+import { groupToolbox, type ToolboxEntry, type ToolboxView } from "./toolboxLayout";
 
 // Icon per widget type — see docs/ui/editor-icons.md ("Toolbox (widget types)").
 const PALETTE: { type: WidgetType; key: DictKey; icon: LucideIcon }[] = [
@@ -119,7 +119,6 @@ export function WidgetPalette({ onAdd, onAddPluginWidget, disabled }: WidgetPale
     ],
     [pluginWidgets, t],
   );
-  const showSearch = entries.length > SEARCH_MIN_TILES || query !== "";
   const matching = entries.filter((e) => {
     const info = e.builtin ? null : (e.item as PluginWidgetInfo);
     return matchesSearch(query, e.name, info?.description, info?.pluginName, info?.category);
@@ -197,16 +196,14 @@ export function WidgetPalette({ onAdd, onAddPluginWidget, disabled }: WidgetPale
         </button>
       </div>
       {menu && <ContextMenu x={menu.x} y={menu.y} items={menuItems} onClose={() => setMenu(null)} />}
-      {showSearch && (
-        <input
-          type="search"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder={t("palette.search")}
-          aria-label={t("palette.search")}
-          style={{ height: 24, padding: "0 6px", fontSize: 12, background: "var(--ms-bg-input, var(--ms-bg-surface-raised))", border: "1px solid var(--ms-border)", borderRadius: 3, color: "var(--ms-text-primary)" }}
-        />
-      )}
+      <input
+        type="search"
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+        placeholder={t("palette.search")}
+        aria-label={t("palette.search")}
+        style={{ height: 24, padding: "0 6px", fontSize: 12, background: "var(--ms-bg-input, var(--ms-bg-surface-raised))", border: "1px solid var(--ms-border)", borderRadius: 3, color: "var(--ms-text-primary)" }}
+      />
       {query !== "" && <div style={{ fontSize: 11, color: "var(--ms-text-secondary)" }}>{matching.length === 0 ? t("palette.noMatch") : t("palette.results", String(matching.length))}</div>}
       {groups.map((group) => (
         <div key={group.id} style={{ display: "flex", flexDirection: "column", gap: 6 }}>

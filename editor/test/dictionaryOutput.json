@@ -105,6 +105,13 @@
       "five": "Failed at 5: 5",
       "words": "Failed at Arg1: Arg2"
     },
+    "action.logic.tooDeep": {
+      "zero": "An If cannot go here: Ifs can be nested only 0 deep.",
+      "one": "An If cannot go here: Ifs can be nested only 1 deep.",
+      "two": "An If cannot go here: Ifs can be nested only 2 deep.",
+      "five": "An If cannot go here: Ifs can be nested only 5 deep.",
+      "words": "An If cannot go here: Ifs can be nested only Arg1 deep."
+    },
     "action.logic.steps.one": {
       "zero": "0 step",
       "one": "1 step",
@@ -1093,6 +1100,13 @@
       "two": "2 saatinde başarısız: 2",
       "five": "5 saatinde başarısız: 5",
       "words": "Arg1 saatinde başarısız: Arg2"
+    },
+    "action.logic.tooDeep": {
+      "zero": "If buraya eklenemez: If en fazla 0 kat iç içe olabilir.",
+      "one": "If buraya eklenemez: If en fazla 1 kat iç içe olabilir.",
+      "two": "If buraya eklenemez: If en fazla 2 kat iç içe olabilir.",
+      "five": "If buraya eklenemez: If en fazla 5 kat iç içe olabilir.",
+      "words": "If buraya eklenemez: If en fazla Arg1 kat iç içe olabilir."
     },
     "action.logic.steps.one": {
       "zero": "0 adım",

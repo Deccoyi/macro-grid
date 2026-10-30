@@ -104,6 +104,19 @@ describe("move", () => {
     expect(names(move(list("if", "if", "a", "end", "end"), 1, -1))).toBe("if a end if end");
   });
 
+  it("hops a step over a whole block instead of landing inside it", () => {
+    expect(names(move(list("a", "if", "b", "end"), 0, 1))).toBe("if b end a");
+    expect(names(move(list("if", "b", "end", "a"), 3, -1))).toBe("a if b end");
+    expect(names(move(list("if", "b", "else", "c", "end", "a"), 5, -1))).toBe("a if b else c end");
+    expect(names(move(list("a", "if", "b", "else", "c", "end"), 0, 1))).toBe("if b else c end a");
+  });
+
+  it("hops over a nested block as one unit and stays in its own lane", () => {
+    expect(names(move(list("if", "a", "if", "b", "end", "c", "end"), 1, 1))).toBe("if if b end a c end");
+    expect(names(move(list("if", "if", "b", "end", "a", "end"), 4, -1))).toBe("if a if b end end");
+    expect(names(move(list("if", "x", "if", "if", "b", "end", "end", "end"), 1, 1))).toBe("if if if b end end x end");
+  });
+
   it("does nothing at the ends of the list", () => {
     const l = list("a", "b");
     expect(move(l, 0, -1)).toBe(l);

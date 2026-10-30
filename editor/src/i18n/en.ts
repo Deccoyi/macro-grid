@@ -712,6 +712,7 @@ export const en: Record<DictKey, string> = {
   "action.logic.stopNote": "Ends the action list here.",
   "action.logic.removeBlock": "Remove (the steps inside stay)",
   "action.logic.emptyIf": "Nothing in If yet.",
+  "action.logic.tooDeep": "An If cannot go here: Ifs can be nested only {max} deep.",
   "action.logic.emptyElse": "Nothing in Else yet.",
   "action.addHere": "Add action here",
   "action.drag": "Drag to move",

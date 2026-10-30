@@ -106,17 +106,17 @@ export function move(bindings: readonly ActionBinding[], index: number, dir: -1 
   const to = row.kind === "if" ? row.endIndex : index;
   if (to === undefined) return bindings as ActionBinding[];
 
-  // The unit next to it: one row, or a whole block when the row beside is the End of one.
+  // The unit next to it: one row, or a whole If block when the row beside is its End (going up) or its If (going down), so a step or block hops over the block instead of landing inside it.
   let otherFrom: number;
   let otherTo: number;
   if (dir === -1) {
     if (from === 0) return bindings as ActionBinding[];
     otherTo = from - 1;
-    otherFrom = row.kind === "if" && rows[otherTo]!.kind === "end" ? blockStart(rows, otherTo) : otherTo;
+    otherFrom = rows[otherTo]!.kind === "end" ? blockStart(rows, otherTo) : otherTo;
   } else {
     if (to === bindings.length - 1) return bindings as ActionBinding[];
     otherFrom = to + 1;
-    otherTo = row.kind === "if" && rows[otherFrom]!.kind === "if" ? (rows[otherFrom]!.endIndex ?? otherFrom) : otherFrom;
+    otherTo = rows[otherFrom]!.kind === "if" ? (rows[otherFrom]!.endIndex ?? otherFrom) : otherFrom;
   }
 
   const [firstFrom, firstTo, secondFrom, secondTo] = dir === -1 ? [otherFrom, otherTo, from, to] : [from, to, otherFrom, otherTo];
