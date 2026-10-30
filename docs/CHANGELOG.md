@@ -69,6 +69,10 @@ New features and fixes in Macro Grid. For technical details, see [CHANGELOG-deve
 - **The Toolbox marks the web widget with a small flask icon** instead of the word "Experimental".
 ### Fixed
 - **Language packs:** long names no longer spill over the rows below. A right-to-left language now shows a note that the layout is not adapted. If a language pack file is gone, Macro Grid goes back to English and remembers it.
+- **Move arrows skip over a whole If block:** a step next to an If block jumps above or below the block instead of landing inside it. Drag and drop and the "+" slots still put steps inside.
+- **A refused If says why:** adding a fourth nested If now shows a short message instead of doing nothing.
+- **Language pack texts stay in the card:** the "remove pack" question and the status bar no longer spill over with a very long pack name.
+- **The Toolbox search box is always shown,** not only when there are many widgets.
 - **A collapsed If block stays collapsed when you move it.**
 - **A collapsed If block fits in a narrow panel:** the condition and step count use the free room and move to their own line when it is too tight.
 - **Automation rules no longer show "running" after they stopped:** the Automation window now refreshes on its own.

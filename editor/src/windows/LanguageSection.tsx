@@ -125,7 +125,7 @@ export function LanguageSection() {
       <SettingGroup title={t("languagePack.packs")}>
         {packs.length === 0 && <div className="st-row"><div className="st-hint">{t("languagePack.none")}</div></div>}
         {packs.map((p) => (
-          <div key={p.tag} className="st-row" style={{ gridTemplateColumns: "minmax(0, 1fr) auto", columnGap: 12, rowGap: 6 }}>
+          <div key={p.tag} className="st-row" style={{ gridTemplateColumns: "minmax(0, 1fr) auto", columnGap: 12, rowGap: 6, overflowWrap: "anywhere" }}>
             <div style={{ minWidth: 0, overflowWrap: "anywhere" }}>
               <div className="st-row-name">{p.name} <span className="st-hint">({p.tag})</span></div>
               <div className="st-row-hint">
@@ -139,7 +139,7 @@ export function LanguageSection() {
               <button type="button" className="st-btn" onClick={() => setLang(p.tag)}>{t("languagePack.use")}</button>
             )}
             {removing === p.tag ? (
-              <div style={{ gridColumn: "1 / -1", display: "flex", flexDirection: "column", gap: 6 }}>
+              <div style={{ gridColumn: "1 / -1", minWidth: 0, display: "flex", flexDirection: "column", gap: 6 }}>
                 <div style={{ fontSize: 12 }}>{t("languagePack.removeConfirm", p.name)}</div>
                 <div style={{ display: "flex", gap: 8 }}>
                   <button type="button" className="st-btn" onClick={() => void removePack(p.tag)} style={{ color: "var(--ms-danger)" }}>{t("languagePack.remove")}</button>

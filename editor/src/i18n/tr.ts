@@ -722,6 +722,7 @@ export const tr = {
   "action.logic.stopNote": "Eylem listesini burada bitirir.",
   "action.logic.removeBlock": "Kaldır (içindeki adımlar kalır)",
   "action.logic.emptyIf": "If içinde henüz eylem yok.",
+  "action.logic.tooDeep": "If buraya eklenemez: If en fazla {max} kat iç içe olabilir.",
   "action.logic.emptyElse": "Else içinde henüz eylem yok.",
   "action.addHere": "Buraya eylem ekle",
   "action.drag": "Taşımak için sürükle",

@@ -1,9 +1,6 @@
 /** How the Toolbox lists its widgets: one group per plugin (in the order the plugins were listed), or as one flat list with no groups, A to Z. */
 export type ToolboxView = "plugin" | "alphabetical";
 
-/** The search box shows only when the Toolbox has more tiles than this (or while something is typed in it). */
-export const SEARCH_MIN_TILES = 12;
-
 export interface ToolboxEntry<T> {
   name: string;
   plugin?: string;

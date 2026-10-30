@@ -60,9 +60,10 @@ function LanguagePackMark() {
   const { lang, setLang } = useT();
   const pack = usePack();
   if (isBuiltIn(lang)) return null;
+  const text = `Unofficial language pack: ${pack?.tag === lang ? pack.name : lang}`;
   return (
     <span style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11.5, padding: "0 6px", flexShrink: 0, color: "var(--ms-warning)" }}>
-      <span>{`Unofficial language pack: ${pack?.tag === lang ? pack.name : lang}`}</span>
+      <span title={text} style={{ maxWidth: 280, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{text}</span>
       <button type="button" className="ghost" style={{ fontSize: 11.5, padding: "0 6px" }} onClick={() => setLang("en")}>English</button>
     </span>
   );

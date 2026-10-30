@@ -21,6 +21,7 @@ export const PARAMS: Partial<Record<DictKey, readonly string[]>> = {
   "automation.last.ok": ["time"],
   "automation.last.refused": ["time"],
   "automation.last.failed": ["time","message"],
+  "action.logic.tooDeep": ["max"],
   "action.logic.steps.one": ["n"],
   "action.logic.steps.other": ["n"],
   "consent.http": ["target"],
