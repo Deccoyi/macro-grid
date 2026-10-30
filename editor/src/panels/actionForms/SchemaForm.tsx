@@ -155,6 +155,8 @@ function SchemaFieldRow({
   const hint = field.description ?? undefined;
 
   if (field.kind === "Notice") {
+    // A notice whose text is empty (an unresolved plugin string) would show a bare warning icon.
+    if (!field.description?.trim()) return null;
     return (
       <div role="note" className="pf-note">
         <TriangleAlert size={14} />

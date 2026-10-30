@@ -86,4 +86,11 @@ describe("MultiSelect field", () => {
     const boxes = container.querySelectorAll<HTMLInputElement>("input[type=checkbox]");
     expect([...boxes].map((b) => b.checked)).toEqual([false, true, false]);
   });
+
+  it("draws no box for a notice without text and a box for one with text", () => {
+    const empty = { key: "n", label: "N", kind: "Notice", description: "" } as SettingField;
+    expect(draw([empty], {}).container.querySelector("[role=note]")).toBeNull();
+    const filled = { ...empty, description: "Hello" } as SettingField;
+    expect(draw([filled], {}).container.querySelector("[role=note]")?.textContent).toBe("Hello");
+  });
 });
