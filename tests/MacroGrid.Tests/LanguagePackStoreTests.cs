@@ -162,6 +162,51 @@ public sealed class LanguagePackStoreTests : IDisposable
         Assert.Equal("en", new MacroGrid.Core.Preferences.PreferencesStore(_dir).Get().Language);
     }
 
+    [Theory]
+    [InlineData("tr-TR")]
+    [InlineData("tr-tr")]
+    [InlineData("pt-BR")]
+    [InlineData("xx not a tag")]
+    [InlineData("")]
+    public void A_saved_pack_tag_with_no_file_goes_back_to_English(string language)
+    {
+        var preferences = new MacroGrid.Core.Preferences.PreferencesStore(_dir);
+        var saved = preferences.Get();
+        saved.Language = language;
+        preferences.Save(saved);
+
+        new LanguagePackStore(_dir).ResetMissingLanguage(preferences);
+
+        Assert.Equal("en", new MacroGrid.Core.Preferences.PreferencesStore(_dir).Get().Language);
+    }
+
+    [Theory]
+    [InlineData("tr-TR", "tr-TR")]
+    [InlineData("PT-br", "pt-br")]
+    [InlineData("TR", "TR")]
+    [InlineData("EN", "EN")]
+    public void A_saved_tag_is_kept_when_its_pack_exists_or_it_is_built_in_whatever_the_case(string language, string packTag)
+    {
+        var store = new LanguagePackStore(_dir);
+        if (language.Length > 2) store.Save(packTag, Pack(packTag));
+        var preferences = new MacroGrid.Core.Preferences.PreferencesStore(_dir);
+        var saved = preferences.Get();
+        saved.Language = language;
+        preferences.Save(saved);
+
+        store.ResetMissingLanguage(preferences);
+
+        Assert.Equal(language, new MacroGrid.Core.Preferences.PreferencesStore(_dir).Get().Language);
+    }
+
+    [Fact]
+    public void A_pack_cannot_take_the_tag_of_a_built_in_language()
+    {
+        var store = new LanguagePackStore(_dir);
+        Assert.Throws<LanguagePackException>(() => store.Save("tr", Pack("tr")));
+        Assert.Throws<LanguagePackException>(() => store.Save("en", Pack("en")));
+    }
+
     [Fact]
     public void A_built_in_saved_language_is_left_alone()
     {

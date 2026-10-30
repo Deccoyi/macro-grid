@@ -115,7 +115,10 @@ public sealed partial class LanguagePackStore
     {
         var current = preferences.Get();
         var language = current.Language;
-        if (language is "tr" or "en" or PseudoTag || Read(language) is not null) return;
+        // Tags compare without case (the file name is lower case), and a value that cannot be a tag at all is as missing as a deleted file.
+        if (!string.IsNullOrEmpty(language)
+            && (language.Equals("tr", StringComparison.OrdinalIgnoreCase) || language.Equals("en", StringComparison.OrdinalIgnoreCase)
+                || language.Equals(PseudoTag, StringComparison.OrdinalIgnoreCase) || Read(language.ToLowerInvariant()) is not null)) return;
         current.Language = "en";
         preferences.Save(current);
     }

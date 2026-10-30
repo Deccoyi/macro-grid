@@ -68,6 +68,7 @@ New features and fixes in Macro Grid. For technical details, see [CHANGELOG-deve
 - **The Toolbox can be an A to Z list:** the menu next to "Add widget" switches between plugin groups and one plain alphabetical list, and a plugin group can be folded.
 - **The Toolbox marks the web widget with a small flask icon** instead of the word "Experimental".
 ### Fixed
+- **Refused profile delete is no longer missed:** when Macro Grid cannot save a restore point first, so it keeps the profile, a message window now says so instead of a short line in the status bar.
 - **Language packs:** long names no longer spill over the rows below. A right-to-left language now shows a note that the layout is not adapted. If a language pack file is gone, Macro Grid goes back to English and remembers it.
 - **A collapsed If block stays collapsed when you move it.**
 - **A collapsed If block fits in a narrow panel:** the condition and step count use the free room and move to their own line when it is too tight.
