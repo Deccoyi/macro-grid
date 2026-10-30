@@ -286,21 +286,23 @@ function IfRow({ row, binding, bindings, collapsed, frame, setRef, grip, variabl
   const summary = when === "condition" ? summarizeCondition(binding.settings.condition as ConditionNode | undefined, t) : t(`action.logic.when.${when}`);
   return (
     <div ref={setRef} className="pf-card" style={{ ...frame, padding: 8, display: "flex", flexDirection: "column", gap: 8, background: "var(--ms-bg-canvas)" }}>
-      <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+      <div style={{ display: "flex", gap: 4, alignItems: "center", flexWrap: "wrap" }}>
         <button className="ghost" onClick={onToggle} title={t(collapsed ? "action.logic.expand" : "action.logic.collapse")} aria-expanded={!collapsed} style={{ display: "flex", padding: 4 }}>
           {collapsed ? <ChevronRight size={14} /> : <ChevronDown size={14} />}
         </button>
         {grip}
         <span className="pf-tag">{t("action.logic.if")}</span>
+        {/* The summary takes the room the buttons leave; when that is under 120px it drops to its own line instead of being cut to nothing. */}
         {collapsed && (
-          <span style={{ flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontSize: 12, color: "var(--ms-text-secondary)" }}>
+          <span title={`${summary} · ${tn("action.logic.steps", stepCount)}`} style={{ flex: "1 1 120px", minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontSize: 12, color: "var(--ms-text-secondary)" }}>
             {summary} · {tn("action.logic.steps", stepCount)}
           </span>
         )}
-        <div style={{ flex: 1 }} />
-        <button className="ghost" onClick={() => onMove(-1)} disabled={!canMove(-1)} title={t("action.moveUp")}><ChevronUp size={14} /></button>
-        <button className="ghost" onClick={() => onMove(1)} disabled={!canMove(1)} title={t("action.moveDown")}><ChevronDown size={14} /></button>
-        <button className="ghost" onClick={onRemove} title={t("action.logic.removeBlock")}><X size={14} /></button>
+        <div style={{ display: "flex", gap: 0, marginLeft: "auto" }}>
+          <button className="ghost" style={{ padding: 4 }} onClick={() => onMove(-1)} disabled={!canMove(-1)} title={t("action.moveUp")}><ChevronUp size={14} /></button>
+          <button className="ghost" style={{ padding: 4 }} onClick={() => onMove(1)} disabled={!canMove(1)} title={t("action.moveDown")}><ChevronDown size={14} /></button>
+          <button className="ghost" style={{ padding: 4 }} onClick={onRemove} title={t("action.logic.removeBlock")}><X size={14} /></button>
+        </div>
       </div>
       {!collapsed && (
         <>

@@ -217,6 +217,20 @@
       "five": "Page \"5\", 5: the variable \"5\" is not in the Global Variable List.",
       "words": "Page \"Arg1\", Arg2: the variable \"Arg3\" is not in the Global Variable List."
     },
+    "diag.server.variableMissing": {
+      "zero": "The variable '0' does not exist.",
+      "one": "The variable '1' does not exist.",
+      "two": "The variable '2' does not exist.",
+      "five": "The variable '5' does not exist.",
+      "words": "The variable 'Arg1' does not exist."
+    },
+    "diag.server.ruleVariableMissing": {
+      "zero": "This rule uses the variable '0', which does not exist.",
+      "one": "This rule uses the variable '1', which does not exist.",
+      "two": "This rule uses the variable '2', which does not exist.",
+      "five": "This rule uses the variable '5', which does not exist.",
+      "words": "This rule uses the variable 'Arg1', which does not exist."
+    },
     "diag.check.W232": {
       "zero": "Page \"0\", 0: \"0\" works only in the button's own text and rules.",
       "one": "Page \"1\", 1: \"1\" works only in the button's own text and rules.",
@@ -225,11 +239,11 @@
       "words": "Page \"Arg1\", Arg2: \"Arg3\" works only in the button's own text and rules."
     },
     "diag.check.W233": {
-      "zero": "Page \"0\", 0, 0: the If, Otherwise and End steps do not match, or they are nested more than 0 deep.",
-      "one": "Page \"1\", 1, 1: the If, Otherwise and End steps do not match, or they are nested more than 1 deep.",
-      "two": "Page \"2\", 2, 2: the If, Otherwise and End steps do not match, or they are nested more than 2 deep.",
-      "five": "Page \"5\", 5, 5: the If, Otherwise and End steps do not match, or they are nested more than 5 deep.",
-      "words": "Page \"Arg1\", Arg2, Arg3: the If, Otherwise and End steps do not match, or they are nested more than Arg4 deep."
+      "zero": "Page \"0\", 0, 0: the If, Else and End steps do not match, or they are nested more than 0 deep.",
+      "one": "Page \"1\", 1, 1: the If, Else and End steps do not match, or they are nested more than 1 deep.",
+      "two": "Page \"2\", 2, 2: the If, Else and End steps do not match, or they are nested more than 2 deep.",
+      "five": "Page \"5\", 5, 5: the If, Else and End steps do not match, or they are nested more than 5 deep.",
+      "words": "Page \"Arg1\", Arg2, Arg3: the If, Else and End steps do not match, or they are nested more than Arg4 deep."
     },
     "diag.check.W234": {
       "zero": "Page \"0\", 0, 0, step 0: the If has no condition to test.",
@@ -1192,6 +1206,20 @@
       "five": "\"5\" sayfası, 5: \"5\" değişkeni Genel Değişken Listesi'nde yok.",
       "words": "\"Arg1\" sayfası, Arg2: \"Arg3\" değişkeni Genel Değişken Listesi'nde yok."
     },
+    "diag.server.variableMissing": {
+      "zero": "'0' değişkeni yok.",
+      "one": "'1' değişkeni yok.",
+      "two": "'2' değişkeni yok.",
+      "five": "'5' değişkeni yok.",
+      "words": "'Arg1' değişkeni yok."
+    },
+    "diag.server.ruleVariableMissing": {
+      "zero": "Bu kural var olmayan '0' değişkenini kullanıyor.",
+      "one": "Bu kural var olmayan '1' değişkenini kullanıyor.",
+      "two": "Bu kural var olmayan '2' değişkenini kullanıyor.",
+      "five": "Bu kural var olmayan '5' değişkenini kullanıyor.",
+      "words": "Bu kural var olmayan 'Arg1' değişkenini kullanıyor."
+    },
     "diag.check.W232": {
       "zero": "\"0\" sayfası, 0: \"0\" yalnızca düğmenin kendi metninde ve kurallarında çalışır.",
       "one": "\"1\" sayfası, 1: \"1\" yalnızca düğmenin kendi metninde ve kurallarında çalışır.",
@@ -1200,18 +1228,18 @@
       "words": "\"Arg1\" sayfası, Arg2: \"Arg3\" yalnızca düğmenin kendi metninde ve kurallarında çalışır."
     },
     "diag.check.W233": {
-      "zero": "\"0\" sayfası, 0, 0: Eğer, Değilse ve Bitir adımları birbirini tutmuyor ya da 0 seviyeden fazla iç içe.",
-      "one": "\"1\" sayfası, 1, 1: Eğer, Değilse ve Bitir adımları birbirini tutmuyor ya da 1 seviyeden fazla iç içe.",
-      "two": "\"2\" sayfası, 2, 2: Eğer, Değilse ve Bitir adımları birbirini tutmuyor ya da 2 seviyeden fazla iç içe.",
-      "five": "\"5\" sayfası, 5, 5: Eğer, Değilse ve Bitir adımları birbirini tutmuyor ya da 5 seviyeden fazla iç içe.",
-      "words": "\"Arg1\" sayfası, Arg2, Arg3: Eğer, Değilse ve Bitir adımları birbirini tutmuyor ya da Arg4 seviyeden fazla iç içe."
+      "zero": "\"0\" sayfası, 0, 0: If, Else ve End adımları birbirini tutmuyor ya da 0 seviyeden fazla iç içe.",
+      "one": "\"1\" sayfası, 1, 1: If, Else ve End adımları birbirini tutmuyor ya da 1 seviyeden fazla iç içe.",
+      "two": "\"2\" sayfası, 2, 2: If, Else ve End adımları birbirini tutmuyor ya da 2 seviyeden fazla iç içe.",
+      "five": "\"5\" sayfası, 5, 5: If, Else ve End adımları birbirini tutmuyor ya da 5 seviyeden fazla iç içe.",
+      "words": "\"Arg1\" sayfası, Arg2, Arg3: If, Else ve End adımları birbirini tutmuyor ya da Arg4 seviyeden fazla iç içe."
     },
     "diag.check.W234": {
-      "zero": "\"0\" sayfası, 0, 0, 0. adım: Eğer'in sınayacağı bir koşul yok.",
-      "one": "\"1\" sayfası, 1, 1, 1. adım: Eğer'in sınayacağı bir koşul yok.",
-      "two": "\"2\" sayfası, 2, 2, 2. adım: Eğer'in sınayacağı bir koşul yok.",
-      "five": "\"5\" sayfası, 5, 5, 5. adım: Eğer'in sınayacağı bir koşul yok.",
-      "words": "\"Arg1\" sayfası, Arg2, Arg3, Arg4. adım: Eğer'in sınayacağı bir koşul yok."
+      "zero": "\"0\" sayfası, 0, 0, 0. adım: If'in sınayacağı bir koşul yok.",
+      "one": "\"1\" sayfası, 1, 1, 1. adım: If'in sınayacağı bir koşul yok.",
+      "two": "\"2\" sayfası, 2, 2, 2. adım: If'in sınayacağı bir koşul yok.",
+      "five": "\"5\" sayfası, 5, 5, 5. adım: If'in sınayacağı bir koşul yok.",
+      "words": "\"Arg1\" sayfası, Arg2, Arg3, Arg4. adım: If'in sınayacağı bir koşul yok."
     },
     "diag.check.W235": {
       "zero": "\"0\" sayfası, 0: \"0\" değişkeninin şu anda değeri yok.",
