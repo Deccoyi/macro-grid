@@ -8,20 +8,20 @@ The editor opens in the server's own window (from the tray icon). It only works 
 
 The editor is a workspace of panels you can arrange. The default layout has the Hierarchy and Toolbox on the left, the page tabs and the grid in the middle, and Properties on the right.
 
-- **Menu bar:** **File** (export and import profiles), **View** (show or hide panels, save layouts), **Settings** (Preferences), **Plugins** (Manage Plugins), **Help** (version, about and disclaimer, licenses, user agreement).
+- **Menu bar:** **File** (share and import profiles, back up and restore everything), **View** (show or hide panels, save layouts), **Settings** (Preferences), **Plugins** (Manage Plugins), **Help** (version, about and disclaimer, licenses, user agreement).
 - **Header:** a device size for the preview, **Preview**, **Refresh variables**, **Pairing**, and **Save**.
 - **Hierarchy:** one tree with all your profiles and their pages. Add, rename, duplicate, delete and group them in folders. See [Profiles and pages](/guide/profiles).
-- **Toolbox:** the widget types. Click one to add it to the open page.
+- **Toolbox:** the widget types. Click one to add it to the open page. The menu next to **Add widget** groups them by plugin or shows one A to Z list. Web widgets have a small flask icon, because they are experimental.
 - **Page tabs and canvas:** every page you open gets a tab. The canvas is the grid: drag widgets, resize them from the corner, right-click for a menu.
 - **Properties:** the properties of what you selected: a widget, the page, or a profile.
-- **Error List:** a list of problems with a severity filter. It sits at the bottom edge and slides open when you click it; today it shows "No problems" unless something reports one.
-- **Status bar:** server version, connected devices, plugin status and action errors.
+- **Diagnostic Messages** (formerly the Error List): errors, warnings and information about your profile and plugins, with a severity filter. It sits at the bottom edge and slides open when you click it. See [Troubleshooting](/guide/troubleshooting).
+- **Status bar:** server version, connected devices, and the status items of the plugins you switched on in the Plugins window.
 
 ## Arranging the panels
 
 - **Move a panel:** drag its tab. Drop it next to another panel to split the space, or onto a panel's tab bar to stack them as tabs.
-- **Auto-hide:** click the pin icon on a panel's tab to collapse it to the edge of the window. Click its name there to slide it open, and pin it again to dock it back. The Error List starts this way.
-- **Close and reopen:** close a panel with the **✕** on its tab, and bring it back from the **View** menu, which lists Hierarchy, Toolbox, Properties and Error List with a check mark on the open ones.
+- **Auto-hide:** click the pin icon on a panel's tab to collapse it to the edge of the window. Click its name there to slide it open, and pin it again to dock it back. Diagnostic Messages starts this way.
+- **Close and reopen:** close a panel with the **✕** on its tab, and bring it back from the **View** menu, which lists Hierarchy, Toolbox, Properties and Diagnostic Messages with a check mark on the open ones.
 - **Layouts:** **View → Layouts → Save** stores the current arrangement under a name. Pick a saved layout from the same menu to switch to it, **Delete** removes one, and **Default** restores the original arrangement.
 
 ![The View menu with the Layouts submenu](/img/editor-layouts.png)
@@ -59,4 +59,4 @@ While you type in a text field, Ctrl+C and Ctrl+V copy and paste text as usual.
 
 ## Language and theme
 
-The editor is available in Turkish (default) and English, in dark or light theme: [Preferences](/guide/preferences).
+The editor is available in Turkish (default) and English, in dark or light theme: [Preferences](/guide/preferences). You can add your own language with a language pack; details are on the [Preferences](/guide/preferences) page.

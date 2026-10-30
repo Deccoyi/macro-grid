@@ -32,3 +32,7 @@ All start with `obs.`.
 A **slug** is the name in lower case with every run of characters other than `a-z` and `0-9` replaced by `_`. For example the input `Mic/Aux` becomes `mic_aux`.
 
 Other plugins publish their own variables; the picker lists everything currently available.
+
+## Your own and button variables
+
+Variables you define in Preferences (Global Variable List) are `user.<name>`. The variables under **This button** are `self.toggled`, `self.busy`, `self.pressed`, `self.lastResult` and `self.lastError`. See [Variables and text](/guide/variables).

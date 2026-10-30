@@ -20,6 +20,8 @@ Bir cihazın hangi profili açtığı:
 2. [Tercihler](/tr/guide/preferences)'teki **varsayılan profil**, yoksa
 3. ilk profil.
 
+Telefon ayrıca cihazda en son seçtiğiniz profili hatırlar: bağlantı koptuktan ya da yeniden başlattıktan sonra o profili yeniden açar. Düzenleyicide atadığınız bir profil bu seçimin yerini alır.
+
 Profil, bir düğmeyle (**Profil değiştir** eylemi), telefondaki çekmeceden ya da [uygulama kurallarıyla](/tr/guide/auto-switch) otomatik olarak da değiştirilebilir.
 
 ## Sayfalar
@@ -46,8 +48,17 @@ Klasörler yalnızca düzenleyici içindir. Bir cihaz, sayfalar ve profiller kla
 
 ## Dışa ve içe aktarma
 
-- **Dosya → Profili Dışa Aktar (.mgprofile)** geçerli profili tek bir dosyaya kaydeder.
-- **Dosya → Profili İçe Aktar (.mgprofile / .json)…** bir profil yükler. Aynı adlı bir profil varsa **Üzerine yaz** ya da **Adı değiştir** seçeneğini seçersiniz.
+- **Dosya → Profili Paylaş… (.mgprofile)** geçerli profili tek bir dosyaya kaydeder.
+- **Dosya → Paylaşılan Profili İçe Aktar (.mgprofile / .json)…** bir profil yükler. Aynı adlı bir profil varsa **Üzerine yaz** ya da **Adı değiştir** seçeneğini seçersiniz. Eski `.msprofile` dosyaları da içe aktarılır.
 - İçe aktarılan profil sahip olmadığınız bir eklenti kullanıyorsa Düzenleyici hangisi olduğunu listeler; eklentiyi kurunca düğmeler çalışır.
+- Bu bilgisayarda bulunmayan bir dosyayı kullanan eylemler de listelenir.
 
-Bir deck'i yedeklemenin ya da başkasıyla paylaşmanın en kolay yolu budur.
+Bir deck'i başkasıyla paylaşmanın en kolay yolu budur.
+
+## Yedekle ve geri yükle
+
+**Dosya → Her Şeyi Yedekle…** profillerinizi, profil ağacını, tercihlerinizi, genel değişkenlerinizi, otomasyon kurallarınızı, eşleşmiş cihazlardaki seçimlerinizi, eklenti ayarlarınızı ve dil paketlerinizi tek bir `.mgbackup` dosyasında kaydeder. **Dosya → Geri Yükle…** böyle bir dosyayı açar, içeriğini her öğe için bir onay kutusuyla listeler ve işaretlediğiniz öğeleri geri yükler. Geri yükleme hiçbir şeyi silmez.
+
+Parolalar, cihaz belirteçleri ve eşleşmeler yedeğe dahil değildir. Genel değişkenler yedeğe yalnızca tanımlarıyla girer, geçerli değerleriyle girmez. Geri yükleme sırasında gelen otomasyon kuralları kapalı olarak gelir; açmadan önce kontrol edin.
+
+Macro Grid ayrıca geri yükleme noktaları da tutar: geri yüklemeden, bir profil silinmeden ya da içe aktarma ile üzerine yazılmadan önce ve bir güncellemeden sonra bir kez alınan veri kopyaları. Bunlar veri klasörünüzdeki `restore-points` klasöründe saklanır (bkz. [Dosyalar ve portlar](/tr/reference/files)). Düzenleyici bunları henüz listelemez.

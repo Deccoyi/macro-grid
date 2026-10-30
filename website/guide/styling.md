@@ -6,7 +6,7 @@ In **Appearance** you can set the **Background**, **Text** color, **Border** col
 
 ## Icons
 
-**Pick icon…** opens a searchable picker with the Lucide icon set (ISC license). Plugins can add their own packs; the [PLC Icons](/guide/plugins#plc-icons) plugin adds 29 ladder-logic symbols in its own category. The chosen icon takes the widget's icon color, and you set its size and position relative to the text.
+**Pick icon…** opens a searchable picker with the Lucide icon set (ISC license). Plugins can add their own packs; the [PLC Icons](/guide/plugins#plc-icons) plugin adds 29 ladder-logic symbols in its own category. The chosen icon takes the colour of the widget's text, so a dynamic text colour also recolours the icon. Icons picked before this change keep their own colour until you pick them again. You set the size and position relative to the text.
 
 Icons are sent to a device once and cached there.
 

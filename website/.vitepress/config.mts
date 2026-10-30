@@ -77,6 +77,7 @@ export default defineConfig({
               items: [
                 { text: 'Profiller ve sayfalar', link: '/tr/guide/profiles' },
                 { text: 'Uygulamaya göre otomatik geçiş', link: '/tr/guide/auto-switch' },
+                { text: 'Otomasyon kuralları', link: '/tr/guide/automation' },
                 { text: 'Eklentiler', link: '/tr/guide/plugins' },
                 { text: 'Tercihler', link: '/tr/guide/preferences' },
                 { text: 'Güvenlik', link: '/tr/guide/security' },
@@ -169,6 +170,7 @@ export default defineConfig({
         items: [
           { text: 'Profiles and pages', link: '/guide/profiles' },
           { text: 'Auto-switching by app', link: '/guide/auto-switch' },
+          { text: 'Automation rules', link: '/guide/automation' },
           { text: 'Plugins', link: '/guide/plugins' },
           { text: 'Preferences', link: '/guide/preferences' },
           { text: 'Security', link: '/guide/security' },

@@ -51,6 +51,10 @@ there checks at once.
 
 An update only installs if it is signed with the same key as the installed app. If you have version 0.1.1 (published as a test build with a different key), uninstall it once and install the new version by hand.
 
+## Grey buttons
+
+A button whose action cannot work right now looks grey with a small warning mark. That happens when its plugin is switched off or removed, when a variable it reads has no value, or when its target (a page, profile, web widget or variable) was deleted. Press it and the phone tells you what is missing. Fix the button in the editor; its line in Diagnostic Messages says which part is missing.
+
 ## When the connection drops
 
 The app reconnects with a growing wait, shows the last layout with an "offline, cached" badge, and caches icons so reconnecting is quick. If an action fails on the PC, you see a short red error toast.
