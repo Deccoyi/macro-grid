@@ -265,7 +265,9 @@ public sealed partial class JsPlugin
         if (!_permissions.AllowsHttp(uri))
         {
             ReportNetworkRefused(uri.Host, uri.Port, "the plugin has not been granted this address.");
-            throw new JsHostException($"This plugin has not been granted 'http:{uri.Host}:{uri.Port}'.");
+            // The P102 line already says it; a script that does not catch this must not add a second line (P130) for the same refusal.
+            _lastReported = $"This plugin has not been granted 'http:{uri.Host}:{uri.Port}'.";
+            throw new JsHostException(_lastReported);
         }
 
         var request = new HttpRequestMessage(new HttpMethod(method), uri);

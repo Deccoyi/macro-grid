@@ -267,4 +267,33 @@ public sealed class JsNetworkGuardTests : IDisposable
         Assert.Equal("hello", _variables.Get("t.body"));
         Assert.Equal("k1", seen);
     }
+    [Theory]
+    [InlineData("host.after(100, () => { try { host.http.get(URL); } catch (e) { host.variables.set('t.err', e.message); } });")]
+    [InlineData("host.after(100, async () => { try { await host.http.getAsync(URL); } catch (e) { host.variables.set('t.err', e.message); } });")]
+    [InlineData("host.after(100, () => { host.http.getAsync(URL).catch((e) => host.variables.set('t.err', e.message)); });")]
+    [InlineData("(async () => { try { await host.http.getAsync(URL); } catch (e) { host.variables.set('t.err', e.message); } })();")]
+    [InlineData("host.http.getAsync(URL).catch((e) => host.variables.set('t.err', e.message));")]
+    public void A_caught_refusal_is_one_P102_line_and_no_failed_call(string script)
+    {
+        var port = FreePort();
+        Start(script.Replace("URL", $"'http://localhost:{port}/x'"), ["variables"], JsNetworkPolicy.None);
+        SpinWait.SpinUntil(() => _variables.Get("t.err") is not null, 3000);
+        Thread.Sleep(300);
+
+        Assert.Contains("has not been granted", (string)_variables.Get("t.err")!);
+        Assert.Equal([ProblemCodes.NetworkRefused], _problems.Snapshot().Select(p => p.Code).ToArray());
+    }
+
+    [Theory]
+    [InlineData("host.after(100, () => { host.http.get(URL); });")]
+    [InlineData("host.after(100, async () => { await host.http.getAsync(URL); });")]
+    public void An_uncaught_refusal_is_still_one_P102_line_and_not_a_second_P130_line(string script)
+    {
+        var port = FreePort();
+        Start(script.Replace("URL", $"'http://localhost:{port}/x'"), ["variables"], JsNetworkPolicy.None);
+        SpinWait.SpinUntil(() => _problems.Snapshot().Any(p => p.Code == ProblemCodes.NetworkRefused), 3000);
+        Thread.Sleep(300);
+
+        Assert.Equal([ProblemCodes.NetworkRefused], _problems.Snapshot().Select(p => p.Code).ToArray());
+    }
 }
