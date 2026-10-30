@@ -310,15 +310,16 @@ export function useProfileDocument() {
       try {
         await api.deleteProfile(id);
       } catch {
-        // The server deletes nothing when it cannot save a restore point first.
-        showStatusNotice("profile.deleteFailed");
+        // The server deletes nothing when it cannot save a restore point first. A dialog, not a status-bar line:
+        // a refused destructive action must not be missable (the status line fades after a few seconds).
+        await alertAsync(t("profile.deleteFailed"), { title: t("restore.point.failedTitle") });
         return false;
       }
       await loadProfileList();
       showStatusNotice("undo.notUndoable");
       return true;
     },
-    [loadProfileList],
+    [loadProfileList, t],
   );
 
   /** Refreshes just the profile summary list (the Hierarchy tree's profile names/ids) without touching
