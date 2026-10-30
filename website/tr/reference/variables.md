@@ -32,3 +32,7 @@ Hepsi `obs.` ile başlar.
 **Slug**, adın küçük harfe çevrilmiş ve `a-z` ile `0-9` dışındaki her karakter dizisinin `_` ile değiştirilmiş hâlidir. Örneğin `Mic/Aux` girişi `mic_aux` olur.
 
 Diğer eklentiler kendi değişkenlerini yayınlar; seçici o an kullanılabilen her şeyi listeler.
+
+## Kendi değişkenleriniz ve düğme değişkenleri
+
+Tercihler'deki Genel Değişken Listesi'nde tanımladığınız değişkenler `user.<name>` biçimindedir. **Bu düğme** altındaki değişkenler `self.toggled`, `self.busy`, `self.pressed`, `self.lastResult` ve `self.lastError`dir. Bkz. [Değişkenler ve metin](/tr/guide/variables).

@@ -8,20 +8,20 @@ Düzenleyici, sunucunun kendi penceresinde (sistem tepsisi simgesinden) açılı
 
 Düzenleyici, istediğiniz gibi düzenleyebileceğiniz panellerden oluşan bir çalışma alanıdır. Varsayılan yerleşimde solda Hiyerarşi ve Araç Kutusu, ortada sayfa sekmeleri ve ızgara, sağda Özellikler bulunur.
 
-- **Menü çubuğu:** **Dosya** (profilleri dışa ve içe aktarma), **Görünüm** (panelleri gösterme veya gizleme, yerleşimleri kaydetme), **Ayarlar** (Tercihler), **Eklentiler** (Eklentileri Yönet), **Yardım** (sürüm, hakkında ve sorumluluk reddi, lisanslar, kullanıcı sözleşmesi).
+- **Menü çubuğu:** **Dosya** (profilleri paylaşma ve içe aktarma, her şeyi yedekleme ve geri yükleme), **Görünüm** (panelleri gösterme veya gizleme, yerleşimleri kaydetme), **Ayarlar** (Tercihler), **Eklentiler** (Eklentileri Yönet), **Yardım** (sürüm, hakkında ve sorumluluk reddi, lisanslar, kullanıcı sözleşmesi).
 - **Üst bölüm:** önizleme için cihaz boyutu, **Önizleme**, **Değişkenleri yenile**, **Eşleştirme** ve **Kaydet**.
 - **Hiyerarşi:** tüm profillerin ve sayfalarının tek bir ağaçta gösterildiği panel. Ekleyebilir, yeniden adlandırabilir, çoğaltabilir, silebilir ve klasörlerde gruplayabilirsiniz. Bkz. [Profiller ve sayfalar](/tr/guide/profiles).
-- **Araç Kutusu:** widget türleri. Birine tıklayarak açık sayfaya ekleyin.
+- **Araç Kutusu:** widget türleri. Birine tıklayarak açık sayfaya ekleyin. **Widget ekle** yanındaki menü bunları eklentiye göre gruplar ya da A'dan Z'ye tek bir liste gösterir. Web widget'larının yanında küçük bir deney şişesi simgesi vardır.
 - **Sayfa sekmeleri ve tuval:** açtığınız her sayfa bir sekme olur. Tuval ızgaradır: widget'ları sürükleyin, köşeden boyutlandırın, sağ tıklayarak menü açın.
 - **Özellikler:** seçtiğiniz şeyin özellikleri: bir widget, sayfa ya da profil.
-- **Hata Listesi:** önem derecesine göre süzülebilen sorun listesi. Pencerenin alt kenarında durur, tıklayınca yukarı açılır. Şimdilik bir şey bildirmedikçe "Sorun yok" gösterir.
-- **Durum çubuğu:** sunucu sürümü, bağlı cihazlar, eklenti durumu ve eylem hataları.
+- **Tanılama Mesajları** (eski adı Hata Listesi): profiliniz ve eklentileriniz hakkında hatalar, uyarılar ve bilgiler; önem derecesine göre süzülebilir. Pencerenin alt kenarında durur, tıklayınca açılır. Bkz. [Sorun giderme](/tr/guide/troubleshooting).
+- **Durum çubuğu:** sunucu sürümü, bağlı cihazlar ve Eklentiler penceresinde açtığınız eklentilerin durum öğeleri.
 
 ## Panelleri düzenleme
 
 - **Paneli taşıma:** sekmesini sürükleyin. Başka bir panelin yanına bırakırsanız alan bölünür, sekme çubuğuna bırakırsanız sekme olarak üst üste gelir.
-- **Otomatik gizleme:** panelin sekmesindeki iğne simgesine tıklayınca panel pencerenin kenarına iner. Adına tıklayınca açılır, iğneye yeniden basınca yerine oturur. Hata Listesi böyle başlar.
-- **Kapatma ve geri açma:** paneli sekmesindeki **✕** ile kapatın, **Görünüm** menüsünden geri getirin. Menü Hiyerarşi, Araç Kutusu, Özellikler ve Hata Listesi'ni listeler, açık olanların yanında onay işareti vardır.
+- **Otomatik gizleme:** panelin sekmesindeki iğne simgesine tıklayınca panel pencerenin kenarına iner. Adına tıklayınca açılır, iğneye yeniden basınca yerine oturur. Tanılama Mesajları böyle başlar.
+- **Kapatma ve geri açma:** paneli sekmesindeki **✕** ile kapatın, **Görünüm** menüsünden geri getirin. Menü Hiyerarşi, Araç Kutusu, Özellikler ve Tanılama Mesajları'nı listeler, açık olanların yanında onay işareti vardır.
 - **Yerleşimler:** **Görünüm → Yerleşimler → Kaydet** mevcut düzeni bir adla saklar. Kayıtlı bir yerleşimi aynı menüden seçerek geçiş yapın, **Sil** birini kaldırır, **Varsayılan** özgün düzeni geri getirir.
 
 ![Yerleşimler alt menüsüyle Görünüm menüsü](/img/editor-layouts.png)
@@ -59,4 +59,4 @@ Bir metin alanına yazarken Ctrl+C ve Ctrl+V her zamanki gibi metni kopyalar ve 
 
 ## Dil ve tema
 
-Düzenleyici Türkçe (varsayılan) ve İngilizce olarak, koyu veya açık temayla kullanılabilir: [Tercihler](/tr/guide/preferences).
+Düzenleyici Türkçe (varsayılan) ve İngilizce olarak, koyu veya açık temayla kullanılabilir: [Tercihler](/tr/guide/preferences). Kendi dilinizi bir dil paketiyle ekleyebilirsiniz; ayrıntılar [Tercihler](/tr/guide/preferences) sayfasında.

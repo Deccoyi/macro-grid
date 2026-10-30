@@ -10,12 +10,14 @@ Every action you can bind to a widget event. The names below are how they appear
 | Type text | Metin yaz | Keyboard | Text to type |
 | Open application | Uygulama aç | System | Application, arguments (optional) |
 | Open URL | URL aç | System | Address starting with `http://` or `https://` |
-| Delay | Bekle | System | Milliseconds, up to 60000 |
+| Wait | Bekle | Logic | Seconds, up to 60 |
 | Change page | Sayfa değiştir | Page and profile | Go to a page, next, previous or back |
 | Change profile | Profil değiştir | Page and profile | Profile |
 | Master volume | Ana ses seviyesi | Audio | Uses the slider or knob value |
 | Mute / unmute | Sesi kapat/aç | Audio | Mute or unmute |
 | Toggle mute | Sesi sessize al/aç | Audio | None |
+
+The variable actions (Set variable, Add to or subtract from number, Toggle variable, Reset to start value) are in the Variable group. If, Else, End and Stop are in the Logic group. See [Actions and macros](/guide/actions).
 
 ## OBS plugin
 

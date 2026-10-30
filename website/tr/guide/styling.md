@@ -6,7 +6,7 @@
 
 ## Simgeler
 
-**İkon seç…** düğmesi, Lucide simge setiyle (ISC lisansı) aranabilir bir seçici açar. Eklentiler kendi paketlerini ekleyebilir; [PLC Icons](/tr/guide/plugins#plc-icons) eklentisi kendi kategorisinde 29 merdiven mantığı simgesi ekler. Seçilen simge widget'ın simge rengini alır; boyutunu ve metne göre konumunu siz belirlersiniz.
+**İkon seç…** düğmesi, Lucide simge setiyle (ISC lisansı) aranabilir bir seçici açar. Eklentiler kendi paketlerini ekleyebilir; [PLC Icons](/tr/guide/plugins#plc-icons) eklentisi kendi kategorisinde 29 merdiven mantığı simgesi ekler. Seçilen simge, widget'ın metninin rengini alır; metnin rengi dinamikse simge de onunla değişir. Bu değişiklikten önce seçilmiş simgeler, siz yeniden seçene kadar kendi renklerini korur. Boyutunu ve metne göre konumunu siz belirlersiniz.
 
 Simgeler bir cihaza bir kez gönderilir ve orada önbelleğe alınır.
 

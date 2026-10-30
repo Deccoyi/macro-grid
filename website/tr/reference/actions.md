@@ -10,12 +10,14 @@ Bir widget olayına bağlayabileceğiniz tüm eylemler. Aşağıdaki adlar eylem
 | Metin yazma | Metin yaz | Klavye | Yazılacak metin |
 | Uygulama açma | Uygulama aç | Sistem | Uygulama, argümanlar (isteğe bağlı) |
 | URL açma | URL aç | Sistem | `http://` veya `https://` ile başlayan adres |
-| Gecikme | Bekle | Sistem | Milisaniye, en fazla 60000 |
+| Bekle | Bekle | Mantık | Saniye, en fazla 60 |
 | Sayfa değiştirme | Sayfa değiştir | Sayfa ve profil | Bir sayfaya git, sonraki, önceki veya geri |
 | Profil değiştirme | Profil değiştir | Sayfa ve profil | Profil |
 | Ana ses düzeyi | Ana ses seviyesi | Ses | Slider veya knob değerini kullanır |
 | Sesi kapat / aç | Sesi kapat/aç | Ses | Sustur veya sesi aç |
 | Sesi aç/kapat (toggle) | Sesi sessize al/aç | Ses | Yok |
+
+Değişken eylemleri **Değişken** grubundadır: Değişkene değer ata, Sayıyı artır / azalt, Değişkeni ters çevir ve Başlangıç değerine döndür. If, Else, End ve Stop **Mantık** grubundadır. Bkz. [Eylemler ve makrolar](/tr/guide/actions).
 
 ## OBS eklentisi
 
