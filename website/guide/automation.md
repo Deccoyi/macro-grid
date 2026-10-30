@@ -18,7 +18,7 @@ A variable that has no value counts as false in a condition.
 
 The steps are the same as a button's actions, including If blocks. See [Actions and macros](/guide/actions).
 
-Use **Run now** in the rule list to try a rule. It ignores the on/off switch and the cooldown, but not the limits below.
+Use **Run now** in the rule list to try a rule. It ignores the on/off switch, the pause and the cooldown, but not the limits below.
 
 ## Limits
 

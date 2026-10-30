@@ -18,7 +18,7 @@ Değeri olmayan bir değişken, bir koşulda yanlış sayılır.
 
 Adımlar bir düğmenin eylemleriyle aynıdır; If blokları da dahil. Bkz. [Eylemler ve makrolar](/tr/guide/actions).
 
-Bir kuralı denemek için kural listesindeki **Şimdi çalıştır** düğmesini kullanın. Bu düğme açma/kapama anahtarını ve bekleme süresini yok sayar, ama aşağıdaki sınırları yok saymaz.
+Bir kuralı denemek için kural listesindeki **Şimdi çalıştır** düğmesini kullanın. Bu düğme açma/kapama anahtarını, duraklatmayı ve bekleme süresini yok sayar, ama aşağıdaki sınırları yok saymaz.
 
 ## Sınırlar
 
