@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { ActionBinding } from "@macro/renderer";
-import { MAX_DEPTH, addElse, addIf, insertAt, isWellFormed, laneStacks, layout, move, moveTo, remove } from "../src/panels/actionFlow";
+import { MAX_DEPTH, addElse, carryCollapsed, addIf, insertAt, isWellFormed, laneStacks, layout, move, moveTo, remove } from "../src/panels/actionFlow";
 
 /** "if" "else" "end" are the markers; anything else is a plain step named by the text. */
 const MARKER: Record<string, string> = { if: "core.if", else: "core.else", end: "core.endIf" };
@@ -156,5 +156,20 @@ describe("moveTo", () => {
   it("refuses a block that would nest too deep", () => {
     const l = list("if", "if", "if", "end", "end", "end", "if", "end");
     expect(moveTo(l, 6, 3)).toBe(l);
+  });
+});
+
+describe("carryCollapsed", () => {
+  it("keeps a collapsed If collapsed when it is moved, and when steps are added or removed before it", () => {
+    const l = list("a", "if", "b", "end", "c");
+    expect([...carryCollapsed(l, move(l, 1, -1), new Set([1]))]).toEqual([0]);
+    expect([...carryCollapsed(l, move(l, 1, 1), new Set([1]))]).toEqual([2]);
+    expect([...carryCollapsed(l, moveTo(l, 1, 5), new Set([1]))]).toEqual([2]);
+    expect([...carryCollapsed(l, insertAt(l, 0, "x"), new Set([1]))]).toEqual([2]);
+  });
+
+  it("drops a collapsed If that was removed", () => {
+    const l = list("a", "if", "b", "end");
+    expect(carryCollapsed(l, remove(l, 1), new Set([1])).size).toBe(0);
   });
 });

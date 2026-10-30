@@ -6,7 +6,7 @@ import { useCatalogText } from "../i18n/catalogText";
 import { useT } from "../i18n/I18nContext";
 import { ActionPicker } from "./ActionPicker";
 import { formFor } from "./actionForms/forms";
-import { FLOW_ELSE, FLOW_END, FLOW_IF, addElse, insertAt, laneStacks, layout, move as moveRow, moveTo, remove as removeRow, type FlowRow, type Lane } from "./actionFlow";
+import { FLOW_ELSE, FLOW_END, FLOW_IF, addElse, carryCollapsed, insertAt, laneStacks, layout, move as moveRow, moveTo, remove as removeRow, type FlowRow, type Lane } from "./actionFlow";
 import { IfStepEditor, whenOf } from "./IfStepEditor";
 import { summarizeCondition } from "./dynamic/conditionSummary";
 
@@ -52,12 +52,12 @@ export function ActionList({ bindings, actions, pages, profiles, variableCatalog
   const [outlined, setOutlined] = useState<number | null>(null);
   const rowRefs = useRef<(HTMLDivElement | null)[]>([]);
 
-  // Which If blocks are drawn collapsed. Only a view state: it is dropped whenever the list changes shape.
+  // Which If blocks are drawn collapsed. Only a view state: it follows its If when the list is reshaped (moved, steps added or removed).
   const [collapsed, setCollapsed] = useState<Set<number>>(new Set());
   const rows = layout(bindings);
   const stacks = laneStacks(bindings);
   const hidden = (index: number) => rows.some((r) => r.kind === "if" && collapsed.has(r.index) && index > r.index && index <= (r.endIndex ?? bindings.length - 1));
-  const reshape = (next: ActionBinding[]) => { setCollapsed(new Set()); onChange(next); };
+  const reshape = (next: ActionBinding[]) => { setCollapsed(carryCollapsed(bindings, next, collapsed)); onChange(next); };
 
   // Drag and drop: the step (or whole If block) being dragged and the insertion point under the pointer. The up/down buttons stay as the keyboard way to move.
   const [drag, setDrag] = useState<number | null>(null);

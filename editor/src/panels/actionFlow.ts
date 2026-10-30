@@ -172,3 +172,13 @@ export function moveTo(bindings: readonly ActionBinding[], from: number, pos: nu
   const next = [...rest.slice(0, at), ...unit, ...rest.slice(at)];
   return isWellFormed(next) || !isWellFormed(bindings) ? next : (bindings as ActionBinding[]);
 }
+
+/** Follows the collapsed If blocks through an edit: a step keeps its object when it moves or other steps come and go, so each collapsed If is looked up again by identity. One that is gone drops out. */
+export function carryCollapsed(prev: readonly ActionBinding[], next: readonly ActionBinding[], collapsed: ReadonlySet<number>): Set<number> {
+  const kept = new Set<number>();
+  for (const c of collapsed) {
+    const at = prev[c] ? next.indexOf(prev[c]) : -1;
+    if (at >= 0) kept.add(at);
+  }
+  return kept;
+}

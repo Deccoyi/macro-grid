@@ -4,6 +4,7 @@ New features and fixes in Macro Grid. For technical details, see [CHANGELOG-deve
 
 ## Unreleased
 ### New
+- **Rules can show a page in any profile:** the "Show page" step of an automation rule now switches the phone to the chosen profile first. Steps made before keep working as they did.
 - **If blocks are easier to build:** add an action straight into an If or Otherwise, drag actions between blocks, and condition rows no longer overlap in a narrow panel.
 - **Crash report:** after a crash, Macro Grid shows a report on the next start that you can save or copy. Nothing is sent.
 - **New setting types for plugins:** plugin settings can now have a shortcut key field, a time field (milliseconds, seconds or minutes) and a field where you tick several choices.
@@ -66,6 +67,7 @@ New features and fixes in Macro Grid. For technical details, see [CHANGELOG-deve
 - **The Toolbox can be an A to Z list:** the menu next to "Add widget" switches between plugin groups and one plain alphabetical list, and a plugin group can be folded.
 - **The Toolbox marks the web widget with a small flask icon** instead of the word "Experimental".
 ### Fixed
+- **A collapsed If block stays collapsed when you move it.**
 - **A collapsed If block fits in a narrow panel:** the condition and step count use the free room and move to their own line when it is too tight.
 - **Automation rules no longer show "running" after they stopped:** the Automation window now refreshes on its own.
 - **Imported profiles show at once:** after importing a shared profile, the profile list in the editor updates without a reload.

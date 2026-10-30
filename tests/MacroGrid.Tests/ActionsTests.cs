@@ -32,6 +32,28 @@ public class PageActionTests
         Assert.Equal(["show:p2"], device.Calls);
     }
 
+    [Fact]
+    public async Task Goto_with_a_profile_switches_to_it_first_then_shows_the_page()
+    {
+        var device = new FakeDeviceController();
+        var settings = PageAction.Goto("p2");
+        settings["profileId"] = "prof1";
+
+        await new PageAction().ExecuteAsync(Context(device), settings, default);
+
+        Assert.Equal(["profile:prof1", "show:p2"], device.Calls);
+    }
+
+    [Fact]
+    public async Task Goto_saved_without_a_profile_only_shows_the_page()
+    {
+        var device = new FakeDeviceController();
+
+        await new PageAction().ExecuteAsync(Context(device), JsonNode.Parse("""{ "mode": "goto", "pageId": "p2" }""")!.AsObject(), default);
+
+        Assert.Equal(["show:p2"], device.Calls);
+    }
+
     [Theory]
     [InlineData("next", "next")]
     [InlineData("prev", "prev")]

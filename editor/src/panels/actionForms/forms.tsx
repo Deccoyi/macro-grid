@@ -40,10 +40,10 @@ function TypeTextForm({ binding, onChange }: ActionFormProps) {
   );
 }
 
-/** A rule has no open profile, so its page is picked from a profile chosen here. Only the page id is saved; the profile is found again from it. */
-function RulePagePicker({ pageId, profiles, onPick }: { pageId: string; profiles: ProfileSummary[]; onPick: (pageId: string) => void }) {
+/** A rule has no open profile, so its page is picked from a profile chosen here. The profile is saved with the page, so the rule switches the device to it first; a step saved before that has only the page and the profile is found again from it. */
+function RulePagePicker({ pageId, savedProfileId, profiles, onPick }: { pageId: string; savedProfileId: string; profiles: ProfileSummary[]; onPick: (pageId: string, profileId: string) => void }) {
   const { t } = useT();
-  const [profileId, setProfileId] = useState("");
+  const [profileId, setProfileId] = useState(savedProfileId);
   const [pages, setPages] = useState<{ id: string; name: string }[]>([]);
   useEffect(() => {
     let live = true;
@@ -62,13 +62,13 @@ function RulePagePicker({ pageId, profiles, onPick }: { pageId: string; profiles
   return (
     <>
       <Field label={t("form.profile.label")}>
-        <SelectInput value={profileId} onChange={(v) => { setProfileId(v); setPages([]); onPick(""); }}>
+        <SelectInput value={profileId} onChange={(v) => { setProfileId(v); setPages([]); onPick("", v); }}>
           <option value="">{t("form.pickPlaceholder")}</option>
           {profiles.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
         </SelectInput>
       </Field>
       <Field label={t("form.page.page")}>
-        <SelectInput value={pageId} onChange={onPick}>
+        <SelectInput value={pageId} onChange={(v) => onPick(v, profileId)}>
           <option value="">{t("form.pickPlaceholder")}</option>
           {pages.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
         </SelectInput>
@@ -83,7 +83,7 @@ function PageActionForm({ binding, onChange, pages, profiles }: ActionFormProps)
   return (
     <>
       <Field label={t("form.page.mode")}>
-        <SelectInput value={mode} onChange={(v) => onChange({ mode: v, pageId: binding.settings.pageId })}>
+        <SelectInput value={mode} onChange={(v) => onChange({ mode: v, pageId: binding.settings.pageId, profileId: binding.settings.profileId })}>
           <option value="goto">{t("form.page.mode.goto")}</option>
           <option value="next">{t("form.page.mode.next")}</option>
           <option value="prev">{t("form.page.mode.prev")}</option>
@@ -91,7 +91,7 @@ function PageActionForm({ binding, onChange, pages, profiles }: ActionFormProps)
         </SelectInput>
       </Field>
       {mode === "goto" && pages.length === 0 && (
-        <RulePagePicker pageId={str(binding.settings.pageId)} profiles={profiles} onPick={(pageId) => onChange({ mode, pageId })} />
+        <RulePagePicker pageId={str(binding.settings.pageId)} savedProfileId={str(binding.settings.profileId)} profiles={profiles} onPick={(pageId, profileId) => onChange({ mode, pageId, profileId })} />
       )}
       {mode === "goto" && pages.length > 0 && (
         <Field label={t("form.page.page")}>
