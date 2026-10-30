@@ -17,6 +17,15 @@
 - The server and the SDK share one version, set only in `<Version>` in `Directory.Build.props`. Never write a version into code or a project file.
 - Tags and plugin or APK releases are outward-facing: ask the owner before each one. The SDK is no longer published to NuGet.
 
+## Signing folder
+- The signing material lives in `%USERPROFILE%signing` (release keystore, plugin signing keys). Never delete, change, move, regenerate or overwrite anything there, never run a script that signs (`release-plugin.ps1`, `publish-catalog.ps1`, `build-release-apk.ps1`) and never read key contents, unless the owner has approved that exact action in chat. Listing file names is the most you may do, and only to answer a question. Releases are signed with the keys in that folder exactly as they are; they are never replaced, regenerated or edited.
+
+## Merging dev into main
+- Preparing the release content is part of sending `dev` to `main`, in EVERY repository (server, phone app, plugins). The owner has asked for this more than once: do it before the `dev` to `main` pull request is opened, never after, and never wait to be asked.
+- Before opening that pull request, on `dev`: (1) choose the new version by the rules in the versioning guide and set it where that repository keeps it (server: `<Version>` in `Directory.Build.props`; phone app: `version` in `package.json`; plugins: `version` in each changed plugin's `plugin.json`); (2) move every `[Unreleased]` entry of both changelogs under the new version and the date and leave a new empty `Unreleased`; (3) compare the changelog entries with the real changes since the last release and fix gaps; (4) update the docs and website pages for every user-visible change; (5) run the tests and the docs build.
+- The pull request description names the chosen version. Tags, GitHub releases, installers, signing and release scripts stay with the owner.
+- Never use a squash or rebase merge for `dev` to `main`.
+
 ## Commits
 - Conventional Commits (`type(scope): description`), always in English.
 

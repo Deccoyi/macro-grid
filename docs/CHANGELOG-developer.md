@@ -3,6 +3,8 @@
 This file follows the [Keep a Changelog](https://keepachangelog.com/) format. For versioning rules, see [versioning.md](guides/versioning.md). The short, public changelog is [CHANGELOG.md](CHANGELOG.md).
 
 ## [Unreleased]
+
+## [1.4.0] - 2026-10-30
 ### Added
 - **Plugin link install follows the one-source rule:** `POST /api/plugin-link/install` now refuses (`installed: false`, `code: "other-source"`) when the plugin id is already installed from a different source, like `/api/plugin-catalog/install`; before, a pasted link could replace an official plugin and its new package inherited the old permissions and settings. `POST /api/plugin-link/inspect` adds `installed: { version, trust, sameSource }` when the id is already installed.
 - **JavaScript plugin runtime fixes (host; no SDK change):** a `host.http` or `host.ws` call to an address the plugin did not declare now also adds one `P102` line (it was only a catchable error). `host.diagnostics.report` lines made while the script loads are no longer wiped at the end of the load. An unknown setting `kind` error names the field key and the kind.

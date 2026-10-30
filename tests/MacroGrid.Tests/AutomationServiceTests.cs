@@ -46,10 +46,12 @@ public sealed class AutomationServiceTests : IDisposable
         public string DisplayName => type;
         public List<ActionContext> Runs { get; } = [];
         public TaskCompletionSource Gate { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        public TaskCompletionSource FirstRun { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
 
         public async Task ExecuteAsync(ActionContext context, JsonObject settings, CancellationToken cancellationToken)
         {
             lock (Runs) Runs.Add(context);
+            FirstRun.TrySetResult();
             if (settings["wait"] is not null) await Gate.Task;
             if (settings["fail"] is not null) throw new InvalidOperationException("boom");
         }
@@ -241,6 +243,8 @@ public sealed class AutomationServiceTests : IDisposable
 
         _variables.Set("user.x", 5);
         _service.Tick();
+        // The run starts on its own task: wait until it has started before the next ticks, or the test races it.
+        await _ok.FirstRun.Task.WaitAsync(TimeSpan.FromSeconds(10));
         _variables.Set("user.x", 0);
         _clock.Advance(TimeSpan.FromSeconds(2));
         _service.Tick();
