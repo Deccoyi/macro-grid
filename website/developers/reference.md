@@ -33,8 +33,8 @@ Types in profile files: `button`, `toggle`, `slider`, `knob`, `label`, `image`, 
 
 | What | Where |
 |---|---|
-| Server | TCP port 9820, all interfaces |
-| Devices (WebSocket) | `ws://<PC address>:9820/ws` |
+| Server | TCP port 9820, all interfaces; TLS port 9821 (`ServerApp.TlsPort`, the port after 9820) |
+| Devices (WebSocket) | `ws://<PC address>:9820/ws`; encrypted: `wss://<PC address>:9821/ws` |
 | Browser deck | `http://<PC address>:9820/deck/` |
 | Editor | `/editor/`; the `/api` endpoints answer only requests from the PC itself |
 | QR code content | `macrogrid://pair?host=<ip>&port=9820&pin=<pin>` |

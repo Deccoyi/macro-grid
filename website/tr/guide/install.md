@@ -13,7 +13,7 @@ Sunucu, Windows'ta çalışan bir sistem tepsisi uygulamasıdır. Profillerinizi
 2. Çalıştırın ve kullanıcı sözleşmesini kabul edin. Varsayılan olarak masaüstüne bir kısayol eklenir.
 3. Kurulumu bitirip Macro Grid'i başlatın.
 
-Kurulum programı uygulamayı `Program Files\Macro Grid` klasörüne yerleştirir ve **yalnızca özel ve etki alanı ağlarında TCP 9820**'ye izin veren bir güvenlik duvarı kuralı ekler. Genel ağlara asla izin vermez. Kaldırma işlemi kuralı da siler.
+Kurulum programı uygulamayı `Program Files\Macro Grid` klasörüne yerleştirir ve **yalnızca özel ve etki alanı ağlarında TCP 9820 ve 9821**'e izin veren bir güvenlik duvarı kuralı ekler. Genel ağlara asla izin vermez. Kaldırma işlemi kuralı da siler.
 
 ::: info Bilgi: İmzasız kurulum programı
 Kurulum programı henüz kod imzalı değil, bu yüzden Windows SmartScreen ilk çalıştırmada uyarı verebilir. İndirdiğiniz dosyaya güveniyorsanız **Ek bilgi**'yi, ardından **Yine de çalıştır**'ı seçin.

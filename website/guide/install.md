@@ -13,7 +13,7 @@ The server is a Windows tray application. It stores your profiles, talks to the 
 2. Run it and accept the user agreement. A desktop shortcut is created by default.
 3. Finish and start Macro Grid.
 
-The installer puts the app in `Program Files\Macro Grid` and adds a firewall rule that allows **TCP 9820 on private and domain networks only**, never public ones. Uninstalling removes the rule.
+The installer puts the app in `Program Files\Macro Grid` and adds a firewall rule that allows **TCP 9820 and 9821 on private and domain networks only**, never public ones. Uninstalling removes the rule.
 
 ::: info Unsigned installer
 The installer is not code-signed yet, so Windows SmartScreen may warn on first run. Choose **More info**, then **Run anyway**, if you trust the download.
