@@ -68,6 +68,28 @@ public sealed class BackupRestorerTests : IDisposable
     }
 
     [Fact]
+    public async Task A_restored_plugin_widget_loses_a_binding_that_points_outside_its_own_plugin()
+    {
+        var widget = new Widget
+        {
+            Id = "w1", Type = MacroGrid.Core.Model.WidgetTypes.PluginWidget, W = 2, H = 2,
+            Props = new System.Text.Json.Nodes.JsonObject { ["plugin"] = "gp", ["widget"] = "gauge", ["settings"] = new System.Text.Json.Nodes.JsonObject { ["source"] = "sys.cpu", ["own"] = "gp.count" } },
+        };
+        var profile = new Profile { Id = "web", Name = "Web", Pages = [new Page { Id = "a", Name = "Main", Widgets = [widget] }] };
+        var result = InspectOf(new BackupContent { Profiles = [profile] });
+
+        var done = await _world.Restorer.RestoreAsync(result.Id, [Pick(result.Items.Single())]);
+
+        Assert.True(Assert.Single(done).Ok);
+        var warning = Assert.Single(done[0].Warnings);
+        Assert.Equal("clearedWidgetBindings", warning.Code);
+        Assert.Equal(["Web", "1"], warning.Args);
+        var stored = _world.Profiles.Get("web")!.Pages[0].Widgets[0].Props!["settings"]!;
+        Assert.Null(stored["source"]);
+        Assert.Equal("gp.count", stored["own"]!.GetValue<string>());
+    }
+
+    [Fact]
     public async Task Nothing_is_deleted_by_a_restore()
     {
         var one = _world.AddProfile("One");

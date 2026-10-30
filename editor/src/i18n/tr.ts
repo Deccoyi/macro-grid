@@ -665,6 +665,8 @@ export const tr = {
   "restore.warn.unknownActionType": "Bu sunucuda karşılığı olmayan eylemler: {type}.",
   "restore.warn.missingFile": "Dosya bu bilgisayarda bulunamadı ({page}, {widget}): {path}",
   "restore.warn.variableTypeConflict": "{name} değişkeninin tipi burada farklı, olduğu gibi bırakıldı.",
+  "restore.ownComputer": "Yalnızca kendi bilgisayarında alınmış bir yedeği geri yükle. Geri yüklenen bir profil, telefonda sayfa yükleyen web parçacıkları içerebilir.",
+  "restore.warn.clearedWidgetBindings": "{profile} profili: eklenti parçacıklarının {count} değişken seçimi kendi eklentisinin dışını gösteriyordu ve temizlendi. Yeniden seç.",
   "restore.warn.pluginSettingsNotRunning": "{id} eklentisinin ayarları, burada çalışmadığı için atlandı.",
   "restore.result.done": "{n} öğe geri yüklendi. Editör şimdi yeniden yüklenecek.",
   "restore.result.failed": "Bunlar geri yüklenemedi: {items}",

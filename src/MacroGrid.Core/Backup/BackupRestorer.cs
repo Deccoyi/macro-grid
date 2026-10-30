@@ -5,6 +5,7 @@ using MacroGrid.Core.Devices;
 using MacroGrid.Core.Languages;
 using MacroGrid.Core.Model;
 using MacroGrid.Core.Plugins;
+using MacroGrid.Core.Plugins.Widgets;
 using MacroGrid.Core.Preferences;
 using MacroGrid.Core.Profiles;
 using MacroGrid.Core.Automation;
@@ -77,6 +78,7 @@ public sealed class BackupRestorer(
     PluginManager plugins,
     LanguagePackStore languages,
     ActionDispatcher dispatcher,
+    PluginWidgetCatalog widgetCatalog,
     Func<Profile, Task> profileChanged,
     TimeProvider? clock = null)
 {
@@ -320,6 +322,9 @@ public sealed class BackupRestorer(
                     break;
                 case RestoreItemKind.Profile:
                     var profile = content.Profiles.First(p => p.Id == item.Key);
+                    // The same guard a shared profile gets on import: a plugin widget bound to a variable outside its own plugin is unbound.
+                    if (PluginWidgetProps.ClearOutsideBindings(profile, widgetCatalog) is > 0 and var cleared)
+                        warnings.Add(new RestoreWarning("clearedWidgetBindings", [profile.Name, cleared.ToString()]));
                     profiles.Save(profile);
                     await profileChanged(profile);
                     break;

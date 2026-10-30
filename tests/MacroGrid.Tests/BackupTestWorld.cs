@@ -5,6 +5,7 @@ using MacroGrid.Core.Devices;
 using MacroGrid.Core.Languages;
 using MacroGrid.Core.Model;
 using MacroGrid.Core.Plugins;
+using MacroGrid.Core.Plugins.Widgets;
 using MacroGrid.Core.Preferences;
 using MacroGrid.Core.Profiles;
 using MacroGrid.Core.Variables;
@@ -49,6 +50,7 @@ internal sealed class BackupTestWorld : IDisposable
         Collector = new BackupCollector(Profiles, Tree, Preferences, Variables, Automation, Devices, Plugins, Languages);
         Service = new BackupService(Collector, Root, "1.0.0");
         Restorer = new BackupRestorer(Service, Collector, Profiles, Tree, Preferences, Variables, Automation, Devices, Plugins, Languages, dispatcher,
+            new PluginWidgetCatalog(new MacroGrid.Core.Widgets.AssetStore()),
             profile => { Broadcast.Add(profile.Id); return Task.CompletedTask; });
     }
 

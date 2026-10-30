@@ -652,6 +652,8 @@ export const en: Record<DictKey, string> = {
   "restore.warn.unknownActionType": "Actions with no provider on this server: {type}.",
   "restore.warn.missingFile": "File not found on this PC ({page}, {widget}): {path}",
   "restore.warn.variableTypeConflict": "The variable {name} has another type here, so it is left as it is.",
+  "restore.ownComputer": "Restore only a backup that was made on your own computer. A restored profile can contain web widgets that load pages on the phone.",
+  "restore.warn.clearedWidgetBindings": "Profile {profile}: {count} plugin widget variable choices pointed outside their own plugin and were cleared. Choose them again.",
   "restore.warn.pluginSettingsNotRunning": "Settings of the plugin {id} are left out because it is not running here.",
   "restore.result.done": "Restored {n} items. The editor will reload now.",
   "restore.result.failed": "These could not be restored: {items}",

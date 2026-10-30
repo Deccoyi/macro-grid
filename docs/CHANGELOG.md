@@ -68,6 +68,7 @@ New features and fixes in Macro Grid. For technical details, see [CHANGELOG-deve
 - **The Toolbox can be an A to Z list:** the menu next to "Add widget" switches between plugin groups and one plain alphabetical list, and a plugin group can be folded.
 - **The Toolbox marks the web widget with a small flask icon** instead of the word "Experimental".
 ### Fixed
+- **Restoring a backup is safer with plugin widgets:** plugin widget variable choices that point outside their own plugin are cleared on restore (and reported), as they already are on profile import. The restore window reminds you to restore only your own backups.
 - **A pasted plugin link cannot replace an installed plugin from another source:** Macro Grid now refuses it and says why, and warns when the plugin is already installed.
 - **Refused profile delete is no longer missed:** when Macro Grid cannot save a restore point first, so it keeps the profile, a message window now says so instead of a short line in the status bar.
 - **Language packs:** long names no longer spill over the rows below. A right-to-left language now shows a note that the layout is not adapted. If a language pack file is gone, Macro Grid goes back to English and remembers it.
