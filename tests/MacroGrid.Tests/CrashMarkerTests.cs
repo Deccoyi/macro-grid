@@ -94,7 +94,8 @@ public sealed class CrashMarkerTests : IDisposable
         Assert.True(CrashMarkers.TryWrite(Crashes, Marker()));
 
         var names = Directory.GetFiles(Crashes).Select(Path.GetFileName).Order(StringComparer.Ordinal).ToList();
-        Assert.Equal(["crash-20261029-140312-345-2.json", "crash-20261029-140312-345-3.json", "crash-20261029-140312-345.json"], names);
+        var stamp = Now.LocalDateTime.ToString("yyyyMMdd-HHmmss-fff", System.Globalization.CultureInfo.InvariantCulture); // the file name uses local time, so it depends on the machine zone
+        Assert.Equal([$"crash-{stamp}-2.json", $"crash-{stamp}-3.json", $"crash-{stamp}.json"], names);
     }
 
     [Fact]

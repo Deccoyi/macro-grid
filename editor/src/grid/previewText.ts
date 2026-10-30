@@ -12,7 +12,7 @@ const MISSING_VALUE = "n/a";
  */
 export function renderPreviewText(text: string | undefined, variables: Record<string, unknown>): string | undefined {
   if (!text || !text.includes("{")) return text;
-  return text.replace(/\{\{|\}\}|\{([^{}|]+)(?:\|([^{}|]*))?(?:\|([^}]*))?\}/g, (match, name: string | undefined, format: string | undefined, placeholder: string | undefined) => {
+  return text.replace(/\{\{|\}\}|\{([^{}|]+)(?:\|([^{}|]*)(?:\|([^{}]*))?)?\}/g, (match, name: string | undefined, format: string | undefined, placeholder: string | undefined) => {
     if (match === "{{") return "{";
     if (match === "}}") return "}";
     if (!name) return match;
