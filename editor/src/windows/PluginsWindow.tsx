@@ -524,7 +524,7 @@ export function PluginsWindow() {
                   {(p.keyboardUsesToday ?? 0) > 0 && (
                     <div style={{ fontSize: 11, color: "var(--ms-text-secondary)", marginTop: 2 }}>{tn("plugins.keyboardUses", p.keyboardUsesToday ?? 0)}</div>
                   )}
-                  {p.status === "Loaded" && (p.permissions?.length ?? 0) > 0 && (
+                  {(p.status === "Loaded" || p.status === "Error") && (p.permissions?.length ?? 0) > 0 && (
                     <details style={{ marginTop: 4 }}>
                       <summary style={{ fontSize: 11.5, color: "var(--ms-text-secondary)", cursor: "pointer" }}>{t("plugins.permissions.title", String(p.permissions?.length ?? 0))}</summary>
                       <div style={{ fontSize: 11, color: "var(--ms-text-secondary)", margin: "4px 0" }}>{t("plugins.permissions.hint")}</div>

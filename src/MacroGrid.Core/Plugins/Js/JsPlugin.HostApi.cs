@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
 using MacroGrid.Core.Diagnostics;
 using Microsoft.Extensions.Logging;
@@ -60,7 +61,8 @@ public sealed partial class JsPlugin
         return name;
     }
 
-    /// <summary>A definition the server cannot read (a misspelt kind, a kind from a newer server) becomes an error the script can catch, with the serializer's own text.</summary>
+    /// <summary>A definition the server cannot read (a misspelt kind, a kind from a newer server) becomes an error the script can catch. A bad
+    /// field kind is named with its field; any other fault falls back to the serializer's own text.</summary>
     private static T? ReadDefinition<T>(string json, string call)
     {
         try
@@ -69,8 +71,29 @@ public sealed partial class JsPlugin
         }
         catch (JsonException ex)
         {
-            throw new JsHostException($"A field of {call} could not be read: {ex.Message}");
+            var bad = FindBadKind(JsonNode.Parse(json));
+            throw new JsHostException(bad is { } b
+                ? $"A field of {call} could not be read: the field '{b.Key}' has the unknown kind '{b.Kind}'. Known kinds: {string.Join(", ", Enum.GetNames<SettingFieldKind>())}."
+                : $"A field of {call} could not be read: {ex.Message}");
         }
+    }
+
+    private static (string Key, string Kind)? FindBadKind(JsonNode? node)
+    {
+        switch (node)
+        {
+            case JsonArray array:
+                foreach (var item in array)
+                    if (FindBadKind(item) is { } inArray) return inArray;
+                break;
+            case JsonObject obj:
+                if (obj["kind"] is JsonValue kind && kind.TryGetValue<string>(out var name) && !Enum.TryParse<SettingFieldKind>(name, true, out _))
+                    return (obj["key"]?.ToString() ?? "?", name);
+                foreach (var (_, child) in obj)
+                    if (FindBadKind(child) is { } inChild) return inChild;
+                break;
+        }
+        return null;
     }
 
     private void RegisterAction(string json)
@@ -240,7 +263,10 @@ public sealed partial class JsPlugin
         if (!Uri.TryCreate(url, UriKind.Absolute, out var uri))
             throw new JsHostException("Not a valid URL.");
         if (!_permissions.AllowsHttp(uri))
+        {
+            ReportNetworkRefused(uri.Host, uri.Port, "the plugin has not been granted this address.");
             throw new JsHostException($"This plugin has not been granted 'http:{uri.Host}:{uri.Port}'.");
+        }
 
         var request = new HttpRequestMessage(new HttpMethod(method), uri);
         if (method != "GET") request.Content = new StringContent(body, System.Text.Encoding.UTF8, "application/json");

@@ -306,10 +306,17 @@ export function useProfileDocument() {
   );
 
   const deleteProfile = useCallback(
-    async (id: string) => {
-      await api.deleteProfile(id);
+    async (id: string): Promise<boolean> => {
+      try {
+        await api.deleteProfile(id);
+      } catch {
+        // The server deletes nothing when it cannot save a restore point first.
+        showStatusNotice("profile.deleteFailed");
+        return false;
+      }
       await loadProfileList();
       showStatusNotice("undo.notUndoable");
+      return true;
     },
     [loadProfileList],
   );

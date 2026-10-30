@@ -64,6 +64,10 @@ New features and fixes in Macro Grid. For technical details, see [CHANGELOG-deve
 - **The Toolbox can be an A to Z list:** the menu next to "Add widget" switches between plugin groups and one plain alphabetical list, and a plugin group can be folded.
 - **The Toolbox marks the web widget with a small flask icon** instead of the word "Experimental".
 ### Fixed
+- A plugin that stopped after you switched one of its permissions off can be switched back on in the Plugins window without installing it again.
+- A profile that cannot be deleted because no restore point could be saved now tells you why.
+- A plugin setting with a wrong kind now names the setting and the kind in its error.
+- Problems a plugin reports while it starts now stay in the Error List.
 - **Imported profiles show at once:** after importing a shared profile, the profile list in the editor updates without a reload.
 - **First start on a new PC:** the very first start no longer stops with a crash report.
 - **Automation rules:** a rule that sets a True / False variable without you changing the value now works instead of failing. Long messages in the Automation window wrap instead of being cut off. A rule that uses a deleted variable shows a warning in the Diagnostic Messages. A "show page" step in a rule now asks for a profile first, then the page.

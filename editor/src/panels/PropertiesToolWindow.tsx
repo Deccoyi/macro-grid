@@ -43,7 +43,7 @@ function PropertiesContent() {
           appMatches={isCurrent ? (profile.appMatches ?? []) : []}
           onAppMatchesChange={state.setAppMatches}
           onRename={(name) => state.renameProfile(name)}
-          onDelete={async () => { await state.deleteProfile(profile.id); profileTree.removeProfileNode(profile.id); }}
+          onDelete={async () => { if (await state.deleteProfile(profile.id)) profileTree.removeProfileNode(profile.id); }}
           canDelete={state.profiles.length > 1}
         />
       );

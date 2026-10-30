@@ -230,7 +230,7 @@ public sealed partial class PluginManager
 
             localizer?.Register(manifest.Id, dir, manifest.DefaultLanguage);
             problems?.Resolve("macro-grid", ProblemCodes.ActionMissing);
-            problems?.Resolve(manifest.Id, ProblemCodes.NotAllowed, ProblemCodes.Revoked, ProblemCodes.LoadFailed, ProblemCodes.Incompatible, ProblemCodes.SwitchedOff, ProblemCodes.PluginReported);
+            problems?.Resolve(manifest.Id, ProblemCodes.NotAllowed, ProblemCodes.Revoked, ProblemCodes.LoadFailed, ProblemCodes.Incompatible, ProblemCodes.SwitchedOff);
             var treeProvider = instance as IPluginTreeProvider;
             var info = new LoadedPlugin(manifest.Id, manifest.Name, manifest.Version, PluginLoadStatus.Loaded, null,
                 host.SettingsPage is not null, HasIcon: ResolveIconPath(dir, manifest) is not null, HasTreeItems: treeProvider is not null,
@@ -275,7 +275,13 @@ public sealed partial class PluginManager
             variableStore.RemoveAll();
             context?.Unload();
 
-            return Fail(PluginLoadStatus.Error, ex.Message);
+            // The approved permissions stay listed, so the person can switch a permission back on and reload without reinstalling.
+            var failed = Fail(PluginLoadStatus.Error, ex.Message);
+            if (required.Length == 0) return failed;
+            var withPermissions = failed with { Permissions = required, SwitchedOffPermissions = [.. required.Where(p => switchedOff.Contains(p, StringComparer.OrdinalIgnoreCase))] };
+            lock (_stateLock)
+                if (_entries.TryGetValue(manifest.Id, out var failedEntry) && ReferenceEquals(failedEntry.Info, failed)) failedEntry.Info = withPermissions;
+            return withPermissions;
         }
     }
 
