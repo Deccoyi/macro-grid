@@ -5,6 +5,7 @@ using MacroGrid.Core.Devices;
 using MacroGrid.Core.Languages;
 using MacroGrid.Core.Model;
 using MacroGrid.Core.Plugins;
+using MacroGrid.Core.Plugins.Widgets;
 using MacroGrid.Core.Preferences;
 using MacroGrid.Core.Profiles;
 using MacroGrid.Core.Automation;
@@ -77,6 +78,7 @@ public sealed class BackupRestorer(
     PluginManager plugins,
     LanguagePackStore languages,
     ActionDispatcher dispatcher,
+    PluginWidgetCatalog widgetCatalog,
     Func<Profile, Task> profileChanged,
     TimeProvider? clock = null)
 {
@@ -216,12 +218,15 @@ public sealed class BackupRestorer(
             return new RestoreItem(RestoreItemKind.Profile, backup.Id, backup.Name, RestoreState.New) { BackupPages = backup.Pages.Count, BackupWidgets = backupWidgets };
 
         // The stored profile goes through the same checks as the one in the file, so a difference is a real one.
-        var normalized = ProfilePackage.ParseProfile(JsonSerializer.SerializeToUtf8Bytes(current, Json));
+        // A stored profile that fails those checks (hand-edited, or damaged) is compared as it is: it differs, and restoring replaces it.
+        Profile normalized;
+        try { normalized = ProfilePackage.ParseProfile(JsonSerializer.SerializeToUtf8Bytes(current, Json)); }
+        catch (InvalidDataException) { normalized = current; }
         var same = Equal(backup, normalized);
         var changedPages = new List<string>();
         if (!same)
         {
-            var hereById = normalized.Pages.ToDictionary(p => p.Id, StringComparer.Ordinal);
+            var hereById = normalized.Pages.GroupBy(p => p.Id, StringComparer.Ordinal).ToDictionary(g => g.Key, g => g.First(), StringComparer.Ordinal);
             foreach (var page in backup.Pages)
                 if (!hereById.TryGetValue(page.Id, out var other) || !Equal(page, other)) changedPages.Add(page.Name);
             if (changedPages.Count == 0 && backup.Name != normalized.Name) changedPages.Add(backup.Name);
@@ -320,6 +325,9 @@ public sealed class BackupRestorer(
                     break;
                 case RestoreItemKind.Profile:
                     var profile = content.Profiles.First(p => p.Id == item.Key);
+                    // The same guard a shared profile gets on import: a plugin widget bound to a variable outside its own plugin is unbound.
+                    if (PluginWidgetProps.ClearOutsideBindings(profile, widgetCatalog) is > 0 and var cleared)
+                        warnings.Add(new RestoreWarning("clearedWidgetBindings", [profile.Name, cleared.ToString()]));
                     profiles.Save(profile);
                     await profileChanged(profile);
                     break;
@@ -338,8 +346,9 @@ public sealed class BackupRestorer(
             }
             return new RestoreItemResult(item.Kind, item.Key, true, null, warnings);
         }
-        catch (Exception ex) when (ex is InvalidOperationException or LanguagePackException or IOException or ArgumentException or UnauthorizedAccessException)
+        catch (Exception ex)
         {
+            // The restore point exists by now and is kept; one item that fails (a store, a broadcast) is reported and the rest go on.
             return new RestoreItemResult(item.Kind, item.Key, false, ex.Message, warnings);
         }
     }

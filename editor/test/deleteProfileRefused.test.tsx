@@ -1,11 +1,11 @@
 import { act, renderHook, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const mocks = vi.hoisted(() => ({ deleteFails: false, notices: [] as string[] }));
+const mocks = vi.hoisted(() => ({ deleteFails: false, notices: [] as string[], alerts: [] as string[] }));
 
 vi.mock("../src/i18n/I18nContext", () => ({ useT: () => ({ t: (key: string) => key }) }));
 vi.mock("../src/dialogs/dialogStore", () => ({
-  alertAsync: () => Promise.resolve(),
+  alertAsync: (message: string) => { mocks.alerts.push(message); return Promise.resolve(); },
   choiceAsync: () => Promise.resolve(null),
   confirmAsync: () => Promise.resolve(true),
 }));
@@ -24,9 +24,10 @@ describe("deleting a profile", () => {
   beforeEach(() => {
     mocks.deleteFails = false;
     mocks.notices.length = 0;
+    mocks.alerts.length = 0;
   });
 
-  it("tells the person when the server refuses because no restore point could be saved", async () => {
+  it("shows a dialog when the server refuses because no restore point could be saved", async () => {
     mocks.deleteFails = true;
     const hook = renderHook(() => useProfileDocument());
     await waitFor(() => expect(hook.result.current.profile).not.toBeNull());
@@ -35,7 +36,8 @@ describe("deleting a profile", () => {
     await act(async () => { deleted = await hook.result.current.deleteProfile("b"); });
 
     expect(deleted).toBe(false);
-    expect(mocks.notices).toEqual(["profile.deleteFailed"]);
+    expect(mocks.alerts).toEqual(["profile.deleteFailed"]);
+    expect(mocks.notices).toEqual([]);
   });
 
   it("reports success without the refusal message", async () => {
@@ -46,6 +48,6 @@ describe("deleting a profile", () => {
     await act(async () => { deleted = await hook.result.current.deleteProfile("b"); });
 
     expect(deleted).toBe(true);
-    expect(mocks.notices).not.toContain("profile.deleteFailed");
+    expect(mocks.alerts).toEqual([]);
   });
 });

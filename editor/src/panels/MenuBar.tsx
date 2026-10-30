@@ -20,7 +20,7 @@ import { ContextMenu, type ContextMenuEntry } from "./ContextMenu";
 
 interface MenuBarProps {
   profile: Profile | null;
-  onImportProfile: (data: Profile) => Promise<void>;
+  onImportProfile: (data: Profile, clearedWidgetBindings?: number) => Promise<void>;
   /** True when it is fine to leave the profile as it is on screen (asks first when there are unsaved edits). */
   confirmDiscardIfDirty: () => boolean | Promise<boolean>;
   /** The Edit commands (undo/redo/cut/copy/paste/duplicate/delete/select all) — built once in App.tsx
@@ -104,7 +104,7 @@ export function MenuBar({ profile, onImportProfile, confirmDiscardIfDirty, editC
       if (choice === "clear") clearWebUrls(result.profile);
     }
 
-    await onImportProfile(result.profile);
+    await onImportProfile(result.profile, result.clearedWidgetBindings ?? 0);
 
     const missing = result.missingPlugins?.map((p) => p.name) ?? [];
     const covered = new Set(result.missingPlugins?.flatMap((p) => p.actionTypes) ?? []);

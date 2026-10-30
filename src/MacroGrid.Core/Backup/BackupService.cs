@@ -39,7 +39,14 @@ public sealed partial class BackupService(BackupCollector collector, string data
     /// <summary>A full backup of what is here now, for the person to save.</summary>
     public byte[] BuildBackup()
     {
-        lock (_lock) return Build(BackupFile.KindBackup, "manual", collector.Collect());
+        lock (_lock) return Build(BackupFile.KindBackup, "manual", Collect());
+    }
+
+    private BackupContent Collect()
+    {
+        var content = collector.Collect();
+        foreach (var warning in content.Warnings) log?.LogWarning("Backup: {Warning}", warning);
+        return content;
     }
 
     /// <summary>Makes a restore point of what is here now, unless the newest one already holds exactly this data.</summary>
@@ -58,9 +65,10 @@ public sealed partial class BackupService(BackupCollector collector, string data
             CreateRestorePoint(ReasonUpdate);
             return true;
         }
-        catch (BackupException ex)
+        catch (Exception ex)
         {
-            log?.LogWarning("No restore point was made after the update: {Message}", ex.Message);
+            // Any failure, not only BackupException: this runs at start-up, and LastRunVersion is saved after it.
+            log?.LogWarning(ex, "No restore point was made after the update: {Message}", ex.Message);
             return false;
         }
     }
@@ -88,7 +96,7 @@ public sealed partial class BackupService(BackupCollector collector, string data
         if (!IsKnownReason(reason)) throw new BackupException("Unknown restore point reason.");
         try
         {
-            var content = collector.Collect();
+            var content = Collect();
             var hash = BackupFile.HashOf(content);
             var points = Points();
             if (points.Count > 0 && points[0].Hash == hash) return;
@@ -104,8 +112,9 @@ public sealed partial class BackupService(BackupCollector collector, string data
             File.Move(tmp, path);
             Prune();
         }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or NotSupportedException)
+        catch (Exception ex) when (ex is not BackupException)
         {
+            // Anything the collecting threw (a damaged store, a plugin) refuses the action that wanted the point, like a full disk does.
             throw new BackupException("A restore point could not be made.", ex);
         }
     }

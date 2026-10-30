@@ -120,7 +120,7 @@ internal static class PluginCatalogApi
 
                 var sourceUrl = $"https://github.com/{owner}/{repo}";
                 // A plugin that came from another source is not replaced from this one (see "Go back one version" in the distribution design).
-                if (origins.Get(entry.Id) is { } existing && !string.Equals(existing.SourceUrl, sourceUrl, StringComparison.OrdinalIgnoreCase))
+                if (PluginLinkPolicy.IsOtherSource(origins.Get(entry.Id), sourceUrl))
                     return ApiResults.Json(new { installed = false, error = "This plugin was installed from another source.", code = OtherSourceCode });
                 var choice = PluginCatalogChoice.Choose(entry, ClientHub.ServerVersion, null,
                     isOfficial ? v => official.Revoked?.Find(entry.Id, v.Version) is not null : null);
@@ -137,7 +137,7 @@ internal static class PluginCatalogApi
             }
         });
 
-        api.MapPost("/plugin-link/inspect", async (PluginLinkRequest request, PluginCatalogClient client, CancellationToken cancellationToken) =>
+        api.MapPost("/plugin-link/inspect", async (PluginLinkRequest request, PluginCatalogClient client, PluginManager plugins, PluginInstallOriginStore origins, CancellationToken cancellationToken) =>
         {
             if (string.IsNullOrWhiteSpace(request.Url) || !PluginSourceUrls.TryParseRepo(request.Url, out var owner, out var repo))
                 return ApiResults.BadRequest("That doesn't look like a GitHub repository (expected a URL or \"owner/repo\").");
@@ -153,6 +153,9 @@ internal static class PluginCatalogApi
                 if (string.Equals(manifest.Kind, "csharp", StringComparison.OrdinalIgnoreCase))
                     return ApiResults.Json(new { error = "Only official C# plugins can be installed.", code = PluginDownloadException.Refused });
                 var compatibility = PluginCompatibility.Check(ClientHub.ServerVersion, manifest.MinMacroGrid, manifest.MacroGrid, manifest.SdkVersion);
+                var sourceUrl = $"https://github.com/{owner}/{repo}";
+                var installedVersion = plugins.Plugins.FirstOrDefault(p => p.Id == manifest.Id)?.Version;
+                var origin = origins.Get(manifest.Id);
                 return ApiResults.Json(new
                 {
                     isMultiPlugin = false,
@@ -172,6 +175,13 @@ internal static class PluginCatalogApi
                     permissions = manifest.Permissions ?? [],
                     compatible = compatibility.Compatible,
                     incompatibleReason = compatibility.Reason,
+                    // Set when this id is already installed: from which source (trust), and whether it is this link's own source.
+                    installed = installedVersion is null && origin is null ? null : new
+                    {
+                        version = installedVersion ?? origin?.Version,
+                        trust = origin?.Trust ?? PluginTrust.Local,
+                        sameSource = !PluginLinkPolicy.IsOtherSource(origin, sourceUrl),
+                    },
                 });
             }
             catch (PluginCatalogException ex)
@@ -180,7 +190,7 @@ internal static class PluginCatalogApi
             }
         });
 
-        api.MapPost("/plugin-link/install", async (PluginLinkRequest request, PluginCatalogClient client, PluginPackageDownloader downloader, PluginCatalogInstaller installer, CancellationToken cancellationToken) =>
+        api.MapPost("/plugin-link/install", async (PluginLinkRequest request, PluginCatalogClient client, PluginPackageDownloader downloader, PluginCatalogInstaller installer, PluginInstallOriginStore origins, CancellationToken cancellationToken) =>
         {
             if (string.IsNullOrWhiteSpace(request.Url) || !PluginSourceUrls.TryParseRepo(request.Url, out var owner, out var repo))
                 return ApiResults.BadRequest("That doesn't look like a GitHub repository (expected a URL or \"owner/repo\").");
@@ -190,13 +200,15 @@ internal static class PluginCatalogApi
                 var manifest = await client.FetchSinglePluginManifestAsync(owner, repo, cancellationToken);
                 if (string.Equals(manifest.Kind, "csharp", StringComparison.OrdinalIgnoreCase))
                     return ApiResults.Json(new { installed = false, error = "Only official C# plugins can be installed.", code = PluginDownloadException.Refused });
+                var sourceUrl = $"https://github.com/{owner}/{repo}";
+                if (PluginLinkPolicy.IsOtherSource(origins.Get(manifest.Id), sourceUrl))
+                    return ApiResults.Json(new { installed = false, error = "This plugin was installed from another source.", code = OtherSourceCode });
                 var zipUrl = PluginSourceUrls.SinglePluginPackageUrl(owner, repo, manifest.Id, manifest.Version);
                 var sha256 = await downloader.FetchTextAssetAsync(PluginSourceUrls.SinglePluginPackageUrl(owner, repo, manifest.Id, manifest.Version, ".sha256"), cancellationToken);
 
                 var version = new PluginCatalogVersion(manifest.Version, manifest.MinMacroGrid, manifest.MacroGrid, manifest.SdkVersion, manifest.MinServerVersion, zipUrl.ToString(), sha256, Size: 0, manifest.Permissions, Signature: null);
                 var entry = new PluginCatalogEntry(manifest.Id, manifest.Name, manifest.Description, manifest.Author, manifest.Homepage, manifest.Kind, [version]);
 
-                var sourceUrl = $"https://github.com/{owner}/{repo}";
                 var result = await installer.InstallAsync(entry, version, sourceUrl, isOfficial: false, cancellationToken);
                 return ApiResults.Json(new { installed = true, id = result.Id, name = result.Name, status = result.Plugin.Status, detail = result.Plugin.Detail });
             }

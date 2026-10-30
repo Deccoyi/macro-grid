@@ -7,7 +7,11 @@ const mocks = vi.hoisted(() => ({
   choice: "rename" as string | null,
   restorePointFails: false,
   saved: [] as Profile[],
+  saveFails: false,
+  notices: [] as string[],
 }));
+
+vi.mock("../src/state/statusNotice", () => ({ showStatusNotice: (key: string, ...args: string[]) => { mocks.notices.push([key, ...args].join(":")); } }));
 
 vi.mock("../src/i18n/I18nContext", () => ({ useT: () => ({ t: (key: string) => key }) }));
 vi.mock("../src/dialogs/dialogStore", () => ({
@@ -20,7 +24,8 @@ vi.mock("../src/api/client", () => ({
     listProfiles: () => Promise.resolve([{ id: "old", name: "Home" }]),
     getProfile: (id: string) => Promise.resolve({ id, name: "Home", pages: [{ id: "p", name: "P", widgets: [] }] }),
     createProfile: () => { mocks.calls.push("create"); return Promise.resolve({ id: "new" }); },
-    saveProfile: (p: Profile) => { mocks.calls.push(`save:${p.id}`); mocks.saved.push(p); return Promise.resolve(); },
+    saveProfile: (p: Profile) => { mocks.calls.push(`save:${p.id}`); mocks.saved.push(p); return mocks.saveFails ? Promise.reject(new Error("disk")) : Promise.resolve(); },
+    deleteProfile: (id: string) => { mocks.calls.push(`delete:${id}`); return Promise.resolve(); },
     createRestorePoint: () => {
       mocks.calls.push("restorePoint");
       return mocks.restorePointFails ? Promise.reject(new Error("no")) : Promise.resolve();
@@ -45,6 +50,8 @@ describe("import of a shared profile whose name exists", () => {
     mocks.saved.length = 0;
     mocks.choice = "rename";
     mocks.restorePointFails = false;
+    mocks.saveFails = false;
+    mocks.notices.length = 0;
   });
 
   it("Rename saves under a new id and never touches the existing profile", async () => {
@@ -70,5 +77,29 @@ describe("import of a shared profile whose name exists", () => {
     await act(() => result.current.importProfileFromJson(shared));
 
     expect(mocks.calls).toEqual(["restorePoint", "alert"]);
+  });
+  it("Rename deletes the empty new profile and says so when the save fails", async () => {
+    mocks.saveFails = true;
+    const { result } = await ready();
+    await act(() => result.current.importProfileFromJson(shared));
+
+    expect(mocks.calls).toEqual(["create", "save:new", "delete:new"]);
+    expect(mocks.notices).toEqual(["profile.importSaveFailed"]);
+  });
+
+  it("Overwrite says so when the save fails", async () => {
+    mocks.choice = "overwrite";
+    mocks.saveFails = true;
+    const { result } = await ready();
+    await act(() => result.current.importProfileFromJson(shared));
+
+    expect(mocks.notices).toEqual(["profile.importSaveFailed"]);
+  });
+
+  it("tells how many widget bindings the server cleared", async () => {
+    const { result } = await ready();
+    await act(() => result.current.importProfileFromJson(shared, 3));
+
+    expect(mocks.notices).toEqual(["profile.importCleared:3"]);
   });
 });

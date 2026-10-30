@@ -17,7 +17,7 @@ export function restoreWarningText(t: Translate, warning: RestoreWarning): strin
 
 const KNOWN_WARNINGS = new Set([
   "unencryptedKept", "languagePackMissing", "deviceNotPaired", "deviceProfileMissing", "missingPlugin",
-  "unknownActionType", "missingFile", "variableTypeConflict", "pluginSettingsNotRunning",
+  "unknownActionType", "missingFile", "variableTypeConflict", "pluginSettingsNotRunning", "clearedWidgetBindings",
 ]);
 
 function itemTitle(t: Translate, item: RestoreItem): string {
@@ -74,6 +74,7 @@ export function RestoreContent({ inspected, ticked }: { inspected: Inspected; ti
         : (
           <>
             <p style={{ margin: 0 }}>{t("restore.intro")}</p>
+            <p style={{ margin: 0 }}>{t("restore.ownComputer")}</p>
             <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 6 }}>
               {actionable.map((item) => (
                 <li key={restoreItemId(item)}>

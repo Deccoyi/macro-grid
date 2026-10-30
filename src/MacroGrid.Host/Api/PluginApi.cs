@@ -47,11 +47,13 @@ internal static class PluginApi
         api.MapGet("/icon-packs", (PluginManager plugins, PluginLocalizer localizer) =>
             plugins.IconPacksWithOwner.Select(o => new { o.Pack.Id, DisplayName = localizer.Translate(o.PluginId, o.Pack.DisplayName)!, Icons = o.Pack.IconNames }));
 
-        api.MapGet("/icon-packs/{packId}/{iconName}", (string packId, string iconName, PluginManager plugins) =>
+        api.MapGet("/icon-packs/{packId}/{iconName}", (string packId, string iconName, PluginManager plugins, HttpContext context) =>
         {
             var pack = plugins.IconPacks.FirstOrDefault(p => p.Id == packId);
             var svg = pack?.GetIconSvg(iconName);
-            return svg is null ? Results.NotFound() : Results.Text(svg, "image/svg+xml");
+            if (svg is null) return Results.NotFound();
+            ApiResults.SandboxIcon(context);
+            return Results.Text(svg, "image/svg+xml");
         });
 
         // The manifest's optional logo (LoadedPlugin.HasIcon) — the editor's Plugins window shows this

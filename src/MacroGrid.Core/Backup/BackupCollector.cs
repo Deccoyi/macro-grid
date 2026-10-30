@@ -11,7 +11,7 @@ using MacroGrid.Core.Variables;
 namespace MacroGrid.Core.Backup;
 
 /// <summary>Reads what a backup holds from the stores (not from the files on disk, so a half-written or broken file never travels).</summary>
-public sealed class BackupCollector(
+public class BackupCollector(
     ProfileStore profiles,
     ProfileTreeStore tree,
     PreferencesStore preferences,
@@ -21,7 +21,7 @@ public sealed class BackupCollector(
     PluginManager plugins,
     LanguagePackStore languages)
 {
-    public BackupContent Collect()
+    public virtual BackupContent Collect()
     {
         var allProfiles = profiles.All;
         var content = new BackupContent
@@ -39,14 +39,26 @@ public sealed class BackupCollector(
         foreach (var plugin in plugins.Plugins)
         {
             if (plugins.GetSettingsPage(plugin.Id) is not { } page) continue;
-            try { content.PluginSettings[plugin.Id] = PluginSettingsSecrets.Strip(page.Fields, page.Load()); }
-            catch (Exception ex) when (ex is IOException or InvalidOperationException) { /* this plugin's settings are left out */ }
+            if (TryReadSettings(plugin.Id, () => PluginSettingsSecrets.Strip(page.Fields, page.Load()), content.Warnings) is { } settings)
+                content.PluginSettings[plugin.Id] = settings;
         }
 
         foreach (var info in languages.List())
             if (languages.Read(info.Tag) is { } text) content.LanguagePacks[info.Tag] = text;
 
         return content;
+    }
+
+    /// <summary>A plugin's own code runs inside the read, so whatever it throws (a bad file, a broken script) leaves only that plugin's
+    /// settings out of the backup, with a warning; it never stops the backup or, at start-up, the restore point of an update.</summary>
+    internal static JsonObject? TryReadSettings(string pluginId, Func<JsonObject> read, List<string> warnings)
+    {
+        try { return read(); }
+        catch (Exception ex)
+        {
+            warnings.Add($"The settings of plugin {pluginId} were left out: {ex.GetType().Name}.");
+            return null;
+        }
     }
 
     /// <summary>The plugins the actions in these profiles need (for the manifest, and for the warning on another PC).</summary>

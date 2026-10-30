@@ -42,6 +42,9 @@ public sealed class BackupContent
     public Dictionary<string, JsonObject> PluginSettings { get; init; } = new(StringComparer.OrdinalIgnoreCase);
     /// <summary>Language tag to the pack file text.</summary>
     public Dictionary<string, string> LanguagePacks { get; init; } = new(StringComparer.Ordinal);
+    /// <summary>What was left out while collecting (not written to the file). Shown to the person and logged.</summary>
+    [System.Text.Json.Serialization.JsonIgnore]
+    public List<string> Warnings { get; } = [];
 }
 
 public sealed record BackupFileContent(BackupManifest Manifest, BackupContent Content);
