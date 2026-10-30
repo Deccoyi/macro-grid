@@ -385,6 +385,8 @@ export interface PluginLinkInspectResult {
   permissions?: string[];
   compatible?: boolean;
   incompatibleReason?: string | null;
+  /** Set when a plugin with this id is already installed; `sameSource` is false when it came from another source (an install is then refused). */
+  installed?: { version?: string | null; trust: "Local" | "Official" | "ThirdParty"; sameSource: boolean } | null;
   error?: string;
   code?: string;
 }

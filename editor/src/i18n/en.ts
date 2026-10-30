@@ -256,6 +256,8 @@ export const en: Record<DictKey, string> = {
   "plugins.discover.link.title": "Install from a repository link",
   "plugins.discover.link.prompt": "Paste a single-plugin GitHub repository URL (or owner/repo) with a plugin.json at its root.",
   "plugins.discover.link.failed": "Could not install from that link: {detail}",
+  "plugins.discover.link.installedOther": "A plugin with this id is already installed from another source ({source}), so it cannot be replaced from this link. Remove it first.",
+  "plugins.discover.link.installedSame": "This plugin is already installed (version {version}). Installing replaces it and keeps its permissions and settings.",
   "plugins.discover.link.isSource": "{repo} publishes several plugins (a macrogrid-index.json), not one. Add it as a source instead?",
   "plugins.badge.official": "Official",
   "plugins.badge.thirdParty": "Third-party",

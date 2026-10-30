@@ -258,6 +258,8 @@ export const tr = {
   "plugins.discover.link.title": "Bir depo bağlantısından yükle",
   "plugins.discover.link.prompt": "Kökünde bir plugin.json bulunan, tek eklentilik bir GitHub deposu URL'si (ya da owner/repo) yapıştır.",
   "plugins.discover.link.failed": "Bu bağlantıdan yüklenemedi: {detail}",
+  "plugins.discover.link.installedOther": "Bu kimlikle bir eklenti zaten başka bir kaynaktan kurulu ({source}), bu yüzden bu bağlantıdan değiştirilemez. Önce kaldır.",
+  "plugins.discover.link.installedSame": "Bu eklenti zaten kurulu (sürüm {version}). Yüklemek onu değiştirir; izinleri ve ayarları korunur.",
   "plugins.discover.link.isSource": "{repo} tek değil, birden fazla eklenti yayınlıyor (bir macrogrid-index.json). Bunun yerine kaynak olarak eklensin mi?",
   "plugins.badge.official": "Resmî",
   "plugins.badge.thirdParty": "Üçüncü taraf",

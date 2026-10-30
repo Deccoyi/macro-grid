@@ -223,9 +223,19 @@ export function PluginsWindow() {
       return;
     }
 
+    if (inspected.installed && !inspected.installed.sameSource) {
+      setError(t("plugins.discover.link.installedOther", inspected.installed.trust === "Official" ? t("plugins.badge.official") : inspected.installed.trust === "Local" ? t("plugins.badge.local") : t("plugins.badge.thirdParty")));
+      return;
+    }
+
     const proceed = await confirmRichAsync({
       title: t("plugins.discover.thirdParty.title"),
-      content: <InstallConsent name={inspected.name ?? inspected.id ?? ""} kind={inspected.kind} permissions={inspected.permissions} sourceLabel={`${inspected.owner}/${inspected.repo}`} />,
+      content: (
+        <>
+          {inspected.installed && <div style={{ fontSize: 12, marginBottom: 10, color: "var(--ms-warning, #facc15)" }}>{t("plugins.discover.link.installedSame", inspected.installed.version ?? "?")}</div>}
+          <InstallConsent name={inspected.name ?? inspected.id ?? ""} kind={inspected.kind} permissions={inspected.permissions} sourceLabel={`${inspected.owner}/${inspected.repo}`} />
+        </>
+      ),
       confirmLabel: inspected.kind === "js" ? t("consent.allowInstall") : t("consent.installAnyway"),
       danger: inspected.kind !== "js",
     });
