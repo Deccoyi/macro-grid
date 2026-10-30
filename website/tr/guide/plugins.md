@@ -1,6 +1,6 @@
 # Eklentiler
 
-Eklentiler **eylemler**, **değişkenler**, **ayar sayfaları**, **durum çubuğu öğeleri** ve **simge paketleri** ekler. Sunucu çalışırken, yeniden başlatmadan kurulur, yeniden yüklenir ve kaldırılır.
+Eklentiler **eylemler**, **değişkenler**, **ayar sayfaları**, **simge paketleri** ve deck'iniz için **widget'lar** ekler. **Durum çubuğu öğeleri** yalnızca siz açtığınızda gösterilir. Sunucu çalışırken, yeniden başlatmadan kurulur, yeniden yüklenir ve kaldırılır.
 
 Kendi eklentinizi yazmak, manifest, SDK'lar ve eğitimlerin tümü **[eklenti dokümantasyon sitesinde](https://deccoyi.github.io/macro-grid-plugin/)** yer alır. Kaynak kod ve sürümler: [macro-grid-plugin](https://github.com/Deccoyi/macro-grid-plugin).
 
@@ -10,9 +10,9 @@ Kendi eklentinizi yazmak, manifest, SDK'lar ve eğitimlerin tümü **[eklenti do
 
 1. Bir eklenti klasörü edinin: bir sürümün zip'ini açın ya da kendiniz derleyin. Eklenti klasörü `plugin.json` içerir.
 2. Düzenleyici'de **Eklentiler → Eklentileri Yönet…** yolunu izleyin ve **Klasörden Yükle…** seçeneğini seçin.
-3. Eklenti hemen yüklenir. JavaScript eklentisi önce istediği izinleri gösterir (değişkenleri okuma, eylem ekleme, tuşlara basma, bir sunucuya web isteği gönderme) ve yalnızca **İzin ver ve etkinleştir**'e tıkladıktan sonra çalışır.
+3. Eklenti hemen yüklenir. JavaScript eklentisi önce istediği izinleri gösterir ve yalnızca **İzin ver ve etkinleştir**'e tıkladıktan sonra çalışır.
 
-Bir eklentiyi değiştirdikten sonra **Yeniden yükle**'yi, **Ayarlar** için dişli düğmesini, silmek için de **Kaldır**'ı kullanın. Eklentiler `%AppData%\MacroGrid\plugins\<id>\` altında durur.
+Eklentiler penceresindeki açma/kapama anahtarı bir eklentiyi silmeden durdurur. Bir eklentiyi değiştirdikten sonra **Yeniden yükle**'yi, **Ayarlar** için dişli düğmesini, silmek için de **Kaldır**'ı kullanın. Eklentiler `%AppData%\MacroGrid\plugins\<id>\` altında durur.
 
 ::: danger Güven
 Yalnızca **resmî C# eklentileri** çalışır: C# eklentisi sunucunun kendisi gibi tam erişime sahiptir; bu yüzden Macro Grid onu yalnızca geçerli bir resmî imza taşıyorsa ve her yüklemede kontrol ederek yükler. Başka yazarların eklentileri **JavaScript eklentileridir**; korumalı alanda çalışırlar ve yalnızca sizin onayladığınız şeyleri yapabilirler. Macro Grid bunları incelemez: yalnızca güvendiklerinizi kurun.
@@ -22,6 +22,35 @@ Yalnızca **resmî C# eklentileri** çalışır: C# eklentisi sunucunun kendisi 
 Macro Grid, bir JavaScript eklentisinin yapabileceklerini sınırlar: izinlerini siz onaylarsınız, klavye girdisi yalnızca butonlarından birine bastığınız sırada çalışır ve bazı hedefler reddedilir. Bu sınırlar kötüye kullanımı yalnızca zorlaştırır; **tamamen engelleyemez**. Üçüncü taraf eklentileri yalnızca güvendiğiniz kaynaklardan kurun, izinleri onaylamadan önce okuyun ve tuşlara basabilen ve yazı yazabilen (`input`) ya da internete web isteği gönderen bir eklentide özellikle dikkatli olun.
 :::
 
+## İzinler
+
+JavaScript eklentisi şu izinleri isteyebilir:
+
+| İzin | Ne yapmasına izin verir |
+|---|---|
+| `variables` | Değişkenleri okuma |
+| `actions` | Düğmelere bağlanabilecek eylemler ekleme |
+| `input` | Tuşlara basma ve metin yazma; yalnızca siz eklentinin düğmelerinden birine bastığınızda |
+| `storage` | Kendi küçük miktarda verisini saklama |
+| `notify` | Sistem tepsisinde kısa bildirimler gösterme |
+| `http:<host>` | Tek bir adrese web isteği gönderme |
+| `ws:<host>:<port>` | Tek bir adrese canlı bağlantı açık tutma |
+
+Eklentiler penceresi her izni bir onay kutusuyla listeler. Birini kaldırırsanız eklenti o izin olmadan çalışmaya devam eder. Bir izni kapattıktan sonra durmuş bir eklenti, yeniden kurmadan aynı pencereden tekrar açılabilir. Yeni izin isteyen bir güncelleme, siz onaylayana kadar bekler.
+
+## Eklenti widget'ları
+
+Bir eklenti kendi widget'larını çizebilir (örneğin bir gösterge). Bunlar Düzenleyici'deki widget listesinde eklentinin adı altında görünür. Eklenti widget'ı ağ erişimi olmayan kapalı bir kutuda çalışır; bozuk bir widget deck'in geri kalanına zarar veremez. Bir eklenti sürekli hata verirse Macro Grid onu kapatır; Eklentiler penceresinden yeniden açabilirsiniz.
+
+## Keşfet
+
+Eklentiler penceresindeki **Keşfet** sekmesi resmî kaynaktaki eklentileri listeler. **Kaynak ekle…** bir `macrogrid-index.json` yayımlayan başka bir GitHub deposunu ekler. Eklentileri oradan kurup güncellersiniz.
+
+- **Geri dön:** bir eklentinin sayfası sahip olduğunuz sürümden önceki sürümü geri koyabilir. Macro Grid önce sorar.
+- **Bu sürümde kal:** o eklenti için güncelleme önerilerini durdurur. Güvenlik uyarıları yine gösterilir.
+- **Geri çekilen sürümler:** bir yayıncı bir sürümü geri çekebilir. O sürüm kurulamaz. Zaten kuruluysa güncellemeniz ya da kaldırmanız istenir; siz yapana kadar çalışmaya devam eder.
+- **Güvensiz sürümler:** resmî güvenlik listesi bir sürümü kapatırsa Macro Grid onu durdurur ve nedenini söyler.
+
 ## Resmi eklentiler
 
 ### OBS {#obs}
@@ -30,7 +59,7 @@ OBS Studio'yu yerleşik WebSocket'i üzerinden kontrol eder (OBS 28 ya da daha y
 
 1. OBS'de: **Tools → WebSocket Server Settings** yolundan sunucuyu etkinleştirin (isterseniz parola belirleyin).
 2. Macro Grid'de: **Eklentiler**'i açın, OBS'nin yanındaki dişliye tıklayın, **Enabled** seçeneğini açın ve sunucuyu, bağlantı noktasını (varsayılan 4455) ve parolayı girin. Birkaç saniye içinde bağlanır.
-3. Düzenleyici'nin durum çubuğu bağlantı durumunu gösterir.
+3. Düzenleyici'nin durum çubuğunda bağlantı durumunu görmek için Eklentiler penceresinde OBS için **Durum çubuğu** seçeneğini açın.
 
 ![OBS eklentisi ayar formu](/img/obs-settings.png)
 
