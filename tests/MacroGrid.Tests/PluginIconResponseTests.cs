@@ -11,9 +11,10 @@ public sealed class PluginIconResponseTests
         Assert.Equal("nosniff", PluginIconResponse.ContentTypeOptions);
     }
 
-    // Both icon endpoints must call SandboxIcon before returning the file (the Host project has no endpoint test harness).
+    // Every icon endpoint must call SandboxIcon before returning the file (the Host project has no endpoint test harness).
     [Theory]
     [InlineData("src/MacroGrid.Host/Api/PluginApi.cs", "/plugins/{id}/icon")]
+    [InlineData("src/MacroGrid.Host/Api/PluginApi.cs", "/icon-packs/{packId}/{iconName}")]
     [InlineData("src/MacroGrid.Host/Api/PluginCatalogApi.cs", "/plugin-catalog/icon")]
     public void Icon_endpoints_apply_the_headers(string file, string route)
     {
