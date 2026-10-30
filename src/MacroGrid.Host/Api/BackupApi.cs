@@ -56,6 +56,7 @@ internal static class BackupApi
             try { return ApiResults.Json(await restorer.RestoreAsync(body.Id, body.Items)); }
             catch (RestoreSessionException ex) { return ApiResults.BadRequest(ex.Message); }
             catch (BackupException) { return ApiResults.BadRequest("A restore point could not be made, so nothing was restored."); }
+            catch (InvalidDataException ex) { return ApiResults.BadRequest(ex.Message); }
         });
 
         return api;

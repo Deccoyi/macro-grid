@@ -218,12 +218,15 @@ public sealed class BackupRestorer(
             return new RestoreItem(RestoreItemKind.Profile, backup.Id, backup.Name, RestoreState.New) { BackupPages = backup.Pages.Count, BackupWidgets = backupWidgets };
 
         // The stored profile goes through the same checks as the one in the file, so a difference is a real one.
-        var normalized = ProfilePackage.ParseProfile(JsonSerializer.SerializeToUtf8Bytes(current, Json));
+        // A stored profile that fails those checks (hand-edited, or damaged) is compared as it is: it differs, and restoring replaces it.
+        Profile normalized;
+        try { normalized = ProfilePackage.ParseProfile(JsonSerializer.SerializeToUtf8Bytes(current, Json)); }
+        catch (InvalidDataException) { normalized = current; }
         var same = Equal(backup, normalized);
         var changedPages = new List<string>();
         if (!same)
         {
-            var hereById = normalized.Pages.ToDictionary(p => p.Id, StringComparer.Ordinal);
+            var hereById = normalized.Pages.GroupBy(p => p.Id, StringComparer.Ordinal).ToDictionary(g => g.Key, g => g.First(), StringComparer.Ordinal);
             foreach (var page in backup.Pages)
                 if (!hereById.TryGetValue(page.Id, out var other) || !Equal(page, other)) changedPages.Add(page.Name);
             if (changedPages.Count == 0 && backup.Name != normalized.Name) changedPages.Add(backup.Name);
@@ -343,8 +346,9 @@ public sealed class BackupRestorer(
             }
             return new RestoreItemResult(item.Kind, item.Key, true, null, warnings);
         }
-        catch (Exception ex) when (ex is InvalidOperationException or LanguagePackException or IOException or ArgumentException or UnauthorizedAccessException)
+        catch (Exception ex)
         {
+            // The restore point exists by now and is kept; one item that fails (a store, a broadcast) is reported and the rest go on.
             return new RestoreItemResult(item.Kind, item.Key, false, ex.Message, warnings);
         }
     }

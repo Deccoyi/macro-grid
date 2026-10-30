@@ -90,6 +90,36 @@ public sealed class BackupRestorerTests : IDisposable
     }
 
     [Fact]
+    public async Task A_stored_profile_that_fails_validation_does_not_block_inspect_or_restore()
+    {
+        var broken = new Profile { Id = "bad", Name = "Bad", Pages = [new Page { Id = "a", Name = "One" }, new Page { Id = "a", Name = "Two" }] };
+        _world.Profiles.Save(broken);
+        var result = InspectOf(new BackupContent { Profiles = [Backed("bad", "Bad")] });
+
+        Assert.Equal(RestoreState.Different, result.Items.Single().State);
+        var done = await _world.Restorer.RestoreAsync(result.Id, [Pick(result.Items.Single())]);
+
+        Assert.True(Assert.Single(done).Ok);
+        Assert.Single(_world.Profiles.Get("bad")!.Pages);
+    }
+
+    [Fact]
+    public async Task An_item_that_fails_after_the_restore_point_is_reported_and_the_point_is_kept()
+    {
+        var world = new BackupTestWorld(broadcast: _ => throw new InvalidCastException("boom"));
+        using var _ = world;
+        var content = new BackupContent { Profiles = [Backed("fresh", "Fresh")] };
+        var inspected = world.Restorer.Inspect(BackupFile.Write(content, BackupFile.KindBackup, "manual", "1.0.0", []));
+
+        var done = await world.Restorer.RestoreAsync(inspected.Id, [Pick(inspected.Items.Single())]);
+
+        var result = Assert.Single(done);
+        Assert.False(result.Ok);
+        Assert.Contains("boom", result.Error);
+        Assert.Single(world.Service.ListRestorePoints());
+    }
+
+    [Fact]
     public async Task Nothing_is_deleted_by_a_restore()
     {
         var one = _world.AddProfile("One");

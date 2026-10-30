@@ -30,7 +30,7 @@ internal sealed class BackupTestWorld : IDisposable
     public BackupRestorer Restorer { get; }
     public List<string> Broadcast { get; } = [];
 
-    public BackupTestWorld()
+    public BackupTestWorld(Func<Profile, Task>? broadcast = null)
     {
         Directory.CreateDirectory(Root);
         var store = new VariableStore();
@@ -51,7 +51,7 @@ internal sealed class BackupTestWorld : IDisposable
         Service = new BackupService(Collector, Root, "1.0.0");
         Restorer = new BackupRestorer(Service, Collector, Profiles, Tree, Preferences, Variables, Automation, Devices, Plugins, Languages, dispatcher,
             new PluginWidgetCatalog(new MacroGrid.Core.Widgets.AssetStore()),
-            profile => { Broadcast.Add(profile.Id); return Task.CompletedTask; });
+            profile => { Broadcast.Add(profile.Id); return broadcast?.Invoke(profile) ?? Task.CompletedTask; });
     }
 
     public string RestorePointsFolder => Path.Combine(Root, BackupService.FolderName);
