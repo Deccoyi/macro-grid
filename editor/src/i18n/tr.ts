@@ -947,6 +947,8 @@ export const tr = {
   "form.profile.label": "Profil",
   "form.web.widget": "Web widget'ı",
   "form.web.missing": "(widget yok)",
+  "form.page.missing": "(sayfa silindi)",
+  "form.profile.missing": "(profil silindi)",
   "form.web.mode": "Ne yapılsın",
   "form.web.mode.set": "Bu adresi göster",
   "form.web.mode.reset": "Widget'ın kendi adresine dön",

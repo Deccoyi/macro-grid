@@ -80,6 +80,9 @@ function RulePagePicker({ pageId, savedProfileId, profiles, onPick }: { pageId: 
 function PageActionForm({ binding, onChange, pages, profiles }: ActionFormProps) {
   const { t } = useT();
   const mode = str(binding.settings.mode, "goto");
+  const pageId = str(binding.settings.pageId);
+  // The id is kept when its page is deleted, so undoing the delete brings the button back; the select must not look cleared.
+  const pageMissing = pageId !== "" && !pages.some((p) => p.id === pageId);
   return (
     <>
       <Field label={t("form.page.mode")}>
@@ -94,9 +97,10 @@ function PageActionForm({ binding, onChange, pages, profiles }: ActionFormProps)
         <RulePagePicker pageId={str(binding.settings.pageId)} savedProfileId={str(binding.settings.profileId)} profiles={profiles} onPick={(pageId, profileId) => onChange({ mode, pageId, profileId })} />
       )}
       {mode === "goto" && pages.length > 0 && (
-        <Field label={t("form.page.page")}>
-          <SelectInput value={str(binding.settings.pageId)} onChange={(v) => onChange({ mode, pageId: v })}>
+        <Field label={t("form.page.page")} error={pageMissing ? t("form.page.missing") : undefined}>
+          <SelectInput value={pageId} onChange={(v) => onChange({ mode, pageId: v })}>
             <option value="">{t("form.pickPlaceholder")}</option>
+            {pageMissing && <option value={pageId}>{t("form.page.missing")}</option>}
             {pages.map((p) => (
               <option key={p.id} value={p.id}>{p.name}</option>
             ))}
@@ -109,10 +113,13 @@ function PageActionForm({ binding, onChange, pages, profiles }: ActionFormProps)
 
 function ProfileActionForm({ binding, onChange, profiles }: ActionFormProps) {
   const { t } = useT();
+  const profileId = str(binding.settings.profileId);
+  const profileMissing = profileId !== "" && !profiles.some((p) => p.id === profileId);
   return (
-    <Field label={t("form.profile.label")}>
-      <SelectInput value={str(binding.settings.profileId)} onChange={(v) => onChange({ profileId: v })}>
+    <Field label={t("form.profile.label")} error={profileMissing ? t("form.profile.missing") : undefined}>
+      <SelectInput value={profileId} onChange={(v) => onChange({ profileId: v })}>
         <option value="">{t("form.pickPlaceholder")}</option>
+        {profileMissing && <option value={profileId}>{t("form.profile.missing")}</option>}
         {profiles.map((p) => (
           <option key={p.id} value={p.id}>{p.name}</option>
         ))}

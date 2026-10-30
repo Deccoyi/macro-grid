@@ -54,6 +54,8 @@ internal sealed class CrashReportDialog : Form
         var close = new Button { Text = HostText.Get("crash.close"), DialogResult = DialogResult.Cancel, AutoSize = true, Padding = new Padding(10, 4, 10, 4) };
         var copy = new Button { Text = HostText.Get("crash.copy"), AutoSize = true, Padding = new Padding(10, 4, 10, 4) };
         var save = new Button { Text = HostText.Get("crash.save"), AutoSize = true, Padding = new Padding(10, 4, 10, 4) };
+        // DialogResult only closes a window shown with ShowDialog; the tray shows this one with Show, so Close closes it itself.
+        close.Click += (_, _) => Close();
         copy.Click += (_, _) => Copy();
         save.Click += (_, _) => Save();
         _status = new Label { AutoSize = true, Margin = new Padding(12, 8, 0, 0) };

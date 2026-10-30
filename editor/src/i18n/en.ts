@@ -919,6 +919,8 @@ export const en: Record<DictKey, string> = {
   "form.profile.label": "Profile",
   "form.web.widget": "Web widget",
   "form.web.missing": "(widget missing)",
+  "form.page.missing": "(page deleted)",
+  "form.profile.missing": "(profile deleted)",
   "form.web.mode": "What to do",
   "form.web.mode.set": "Show this address",
   "form.web.mode.reset": "Back to the widget's own address",
