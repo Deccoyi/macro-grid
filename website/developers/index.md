@@ -11,4 +11,5 @@ Everything else on this site is for people who use Macro Grid. This page is for 
 - [Build from source](/developers/build)
 - [Technical reference](/developers/reference): action types, widget types, endpoints and files
 - [Writing plugins](https://deccoyi.github.io/macro-grid-plugin/): the plugin documentation site
+- A command-line tool for plugin authors, a separate download on the release page: check, package, start and try out a JavaScript plugin
 - [Architecture](https://github.com/Deccoyi/macro-grid/blob/main/docs/architecture.md), [contributing](https://github.com/Deccoyi/macro-grid/blob/main/CONTRIBUTING.md) and [issues](https://github.com/Deccoyi/macro-grid/issues)

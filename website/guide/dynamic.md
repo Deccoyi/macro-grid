@@ -23,6 +23,8 @@ Operators: greater than, greater or equal, less than, less or equal, equal, not 
 
 Use **Remove dynamization** to go back to a fixed value.
 
+The rule editor also has quick templates: on/off, low/medium/high and grey when unavailable. Each one fills in a common rule in one click.
+
 ## Values to type
 
 Type numbers as they are (`80`), and text without quotes (`live`). For booleans such as `system.audio.muted`, type `true` or `false` (letters may be upper or lower case). `1` and `0` do **not** match a boolean yet.

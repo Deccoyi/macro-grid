@@ -44,7 +44,7 @@ Bir eklenti kendi widget'larını çizebilir (örneğin bir gösterge). Bunlar D
 
 ## Keşfet
 
-Eklentiler penceresindeki **Keşfet** sekmesi resmî kaynaktaki eklentileri listeler. **Kaynak ekle…** bir `macrogrid-index.json` yayımlayan başka bir GitHub deposunu ekler. Eklentileri oradan kurup güncellersiniz.
+Eklentiler penceresindeki **Keşfet** sekmesi resmî kaynaktaki eklentileri listeler. **Kaynak ekle…** bir `macrogrid-index.json` yayımlayan başka bir GitHub deposunu ekler. Eklentileri oradan kurup güncellersiniz. Liste saklanır; internet yoksa son listeyi görmeye devam edersiniz.
 
 - **Geri dön:** bir eklentinin sayfası sahip olduğunuz sürümden önceki sürümü geri koyabilir. Macro Grid önce sorar.
 - **Bu sürümde kal:** o eklenti için güncelleme önerilerini durdurur. Güvenlik uyarıları yine gösterilir.

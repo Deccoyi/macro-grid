@@ -44,7 +44,7 @@ A plugin can draw its own widgets, such as a gauge. They appear in the Toolbox u
 
 ## Discover
 
-The **Discover** tab of the Plugins window lists plugins from the official source. **Add source…** adds another GitHub repository that publishes a `macrogrid-index.json`. Install and update plugins from there.
+The **Discover** tab of the Plugins window lists plugins from the official source. **Add source…** adds another GitHub repository that publishes a `macrogrid-index.json`. Install and update plugins from there. The list is kept, so if the internet is down you still see the last one.
 
 - **Go back:** a plugin's page can put back the version before the one you have. Macro Grid asks first.
 - **Stay on this version:** stops update offers for that plugin. Safety warnings still appear.
