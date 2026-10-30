@@ -18,7 +18,7 @@ public abstract class LogicAction(string type, string displayName, string descri
 
 public sealed class IfAction() : LogicAction(ActionFlow.If, "If", "Runs the steps up to the matching End only when a condition is met", "split");
 
-public sealed class ElseAction() : LogicAction(ActionFlow.Else, "Otherwise", "The steps that run when the If was not met", "split");
+public sealed class ElseAction() : LogicAction(ActionFlow.Else, "Else", "The steps that run when the If was not met", "split");
 
 public sealed class EndIfAction() : LogicAction(ActionFlow.EndIf, "End", "Ends an If block", "split");
 

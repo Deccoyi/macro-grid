@@ -3,6 +3,7 @@ import { ChevronDown, ChevronRight, Play, Trash2 } from "lucide-react";
 import type { ConditionNode } from "@macro/renderer";
 import { api } from "../api/client";
 import type { ActionInfo, AutomationRuleDef, AutomationRuleStatus, AutomationResponse, AutomationTriggerKind, PairedDeviceInfo, ProfileSummary, VariableInfo } from "../api/types";
+import { translateServerMessage } from "../diagnostics/serverMessages";
 import { confirmAsync } from "../dialogs/dialogStore";
 import { useT } from "../i18n/I18nContext";
 import type { DictKey } from "../i18n/tr";
@@ -45,6 +46,12 @@ export function AutomationPage() {
   }, [load]);
 
   const refreshStatus = () => api.getAutomation().then((r) => setStatus(r.status)).catch(() => {});
+
+  // Runs start and end on the server without the editor being told; poll so "running" never goes stale (after Pause all, for example).
+  useEffect(() => {
+    const timer = window.setInterval(() => { if (!document.hidden) void refreshStatus(); }, 1500);
+    return () => window.clearInterval(timer);
+  }, []);
 
   /** Shows the change at once; sends it unless a rule is not finished yet. */
   const save = async (nextRules: AutomationRuleDef[], nextPaused: boolean) => {
@@ -239,7 +246,8 @@ function lastText(status: AutomationRuleStatus | undefined, t: (key: DictKey, ..
   if (status.running) return t("automation.last.running");
   if (status.lastResult === "ok") return t("automation.last.ok", time);
   if (status.lastResult === "refused") return t("automation.last.refused", time);
-  return t("automation.last.failed", time, status.lastMessage ?? "");
+  const known = status.lastMessage ? translateServerMessage(status.lastMessage) : null;
+  return t("automation.last.failed", time, known ? t(known.key, ...known.args) : status.lastMessage ?? "");
 }
 
 function messageOf(e: unknown): string {

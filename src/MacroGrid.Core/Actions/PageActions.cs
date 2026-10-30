@@ -3,7 +3,7 @@ using MacroGrid.Plugin.Abstractions;
 
 namespace MacroGrid.Core.Actions;
 
-/// <summary>Changes the page shown on the triggering device. Settings: { "mode": "goto"|"next"|"prev"|"back", "pageId"?: string }</summary>
+/// <summary>Changes the page shown on the triggering device. Settings: { "mode": "goto"|"next"|"prev"|"back", "pageId"?: string, "profileId"?: string }. With a profileId the device switches to that profile first (a rule has no open profile); a step saved without one only shows the page.</summary>
 public sealed class PageAction : IActionHandler, IActionDescriptor
 {
     public const string TypeId = "core.page";
@@ -27,10 +27,12 @@ public sealed class PageAction : IActionHandler, IActionDescriptor
         };
     }
 
-    private static Task GotoAsync(ActionContext context, JsonObject settings)
+    private static async Task GotoAsync(ActionContext context, JsonObject settings)
     {
         var pageId = settings["pageId"]?.GetValue<string>();
-        return string.IsNullOrEmpty(pageId) ? Task.CompletedTask : context.Device.ShowPageAsync(pageId);
+        if (string.IsNullOrEmpty(pageId)) return;
+        if (settings["profileId"]?.GetValue<string>() is { Length: > 0 } profileId) await context.Device.SwitchProfileAsync(profileId);
+        await context.Device.ShowPageAsync(pageId);
     }
 
     public static JsonObject Goto(string pageId) => new() { ["mode"] = "goto", ["pageId"] = pageId };

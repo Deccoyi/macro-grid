@@ -1,6 +1,7 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
+const server = vi.hoisted(() => ({ running: false }));
 const setAutomation = vi.fn(() => Promise.resolve());
 const rule = {
   id: "r1", name: "Morning", enabled: true, cooldownSeconds: 0, actions: [],
@@ -14,7 +15,7 @@ vi.mock("../src/api/client", () => ({
     getLanguagePack: () => Promise.reject(new Error("404")),
     listLanguagePacks: () => Promise.resolve([]),
     getAutomation: () => Promise.resolve({
-      paused: false, rules: [rule], status: { r1: { running: false, lastResult: "none", runs: 0 } },
+      paused: false, rules: [rule], status: { r1: { running: server.running, lastStart: "2026-01-01T07:30:00Z", lastResult: "ok", runs: 1 } },
       limits: { maxRules: 50, maxNameLength: 60, maxSteps: 20, maxCooldownSeconds: 86400, maxComparisons: 20 },
     }),
     setAutomation: (...args: unknown[]) => (setAutomation as unknown as (...a: unknown[]) => Promise<void>)(...args),
@@ -50,5 +51,14 @@ describe("AutomationPage", () => {
 
     expect(await screen.findByText("Choose a value to watch to save the rule.")).toBeTruthy();
     expect(setAutomation).not.toHaveBeenCalled();
+  });
+
+  it("stops showing a rule as running once the server says the run ended", async () => {
+    server.running = true;
+    render(<PreferencesProvider><AutomationPage /></PreferencesProvider>);
+    expect(await screen.findByText(/· Running/)).toBeTruthy();
+
+    server.running = false;
+    await waitFor(() => expect(screen.queryByText(/· Running/)).toBeNull(), { timeout: 4000 });
   });
 });

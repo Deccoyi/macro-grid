@@ -37,6 +37,8 @@ export const PARAMS: Partial<Record<DictKey, readonly string[]>> = {
   "diag.check.W221": ["page", "widget", "event", "n", "field", "value"],
   "diag.check.W230": ["page", "widget", "variable"],
   "diag.check.W231": ["page", "widget", "variable"],
+  "diag.server.variableMissing": ["variable"],
+  "diag.server.ruleVariableMissing": ["variable"],
   "diag.check.W232": ["page", "widget", "variable"],
   "diag.check.W233": ["page", "widget", "event", "depth"],
   "diag.check.W234": ["page", "widget", "event", "step"],

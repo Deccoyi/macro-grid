@@ -4,6 +4,7 @@ New features and fixes in Macro Grid. For technical details, see [CHANGELOG-deve
 
 ## Unreleased
 ### New
+- **Rules can show a page in any profile:** the "Show page" step of an automation rule now switches the phone to the chosen profile first. Steps made before keep working as they did.
 - **If blocks are easier to build:** add an action straight into an If or Otherwise, drag actions between blocks, and condition rows no longer overlap in a narrow panel.
 - **Crash report:** after a crash, Macro Grid shows a report on the next start that you can save or copy. Nothing is sent.
 - **New setting types for plugins:** plugin settings can now have a shortcut key field, a time field (milliseconds, seconds or minutes) and a field where you tick several choices.
@@ -50,6 +51,8 @@ New features and fixes in Macro Grid. For technical details, see [CHANGELOG-deve
 - **A publisher can withdraw a version:** a withdrawn version cannot be installed, and if you have it you are asked to update or remove it. It keeps working until you do.
 - **A command-line tool for plugin authors (a separate download on the release page):** check, package, start and try out a JavaScript plugin.
 ### Changed
+- **Automation messages in your language:** the messages about rules, such as a missing variable or a rule that started too often, are now translated.
+- **If, Else and End look the same in every language:** the logic steps keep their English names, and "Otherwise" is now called "Else".
 - The Dynamize window has a cleaner rule list, and a Presets list with a preview of the rules a preset adds.
 - The Properties panel has a cleaner, aligned layout and adapts to its width.
 - **The Preferences window has a new look:** pages are grouped in the side list, options use switches, variables are shown in a table and automation rules in a clear list. In a narrow window the side list becomes a drop-down.
@@ -65,6 +68,9 @@ New features and fixes in Macro Grid. For technical details, see [CHANGELOG-deve
 - **The Toolbox marks the web widget with a small flask icon** instead of the word "Experimental".
 ### Fixed
 - **Language packs:** long names no longer spill over the rows below. A right-to-left language now shows a note that the layout is not adapted. If a language pack file is gone, Macro Grid goes back to English and remembers it.
+- **A collapsed If block stays collapsed when you move it.**
+- **A collapsed If block fits in a narrow panel:** the condition and step count use the free room and move to their own line when it is too tight.
+- **Automation rules no longer show "running" after they stopped:** the Automation window now refreshes on its own.
 - **Imported profiles show at once:** after importing a shared profile, the profile list in the editor updates without a reload.
 - **First start on a new PC:** the very first start no longer stops with a crash report.
 - **Automation rules:** a rule that sets a True / False variable without you changing the value now works instead of failing. Long messages in the Automation window wrap instead of being cut off. A rule that uses a deleted variable shows a warning in the Diagnostic Messages. A "show page" step in a rule now asks for a profile first, then the page.

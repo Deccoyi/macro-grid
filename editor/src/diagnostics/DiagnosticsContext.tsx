@@ -2,6 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import { api } from "../api/client";
 import type { ServerProblem } from "../api/types";
 import { onDiagnostic } from "./editorEvents";
+import { translateServerMessage } from "./serverMessages";
 import type { Diagnostic } from "./types";
 
 interface DiagnosticsApi {
@@ -17,7 +18,9 @@ const DiagnosticsContext = createContext<DiagnosticsApi | null>(null);
 const POLL_MS = 2000;
 
 function fromServer(p: ServerProblem): Diagnostic {
-  return { id: p.id, source: p.source, sourceName: p.sourceName, severity: p.severity, code: p.code, message: p.message, count: p.count, firstAt: p.firstAt, lastAt: p.lastAt, origin: "server", target: p.target ?? undefined };
+  const known = translateServerMessage(p.message);
+  const text = known ? { messageKey: known.key, messageArgs: known.args } : { message: p.message };
+  return { id: p.id, source: p.source, sourceName: p.sourceName, severity: p.severity, code: p.code, ...text, count: p.count, firstAt: p.firstAt, lastAt: p.lastAt, origin: "server", target: p.target ?? undefined };
 }
 
 /** Error List's data. The editor's own checks call report(); nothing does yet. What the server has seen go wrong (a plugin's refused key press,

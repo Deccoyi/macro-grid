@@ -39,6 +39,8 @@ At most four rule lists run at once; the others wait. Each rule has at most one 
 
 A rule runs with `ActionContext.UserGesture` false, so a JavaScript plugin action cannot type for it. It has no device, so `core.page`, `core.profile` and the web step fail with a clear message, unless the rule is a `deviceConnect` rule: then the device that connected is the context and those steps act on it.
 
+The "Show page" step of a rule saves the profile with the page (`profileId` next to `pageId`): the device first switches to that profile, then shows the page, because a rule has no open profile to look the page up in. A step saved earlier with only a `pageId` works as before (the page is looked up in the device's current profile).
+
 **Key-pressing steps are refused.** `core.hotkey` and `core.typeText` send keys to whatever window is in front when the rule fires, so a rule that contains one reports it (`P160`) instead of pressing. The set is `AutomationService.KeyboardSteps`; allowing them is a few lines there plus removing the editor note.
 
 ## Loop guard and the Error List
