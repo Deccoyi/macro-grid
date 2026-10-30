@@ -4,6 +4,7 @@ New features and fixes in Macro Grid. For technical details, see [CHANGELOG-deve
 
 ## Unreleased
 ### New
+- **Deleted page or profile stays visible in a button:** a "switch page" or "switch profile" step whose target was deleted now says so in its list instead of looking empty. Undo brings the button back to life.
 - **If blocks are easier to build:** add an action straight into an If or Otherwise, drag actions between blocks, and condition rows no longer overlap in a narrow panel.
 - **Crash report:** after a crash, Macro Grid shows a report on the next start that you can save or copy. Nothing is sent.
 - **New setting types for plugins:** plugin settings can now have a shortcut key field, a time field (milliseconds, seconds or minutes) and a field where you tick several choices.
