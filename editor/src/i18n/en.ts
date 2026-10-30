@@ -594,6 +594,8 @@ export const en: Record<DictKey, string> = {
   "dialog.discardChanges": "Unsaved changes will be lost. Continue?",
   "profile.importConflictTitle": "Profile already exists",
   "profile.importConflict": "A profile named \"{name}\" already exists. Overwrite the existing profile, or import this one under a new name?",
+  "profile.importSaveFailed": "The profile could not be saved, so nothing was imported.",
+  "profile.importCleared": "{count} plugin widget variable choices pointed outside their own plugin and were cleared. Choose them again.",
   "profile.importFailedTitle": "Can't import profile",
   "profile.exportFailedTitle": "Can't export profile",
   "profile.importMissingTitle": "Some actions won't work yet",

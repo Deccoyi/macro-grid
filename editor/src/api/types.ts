@@ -539,6 +539,8 @@ export interface ImportProfileResult {
   unknownActionTypes?: string[];
   /** Files named by an action that are not on this PC. */
   missingFiles?: { page: string; widget: string; path: string }[];
+  /** Plugin widget variable choices that pointed outside their own plugin and were cleared. */
+  clearedWidgetBindings?: number;
 }
 
 export type RestoreItemKind = "profile" | "profileTree" | "preferences" | "variables" | "automation" | "device" | "pluginSettings" | "languagePack";

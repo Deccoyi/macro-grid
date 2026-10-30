@@ -606,6 +606,8 @@ export const tr = {
   "dialog.discardChanges": "Kaydedilmemiş değişiklikler kaybolacak. Devam edilsin mi?",
   "profile.importConflictTitle": "Profil zaten var",
   "profile.importConflict": "\"{name}\" isimli bir profil zaten var. Mevcut profilin üzerine yazılsın mı, yoksa içe aktarılan profil yeni bir adla mı eklensin?",
+  "profile.importSaveFailed": "Profil kaydedilemedi, bu yüzden hiçbir şey içe aktarılmadı.",
+  "profile.importCleared": "Eklenti parçacıklarının {count} değişken seçimi kendi eklentisinin dışını gösteriyordu ve temizlendi. Yeniden seç.",
   "profile.importFailedTitle": "Profil içe aktarılamadı",
   "profile.exportFailedTitle": "Profil dışa aktarılamadı",
   "profile.importMissingTitle": "Bazı eylemler henüz çalışmaz",
