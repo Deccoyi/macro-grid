@@ -3,6 +3,8 @@
 New features and fixes in Macro Grid. For technical details, see [CHANGELOG-developer.md](CHANGELOG-developer.md).
 
 ## Unreleased
+
+## 1.4.0 - 2026-10-30
 ### New
 - **Rules can show a page in any profile:** the "Show page" step of an automation rule now switches the phone to the chosen profile first. Steps made before keep working as they did.
 - **Deleted page or profile stays visible in a button:** a "switch page" or "switch profile" step whose target was deleted now says so in its list instead of looking empty. Undo brings the button back to life.
