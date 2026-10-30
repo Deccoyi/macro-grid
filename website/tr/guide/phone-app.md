@@ -50,6 +50,10 @@ gösterebilir; yine de kurmayı seçin. Kurulurken Macro Grid kapanır, sonra ye
 
 Bir güncelleme yalnızca kurulu uygulamayla aynı anahtarla imzalıysa kurulur. 0.1.1 sürümünüz varsa (farklı anahtarlı bir test derlemesi olarak yayımlandı) bir kez kaldırıp yeni sürümü elle kurun.
 
+## Gri düğmeler
+
+Şu anda çalışamayan bir eylemi olan düğme gri görünür ve küçük bir uyarı işareti taşır. Bu, eklentisi kapalı ya da kaldırılmış bir eylem, değeri olmayan okunan bir değişken ya da silinmiş bir hedef (sayfa, profil, web widget'ı ya da değişken) için olur. Düğmeye basarsanız telefon neyin eksik olduğunu söyler. Düğmeyi Düzenleyici'de düzeltin; Tanılama Mesajları'ndaki satır hangi parçanın eksik olduğunu gösterir.
+
 ## Bağlantı koptuğunda
 
 Uygulama giderek uzayan aralıklarla yeniden bağlanmayı dener, son düzeni "çevrimdışı, önbellek" rozetiyle gösterir ve simgeleri önbelleğe alır, böylece yeniden bağlanma hızlı olur. Bir eylem bilgisayarda başarısız olursa kısa, kırmızı bir hata bildirimi görürsünüz.

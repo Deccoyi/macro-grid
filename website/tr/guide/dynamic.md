@@ -23,6 +23,8 @@ Operatörler: büyük, büyük veya eşit, küçük, küçük veya eşit, eşit,
 
 Sabit değere dönmek için **Dinamizasyonu kaldır** düğmesini kullanın.
 
+Kural düzenleyicisinde hazır şablonlar da vardır: açık/kapalı, düşük/orta/yüksek ve kullanılamayınca gri. Her biri tek tıkla sık kullanılan bir kuralı doldurur.
+
 ## Yazılacak değerler
 
 Sayıları olduğu gibi (`80`), metinleri tırnak işareti olmadan (`live`) yazın. `system.audio.muted` gibi mantıksal değerler için `true` ya da `false` yazın (büyük veya küçük harf fark etmez). `1` ve `0` mantıksal değerle henüz **eşleşmez**.

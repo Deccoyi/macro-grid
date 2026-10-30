@@ -10,8 +10,8 @@ Widget, bir sayfanın ızgarasındaki tek bir öğedir. Eklerken türünü seçe
 | **Görsel** | Bir `https://` URL'sinden veya `data:image/...` URL'sinden resim gösterir, isteğe bağlı altyazıyla. |
 | **Slider** | Min, maks ve adım değeri olan bir sürükleme kontrolü. |
 | **Knob** | Slider ile aynı ayarlara sahip döner kontrol. |
-| **Web** | Bir web sayfası gömmek için ayrılmıştır. Şu an yer tutucudur. |
-| **Eklenti** | Eklentilerin çizdiği widget'lar için ayrılmıştır. Şu an yer tutucudur. |
+| **Web** | Bir web sayfasını (örneğin bir sohbet) deck'inizde gösterir. Araç Kutusu'nda küçük bir deney şişesi simgesi vardır. |
+| **Eklenti** | Bir eklentinin çizdiği widget (örneğin bir gösterge). Eklentinin adı altında listelenir. Bkz. [Eklentiler](/tr/guide/plugins). |
 
 ## Olaylar
 
@@ -30,7 +30,7 @@ Her dokunuş aynı zamanda bir basıştır. Bu yüzden **Uzun basınca** ve **Ç
 ## Metin, simgeler ve yerleşim
 
 - **Metin** canlı değerler içerebilir: `CPU {system.cpu|0}%`. Bkz. [Değişkenler ve metin](/tr/guide/variables).
-- Yatay ve dikey hizalamayı, yazı boyutunu ve bir **ikon** ile boyutunu, rengini ve konumunu (metnin üstünde, altında, solunda veya sağında) ayarlayın.
+- Yatay ve dikey hizalamayı, yazı boyutunu ve bir **ikon** ile boyutunu ve konumunu (metnin üstünde, altında, solunda veya sağında) ayarlayın. İkon, metnin rengini alır.
 - **İkon seç…** ile ikon ekleyin (bkz. [Stil](/tr/guide/styling)).
 
 ## Slider ve knob'lar
@@ -42,3 +42,11 @@ Kontrolün bilgisayardan bir değeri *göstermesi* için `system.audio.master` g
 ## Toggle'lar
 
 Bir toggle'ın sunucunun takip ettiği bir durumu (açık veya kapalı) vardır. Eylemleri **Açılınca** ve **Kapanınca** olaylarına bağlayın, örneğin sesi kapatma ve açma. Görünümünü gerçekle uyumlu tutmak için (örneğin başka yerde kapatılmış bir mikrofon), bir değişkene dayalı [dinamik kural](/tr/guide/dynamic) kullanın.
+
+## Web widget'ları
+
+Bir web widget'ının özelliklerinde **Yüklü tut** anahtarı vardır. Siz ızgaranın başka bir sayfasına geçtiğinizde sayfayı çalışır durumda tutar; böylece bir sohbet her seferinde yeniden yüklenmez. Telefon aynı anda yalnızca birkaç web widget'ı çalıştırabildiğinden, bir sayfada üçten fazla web widget'ı varsa düzenleyici uyarır.
+
+## İsimler
+
+Her widget'ın bir **adı** vardır; bunu **Özellikler**'den değiştirirsiniz. Mesajlar ve seçiciler bu adı kullanır, böylece sorunlu bir widget'ı bulmak kolaylaşır. Ad aynı sayfada benzersiz olmalıdır (harf büyüklüğü dikkate alınmaz).

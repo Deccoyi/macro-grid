@@ -20,6 +20,8 @@ Which profile a device opens:
 2. the **default profile** in [Preferences](/guide/preferences), else
 3. the first profile.
 
+The phone also remembers the profile you last picked on it: after a dropped connection or a restart it opens that one again. A profile you assign in the editor replaces that pick.
+
 A profile can also be switched by a button (the **Change profile** action), from the drawer on the phone, or automatically by [app rules](/guide/auto-switch).
 
 ## Pages
@@ -46,8 +48,17 @@ Folders are only for the editor. A device sees the same pages and profiles in th
 
 ## Export and import
 
-- **File → Export Profile (.mgprofile)** saves the current profile to a single file.
-- **File → Import Profile (.mgprofile / .json)…** loads one. If a profile with the same name exists you choose **Overwrite** or **Rename**.
+- **File → Share Profile… (.mgprofile)** saves the current profile to a single file.
+- **File → Import Shared Profile… (.mgprofile / .json)…** loads one. If a profile with the same name exists you choose **Overwrite** or **Rename**. Older `.msprofile` files still import.
 - If the imported profile uses a plugin you do not have, the editor lists which one, so you can install it and the buttons will work.
+- Actions that use a file which is not on this PC are listed too.
 
-This is the easiest way to back up a deck or share it with someone.
+This is the easiest way to share one deck with someone.
+
+## Back up and restore
+
+**File → Back Up Everything…** saves your profiles, the profile tree, preferences, global variables, automation rules, the choices for paired devices, plugin settings and language packs in one `.mgbackup` file. **File → Restore…** opens such a file, lists what it holds with a tick box for each item, and brings back the items you tick. A restore deletes nothing.
+
+Passwords, device tokens and pairings are not in a backup. Global variables are backed up as definitions only, not their current values. Automation rules that come back with a restore are switched off, so check them before you switch them on.
+
+Macro Grid also keeps restore points: copies of your data made before a restore, before a profile is deleted or overwritten by an import, and once after an update. They are kept in the `restore-points` folder of your data folder (see [Files and ports](/reference/files)). The editor does not list them yet.

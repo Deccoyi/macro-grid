@@ -27,6 +27,8 @@ Yalnızca değişen bir değişkeni kullanan widget'lar yeniden çizilir ve ciha
 
 Düz süslü parantez yazmak için arka arkaya iki açma ya da iki kapama parantezi yazın. Bulunamayan bir değişken boş metin olarak görünür.
 
+Bir değişkenin değeri yokken metin bunun yerine bir yer tutucu gösterebilir: `{name|biçim|yer tutucu}`, örneğin `CPU {system.cpu|0|--} %`. `{name||n/a}` varsayılan biçimi korur. Yer tutucu yoksa değeri olmayan değişken hiçbir şey göstermez.
+
 ::: info Mantıksal değerler
 Biçim verilmezse mantıksal bir değer *Açık* ve *Kapalı* sözcükleriyle gösterilir. İfadeyi kendiniz belirlemek için `{system.audio.muted|MUTED/LIVE}` gibi kendi biçiminizi verin.
 :::
@@ -44,6 +46,30 @@ Biçim verilmezse mantıksal bir değer *Açık* ve *Kapalı* sözcükleriyle g�
 | `system.audio.muted` | Ses kapalıysa `true` |
 
 Eklentiler çok daha fazlasını ekler (OBS eklentisi yaklaşık 45 tane ekler). Bkz. [Değişkenler başvurusu](/tr/reference/variables). Bir eklenti kurduktan sonra Düzenleyici'nin üst çubuğundaki **Değişkenleri yenile** düğmesine tıklayın.
+
+## Kendi değişkenleriniz
+
+**Tercihler → Genel Değişken Listesi** bölümünde kendi değişkenlerinizi tanımlayın: metin, sayı ya da Doğru / Yanlış değeri. Bunları her yerde `{user.name}` olarak kullanın: metinde, kuralda ya da eylemde. **Değişkene değer ata** eylemi bunları değiştirir (bkz. [Eylemler ve makrolar](/tr/guide/actions)).
+
+- Adı ve türü sonradan değiştirilemez. Birini değiştirmek için değişkeni silin ve yenisini ekleyin.
+- Yeniden başlattıktan sonra, değişken için **Koru** seçeneğini açmadıysanız başlangıç değerinden yeniden başlar.
+- Hâlâ kullanılan bir değişkeni silmeden önce nerelerde kullanıldığı listelenir. Siz düzeltene kadar bu yerler hiçbir şey göstermez.
+
+## Kullanılamayan değişkenler
+
+Değeri olmayan bir değişken **kullanılamaz** durumdadır. Örneğin eklentisi kapalıdır ya da bir sayı değişkeninin başlangıç değeri yoktur. Metin bunun için hiçbir şey göstermez (ya da yer tutucusunu). Bir kural `unavailable` ya da `available` ile bunu sınayabilir. Kullanılamayan bir değişkeni okuyan eylemi olan bir düğme telefonda gri görünür ve küçük bir uyarı işareti taşır. Bkz. [Telefon uygulaması](/tr/guide/phone-app).
+
+## Bu düğme
+
+**Bu düğme** altındaki beş değişken düğmenin kendisini tanımlar. Yalnızca kendi metninde ve kurallarında çalışırlar:
+
+- `self.toggled`: Toggle açıkken açık.
+- `self.busy`: Bu düğmenin eylem listesi 150 ms'den uzun süredir çalışıyorsa açık.
+- `self.pressed`: Parmağınız basılıyken, en az 150 ms boyunca açık.
+- `self.lastResult`: `Success` ya da `Failed`; son çalışmanın nasıl bittiği.
+- `self.lastError`: son çalışmadaki ilk hatanın kodu.
+
+Bir eylemde ya da slider'ın değişkeninde değerleri yoktur.
 
 ## Slider ve knob'lar
 

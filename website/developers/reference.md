@@ -10,7 +10,9 @@ Built-in types are `core.*`; plugin actions are `<plugin id>.*`.
 | `core.typeText` | text |
 | `core.open` | `target`, arguments |
 | `core.openUrl` | `url` (`http://` or `https://`) |
-| `core.delay` | `ms`, up to 60000 |
+| `core.delay` | `ms`, up to 60000 (the editor shows Wait in seconds) |
+| `core.if`, `core.else`, `core.endIf`, `core.stop` | Logic steps: an If with a `when` setting (`condition`, `previousFailed` or `previousOk`), an Else, its End, and Stop |
+| `core.variable.set`, `core.variable.add`, `core.variable.toggle`, `core.variable.reset` | Set variable actions on a `user.<name>` variable, with `value` or `amount` |
 | `core.page` | `mode`: go to a page, `next`, `prev`, `back` |
 | `core.profile` | profile |
 | `core.setVolume` | uses the slider or knob value |
@@ -29,12 +31,22 @@ Types in profile files: `button`, `toggle`, `slider`, `knob`, `label`, `image`, 
 | Toggle | `toggleOn`, `toggleOff` |
 | Slider, Knob | `valueChange` |
 
+## Plugin setting fields
+
+A plugin settings page is built from fields. The kinds are `Text`, `Password`, `Number`, `Slider`, `Bool`, `Select`, `Segmented`, `File`, `List`, `Button`, `Notice`, `Variable`, `Color`, `Hotkey`, `Duration` and `MultiSelect`. The newest three:
+
+| Kind | What it is |
+|---|---|
+| `Hotkey` | A key combination, captured by pressing the keys. |
+| `Duration` | A time that can be shown in milliseconds, seconds or minutes. |
+| `MultiSelect` | Several of the options, each ticked on its own. |
+
 ## Network
 
 | What | Where |
 |---|---|
-| Server | TCP port 9820, all interfaces |
-| Devices (WebSocket) | `ws://<PC address>:9820/ws` |
+| Server | TCP port 9820, all interfaces; TLS port 9821 (`ServerApp.TlsPort`, the port after 9820) |
+| Devices (WebSocket) | `ws://<PC address>:9820/ws`; encrypted: `wss://<PC address>:9821/ws` |
 | Browser deck | `http://<PC address>:9820/deck/` |
 | Editor | `/editor/`; the `/api` endpoints answer only requests from the PC itself |
 | QR code content | `macrogrid://pair?host=<ip>&port=9820&pin=<pin>` |
