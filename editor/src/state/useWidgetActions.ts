@@ -1,12 +1,15 @@
 import { useCallback } from "react";
 import type { ActionBinding, Widget, WidgetType } from "@macro/renderer";
 import { api } from "../api/client";
+import type { PluginWidgetInfo } from "../api/types";
 import { findFreeCell, findFreeCellsForBatch } from "../grid/collision";
 import { useT } from "../i18n/I18nContext";
 import type { DictKey } from "../i18n/tr";
+import { emitDiagnostic, noFreeCellWarning } from "../diagnostics/editorEvents";
 import { setClipboard } from "./clipboard";
 import { showStatusNotice } from "./statusNotice";
 import { tempId } from "./tempId";
+import { defaultWidgetName, nameForPage } from "./widgetNames";
 import type { ProfileDocument } from "./useProfileDocument";
 
 /** Widget-level edits on the current page: add, update, move/resize, action bindings, delete, duplicate, move/copy. */
@@ -20,18 +23,55 @@ export function useWidgetActions({
       if (!currentPage) return;
       const cell = findFreeCell(1, 1, currentPage.widgets, currentPage.cols, currentPage.rows);
       if (!cell) {
+        emitDiagnostic(noFreeCellWarning());
         setError(t("state.noFreeCell"));
         return;
       }
       const widget: Widget = {
         id: tempId("widget"),
         type,
+        name: defaultWidgetName(type, currentPage.widgets.map((w) => w.name)),
         x: cell.x,
         y: cell.y,
         w: 1,
         h: 1,
         text: defaultTextFor(type, t),
         style: {},
+        actions: {},
+      };
+      mutatePage(currentPage.id, (p) => p.widgets.push(widget), { label: "undo.addWidget" });
+      setSelectedIds([widget.id]);
+    },
+    [currentPage, mutatePage, setError, setSelectedIds, t],
+  );
+
+  /** Adds a plugin's custom widget at the size its manifest asks for (as much as fits), with the defaults of its settings. */
+  const addPluginWidget = useCallback(
+    (info: PluginWidgetInfo) => {
+      if (!currentPage) return;
+      const w = Math.min(info.size.w, currentPage.cols);
+      const h = Math.min(info.size.h, currentPage.rows);
+      const cell = findFreeCell(w, h, currentPage.widgets, currentPage.cols, currentPage.rows) ?? findFreeCell(1, 1, currentPage.widgets, currentPage.cols, currentPage.rows);
+      if (!cell) {
+        emitDiagnostic(noFreeCellWarning());
+        setError(t("state.noFreeCell"));
+        return;
+      }
+      const fits = findFreeCell(w, h, currentPage.widgets, currentPage.cols, currentPage.rows) !== null;
+      const settings: Record<string, unknown> = {};
+      for (const field of info.settings ?? [])
+        if (field.default !== undefined && field.default !== null && field.kind !== "Notice" && field.kind !== "Button") settings[field.key] = field.default;
+      const widget: Widget = {
+        id: tempId("widget"),
+        type: "plugin-widget",
+        name: defaultWidgetName("plugin-widget", currentPage.widgets.map((w) => w.name)),
+        x: cell.x,
+        y: cell.y,
+        w: fits ? w : 1,
+        h: fits ? h : 1,
+        text: info.name,
+        style: {},
+        props: { plugin: info.plugin, widget: info.widget, settings },
         actions: {},
       };
       mutatePage(currentPage.id, (p) => p.widgets.push(widget), { label: "undo.addWidget" });
@@ -87,6 +127,7 @@ export function useWidgetActions({
       const cell = findFreeCell(w.w, w.h, currentPage.widgets, currentPage.cols, currentPage.rows);
       return { ...structuredClone(w), id: tempId("widget"), x: cell?.x ?? w.x, y: cell?.y ?? w.y };
     });
+    nameForPage(clones, currentPage.widgets);
     mutatePage(currentPage.id, (p) => p.widgets.push(...clones), { label: "undo.duplicateWidgets" });
     setSelectedIds(clones.map((c) => c.id));
   }, [currentPage, mutatePage, selectedIds, selectedWidgets, setSelectedIds]);
@@ -113,7 +154,10 @@ export function useWidgetActions({
       if (targetProfileId === profile.id) {
         mutate((draft) => {
           const targetPage = draft.pages.find((p) => p.id === targetPageId);
-          if (targetPage) targetPage.widgets.push(...clones);
+          if (targetPage) {
+            nameForPage(clones, targetPage.widgets);
+            targetPage.widgets.push(...clones);
+          }
           if (mode === "move") {
             const sourcePage = draft.pages.find((p) => p.id === currentPage.id);
             if (sourcePage) sourcePage.widgets = sourcePage.widgets.filter((w) => !widgetIds.includes(w.id));
@@ -125,6 +169,7 @@ export function useWidgetActions({
         const target = await api.getProfile(targetProfileId);
         const targetPage = target.pages.find((p) => p.id === targetPageId);
         if (targetPage) {
+          nameForPage(clones, targetPage.widgets);
           targetPage.widgets.push(...clones);
           await api.saveProfile(target);
         }
@@ -154,12 +199,14 @@ export function useWidgetActions({
           cells = findFreeCellsForBatch(toPlace.map((w) => ({ w: w.w, h: w.h })), currentPage.widgets, currentPage.cols, currentPage.rows);
         }
         if (!cells) {
+          emitDiagnostic(noFreeCellWarning());
           setError(t("state.noFreeCell"));
           return;
         }
         showStatusNotice("undo.pastePartial", String(toPlace.length), String(widgets.length));
       }
       const clones = toPlace.map((w, i) => ({ ...structuredClone(w), id: tempId("widget"), x: cells![i]!.x, y: cells![i]!.y }));
+      nameForPage(clones, currentPage.widgets);
       mutatePage(currentPage.id, (p) => p.widgets.push(...clones), { label: "undo.pasteWidgets" });
       setSelectedIds(clones.map((c) => c.id));
     },
@@ -167,7 +214,7 @@ export function useWidgetActions({
   );
 
   return {
-    addWidget, updateWidget, setWidgetRect, setWidgetActions,
+    addWidget, addPluginWidget, updateWidget, setWidgetRect, setWidgetActions,
     deleteWidget, deleteSelectedWidgets, duplicateSelectedWidgets, cutSelectedWidgets, moveOrCopyWidgets, pasteWidgets,
   };
 }
@@ -182,6 +229,7 @@ function defaultTextFor(type: WidgetType, t: ReturnType<typeof useT>["t"]): stri
     case "image": return "";
     case "web": return t("widget.type.web");
     case "plugin-html": return t("widget.type.plugin-html");
+    case "plugin-widget": return "";
     default: return "";
   }
 }

@@ -1,8 +1,14 @@
 import { useCallback, useRef, useState } from "react";
-import { Grid, WidgetView, gridArea, type Page, type Widget } from "@macro/renderer";
+import { CircleAlert, TriangleAlert } from "lucide-react";
+import { Grid, PluginWidgetContext, WidgetView, gridArea, type Page, type Widget } from "@macro/renderer";
 import { useT } from "../i18n/I18nContext";
 import { canPlace, canPlaceExcluding, clamp, overlappingWidgets } from "./collision";
 import { evaluateWidgetDynamicStyle, evaluateWidgetDynamicText } from "./evaluateDynamic";
+import { renderPreviewText } from "./previewText";
+import { selfSample } from "./selfPreview";
+import { useSelfPreview } from "../state/selfPreviewStore";
+import type { WidgetProblems } from "../diagnostics/problemWidgets";
+import { usePluginWidgetPreview } from "./usePluginWidgetPreview";
 
 interface EditorCanvasProps {
   page: Page;
@@ -12,6 +18,8 @@ interface EditorCanvasProps {
   onRectChange: (widgetId: string, rect: { x: number; y: number; w: number; h: number }) => void;
   onContextMenu: (x: number, y: number, widgetId: string) => void;
   variables: Record<string, unknown>;
+  /** Widgets with an error line, with the line's text: each gets a small red marker (drawn in the overlay, never inside the widget). */
+  problemWidgets?: ReadonlyMap<string, WidgetProblems>;
 }
 
 type DragMode = "move" | "resize";
@@ -30,8 +38,10 @@ interface DragState {
  * uses (so "what you see is what you ship"), plus a light-DOM overlay per widget for selection,
  * dragging and resizing. The overlay never touches the widget's own shadow root.
  */
-export function EditorCanvas({ page, selectedIds, onSelect, onToggleSelect, onRectChange, onContextMenu, variables }: EditorCanvasProps) {
+export function EditorCanvas({ page, selectedIds, onSelect, onToggleSelect, onRectChange, onContextMenu, variables, problemWidgets }: EditorCanvasProps) {
   const { t } = useT();
+  const pluginPreview = usePluginWidgetPreview(page.widgets, variables);
+  const selfPreview = useSelfPreview();
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [drag, setDrag] = useState<DragState | null>(null);
   const [previewRect, setPreviewRect] = useState<{ x: number; y: number; w: number; h: number } | null>(null);
@@ -132,6 +142,7 @@ export function EditorCanvas({ page, selectedIds, onSelect, onToggleSelect, onRe
       onPointerCancel={endDrag}
       onPointerDown={() => onSelect([])}
     >
+      <PluginWidgetContext.Provider value={pluginPreview.context}>
       <Grid
         page={page}
         gap={gap}
@@ -140,12 +151,14 @@ export function EditorCanvas({ page, selectedIds, onSelect, onToggleSelect, onRe
           const isSwapTarget = swapWithId === widget.id;
           const rect = isDraggingThis && previewRect ? previewRect : widget;
           const isSelected = selectedIds.includes(widget.id);
+          // The button's own state (the "This button" variables) is not in the live snapshot: draw its resting look, or the look chosen in the Inspector.
+          const widgetVariables = { ...variables, ...selfSample(selfPreview?.widgetId === widget.id ? selfPreview.state : "normal") };
           return (
             <div style={{ position: "relative", width: "100%", height: "100%" }}>
               <WidgetView
-                widget={rect === widget ? widget : { ...widget, ...rect }}
-                liveText={renderPreviewText(evaluateWidgetDynamicText(widget, variables), variables)}
-                liveStyle={evaluateWidgetDynamicStyle(widget, variables)}
+                widget={pluginPreview.withRuntime(rect === widget ? widget : { ...widget, ...rect })}
+                liveText={renderPreviewText(evaluateWidgetDynamicText(widget, widgetVariables), widgetVariables)}
+                liveStyle={evaluateWidgetDynamicStyle(widget, widgetVariables)}
                 haptics={false}
                 // The real page, as the phone will show it; the frame ignores the pointer so the widget can still be selected and dragged.
                 webInteractive={false}
@@ -176,6 +189,15 @@ export function EditorCanvas({ page, selectedIds, onSelect, onToggleSelect, onRe
                   borderRadius: widget.style?.radius ?? 4,
                 }}
               />
+              {problemWidgets?.has(widget.id) && (
+                <div
+                  title={problemWidgets.get(widget.id)?.texts.join(" · ")}
+                  onPointerDown={(e) => { e.stopPropagation(); if (!isSelected) onSelect([widget.id]); }}
+                  style={{ position: "absolute", top: 3, right: 3, display: "flex", color: problemWidgets.get(widget.id)?.level === "error" ? "var(--ms-danger)" : "var(--ms-warning)", background: "var(--ms-bg-surface)", borderRadius: "50%" }}
+                >
+                  {problemWidgets.get(widget.id)?.level === "error" ? <CircleAlert size={14} strokeWidth={2.25} /> : <TriangleAlert size={14} strokeWidth={2.25} />}
+                </div>
+              )}
               {isSelected && (
                 <div
                   onPointerDown={(e) => beginDrag("resize", widget, e)}
@@ -196,6 +218,7 @@ export function EditorCanvas({ page, selectedIds, onSelect, onToggleSelect, onRe
           );
         }}
       />
+      </PluginWidgetContext.Provider>
 
       {drag && previewRect && (
         <div
@@ -239,51 +262,4 @@ export function EditorCanvas({ page, selectedIds, onSelect, onToggleSelect, onRe
 
 function sameRect(a: { x: number; y: number; w: number; h: number }, b: { x: number; y: number; w: number; h: number }): boolean {
   return a.x === b.x && a.y === b.y && a.w === b.w && a.h === b.h;
-}
-
-/**
- * Best-effort local substitution of {name|format} tokens using the one-shot variable snapshot, so a
- * template widget shows something close to what the server's Template.Render would produce, rather
- * than either the raw "{system.cpu}" text or (worse) an unformatted "2026-09-22T10:09:03.006Z". Only
- * approximates the server's number/date formatting — the server's own render always wins at runtime.
- */
-function renderPreviewText(text: string | undefined, variables: Record<string, unknown>): string | undefined {
-  if (!text || !text.includes("{")) return text;
-  return text.replace(/\{\{|\}\}|\{([^{}|]+)(?:\|([^{}]*))?\}/g, (match, name: string | undefined, format: string | undefined) => {
-    if (match === "{{") return "{";
-    if (match === "}}") return "}";
-    if (!name) return match;
-    const value = variables[name.trim()];
-    return value === undefined ? "" : formatPreviewValue(value, format);
-  });
-}
-
-function formatPreviewValue(value: unknown, format: string | undefined): string {
-  if (typeof value === "number") return formatNumber(value, format);
-  if (typeof value === "string" && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/.test(value)) {
-    const date = new Date(value);
-    if (!Number.isNaN(date.getTime())) return formatDate(date, format);
-  }
-  return String(value);
-}
-
-function formatNumber(value: number, format: string | undefined): string {
-  const decimalsMatch = /^0\.(#+)$/.exec(format ?? "0.##");
-  const maxDecimals = decimalsMatch ? decimalsMatch[1]!.length : 0;
-  const fixed = value.toFixed(maxDecimals);
-  return maxDecimals > 0 ? fixed.replace(/\.?0+$/, "") : fixed;
-}
-
-function formatDate(date: Date, format: string | undefined): string {
-  const pad = (n: number) => n.toString().padStart(2, "0");
-  const tokens: Record<string, string> = {
-    HH: pad(date.getHours()),
-    mm: pad(date.getMinutes()),
-    ss: pad(date.getSeconds()),
-    dd: pad(date.getDate()),
-    MM: pad(date.getMonth() + 1),
-    yyyy: date.getFullYear().toString(),
-  };
-  const pattern = format ?? "HH:mm";
-  return pattern.replace(/HH|mm|ss|dd|MM|yyyy/g, (token) => tokens[token] ?? token);
 }

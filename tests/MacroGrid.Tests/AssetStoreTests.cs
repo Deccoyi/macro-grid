@@ -59,4 +59,26 @@ public class AssetStoreTests
     {
         Assert.Null(new AssetStore().Get("0123456789abcdef01234567"));
     }
+
+    [Fact]
+    public void The_oldest_assets_are_dropped_when_the_size_budget_is_exceeded()
+    {
+        var store = new AssetStore(maxEntries: 100, maxChars: 700);
+        var a = store.Put(BigDataUri('A'));
+        var b = store.Put(BigDataUri('B'));
+        var c = store.Put(BigDataUri('C'));
+
+        Assert.Null(store.Get(a[AssetStore.RefPrefix.Length..]));
+        Assert.NotNull(store.Get(b[AssetStore.RefPrefix.Length..]));
+        Assert.NotNull(store.Get(c[AssetStore.RefPrefix.Length..]));
+    }
+
+    [Fact]
+    public void A_single_asset_over_the_budget_is_still_kept()
+    {
+        var store = new AssetStore(maxEntries: 100, maxChars: 10);
+        var a = store.Put(BigDataUri('A'));
+
+        Assert.NotNull(store.Get(a[AssetStore.RefPrefix.Length..]));
+    }
 }

@@ -5,10 +5,11 @@ import type { PluginCatalogEntryInfo, PluginInfo, PluginLinkInspectResult, Plugi
 import { DialogHost } from "../dialogs/DialogHost";
 import { confirmAsync, confirmRichAsync, promptAsync } from "../dialogs/dialogStore";
 import { useT } from "../i18n/I18nContext";
+import { usePreferences } from "../preferences/PreferencesContext";
 import { useDocumentTitle } from "../i18n/useDocumentTitle";
 import { SectionLabel } from "../panels/fields/controls";
 import { ToolWindowLayout } from "./ToolWindowLayout";
-import { httpTargetScope } from "./httpTarget";
+import { permissionLabel } from "./permissionLabel";
 import { InstallConsent } from "./InstallConsent";
 
 type Category = "installed" | "discover";
@@ -19,6 +20,7 @@ const STATUS_COLOR: Record<PluginInfo["status"], string> = {
   Error: "var(--ms-danger)",
   NeedsApproval: "var(--ms-warning, #facc15)",
   NotAllowed: "var(--ms-danger)",
+  Disabled: "var(--ms-text-disabled)",
 };
 
 // The catalog carries no icon of its own yet (docs/roadmap.md, "A richer Discover tab" — deciding what's
@@ -51,6 +53,7 @@ function GetButton({ entry, busy, onGet, large = false }: { entry: PluginCatalog
   const { t } = useT();
   const pad = large ? "6px 26px" : "3px 14px";
   const font = large ? 13 : 11.5;
+  if (entry.withdrawn) return <span style={{ fontSize: 11, color: "var(--ms-warning, #facc15)", flexShrink: 0 }}>{t("plugins.discover.withdrawn")}</span>;
   if (!entry.compatible) return <span style={{ fontSize: 11, color: "var(--ms-warning, #facc15)", flexShrink: 0 }}>{t("plugins.discover.incompatibleShort")}</span>;
   if (entry.installed && !entry.updateAvailable) {
     return <span style={{ fontSize: font, color: "var(--ms-text-disabled)", flexShrink: 0, padding: pad }}>{t("plugins.discover.installed")}</span>;
@@ -79,8 +82,12 @@ function InfoCell({ label, value }: { label: string; value: string }) {
   );
 }
 
-function PluginAvatar({ id, name, size = 36 }: { id: string; name: string; size?: number }) {
+function PluginAvatar({ id, name, size = 36, iconUrl }: { id: string; name: string; size?: number; iconUrl?: string }) {
   const hue = avatarHue(id);
+  const [broken, setBroken] = useState(false);
+  if (iconUrl && !broken) {
+    return <img src={iconUrl} alt="" onError={() => setBroken(true)} style={{ width: size, height: size, borderRadius: 8, flexShrink: 0, objectFit: "contain" }} />;
+  }
   return (
     <div
       style={{
@@ -99,7 +106,17 @@ function PluginAvatar({ id, name, size = 36 }: { id: string; name: string; size?
  * window. Lists what MacroGrid.Core.Plugins.PluginManager found under plugins/, and lets the user
  * install (from a folder), reload or remove a plugin. All of it takes effect immediately — no restart. */
 export function PluginsWindow() {
-  const { t } = useT();
+  const { t, tn } = useT();
+  const { statusBarPlugins, setPluginInStatusBar } = usePreferences();
+  // The "Status bar" switch only makes sense for a plugin that has a status item right now (or was switched on before).
+  const [pluginsWithStatus, setPluginsWithStatus] = useState<Set<string>>(new Set());
+  useEffect(() => {
+    let stopped = false;
+    const load = () => api.getStatus().then((list) => { if (!stopped) setPluginsWithStatus(new Set(list.filter((i) => i.pluginId !== "core").map((i) => i.pluginId))); }).catch(() => {});
+    load();
+    const timer = window.setInterval(load, 4000);
+    return () => { stopped = true; window.clearInterval(timer); };
+  }, []);
   useDocumentTitle("plugins.title");
   const [category, setCategory] = useState<Category>("installed");
   const [plugins, setPlugins] = useState<PluginInfo[] | null>(null);
@@ -107,6 +124,7 @@ export function PluginsWindow() {
   const [uninstallingId, setUninstallingId] = useState<string | null>(null);
   const [reloadingId, setReloadingId] = useState<string | null>(null);
   const [approvingId, setApprovingId] = useState<string | null>(null);
+  const [togglingId, setTogglingId] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -128,13 +146,13 @@ export function PluginsWindow() {
     refresh();
   }, []);
 
-  const refreshCatalog = (source = selectedSource) => {
+  const refreshCatalog = (source = selectedSource, force = false) => {
     setCatalogLoading(true);
     setCatalogError(null);
     setCatalog(null);
     setSelectedEntryId(null);
     api
-      .fetchPluginCatalog(source)
+      .fetchPluginCatalog(source, force)
       .then((response) => {
         setCatalogOfficial(response.official ?? source === "official");
         if (response.error) setCatalogError(response.error);
@@ -205,9 +223,19 @@ export function PluginsWindow() {
       return;
     }
 
+    if (inspected.installed && !inspected.installed.sameSource) {
+      setError(t("plugins.discover.link.installedOther", inspected.installed.trust === "Official" ? t("plugins.badge.official") : inspected.installed.trust === "Local" ? t("plugins.badge.local") : t("plugins.badge.thirdParty")));
+      return;
+    }
+
     const proceed = await confirmRichAsync({
       title: t("plugins.discover.thirdParty.title"),
-      content: <InstallConsent name={inspected.name ?? inspected.id ?? ""} kind={inspected.kind} permissions={inspected.permissions} sourceLabel={`${inspected.owner}/${inspected.repo}`} />,
+      content: (
+        <>
+          {inspected.installed && <div style={{ fontSize: 12, marginBottom: 10, color: "var(--ms-warning, #facc15)" }}>{t("plugins.discover.link.installedSame", inspected.installed.version ?? "?")}</div>}
+          <InstallConsent name={inspected.name ?? inspected.id ?? ""} kind={inspected.kind} permissions={inspected.permissions} sourceLabel={`${inspected.owner}/${inspected.repo}`} />
+        </>
+      ),
       confirmLabel: inspected.kind === "js" ? t("consent.allowInstall") : t("consent.installAnyway"),
       danger: inspected.kind !== "js",
     });
@@ -245,13 +273,47 @@ export function PluginsWindow() {
       .catch(() => {});
   }, [category]);
 
-  const permissionText = (permission: string) => {
-    if (permission === "variables" || permission === "actions" || permission === "input") return t(`plugins.permission.${permission}`);
-    if (permission.startsWith("http:")) {
-      const target = permission.slice(5);
-      return t(`plugins.permission.http.${httpTargetScope(target)}`, target);
+  const permissionText = (permission: string) => permissionLabel(permission, t).text;
+
+  const setHold = async (entry: PluginCatalogEntryInfo, hold: boolean) => {
+    setError(null);
+    try {
+      await api.setPluginHold(entry.id, hold);
+      refresh();
+      refreshCatalog();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
     }
-    return t("plugins.permission.unknown", permission);
+  };
+
+  const goBack = async (entry: PluginCatalogEntryInfo) => {
+    const previous = entry.previous;
+    if (!previous) return;
+    const proceed = await confirmRichAsync({
+      title: t("plugins.goBack.title"),
+      content: <InstallConsent name={entry.name} kind={entry.kind} permissions={previous.permissions} sourceLabel={catalogOfficial ? undefined : currentSourceLabel()} />,
+      confirmLabel: t("plugins.goBack.confirm", previous.version),
+    });
+    if (!proceed) return;
+    setInstallingCatalogId(entry.id);
+    setError(null);
+    setNotice(null);
+    try {
+      // Going back also stays: otherwise the next refresh would offer the newer version again.
+      const result = await api.installFromPluginCatalog(selectedSource, entry.id, previous.version, true);
+      if (result.installed) {
+        setNotice(t("plugins.goBack.done", result.name ?? entry.name, previous.version));
+        approveIfNeeded(entry.id, result.status);
+        refresh();
+        refreshCatalog();
+      } else {
+        setError(t("plugins.discover.installFailed", entry.name, result.error ?? "?"));
+      }
+    } catch (err) {
+      setError(t("plugins.discover.installFailed", entry.name, err instanceof Error ? err.message : String(err)));
+    } finally {
+      setInstallingCatalogId(null);
+    }
   };
 
   const installFromCatalog = async (entry: PluginCatalogEntryInfo, official: boolean, sourceLabel: string) => {
@@ -345,6 +407,31 @@ export function PluginsWindow() {
     }
   };
 
+  const setEnabled = async (plugin: PluginInfo, enabled: boolean) => {
+    setTogglingId(plugin.id);
+    setError(null);
+    setNotice(null);
+    try {
+      await api.setPluginEnabled(plugin.id, enabled);
+      refresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setTogglingId(null);
+    }
+  };
+
+  const switchPermission = async (plugin: PluginInfo, permission: string, enabled: boolean) => {
+    setError(null);
+    setNotice(null);
+    try {
+      await api.setPluginPermission(plugin.id, permission, enabled);
+      refresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    }
+  };
+
   const install = async () => {
     setInstalling(true);
     setError(null);
@@ -393,7 +480,7 @@ export function PluginsWindow() {
   const selectedEntry = catalog?.find((e) => e.id === selectedEntryId) ?? null;
   const needle = query.trim().toLowerCase();
   const visibleEntries = (catalog ?? []).filter((e) =>
-    matchesFilter(e, filter) && (!needle || `${e.name} ${e.author ?? ""} ${e.description ?? ""}`.toLowerCase().includes(needle)));
+    matchesFilter(e, filter) && (!needle || `${e.name} ${e.author ?? ""} ${e.description ?? ""} ${e.category ?? ""} ${(e.tags ?? []).join(" ")}`.toLowerCase().includes(needle)));
   const filterCount = (f: DiscoverFilter) => (catalog ?? []).filter((e) => matchesFilter(e, f)).length;
 
   return (
@@ -437,13 +524,30 @@ export function PluginsWindow() {
                     >
                       {t(`plugins.badge.${p.trust === "ThirdParty" ? "thirdParty" : p.trust === "Official" ? "official" : "local"}`)}
                     </span>
+                    {p.held && <span style={{ fontSize: 10, color: "var(--ms-text-secondary)" }}>{t("plugins.held")}</span>}
                     {catalog?.find((e) => e.id === p.id)?.updateAvailable && (
                       <span style={{ fontSize: 10, color: "var(--ms-warning, #facc15)" }}>{t("plugins.updateAvailable")}</span>
                     )}
                   </div>
                   {p.detail && <div style={{ fontSize: 11, color: "var(--ms-text-secondary)", marginTop: 2 }}>{p.detail}</div>}
+                  {p.withdrawn && <div style={{ fontSize: 11, color: "var(--ms-warning, #facc15)", marginTop: 2 }}>{t("plugins.withdrawn.installedNote")}</div>}
                   {(p.keyboardUsesToday ?? 0) > 0 && (
-                    <div style={{ fontSize: 11, color: "var(--ms-text-secondary)", marginTop: 2 }}>{t("plugins.keyboardUses", String(p.keyboardUsesToday ?? 0))}</div>
+                    <div style={{ fontSize: 11, color: "var(--ms-text-secondary)", marginTop: 2 }}>{tn("plugins.keyboardUses", p.keyboardUsesToday ?? 0)}</div>
+                  )}
+                  {(p.status === "Loaded" || p.status === "Error") && (p.permissions?.length ?? 0) > 0 && (
+                    <details style={{ marginTop: 4 }}>
+                      <summary style={{ fontSize: 11.5, color: "var(--ms-text-secondary)", cursor: "pointer" }}>{t("plugins.permissions.title", String(p.permissions?.length ?? 0))}</summary>
+                      <div style={{ fontSize: 11, color: "var(--ms-text-secondary)", margin: "4px 0" }}>{t("plugins.permissions.hint")}</div>
+                      {(p.permissions ?? []).map((permission) => {
+                        const off = (p.switchedOffPermissions ?? []).includes(permission);
+                        return (
+                          <label key={permission} style={{ display: "flex", alignItems: "flex-start", gap: 6, fontSize: 12, padding: "2px 0" }}>
+                            <input type="checkbox" checked={!off} onChange={(e) => switchPermission(p, permission, e.target.checked)} style={{ marginTop: 2 }} />
+                            <span>{permissionText(permission)}</span>
+                          </label>
+                        );
+                      })}
+                    </details>
                   )}
                   {p.status === "NeedsApproval" && (
                     <div style={{ marginTop: 6 }}>
@@ -459,6 +563,20 @@ export function PluginsWindow() {
                     </div>
                   )}
                 </div>
+                <label
+                  title={t(p.status === "Disabled" ? "plugins.enable" : "plugins.disable")}
+                  style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11.5, padding: 6, flexShrink: 0, cursor: "pointer" }}
+                >
+                  <input type="checkbox" checked={p.status !== "Disabled"} disabled={togglingId === p.id} onChange={(e) => setEnabled(p, e.target.checked)} />
+                  {t(p.status === "Disabled" ? "plugins.state.off" : "plugins.state.on")}
+                </label>
+                {(pluginsWithStatus.has(p.id) || statusBarPlugins?.[p.id]) && <label
+                  title={t("plugins.statusBar.hint")}
+                  style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11.5, padding: 6, flexShrink: 0, cursor: "pointer" }}
+                >
+                  <input type="checkbox" checked={!!statusBarPlugins?.[p.id]} onChange={(e) => setPluginInStatusBar(p.id, e.target.checked)} />
+                  {t("plugins.statusBar")}
+                </label>}
                 {p.hasSettings && (
                   <button
                     type="button"
@@ -519,7 +637,7 @@ export function PluginsWindow() {
           </button>
 
           <div style={{ display: "flex", gap: 16, alignItems: "center" }}>
-            <PluginAvatar id={selectedEntry.id} name={selectedEntry.name} size={84} />
+            <PluginAvatar id={selectedEntry.id} name={selectedEntry.name} size={84} iconUrl={selectedEntry.hasIcon ? api.pluginCatalogIconUrl(selectedSource, selectedEntry.id) : undefined} />
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontSize: 22, fontWeight: 600 }}>{selectedEntry.name}</div>
               {selectedEntry.author && (
@@ -535,8 +653,17 @@ export function PluginsWindow() {
             <InfoCell label={t("plugins.discover.info.version")} value={selectedEntry.latestVersion ? `v${selectedEntry.latestVersion}` : "-"} />
             <InfoCell label={t("plugins.discover.info.type")} value={selectedEntry.kind === "js" ? t("plugins.discover.kind.js") : t("plugins.discover.kind.native")} />
             <InfoCell label={t("plugins.discover.info.source")} value={t(`plugins.badge.${catalogOfficial ? "official" : "thirdParty"}`)} />
-            <InfoCell label={t("plugins.discover.info.access")} value={selectedEntry.kind === "js" ? t("plugins.discover.info.permissionsCount", String(selectedEntry.permissions.length)) : t("plugins.discover.info.fullAccess")} />
+            {selectedEntry.category && <InfoCell label={t("plugins.discover.info.category")} value={selectedEntry.category} />}
+            <InfoCell label={t("plugins.discover.info.access")} value={selectedEntry.kind === "js" ? tn("plugins.discover.info.permissionsCount", selectedEntry.permissions.length) : t("plugins.discover.info.fullAccess")} />
           </div>
+
+          {(selectedEntry.tags?.length ?? 0) > 0 && (
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 12 }}>
+              {selectedEntry.tags?.map((tag) => (
+                <span key={tag} style={{ fontSize: 11, padding: "1px 8px", borderRadius: 10, border: "1px solid var(--ms-border)", color: "var(--ms-text-secondary)" }}>{tag}</span>
+              ))}
+            </div>
+          )}
 
           {selectedEntry.description && (
             <>
@@ -545,10 +672,32 @@ export function PluginsWindow() {
             </>
           )}
 
-          {!selectedEntry.compatible && (
+          {selectedEntry.installed && selectedEntry.sameSource !== false && (
+            <div style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap", marginBottom: 14 }}>
+              <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12.5 }}>
+                <input type="checkbox" checked={selectedEntry.held === true} onChange={(e) => setHold(selectedEntry, e.target.checked)} />
+                {t("plugins.hold")}
+              </label>
+              {selectedEntry.previous && (
+                <button type="button" className="ghost" disabled={installingCatalogId === selectedEntry.id} onClick={() => goBack(selectedEntry)} style={{ fontSize: 12 }}>
+                  {t("plugins.goBack.button", selectedEntry.previous.version)}
+                </button>
+              )}
+            </div>
+          )}
+          {selectedEntry.installed && selectedEntry.sameSource === false && (
+            <div style={{ fontSize: 12, color: "var(--ms-text-secondary)", marginBottom: 14 }}>{t("plugins.otherSource")}</div>
+          )}
+
+          {selectedEntry.withdrawn ? (
+            <div style={{ fontSize: 12, color: "var(--ms-warning, #facc15)", marginBottom: 14 }}>{t("plugins.withdrawn.note")}</div>
+          ) : !selectedEntry.compatible && (
             <div style={{ fontSize: 12, color: "var(--ms-warning, #facc15)", marginBottom: 14 }}>
               {selectedEntry.incompatibleReason ?? t("plugins.discover.incompatible")}
             </div>
+          )}
+          {selectedEntry.installedWithdrawn && !selectedEntry.withdrawn && (
+            <div style={{ fontSize: 12, color: "var(--ms-warning, #facc15)", marginBottom: 14 }}>{t("plugins.withdrawn.installedNote")}</div>
           )}
 
           <SectionLabel>{t("plugins.discover.permissionsLabel")}</SectionLabel>
@@ -583,7 +732,7 @@ export function PluginsWindow() {
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
             <SectionLabel>{t("plugins.category.discover")}</SectionLabel>
             <div style={{ flex: 1 }} />
-            <button type="button" className="ghost" title={t("plugins.refresh")} onClick={() => refreshCatalog()} style={{ display: "flex", padding: 6 }}>
+            <button type="button" className="ghost" title={t("plugins.refresh")} onClick={() => refreshCatalog(selectedSource, true)} style={{ display: "flex", padding: 6 }}>
               <RefreshCw size={14} />
             </button>
           </div>
@@ -681,7 +830,7 @@ export function PluginsWindow() {
                       background: "var(--ms-bg-surface)", cursor: "pointer",
                     }}
                   >
-                    <PluginAvatar id={entry.id} name={entry.name} size={56} />
+                    <PluginAvatar id={entry.id} name={entry.name} size={56} iconUrl={entry.hasIcon ? api.pluginCatalogIconUrl(selectedSource, entry.id) : undefined} />
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: 13.5, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{entry.name}</div>
                       <div style={{ fontSize: 11, color: "var(--ms-text-secondary)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>

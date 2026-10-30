@@ -15,7 +15,7 @@ Where things live. Public entry points (`README.md`, `CONTRIBUTING.md`, `SECURIT
 | File | What it is |
 |---|---|
 | [architecture.md](architecture.md) | How the parts fit together: data model, WebSocket protocol, actions, variables, plugins, security model. |
-| [design/](design/) | One design note per bigger feature (automatic profile switching, layout patches and assets, the JavaScript plugin runtime, variable types, automatic updates, the user agreement acceptance), and the [security risk assessment](design/security-risk-assessment.md). |
+| [design/](design/) | One design note per bigger feature (automatic profile switching, layout patches and assets, the JavaScript plugin runtime, custom plugin widgets, variable types, the Global Variable List, logic steps in action lists, automatic updates, the user agreement acceptance, diagnostics and repair, language packs, backup and restore, automation rules), and the [security risk assessment](design/security-risk-assessment.md). |
 | [plans/](plans/) | Designs of features that are planned and **not implemented yet**, with the priority order in [plans/README.md](plans/README.md). Move a plan to `design/` when the feature ships and is still useful as a reference (see the end of this page). |
 
 ## Working on the code
@@ -28,6 +28,10 @@ Where things live. Public entry points (`README.md`, `CONTRIBUTING.md`, `SECURIT
 | [guides/release.md](guides/release.md) | How a release is made: build, installer, tags. |
 | [ui/ui-guidelines.md](ui/ui-guidelines.md) | UI rules for the editor and the phone deck. |
 | [ui/color-bible.md](ui/color-bible.md) | The color system ([live preview](ui/color-bible-preview.html)). |
+| [ui/properties-panel-mockups/](ui/properties-panel-mockups/index.html) | Properties panel mockups: panels, field-kind catalog, measurements spec, responsive tiers. Rules are in ui-guidelines.md. |
+| [ui/settings-window-design.md](ui/settings-window-design.md) | Settings window design: shell, General, Global variable list, Automation, states, tokens. Mockups in [ui/settings-window-mockups/](ui/settings-window-mockups/index.html). |
+| [ui/variable-picker-design.md](ui/variable-picker-design.md) | Variable picker ("Add variable") window design. Mockups in [ui/variable-picker-mockups/](ui/variable-picker-mockups/index.html). |
+| [ui/dynamize-window-anatomy.md](ui/dynamize-window-anatomy.md) | Dynamize window and Presets window: anatomy, measurements, how to add a preset ([mockups](ui/dynamize-window/)). |
 | [ui/editor-icons.md](ui/editor-icons.md) | Editor icons: format, sizes, colors by state, the full list, and the custom icons to draw ([preview](ui/editor-icons-preview.html)). |
 
 ## Where a new document goes

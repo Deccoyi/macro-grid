@@ -1,6 +1,8 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { api } from "../api/client";
 import type { ServerProblem } from "../api/types";
+import { onDiagnostic } from "./editorEvents";
+import { translateServerMessage } from "./serverMessages";
 import type { Diagnostic } from "./types";
 
 interface DiagnosticsApi {
@@ -16,7 +18,9 @@ const DiagnosticsContext = createContext<DiagnosticsApi | null>(null);
 const POLL_MS = 2000;
 
 function fromServer(p: ServerProblem): Diagnostic {
-  return { id: p.id, source: p.source, sourceName: p.sourceName, severity: p.severity, code: p.code, message: p.message, count: p.count };
+  const known = translateServerMessage(p.message);
+  const text = known ? { messageKey: known.key, messageArgs: known.args } : { message: p.message };
+  return { id: p.id, source: p.source, sourceName: p.sourceName, severity: p.severity, code: p.code, ...text, count: p.count, firstAt: p.firstAt, lastAt: p.lastAt, origin: "server", target: p.target ?? undefined };
 }
 
 /** Error List's data. The editor's own checks call report(); nothing does yet. What the server has seen go wrong (a plugin's refused key press,
@@ -42,6 +46,20 @@ export function DiagnosticsProvider({ children }: { children: ReactNode }) {
     const timer = window.setInterval(poll, POLL_MS);
     return () => { stopped = true; window.clearInterval(timer); };
   }, []);
+
+  // What the editor's own hooks notice (a widget that did not fit): the same message again is counted, not listed twice.
+  useEffect(
+    () =>
+      onDiagnostic((d) =>
+        setBySource((prev) => {
+          const list = prev[d.source] ?? [];
+          const existing = list.find((x) => x.id === d.id);
+          const next = existing ? list.map((x) => (x.id === d.id ? { ...x, count: (x.count ?? 1) + 1 } : x)) : [...list, { ...d, count: 1 }];
+          return { ...prev, [d.source]: next };
+        }),
+      ),
+    [],
+  );
 
   const report = useCallback((source: string, list: Diagnostic[]) => {
     setBySource((prev) => ({ ...prev, [source]: list }));

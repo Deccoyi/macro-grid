@@ -16,6 +16,11 @@ public sealed class PairedDevice
     /// deleted) is treated as unset by <c>ClientHub.OnHelloAsync</c>'s lookup, not an error.</summary>
     public string? AssignedProfileId { get; set; }
 
+    /// <summary>The profile the person last picked on the device itself (the drawer, or a profile button). It is opened again when the device
+    /// reconnects, so a pick survives a dropped connection or a restart of the app; an auto switch does not change it. Cleared when a profile
+    /// is assigned to the device in the editor, since that is a newer, explicit choice. A dangling id (the profile was deleted) is ignored.</summary>
+    public string? LastProfileId { get; set; }
+
     /// <summary>Opt-in: whether this device's session auto-switches profile based on the foreground window
     /// on the server machine (docs/design/auto-profile-switch.md). Off by default — most devices never want this.</summary>
     public bool FollowActiveWindow { get; set; }

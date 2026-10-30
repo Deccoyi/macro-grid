@@ -45,6 +45,7 @@ Nothing that signs is stored on GitHub. The keys stay on the maintainer's PC, ou
 | What | How it is signed or protected | Where the key is | Who checks it | If the key is lost |
 |---|---|---|---|---|
 | **Plugin package** (the release zip) | ECDSA P-256 over the zip, made locally by `scripts/release-plugin.ps1` in `macro-grid-plugin` (`scripts/sign-package.cs`), stored as `<zip>.sig` and in the source index | `%USERPROFILE%\signing\plugin-signing\plugin-signing-private.pem` on the maintainer's PC | The server, with the public key in `PluginSigning.cs`: a valid signature is what makes a plugin **Official** in the editor | A new key, a server release that contains its public key, and every plugin signed again |
+| **Official catalog files** (`index.signed.json`, `revoked.signed.json`) | ECDSA P-256 over the payload bytes with the same plugin key, made locally by `scripts/publish-catalog.ps1` in `macro-grid-plugin` (`scripts/sign-catalog.cs`); each file has a rising `sequence` | the plugin key above | The server, with the same public key: the signature is checked before the file is read, a lower sequence is refused | Same as the plugin key |
 | **Phone app** (the APK) | Android release keystore, used by `scripts\build-release-apk.ps1` in `macro-grid-client`; the APK is uploaded to the draft release by hand | A keystore file outside the repository plus `android\keystore.properties` (git-ignored) | Android: an update installs only over an app signed with the same key. The script also stops when the certificate is not the release certificate | The update path closes for good: every user has to uninstall and reinstall |
 | **Server installer** | Not code-signed (Windows SmartScreen warns on first run) | none | The in-app updater checks the SHA-256 that GitHub reports for the asset | none |
 
@@ -66,7 +67,8 @@ on the maintainer's PC, and `examples/third-party-release.yml` in that repositor
      (`scripts/check-vulnerabilities.ps1`, the same check CI runs), runs `scripts/publish.ps1`, writes the SBOM
      (`scripts/sbom.ps1`, `MacroGrid-Server-<version>.cdx.json`, one file merged from the .NET, editor, deck and renderer parts, attached to the release), zips the folder, builds
      `MacroGrid-Setup-<version>.exe` with Inno Setup (on every tag; the updater downloads exactly this file name) and attaches both to a **draft**
-     GitHub Release whose body is the changelog section from step 3. If the installer is missing from the draft, the app offers the release page
+     GitHub Release whose body is the changelog section from step 3. The same run also builds the plugin tool (`scripts/publish-plugin-tool.ps1`) and attaches
+     `MacroGrid-PluginTool-<version>-win-x64.zip`; the updater ignores it (it looks for the installer's exact name). If the installer is missing from the draft, the app offers the release page
      instead of "Install now".
 9. Test the installer on a clean PC (install, upgrade over the old version, uninstall), and test the update on a PC that has the previous
    version installed (see "Updating from inside the app" below). **Publishing the draft is what reaches people: every running install checks

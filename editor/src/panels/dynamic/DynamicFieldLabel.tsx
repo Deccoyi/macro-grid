@@ -18,7 +18,8 @@ interface DynamicFieldLabelProps {
   iconColor?: string;
 }
 
-/** A field label with a small lightning-bolt button that opens the "make this depend on a variable" modal; lit up (accent color) once dynamized. */
+/** The "make this depend on a variable" bolt of a field: the last action in the field's label row (pass it as `action` of Field). The label text itself is
+ * drawn by Field; `label` only names the property in the modal. Lit up (accent color) once dynamized. */
 export function DynamicFieldLabel({ label, propertyKey, widget, variableCatalog, onChange, resultKind, iconColor }: DynamicFieldLabelProps) {
   const { t } = useT();
   const [open, setOpen] = useState(false);
@@ -26,16 +27,16 @@ export function DynamicFieldLabel({ label, propertyKey, widget, variableCatalog,
   const isDynamic = binding !== undefined;
 
   return (
-    <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
-      {label}
+    <>
       <button
         type="button"
         className="ghost"
         title={isDynamic ? t("dynamic.editTitle") : t("dynamic.addTitle")}
+        aria-label={isDynamic ? t("dynamic.editTitle") : t("dynamic.addTitle")}
         onClick={() => setOpen(true)}
-        style={{ padding: "0 4px", lineHeight: 1, display: "inline-flex", color: isDynamic ? "var(--ms-accent)" : "var(--ms-text-secondary)" }}
+        style={{ color: isDynamic ? "var(--ms-accent)" : "var(--ms-text-secondary)" }}
       >
-        <Zap size={12} />
+        <Zap size={12} fill={isDynamic ? "currentColor" : "none"} />
       </button>
       {open && (
         <DynamizeModal
@@ -54,6 +55,6 @@ export function DynamicFieldLabel({ label, propertyKey, widget, variableCatalog,
           }
         />
       )}
-    </span>
+    </>
   );
 }

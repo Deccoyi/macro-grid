@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>If block UI mockup</title>
+<style>
+/* Tokens copied from editor/src/theme.css (dark default, light via data-theme). */
+:root{--ms-bg-canvas:#1c1e22;--ms-bg-surface:#232529;--ms-bg-surface-raised:#2b2e33;--ms-bg-inset:#16171a;--ms-border:#35383e;--ms-border-strong:#46494f;--ms-text-primary:#e6e7ea;--ms-text-secondary:#9a9ea6;--ms-text-disabled:#5b5e64;--ms-accent:#d97706;--ms-accent-hover:#f59e0b;--ms-accent-bg-muted:rgba(217,119,6,.15);--ms-accent-on:#1c1e22;--ms-danger:#e5584a;--pf-radius:4px;--drop-bg:rgba(217,119,6,.10)}
+:root[data-theme="light"]{--ms-bg-canvas:#f3f4f6;--ms-bg-surface:#fff;--ms-bg-surface-raised:#eceef1;--ms-bg-inset:#e5e7eb;--ms-border:#d4d7dc;--ms-border-strong:#b7bbc2;--ms-text-primary:#1c1e22;--ms-text-secondary:#565b63;--ms-text-disabled:#9a9ea6;--ms-accent:#b45f04;--ms-accent-hover:#d97706;--ms-accent-bg-muted:rgba(180,95,4,.12);--ms-accent-on:#fff;--ms-danger:#b02e21;--drop-bg:rgba(180,95,4,.09)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--ms-bg-canvas);color:var(--ms-text-primary);font:13px/1.4 system-ui,"Segoe UI",sans-serif}
+header.page{padding:20px 24px 8px;display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap}
+header.page h1{font-size:16px;margin:0 0 4px}
+header.page p{margin:0;color:var(--ms-text-secondary);max-width:70ch}
+.tools{margin-left:auto}
+button{font:inherit;color:inherit;background:none;border:1px solid transparent;border-radius:var(--pf-radius);cursor:pointer}
+button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid var(--ms-accent);outline-offset:1px}
+.btn{border-color:var(--ms-border-strong);padding:3px 10px;background:var(--ms-bg-surface)}
+.grid{display:flex;flex-wrap:wrap;gap:28px 32px;padding:12px 24px 40px;align-items:flex-start}
+figure{margin:0;flex:none}
+figcaption{font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--ms-text-secondary);margin-bottom:6px}
+figcaption small{display:block;text-transform:none;letter-spacing:0;font-weight:400;color:var(--ms-text-disabled);max-width:42ch;margin-top:2px}
+.panel{container-type:inline-size;background:var(--ms-bg-surface);border:1px solid var(--ms-border);border-radius:6px;padding:10px}
+.w-wide{width:480px}.w-narrow{width:250px}
+.cards{display:flex;flex-direction:column;gap:8px}
+.card{border:1px solid var(--ms-border);border-radius:var(--pf-radius);background:var(--ms-bg-surface);min-width:0}
+.head{display:flex;align-items:center;gap:6px;height:32px;padding:0 4px 0 6px;border-bottom:1px solid var(--ms-border);font-size:12px;min-width:0}
+.head .name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.num{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:50%;background:var(--ms-accent-bg-muted);color:var(--ms-accent);font-size:10px;font-weight:700;flex:none}
+.ic{width:24px;height:24px;display:inline-flex;align-items:center;justify-content:center;color:var(--ms-text-secondary);flex:none;padding:0}
+.ic:hover{background:var(--ms-bg-surface-raised);color:var(--ms-text-primary)}
+.ic[disabled]{opacity:.35;cursor:default}
+.grip{cursor:grab;color:var(--ms-text-disabled)}
+.body{padding:8px;display:flex;flex-direction:column;gap:6px}
+input,select{font:inherit;color:var(--ms-text-primary);background:var(--ms-bg-inset);border:1px solid var(--ms-border);border-radius:var(--pf-radius);padding:3px 6px;height:26px;min-width:0;width:100%}
+
+/* Block: one spine joins If, Otherwise and End. */
+.block{--spine:var(--ms-accent);position:relative;display:flex;flex-direction:column}
+.block>.rail{display:flex;flex-direction:column}
+.tag{font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:1px 6px;border-radius:3px;background:var(--ms-accent);color:var(--ms-accent-on);flex:none}
+.tag.else{background:var(--ms-bg-surface-raised);color:var(--ms-text-secondary);border:1px solid var(--ms-border-strong)}
+.if-head{display:flex;align-items:center;gap:4px;padding:4px 4px 4px 2px;min-width:0}
+.if-head .sum{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--ms-text-secondary);font-size:12px}
+.if-card{border:1px solid var(--ms-border);border-left:3px solid var(--ms-accent);border-radius:var(--pf-radius);background:var(--ms-bg-canvas)}
+.if-card .cond{padding:0 8px 8px;display:flex;flex-direction:column;gap:6px}
+.lane{margin-left:10px;padding-left:12px;border-left:3px solid var(--ms-accent);display:flex;flex-direction:column;gap:0}
+.lane.else{border-left-color:var(--ms-border-strong)}
+.lane .card{margin:0}
+.else-head{margin-left:10px;border-left:3px solid var(--ms-border-strong);padding:6px 4px 6px 9px;display:flex;align-items:center;gap:6px;background:linear-gradient(90deg,var(--ms-bg-inset),transparent)}
+.end{margin-left:10px;border-left:3px solid var(--ms-accent);border-bottom:1px solid var(--ms-border);padding:4px 0 4px 9px;font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--ms-text-disabled);border-bottom-left-radius:6px}
+
+/* Condition row: container-width based wrap. */
+.crow{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr) minmax(0,1fr) auto;gap:4px;align-items:center}
+@container (max-width:420px){
+  .crow{grid-template-columns:minmax(0,1fr) minmax(0,1fr) auto}
+  .crow .v{grid-column:1/-1;grid-row:1}
+  .crow .o{grid-column:1;grid-row:2}
+  .crow .val{grid-column:2;grid-row:2}
+  .crow .x{grid-column:3;grid-row:2}
+  .crow{padding-bottom:6px;border-bottom:1px dashed var(--ms-border)}
+  .crow:last-of-type{border-bottom:0;padding-bottom:0}
+}
+.join{font-size:11px;color:var(--ms-text-secondary);display:flex;gap:6px;align-items:center}
+.addc{align-self:flex-start;font-size:12px;color:var(--ms-text-secondary);padding:1px 4px}
+.addc:hover{color:var(--ms-accent)}
+
+/* Insertion slot: a hairline with a plus that opens the picker. Always present, quiet until hovered or focused. */
+.slot{position:relative;height:14px;display:flex;align-items:center;justify-content:center;color:var(--ms-text-disabled);margin:0}
+.slot::before{content:"";position:absolute;left:0;right:0;top:50%;height:1px;background:var(--ms-border);opacity:0;transition:opacity .12s}
+.slot button{position:relative;z-index:1;width:18px;height:18px;border-radius:50%;padding:0;font-size:14px;line-height:16px;background:var(--ms-bg-surface);border:1px solid var(--ms-border);color:var(--ms-text-disabled);opacity:.55;transition:opacity .12s,color .12s,border-color .12s}
+.slot:hover::before,.slot:focus-within::before{opacity:1;background:var(--ms-accent)}
+.slot:hover button,.slot button:focus-visible{opacity:1;color:var(--ms-accent);border-color:var(--ms-accent)}
+.slot .lbl{display:none}
+.slot.gap{height:8px}.slot.gap button{opacity:0}.slot.gap:hover button,.slot.gap:focus-within button{opacity:1}
+
+/* Empty block: an explicit target instead of a blank gap. */
+.empty{margin:4px 0;border:1px dashed var(--ms-border-strong);border-radius:var(--pf-radius);padding:8px 10px;display:flex;align-items:center;gap:8px;color:var(--ms-text-secondary);font-size:12px;min-width:0}
+.empty .btn{margin-left:auto;font-size:12px;padding:1px 8px;white-space:nowrap}
+.empty span{min-width:0}
+
+.addrow{display:flex;gap:6px;align-items:center;margin-top:2px}
+.add-main{border:1px solid var(--ms-border-strong);padding:3px 10px;font-size:12px}
+
+/* Drag state */
+.dragging{opacity:.4;border-style:dashed}
+.ghost{position:absolute;pointer-events:none;background:var(--ms-bg-surface-raised);border:1px solid var(--ms-accent);border-radius:var(--pf-radius);box-shadow:0 6px 18px rgba(0,0,0,.35);padding:4px 10px;font-size:12px;z-index:5;display:flex;gap:6px;align-items:center}
+.drag .slot{height:24px;margin:2px 0}
+.drag .slot::before{opacity:1;top:0;bottom:0;height:auto;border:1px dashed var(--ms-accent);background:var(--drop-bg);border-radius:var(--pf-radius)}
+.drag .slot button{display:none}
+.drag .slot .lbl{display:block;position:relative;z-index:1;font-size:11px;color:var(--ms-accent);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:0 6px}
+.drag .slot.over::before{background:var(--ms-accent);border-style:solid}
+.drag .slot.over .lbl{color:var(--ms-accent-on)}
+.drag .empty{border-color:var(--ms-accent);background:var(--drop-bg);color:var(--ms-accent)}
+.drag .empty .btn{display:none}
+.drag .slot.invalid::before{border-color:var(--ms-danger);background:transparent;opacity:.5}
+.drag .slot.invalid .lbl{color:var(--ms-danger)}
+
+.notes{max-width:900px;padding:0 24px 40px;color:var(--ms-text-secondary)}
+.notes h2{font-size:13px;color:var(--ms-text-primary);margin:18px 0 6px}
+.notes li{margin:2px 0}
+kbd{background:var(--ms-bg-surface-raised);border:1px solid var(--ms-border);border-radius:3px;padding:0 4px;font-size:11px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<header class="page">
+  <div>
+    <h1>If / Otherwise / End in the action list</h1>
+    <p>Static mockup for review. One spine joins the three rows into a block. Steps inside sit in a lane; every gap is an insertion slot.</p>
+  </div>
+  <div class="tools"><button class="btn" id="theme" type="button">Switch to light theme</button></div>
+</header>
+
+<div class="grid">
+
+<!-- 1. WIDE -->
+<figure>
+  <figcaption>1 · Wide panel<small>Condition row on one line. A plus sits in every gap: before the block, inside If, inside Otherwise, after the block.</small></figcaption>
+  <div class="panel w-wide"><div class="cards">
+    <div class="slot gap"><button type="button" aria-label="Add action before the block">+</button></div>
+    <div class="block">
+      <div class="if-card">
+        <div class="if-head">
+          <button class="ic" aria-label="Collapse" type="button">▾</button>
+          <span class="grip ic" title="Drag to move">⋮⋮</span>
+          <span class="tag">If</span>
+          <span class="sum"></span>
+          <button class="ic" aria-label="Move up" type="button">↑</button>
+          <button class="ic" aria-label="Move down" type="button">↓</button>
+          <button class="ic" aria-label="Remove (the steps inside stay)" type="button">✕</button>
+        </div>
+        <div class="cond">
+          <select aria-label="If"><option>this condition is met</option></select>
+          <div class="crow"><select class="v" aria-label="Variable"><option>Volume level</option></select><select class="o" aria-label="Operator"><option>is greater than</option></select><input class="val" value="50" aria-label="Value"><button class="ic x" aria-label="Remove condition" type="button">✕</button></div>
+          <div class="join">Match <select style="width:auto" aria-label="Combinator"><option>all</option></select> of these</div>
+          <button class="addc" type="button">+ Add condition</button>
+        </div>
+      </div>
+      <div class="lane">
+        <div class="slot"><button type="button" aria-label="Add action at the start of If">+</button></div>
+        <div class="card"><div class="head"><span class="grip ic">⋮⋮</span><span class="num">1</span><button class="name" style="text-align:left;height:24px" type="button">Set volume</button><button class="ic" type="button" aria-label="Move up">↑</button><button class="ic" type="button" aria-label="Move down">↓</button><button class="ic" type="button" aria-label="Remove">✕</button></div><div class="body"><input value="80" aria-label="Level"></div></div>
+        <div class="slot"><button type="button" aria-label="Add action after step 1, inside If">+</button></div>
+      </div>
+      <div class="else-head"><span class="tag else">Otherwise</span><span style="flex:1"></span><button class="ic" type="button" aria-label="Remove">✕</button></div>
+      <div class="lane else">
+        <div class="slot"><button type="button" aria-label="Add action at the start of Otherwise">+</button></div>
+        <div class="card"><div class="head"><span class="grip ic">⋮⋮</span><span class="num">2</span><button class="name" style="text-align:left;height:24px" type="button">Show notification</button><button class="ic" type="button" aria-label="Move up">↑</button><button class="ic" type="button" aria-label="Move down">↓</button><button class="ic" type="button" aria-label="Remove">✕</button></div><div class="body"><input value="Too quiet" aria-label="Text"></div></div>
+        <div class="slot"><button type="button" aria-label="Add action after step 2, inside Otherwise">+</button></div>
+      </div>
+      <div class="end">End</div>
+    </div>
+    <div class="slot gap"><button type="button" aria-label="Add action after the block">+</button></div>
+    <div class="addrow"><button class="add-main" type="button">+ Add action</button><button class="add-main" type="button">+ Add If</button></div>
+  </div></div>
+</figure>
+
+<!-- 2. NARROW -->
+<figure>
+  <figcaption>2 · Narrow panel<small>Container query (panel width, not viewport): variable gets its own line; operator, value and remove share the second line. No overlap.</small></figcaption>
+  <div class="panel w-narrow"><div class="cards">
+    <div class="block">
+      <div class="if-card">
+        <div class="if-head">
+          <button class="ic" aria-label="Collapse" type="button">▾</button>
+          <span class="tag">If</span><span class="sum"></span>
+          <button class="ic" aria-label="Move up" type="button">↑</button>
+          <button class="ic" aria-label="Move down" type="button">↓</button>
+          <button class="ic" aria-label="Remove" type="button">✕</button>
+        </div>
+        <div class="cond">
+          <select aria-label="If"><option>this condition is met</option></select>
+          <div class="crow"><select class="v" aria-label="Variable"><option>Volume level</option></select><select class="o" aria-label="Operator"><option>is greater than</option></select><input class="val" value="50" aria-label="Value"><button class="ic x" aria-label="Remove condition" type="button">✕</button></div>
+          <div class="crow"><select class="v" aria-label="Variable"><option>Active window title</option></select><select class="o" aria-label="Operator"><option>contains</option></select><input class="val" value="Video" aria-label="Value"><button class="ic x" aria-label="Remove condition" type="button">✕</button></div>
+          <div class="join">Match <select style="width:auto" aria-label="Combinator"><option>all</option></select> of these</div>
+          <button class="addc" type="button">+ Add condition</button>
+        </div>
+      </div>
+      <div class="lane">
+        <div class="slot"><button type="button" aria-label="Add action at the start of If">+</button></div>
+        <div class="card"><div class="head"><span class="grip ic">⋮⋮</span><span class="num">1</span><button class="name" style="text-align:left;height:24px" type="button">Set volume</button><button class="ic" type="button" aria-label="Remove">✕</button></div></div>
+        <div class="slot"><button type="button" aria-label="Add action after step 1">+</button></div>
+      </div>
+      <div class="end">End</div>
+    </div>
+    <div class="addrow"><button class="add-main" type="button">+ Add action</button></div>
+  </div></div>
+</figure>
+
+<!-- 3. EMPTY -->
+<figure>
+  <figcaption>3 · Empty block<small>A new If is not blank. Each empty body shows a placeholder with its own Add button, so the first step goes straight inside.</small></figcaption>
+  <div class="panel w-narrow" style="width:320px"><div class="cards">
+    <div class="block">
+      <div class="if-card">
+        <div class="if-head"><button class="ic" type="button" aria-label="Collapse">▾</button><span class="tag">If</span><span class="sum"></span><button class="ic" type="button" aria-label="Remove">✕</button></div>
+        <div class="cond"><select aria-label="If"><option>the step before failed</option></select><button class="addc" type="button">+ Add otherwise</button></div>
+      </div>
+      <div class="lane">
+        <div class="empty"><span>No actions in If yet. Add one or drop one here.</span><button class="btn" type="button">+ Add action</button></div>
+      </div>
+      <div class="end">End</div>
+    </div>
+  </div></div>
+</figure>
+
+<!-- 4. DRAG -->
+<figure>
+  <figcaption>4 · Dragging step 3<small>Every valid target opens as a labelled drop zone. The one under the pointer is solid. Arrow keys and the existing up/down buttons remain the keyboard path. A zone that would break nesting depth is shown red and refuses the drop.</small></figcaption>
+  <div class="panel w-wide drag" style="position:relative"><div class="cards">
+    <div class="slot over"><span class="lbl">Before the If block</span></div>
+    <div class="block">
+      <div class="if-card"><div class="if-head"><button class="ic" type="button" aria-label="Collapse">▾</button><span class="tag">If</span><span class="sum">Volume level is greater than 50 · 1 step</span></div></div>
+      <div class="lane">
+        <div class="slot"><span class="lbl">Inside If · first</span></div>
+        <div class="card"><div class="head"><span class="grip ic">⋮⋮</span><span class="num">1</span><span class="name">Set volume</span></div></div>
+        <div class="slot"><span class="lbl">Inside If · after step 1</span></div>
+      </div>
+      <div class="else-head"><span class="tag else">Otherwise</span></div>
+      <div class="lane else">
+        <div class="empty"><span>Drop here: inside Otherwise</span></div>
+      </div>
+      <div class="end">End</div>
+    </div>
+    <div class="slot"><span class="lbl">After the If block</span></div>
+    <div class="card dragging"><div class="head"><span class="grip ic">⋮⋮</span><span class="num">3</span><span class="name">Open page</span></div></div>
+    <div class="ghost" style="right:20px;top:150px"><span class="grip">⋮⋮</span> Open page</div>
+  </div></div>
+</figure>
+
+</div>
+
+<div class="notes">
+  <h2>Behaviour in this mockup</h2>
+  <ul>
+    <li>Slots are real buttons: <kbd>Tab</kbd> reaches them, <kbd>Enter</kbd> opens the action picker, and the pick lands at that slot.</li>
+    <li>Gaps between top-level steps stay quiet (plus appears on hover or focus). Gaps inside a block show a faint plus, so the target is discoverable.</li>
+    <li>Drag starts from the grip (⋮⋮) on a step or an If header. Dragging an If carries its whole block; its own inside is not a target.</li>
+    <li>Saved data stays a flat list. The spine, lanes and slots are drawing only.</li>
+    <li>Colours come only from theme tokens. The one accent spine marks If; Otherwise uses the neutral border so only one thing is loud.</li>
+  </ul>
+</div>
+<script>
+document.getElementById("theme").addEventListener("click",function(e){var r=document.documentElement,l=r.dataset.theme==="light";r.dataset.theme=l?"dark":"light";e.target.textContent=l?"Switch to light theme":"Switch to dark theme"});
+</script>
+</body>
+</html>

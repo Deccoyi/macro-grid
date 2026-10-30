@@ -28,6 +28,7 @@ public sealed class SessionDeviceController(ClientSession session, ProfileStore 
     public Task SwitchProfileAsync(string profileId)
     {
         session.AutoSwitch.OnManual(profileId);
+        session.ManualProfileChosen?.Invoke(profileId);
         return ApplyProfileAsync(profileId);
     }
 
@@ -44,6 +45,7 @@ public sealed class SessionDeviceController(ClientSession session, ProfileStore 
         session.PageId = page.Id;
         session.PageHistory.Clear();
         widgetState.ForgetWebViews(session);
+        session.Pressed.Clear(); // a new profile has other buttons; a finger that was down on the old one no longer counts
         session.SentTexts.Clear();
         session.SentStyles.Clear();
         session.SentValues.Clear();
@@ -75,6 +77,8 @@ public sealed class SessionDeviceController(ClientSession session, ProfileStore 
             session.PageHistory.Push(session.PageId);
 
         session.PageId = pageId;
+        // The finger that pressed a button of the old page may never report its release (the button is gone from the screen), so nothing stays held across a page change.
+        session.Pressed.Clear();
         await session.SendAsync(MessageTypes.PageShow, new PageShowMessage(pageId));
         await widgetState.SendInitialAsync(session, page, CancellationToken.None);
     }

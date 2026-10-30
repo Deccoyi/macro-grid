@@ -1,3 +1,5 @@
+using System.Text.Json.Nodes;
+
 namespace MacroGrid.Protocol;
 
 // ---- client -> server ----
@@ -17,6 +19,11 @@ public static class ClientCapabilities
 
     /// <summary>A saved profile edit is sent as a <c>layout.patch</c> (only the changed widgets) instead of a full layout.</summary>
     public const string LayoutPatch = "layout.patch";
+
+    /// <summary>The client can run custom plugin widgets (sandboxed workers drawing to a canvas). A widget's script and images arrive as asset references
+    /// the client fetches with <c>asset.get</c> (which every client may use, whether or not it announced <see cref="Assets"/>). Without this capability a plugin widget
+    /// is sent without its code and the client draws a placeholder.</summary>
+    public const string PluginWidgets = "plugin-widgets";
 }
 
 /// <summary>Client asks for the data of asset references it does not have cached yet.</summary>
@@ -49,7 +56,9 @@ public sealed record ProfilesListPayload(List<ProfileSummary> Profiles, AutoSwit
 /// <summary><paramref name="Style"/> is property name ("background"/"foreground"/"borderColor") to resolved CSS value, from dynamized properties.
 /// <paramref name="Url"/> is for a <c>web</c> widget only: the address this device shows instead of the profile's (set by a button), or an empty string
 /// to go back to the profile's. <paramref name="Reload"/> is a counter for a <c>web</c> widget; a higher number than before means "load the page again".
-/// A client that does not know these two fields ignores them.</summary>
+/// A client that does not know these two fields ignores them.
+/// <paramref name="Unavailable"/> names the variables the widget uses that have no value now (plugin off, removed, disconnected); the client fades the widget and
+/// shows a warning mark. An empty list means "all available again"; null means "no change". A client that does not know the field ignores it.</summary>
 public sealed record WidgetStateMessage(
     string WidgetId,
     string? Text = null,
@@ -57,7 +66,8 @@ public sealed record WidgetStateMessage(
     bool? Active = null,
     Dictionary<string, string>? Style = null,
     string? Url = null,
-    int? Reload = null);
+    int? Reload = null,
+    List<string>? Unavailable = null);
 /// <summary><paramref name="RetryAfterSeconds"/> is set only for <c>pairing_required</c> when the address is
 /// blocked after too many wrong PINs — a machine-readable seconds-to-wait a client can count down with, kept
 /// separate from <paramref name="Message"/> so the prose text can change (wording, translation) without
@@ -68,3 +78,34 @@ public sealed record WidgetStateMessage(
 /// <paramref name="Reason"/> (an older build against a newer server that adds a case) falls back to
 /// <paramref name="Message"/>.</summary>
 public sealed record ErrorMessage(string Code, string Message, int? RetryAfterSeconds = null, string? Reason = null);
+
+// ---- plugin widgets (capability "plugin-widgets") ----
+
+/// <summary>What a plugin widget asks of the server. <paramref name="Kind"/> is one of <see cref="PluginWidgetKinds"/>. The message carries no plugin id:
+/// the server takes it from the widget in the profile this device has open.</summary>
+/// <param name="Id">A positive number chosen by the client for <c>request</c> and <c>run</c>; the reply carries it back.</param>
+/// <param name="Data"><c>request</c>: what the widget sent (at most 16 KB). <c>run</c>: <c>{ action, settings }</c>. <c>subscribe</c>: <c>{ variables: string[] }</c> (at most 32).</param>
+/// <param name="UserGesture">For <c>run</c>: true only when the client's renderer saw a real touch on this widget a moment ago. Only then may a keyboard-using plugin action type.</param>
+public sealed record PluginWidgetRequestMessage(string PageId, string WidgetId, string Kind, int? Id = null, JsonNode? Data = null, bool UserGesture = false);
+
+public static class PluginWidgetKinds
+{
+    /// <summary>The widget's code is running; the server answers with the widget's retained events and current values.</summary>
+    public const string Ready = "ready";
+    public const string Request = "request";
+    public const string Run = "run";
+    public const string Subscribe = "subscribe";
+}
+
+/// <summary>The answer to a <c>request</c> or <c>run</c>. <paramref name="Error"/> is a short code: <c>rate_limited</c>, <c>too_large</c>, <c>not_allowed</c>,
+/// <c>plugin_unavailable</c>, <c>timeout</c>, <c>failed</c>, <c>bad_request</c>.</summary>
+public sealed record PluginWidgetReplyMessage(string WidgetId, int Id, bool Ok, JsonNode? Data = null, string? Error = null, string? Message = null);
+
+/// <summary>Changed values of the variables a widget subscribed to (the current values right after a subscribe).</summary>
+public sealed record PluginWidgetVarsMessage(string WidgetId, Dictionary<string, JsonNode?> Values);
+
+/// <summary>An event the widget's plugin pushed.</summary>
+public sealed record PluginWidgetEventMessage(string WidgetId, string Name, JsonNode? Data);
+
+/// <summary>An error from a widget's own code, for the Error List.</summary>
+public sealed record PluginWidgetErrorMessage(string PageId, string WidgetId, string Message);

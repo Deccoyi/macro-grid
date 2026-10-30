@@ -1,12 +1,11 @@
-import { useState, type ElementType } from "react";
-import { ChevronUp, ChevronDown, Circle, CircleDot, SlidersHorizontal, Timer, ToggleLeft, ToggleRight, X } from "lucide-react";
+import { useEffect, useState, type ElementType } from "react";
+import { Circle, CircleDot, SlidersHorizontal, Timer, ToggleLeft, ToggleRight, TriangleAlert } from "lucide-react";
 import type { ActionBinding, Page, Widget, WidgetEventName } from "@macro/renderer";
 import type { ActionInfo, ProfileSummary, VariableInfo } from "../api/types";
-import { useCatalogText } from "../i18n/catalogText";
 import { useT } from "../i18n/I18nContext";
 import type { DictKey } from "../i18n/tr";
-import { ActionPicker } from "./ActionPicker";
-import { formFor } from "./actionForms/forms";
+import { useWorkspaceUi } from "../workspace/WorkspaceUiContext";
+import { ActionList } from "./ActionList";
 
 interface ActionEditorProps {
   widget: Widget;
@@ -46,7 +45,6 @@ const VALUE_EVENTS: { event: WidgetEventName; key: DictKey; icon: ElementType }[
 
 export function ActionEditor({ widget, actions, pages, profiles, variableCatalog, onChange }: ActionEditorProps) {
   const { t } = useT();
-  const catalogText = useCatalogText();
   const events =
     widget.type === "toggle" ? TOGGLE_EVENTS
     : widget.type === "slider" || widget.type === "knob" ? VALUE_EVENTS
@@ -54,32 +52,28 @@ export function ActionEditor({ widget, actions, pages, profiles, variableCatalog
   const [activeEvent, setActiveEvent] = useState<WidgetEventName>(events[0]!.event);
   const bindings = widget.actions[activeEvent] ?? [];
 
-  const updateBinding = (index: number, next: Partial<ActionBinding>) => {
-    const copy = bindings.map((b, i) => (i === index ? { ...b, ...next } : b));
-    onChange(activeEvent, copy);
-  };
-
-  const addBinding = (type: string) => onChange(activeEvent, [...bindings, { type, settings: {} }]);
-
-  const removeBinding = (index: number) => onChange(activeEvent, bindings.filter((_, i) => i !== index));
-
-  const move = (index: number, dir: -1 | 1) => {
-    const target = index + dir;
-    if (target < 0 || target >= bindings.length) return;
-    const copy = [...bindings];
-    [copy[index], copy[target]] = [copy[target]!, copy[index]!];
-    onChange(activeEvent, copy);
-  };
+  // "Go to widget" from the Error List: show that event, then hand the step to the list, which scrolls to it and outlines it once.
+  const { focusAction, setFocusAction } = useWorkspaceUi();
+  const [focusIndex, setFocusIndex] = useState<number | null>(null);
+  useEffect(() => {
+    if (!focusAction || focusAction.widgetId !== widget.id) return;
+    if (events.some((e) => e.event === focusAction.event) && activeEvent !== focusAction.event) {
+      setActiveEvent(focusAction.event as WidgetEventName);
+      return; // the rows of that event render next; this effect runs again with the right one
+    }
+    setFocusIndex(focusAction.index);
+    setFocusAction(null);
+  }, [focusAction, widget.id, activeEvent, events, setFocusAction]);
 
   const hasLongOrDouble = (widget.actions.longPress?.length ?? 0) > 0 || (widget.actions.doubleTap?.length ?? 0) > 0;
   const hasPressOrRelease = (widget.actions.press?.length ?? 0) > 0 || (widget.actions.release?.length ?? 0) > 0;
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+    <>
       {/* Always 4 columns (the button's event count), regardless of how many events this widget type
          has — so a slider's single "Value changed" cell or a toggle's two cells are exactly the same size
-         as a button's, instead of stretching to fill the row. */}
-      <div style={{ display: "grid", gridTemplateColumns: `repeat(${BUTTON_EVENTS.length}, minmax(0, 1fr))`, gap: 6 }}>
+         as a button's, instead of stretching to fill the row. More events wrap to further rows. */}
+      <div className="pf-events">
         {events.map((e) => {
           const Icon = e.icon;
           const bound = (widget.actions[e.event]?.length ?? 0) > 0;
@@ -100,42 +94,23 @@ export function ActionEditor({ widget, actions, pages, profiles, variableCatalog
       </div>
 
       {widget.type !== "toggle" && hasLongOrDouble && hasPressOrRelease && (
-        <div style={{ fontSize: 11, color: "var(--ms-text-secondary)", background: "var(--ms-bg-inset)", border: "1px solid var(--ms-border)", borderRadius: 4, padding: "6px 8px" }}>
-          {t("action.warning.longDouble")}
+        <div role="note" className="pf-note">
+          <TriangleAlert size={14} />
+          <span>{t("action.warning.longDouble")}</span>
         </div>
       )}
 
-      {bindings.length === 0 && <div style={{ color: "var(--ms-text-secondary)", fontSize: 12 }}>{t("action.none")}</div>}
-
-      {bindings.map((binding, index) => {
-        const actionInfo = actions.find((a) => a.type === binding.type);
-        const Form = formFor(binding.type, actionInfo);
-        return (
-          <div key={index} style={{ border: "1px solid var(--ms-border)", borderRadius: 4, padding: 8, display: "flex", flexDirection: "column", gap: 6 }}>
-            <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-              <ActionPicker
-                actions={actions}
-                onPick={(type) => updateBinding(index, { type, settings: {} })}
-                renderTrigger={(open) => (
-                  <button type="button" className="ghost" onClick={open} style={{ flex: 1, textAlign: "left", justifyContent: "flex-start" }}>
-                    {actionInfo ? catalogText.actionName(actionInfo) : binding.type}
-                  </button>
-                )}
-              />
-              {bindings.length > 1 && (
-                <>
-                  <button className="ghost" onClick={() => move(index, -1)} disabled={index === 0} title={t("action.moveUp")}><ChevronUp size={14} /></button>
-                  <button className="ghost" onClick={() => move(index, 1)} disabled={index === bindings.length - 1} title={t("action.moveDown")}><ChevronDown size={14} /></button>
-                </>
-              )}
-              <button className="ghost" onClick={() => removeBinding(index)} title={t("action.remove")}><X size={14} /></button>
-            </div>
-            <Form binding={binding} pages={pages} profiles={profiles} actionInfo={actionInfo} variableCatalog={variableCatalog} onChange={(settings) => updateBinding(index, { settings })} />
-          </div>
-        );
-      })}
-
-      <ActionPicker actions={actions} onPick={addBinding} />
-    </div>
+      <ActionList
+        key={activeEvent}
+        bindings={bindings}
+        actions={actions}
+        pages={pages}
+        profiles={profiles}
+        variableCatalog={variableCatalog}
+        onChange={(next) => onChange(activeEvent, next)}
+        focusIndex={focusIndex}
+        onFocusDone={() => setFocusIndex(null)}
+      />
+    </>
   );
 }

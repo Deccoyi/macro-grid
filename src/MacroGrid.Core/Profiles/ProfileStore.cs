@@ -24,7 +24,14 @@ public sealed class ProfileStore
     }
 
     public static string DefaultDataDir =>
+#if DEBUG
+        // A development build can run next to an installed copy: its own data folder (with MACROGRID_PORT and MACROGRID_ALLOW_SECOND_INSTANCE).
+        Environment.GetEnvironmentVariable("MACROGRID_DATA_DIR") is { Length: > 0 } dev ? dev :
+#endif
         Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "MacroGrid");
+
+    /// <summary>Raised after a profile was added, renamed or deleted (not for every ordinary save of a profile's content), outside the lock.</summary>
+    public event Action? ListChanged;
 
     public IReadOnlyList<Profile> All
     {
@@ -49,8 +56,9 @@ public sealed class ProfileStore
             _profiles.Remove(id);
             var path = PathFor(id);
             if (File.Exists(path)) File.Delete(path);
-            return true;
         }
+        ListChanged?.Invoke();
+        return true;
     }
 
     public void Save(Profile profile)
@@ -58,13 +66,16 @@ public sealed class ProfileStore
         var json = JsonSerializer.Serialize(profile, FileJson);
         var path = PathFor(profile.Id);
         var tmp = path + ".tmp";
+        bool listChanged;
         lock (_lock)
         {
             // Write-then-rename so a crash never leaves a half written profile.
             File.WriteAllText(tmp, json);
             File.Move(tmp, path, overwrite: true);
+            listChanged = !_profiles.TryGetValue(profile.Id, out var before) || before.Name != profile.Name;
             _profiles[profile.Id] = profile;
         }
+        if (listChanged) ListChanged?.Invoke();
     }
 
     private void Load()
@@ -75,7 +86,11 @@ public sealed class ProfileStore
             {
                 var profile = JsonSerializer.Deserialize<Profile>(File.ReadAllText(file), FileJson);
                 if (profile is not null)
+                {
+                    // Names for old profiles are filled in memory only; the file is rewritten by the next ordinary save, so loading never touches it.
+                    WidgetNames.Ensure(profile);
                     _profiles[profile.Id] = profile;
+                }
             }
             catch (JsonException)
             {
@@ -173,6 +188,8 @@ public sealed class ProfileStore
             ],
         };
 
-        return new Profile { Name = AppLanguage.Pick("Default", "Varsayılan"), Pages = [page1, page2] };
+        var profile = new Profile { Name = AppLanguage.Pick("Default", "Varsayılan"), Pages = [page1, page2] };
+        WidgetNames.Ensure(profile);
+        return profile;
     }
 }

@@ -1,5 +1,5 @@
-import type { Profile } from "@macro/renderer";
-type SettingFieldKind = "Text" | "Password" | "Number" | "Slider" | "Bool" | "Select" | "Segmented" | "File" | "List" | "Button" | "Notice";
+import type { ActionBinding, ConditionNode, Profile } from "@macro/renderer";
+type SettingFieldKind = "Text" | "Password" | "Number" | "Slider" | "Bool" | "Select" | "Segmented" | "File" | "List" | "Button" | "Notice" | "Variable" | "Color" | "Hotkey" | "Duration" | "MultiSelect";
 
 export interface SettingOption {
   value: string;
@@ -84,6 +84,76 @@ export type VariableSnapshot = Record<string, unknown>;
 /** Mirrors MacroGrid.Plugin.Abstractions.VariableType (sent as these strings). */
 export type VariableType = "text" | "number" | "boolean" | "duration" | "dateTime";
 
+/** Mirrors MacroGrid.Core.Variables.UserVariable: a variable from the Global Variable List. The name and type never change after creation. */
+export type UserVariableType = "text" | "number" | "boolean";
+
+export interface UserVariableDef {
+  name: string;
+  type: UserVariableType;
+  /** The start value; missing or null means "no value yet" (a text variable always has one). */
+  initial?: string | number | boolean | null;
+  keep: boolean;
+  description: string;
+}
+
+export interface UserVariablesResponse {
+  variables: UserVariableDef[];
+  limits: { maxCount: number; maxNameLength: number; maxDescriptionLength: number; maxTextLength: number };
+}
+
+/** Mirrors MacroGrid.Core.Automation: one trigger; only the fields of its kind are used. */
+export type AutomationTriggerKind = "variable" | "time" | "deviceConnect";
+
+export interface AutomationTrigger {
+  kind: AutomationTriggerKind;
+  condition?: ConditionNode | null;
+  /** "HH:mm". */
+  time?: string | null;
+  /** 0 = Sunday ... 6 = Saturday; empty = every day. */
+  days: number[];
+  /** null = any paired device. */
+  deviceId?: string | null;
+}
+
+export interface AutomationRuleDef {
+  id: string;
+  name: string;
+  enabled: boolean;
+  trigger: AutomationTrigger;
+  actions: ActionBinding[];
+  cooldownSeconds: number;
+}
+
+export interface AutomationRuleStatus {
+  running: boolean;
+  lastStart?: string | null;
+  lastResult: "none" | "ok" | "failed" | "refused";
+  lastMessage?: string | null;
+  runs: number;
+}
+
+export interface AutomationResponse {
+  paused: boolean;
+  rules: AutomationRuleDef[];
+  limits: { maxRules: number; maxNameLength: number; maxSteps: number; maxCooldownSeconds: number; maxComparisons: number };
+  status: Record<string, AutomationRuleStatus>;
+}
+
+export interface AutomationRuleUse {
+  id: string;
+  name: string;
+}
+
+export interface UserVariableUse {
+  profileId: string;
+  profileName: string;
+  pageId: string;
+  pageName: string;
+  widgetId: string;
+  widgetName: string;
+  spot: "text" | "dynamic" | "action" | "props";
+}
+
 export interface VariableInfo {
   name: string;
   description: string;
@@ -103,7 +173,7 @@ export interface PluginInfo {
   id: string;
   name: string;
   version: string;
-  status: "Loaded" | "Incompatible" | "Error" | "NeedsApproval" | "NotAllowed";
+  status: "Loaded" | "Incompatible" | "Error" | "NeedsApproval" | "NotAllowed" | "Disabled";
   detail: string | null;
   hasSettings: boolean;
   /** For "NeedsApproval": the permissions a JS plugin declares and is waiting to be allowed. */
@@ -115,14 +185,21 @@ export interface PluginInfo {
    * older server (treat as "Local"). Only GET /api/plugins sends this; approve/reload's single-plugin response
    * does not, since the caller already has it from the list. */
   trust?: "Official" | "ThirdParty" | "Local";
+  /** The person chose to stay on this version (no update offered). Missing from an older server. */
+  held?: boolean;
   /** True when the running plugin implements the optional `IPluginTreeProvider` — only then does the Plugins
    * tool window give it a chevron and ask GET /api/plugins/{id}/tree-items for anything. Missing from an
    * older server (treat as false). See docs/design/plugins-tool-window.md. */
   hasTreeItems?: boolean;
   /** True only in a development build, for a C# plugin that loaded without a valid signature. */
   unsigned?: boolean;
+  /** The installed version was withdrawn by its publisher (from the saved catalog copy; no network). Missing from an older server. */
+  withdrawn?: boolean;
   /** How many button presses used the keyboard through this JavaScript plugin today. Missing from an older server. */
   keyboardUsesToday?: number;
+  /** A running JavaScript plugin's approved permissions, and the ones the person switched off. Missing from an older server. */
+  permissions?: string[] | null;
+  switchedOffPermissions?: string[] | null;
 }
 
 /** Mirrors MacroGrid.Plugin.Abstractions.PluginTreeItem — one node of a plugin's own tree in the Plugins tool
@@ -205,6 +282,11 @@ export interface PluginCatalogEntryInfo {
   author: string | null;
   homepage: string | null;
   kind: string;
+  /** What to browse by and search words, from the catalog; missing or empty when the plugin did not declare any. */
+  category?: string | null;
+  tags?: string[];
+  /** True when the catalog names an icon for this plugin: fetch it from api.pluginCatalogIconUrl(source, id). */
+  hasIcon?: boolean;
   /** The newest version listed, whether or not this server can run it. */
   latestVersion: string | null;
   /** The newest version this server's SDK and version actually satisfy — what Install would fetch. Null
@@ -213,11 +295,23 @@ export interface PluginCatalogEntryInfo {
   compatible: boolean;
   /** Why the latest version cannot be installed here (for example "Needs Macro Grid editor 1.3.0 or newer, this is 1.2.4"); null when compatible. */
   incompatibleReason: string | null;
+  /** True when the entry lists versions but the publisher withdrew every one (or the official list switched them off): nothing is left to install. Missing from an older server. */
+  withdrawn?: boolean;
+  /** The installed version carries the publisher's withdrawn flag. Missing from an older server. */
+  installedWithdrawn?: boolean;
   permissions: string[];
   installed: boolean;
   installedVersion: string | null;
-  /** True when installableVersion is newer than the installed version. */
+  /** True when installableVersion is newer than the installed version, the plugin came from this source, and the person did not choose to stay on the installed version (unless it was withdrawn or switched off). */
   updateAvailable: boolean;
+  /** False when the plugin was installed from a different source than the one listed. Missing from an older server (treat as true). */
+  sameSource?: boolean;
+  /** The person chose to stay on the installed version. Missing from an older server. */
+  held?: boolean;
+  /** The next older version on offer below the installed one, with the permissions it asks for; null when there is none. */
+  previous?: { version: string; permissions: string[] } | null;
+  /** The source the plugin was installed from, when that is not the listed one. */
+  otherSource?: string | null;
   /** "Official" | "ThirdParty" | "Local" | null (not installed and no recorded origin). */
   trust: string | null;
 }
@@ -235,6 +329,8 @@ export interface ServerProblem {
   count: number;
   firstAt: string;
   lastAt: string;
+  /** Where in a profile the problem happened, when it belongs to a widget. */
+  target?: { profileId: string; pageId?: string; widgetId?: string; event?: string; actionIndex?: number } | null;
 }
 
 export interface PluginCatalogResponse {
@@ -289,6 +385,8 @@ export interface PluginLinkInspectResult {
   permissions?: string[];
   compatible?: boolean;
   incompatibleReason?: string | null;
+  /** Set when a plugin with this id is already installed; `sameSource` is false when it came from another source (an install is then refused). */
+  installed?: { version?: string | null; trust: "Local" | "Official" | "ThirdParty"; sameSource: boolean } | null;
   error?: string;
   code?: string;
 }
@@ -364,9 +462,12 @@ export interface DockLayoutProfile {
  * cache or a different WebView profile. */
 export interface AppPreferences {
   theme: "dark" | "light";
-  language: "tr" | "en";
+  /** "tr" or "en", or the tag of an installed language pack. */
+  language: string;
   previewProfiles: PreviewProfileInfo[];
   collapsedInspectorSections: Record<string, boolean>;
+  /** Notes the person closed with "do not show again", by id. */
+  dismissedNotices: Record<string, boolean>;
   /** Fallback profile a device resolves to with no explicit assignment and no auto-switch rule currently
    * applying — see docs/design/auto-profile-switch.md. Null means "no preference set". */
   defaultProfileId: string | null;
@@ -378,6 +479,10 @@ export interface AppPreferences {
   checkForUpdates: boolean;
   /** Whether pre-releases (alpha versions) count as updates. */
   includePreReleases: boolean;
+  /** Whether other devices may connect without encryption (the plain port, which the browser deck needs). On by default. */
+  allowUnencrypted: boolean;
+  /** Plugins whose status items show in the status bar (id to true). A plugin that is not listed is hidden there. */
+  statusBarPlugins: Record<string, boolean>;
   /** The docking workspace arrangement last left in — see DockLayoutProfile's `layoutJson`. Empty until
    * the user changes the layout at least once. */
   dockLayoutJson: string;
@@ -416,7 +521,7 @@ export interface UpdateInstallStatus {
 
 export type UpdateCheckOutcome = "available" | "upToDate" | "failed";
 
-/** A plugin a packaged profile needs (from the manifest of a .msprofile file). */
+/** A plugin a packaged profile needs (from the manifest of a .mgprofile file). */
 interface PackagePluginRef {
   id: string;
   name: string;
@@ -432,8 +537,93 @@ export interface ImportProfileResult {
   missingPlugins?: PackagePluginRef[];
   /** Action types in the profile that no installed plugin or built-in provides (also covers plain JSON files, which carry no manifest). */
   unknownActionTypes?: string[];
+  /** Files named by an action that are not on this PC. */
+  missingFiles?: { page: string; widget: string; path: string }[];
+  /** Plugin widget variable choices that pointed outside their own plugin and were cleared. */
+  clearedWidgetBindings?: number;
+}
+
+export type RestoreItemKind = "profile" | "profileTree" | "preferences" | "variables" | "automation" | "device" | "pluginSettings" | "languagePack";
+export type RestoreItemState = "new" | "different" | "same";
+
+export interface RestoreItem {
+  kind: RestoreItemKind;
+  key: string;
+  name: string;
+  state: RestoreItemState;
+  names: string[];
+  herePages?: number | null;
+  hereWidgets?: number | null;
+  backupPages?: number | null;
+  backupWidgets?: number | null;
+  added?: number | null;
+  changed?: number | null;
+  skipped?: number | null;
+  hereVersion?: number | null;
+  backupVersion?: number | null;
+}
+
+/** A warning is a code plus values; the editor words it (restore.warn.<code>). */
+export interface RestoreWarning {
+  code: string;
+  args: string[];
+}
+
+export interface InspectBackupResult {
+  path: string | null;
+  result?: {
+    id: string;
+    manifest: { createdAt: string; serverVersion: string; reason: string };
+    items: RestoreItem[];
+    warnings: RestoreWarning[];
+  };
+}
+
+export interface RestoreItemResult {
+  kind: RestoreItemKind;
+  key: string;
+  ok: boolean;
+  error: string | null;
+  warnings: RestoreWarning[];
 }
 
 export interface ExportProfileResult {
   path: string | null;
+}
+
+/** One custom widget a plugin offers (GET /api/plugin-widgets): what the Toolbox lists and the Inspector draws a settings form from. */
+export interface PluginWidgetInfo {
+  plugin: string;
+  pluginName: string;
+  widget: string;
+  name: string;
+  description?: string | null;
+  category?: string | null;
+  size: { w: number; h: number };
+  fps: number;
+  interactive: boolean;
+  /** The abilities the widget declared and the person approved (keepLoaded, storage). */
+  options: string[];
+  /** The declared options that start switched off on a placed widget. */
+  optionsOff?: string[];
+  /** The widget's Toolbox icon as an SVG data URI, when the plugin ships one. */
+  icon?: string | null;
+  /** False for a plugin that is not verified (every JavaScript plugin). */
+  verified: boolean;
+  settings?: SettingField[] | null;
+}
+
+/** One installed language pack as GET /api/languages lists it. */
+export interface LanguagePackInfo {
+  tag: string;
+  name: string;
+  version: number;
+}
+
+/** The stored file of a language pack (docs/design/language-packs.md). The server checks the container; the editor checks every string. */
+export interface LanguagePackFile {
+  meta: { format: number; tag: string; name: string; version: number; appVersion?: string };
+  strings: Record<string, string>;
+  /** A short hash of the English text each row was translated from, to find rows that need review. */
+  sources?: Record<string, string>;
 }

@@ -23,6 +23,9 @@ public sealed class ClientSession(WebSocket socket)
     public string? ProfileId { get; internal set; }
     public string? PageId { get; internal set; }
 
+    /// <summary>Called when the person switches profile by hand (not an auto switch), so the hub can remember it for the device.</summary>
+    internal Action<string>? ManualProfileChosen { get; set; }
+
     /// <summary>Pages this client navigated away from, for <c>core.page</c> "back". Only touched by this session's own single-threaded action queue.</summary>
     internal Stack<string> PageHistory { get; } = new();
 
@@ -39,6 +42,17 @@ public sealed class ClientSession(WebSocket socket)
     /// <summary>Last pushed slider/knob live value per widget id (from its bound variable), so <see cref="WidgetStateService"/> only re-sends on an actual change.</summary>
     internal ConcurrentDictionary<string, double> SentValues { get; } = new();
 
+    /// <summary>Last pushed list of unavailable variables per widget id (joined names, empty when none), so <see cref="WidgetStateService"/> only re-sends on an actual change.</summary>
+    internal ConcurrentDictionary<string, string> SentUnavailable { get; } = new();
+
+    /// <summary>Widgets whose actions have been running for a while on this device, and widgets held down on it (widget id to when the press began). Back <c>self.busy</c> and <c>self.pressed</c>.</summary>
+    internal ConcurrentDictionary<string, bool> Busy { get; } = new();
+    internal ConcurrentDictionary<string, DateTime> Pressed { get; } = new();
+
+    /// <summary>Widgets this device has pressed and not yet released (widget id to page id). Unlike <see cref="Pressed"/>, which is only a look and lingers after a quick tap,
+    /// this is what the server still owes a release for when the device disappears.</summary>
+    internal ConcurrentDictionary<string, string> Held { get; } = new();
+
     /// <summary>Optional protocol features this client announced in its <c>hello</c> (see <see cref="ClientCapabilities"/>).</summary>
     internal HashSet<string> Capabilities { get; set; } = [];
 
@@ -51,6 +65,9 @@ public sealed class ClientSession(WebSocket socket)
     /// <summary>Layout sends for one client must not interleave, or a patch could be computed against a baseline
     /// the client never received.</summary>
     internal SemaphoreSlim LayoutLock { get; } = new(1, 1);
+
+    /// <summary>What the plugin widget router keeps for this device (subscriptions, rate buckets).</summary>
+    internal PluginWidgetSessionState WidgetBridge { get; } = new();
 
     internal WebSocket Socket => socket;
 

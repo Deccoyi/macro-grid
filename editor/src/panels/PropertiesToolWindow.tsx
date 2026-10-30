@@ -12,6 +12,15 @@ import { ProfileProperties } from "./ProfileProperties";
  * and docs/design/plugins-tool-window.md — the two tool windows share this through a module-level store
  * rather than a context, since neither is an ancestor of the other). */
 export function PropertiesToolWindow() {
+  // The size container the field system reacts to (see theme.css, the @container rules); it also owns the vertical scrolling.
+  return (
+    <div className="pf-root">
+      <PropertiesContent />
+    </div>
+  );
+}
+
+function PropertiesContent() {
   const state = useEditorStateContext();
   const profileTree = useProfileTreeContext();
   const { openMoveCopyForWidgets, profilePropertiesTarget } = useWorkspaceUi();
@@ -34,7 +43,7 @@ export function PropertiesToolWindow() {
           appMatches={isCurrent ? (profile.appMatches ?? []) : []}
           onAppMatchesChange={state.setAppMatches}
           onRename={(name) => state.renameProfile(name)}
-          onDelete={async () => { await state.deleteProfile(profile.id); profileTree.removeProfileNode(profile.id); }}
+          onDelete={async () => { if (await state.deleteProfile(profile.id)) profileTree.removeProfileNode(profile.id); }}
           canDelete={state.profiles.length > 1}
         />
       );
@@ -50,6 +59,7 @@ export function PropertiesToolWindow() {
       actions={state.actions}
       variableCatalog={state.variableCatalog}
       onChange={(fn) => state.selectedWidget && state.updateWidget(state.selectedWidget.id, fn)}
+      onRename={(name) => state.selectedWidget && state.updateWidget(state.selectedWidget.id, (w) => { w.name = name; }, { label: "undo.renameWidget" })}
       onDelete={() => state.selectedWidget && state.deleteWidget(state.selectedWidget.id)}
       onDeleteSelected={state.deleteSelectedWidgets}
       onDuplicateSelected={state.duplicateSelectedWidgets}

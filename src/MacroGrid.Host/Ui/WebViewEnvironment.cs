@@ -29,6 +29,32 @@ internal static class WebViewEnvironment
         web.Settings.IsPasswordAutosaveEnabled = false;
     }
 
+    /// <summary>The editor's preview runs plugin widget code, and such a widget can run out of memory and end the page's renderer process. Left alone the
+    /// window turns blank. The page is loaded again instead, with <c>widgetCrash=1</c> so the editor can switch off the plugins that had live widgets
+    /// (see <c>widgetCrashGuard.ts</c> in the editor). A renderer that keeps dying is not restarted again and again: three losses within a minute leave
+    /// the window as it is. A frame's own process ending (a widget's sandboxed frame) does not affect the page and is left to the widget watchdog.</summary>
+    private static void KeepAliveAfterRendererLoss(CoreWebView2 web, string url)
+    {
+        var losses = new Queue<DateTime>();
+        web.ProcessFailed += (_, e) =>
+        {
+            if (e.ProcessFailedKind != CoreWebView2ProcessFailedKind.RenderProcessExited) return;
+            var now = DateTime.UtcNow;
+            while (losses.Count > 0 && now - losses.Peek() > TimeSpan.FromMinutes(1)) losses.Dequeue();
+            losses.Enqueue(now);
+            if (losses.Count >= 3) return;
+            web.Navigate(WithCrashMarker(url));
+        };
+    }
+
+    internal static string WithCrashMarker(string url)
+    {
+        var fragment = url.IndexOf('#');
+        var head = fragment >= 0 ? url[..fragment] : url;
+        var tail = fragment >= 0 ? url[fragment..] : "";
+        return head + (head.Contains('?') ? "&" : "?") + "widgetCrash=1" + tail;
+    }
+
     private static string[] CandidateFolders() =>
     [
         Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "MacroGrid", "WebView2"),
@@ -38,6 +64,10 @@ internal static class WebViewEnvironment
 
     // The folder that worked once, reused by every later window so they all share one browser environment.
     private static string? _workingFolder;
+
+    // Windows that share one user data folder must create their environment with identical options, or WebView2 refuses the later ones
+    // (0x8007139F). The language is therefore fixed by the first window of a run; switching the editor language later does not need it.
+    private static string? _browserLanguage;
 
     /// <summary>Creates a WebView2 control inside <paramref name="host"/> and navigates it to <paramref name="url"/>. With
     /// <paramref name="followDocumentTitle"/> the window title tracks the page's document title.
@@ -57,7 +87,7 @@ internal static class WebViewEnvironment
                 host.Controls.Add(view);
                 var environment = await CoreWebView2Environment.CreateAsync(
                     browserExecutableFolder: null, userDataFolder: folder,
-                    options: new CoreWebView2EnvironmentOptions { Language = HostText.Language == "tr" ? "tr-TR" : "en-US" });
+                    options: new CoreWebView2EnvironmentOptions { Language = _browserLanguage ??= HostText.Language == "tr" ? "tr-TR" : "en-US" });
                 await view.EnsureCoreWebView2Async(environment);
                 // The editor sets document.title from the language preference, so the native title bar follows it.
                 if (followDocumentTitle)
@@ -75,6 +105,7 @@ internal static class WebViewEnvironment
                 };
                 view.CoreWebView2.ContextMenuRequested += (_, e) => ShowLocalizedContextMenu(view, e);
                 LockDown(view.CoreWebView2);
+                KeepAliveAfterRendererLoss(view.CoreWebView2, url);
                 view.CoreWebView2.Navigate(url);
                 _workingFolder = folder;
                 return;

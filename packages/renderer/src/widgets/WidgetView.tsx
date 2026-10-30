@@ -9,7 +9,8 @@ import { ImageContent } from "./ImageContent";
 import { KnobContent } from "./KnobContent";
 import { PlaceholderContent } from "./PlaceholderContent";
 import { SliderContent } from "./SliderContent";
-import { WebContent, type WebTexts } from "./WebContent";
+import { PluginWidgetContent } from "./pluginWidget/PluginWidgetContent";
+import { WebContent, type WebBlocked, type WebTexts } from "./WebContent";
 
 export interface WidgetViewProps {
   widget: Widget;
@@ -33,6 +34,16 @@ export interface WidgetViewProps {
   webBlockedHosts?: readonly string[];
   /** A `web` widget only: replaces the English words of the placeholder. */
   webTexts?: Partial<WebTexts>;
+  /** A `web` widget only: draw a placeholder with a button instead of the page (the site crashed the app, or the widget waits with "Tap to load"). */
+  webBlocked?: WebBlocked;
+  /** A `plugin-widget` only: false when its page is not the one shown (its worker is stopped, or paused when it keeps itself loaded). Default true. */
+  pluginLive?: boolean;
+  /** Variables this widget uses that have no value now (from widget.state). A non-empty list fades the widget; the editor preview passes it too. */
+  unavailable?: readonly string[];
+  /** When set, a small warning mark sits in the corner of an unavailable widget and this is called with the variable names when it is pressed. */
+  onUnavailableTap?: (names: readonly string[]) => void;
+  /** Accessible name and tooltip of the warning mark. */
+  unavailableLabel?: string;
   onPress?: () => void;
   onRelease?: () => void;
   onLongPress?: () => void;
@@ -61,6 +72,11 @@ export function WidgetView({
   webLive,
   webBlockedHosts,
   webTexts,
+  webBlocked,
+  pluginLive,
+  unavailable,
+  onUnavailableTap,
+  unavailableLabel,
   onPress,
   onRelease,
   onLongPress,
@@ -80,21 +96,31 @@ export function WidgetView({
   const baseCss = useMemo(() => widgetBaseCss(effectiveStyle), [effectiveStyle]);
   const { css: customCss } = useMemo(() => sanitizeWidgetCss(widget.customCss), [widget.customCss]);
   const interactive = !NON_INTERACTIVE_TYPES.has(widget.type);
+  // A widget shown as unavailable does not run its actions: a press only names the missing sources (when the app can show that).
+  const blocked = unavailable !== undefined && unavailable.length > 0 && onUnavailableTap !== undefined;
   const gesture = usePressGesture({ onPress, onRelease, onLongPress, onDoubleTap, haptics });
 
   const text = liveText ?? widget.text ?? "";
 
-  return (
+  const faded = unavailable !== undefined && unavailable.length > 0;
+  const hostStyle: CSSProperties = {
+    touchAction: interactive && widget.type !== "web" ? "none" : "auto",
+    cursor: interactive ? "pointer" : "default",
+    ...style,
+    ...(faded ? { opacity: Number(style?.opacity ?? 1) * UNAVAILABLE_OPACITY, ...(blocked ? { filter: "grayscale(1)" } : null) } : null),
+  };
+
+  const view = (
     <ShadowHost
       baseCss={baseCss}
       customCss={customCss}
       active={liveActive}
       className={className}
       // A web page scrolls and zooms inside its own frame: the widget's press handling must not claim its touches.
-      style={{ touchAction: interactive && widget.type !== "web" ? "none" : "auto", cursor: interactive ? "pointer" : "default", ...style }}
-      onPointerDown={interactive ? gesture.onPointerDown : undefined}
-      onPointerUp={interactive ? gesture.onPointerUp : undefined}
-      onPointerCancel={interactive ? gesture.onPointerCancel : undefined}
+      style={hostStyle}
+      onPointerDown={blocked ? () => onUnavailableTap(unavailable) : interactive ? gesture.onPointerDown : undefined}
+      onPointerUp={interactive && !blocked ? gesture.onPointerUp : undefined}
+      onPointerCancel={interactive && !blocked ? gesture.onPointerCancel : undefined}
     >
       {widget.type === "web" ? (
         <WebContent
@@ -104,13 +130,58 @@ export function WidgetView({
           live={webLive}
           blockedHosts={webBlockedHosts}
           texts={webTexts}
+          blocked={webBlocked}
         />
+      ) : widget.type === "plugin-widget" ? (
+        <PluginWidgetContent widget={widget} live={pluginLive} />
       ) : (
-        renderContent(widget, text, effectiveStyle, liveValue, onValueChange, onValueCommit)
+        renderContent(widget, text, effectiveStyle, liveValue, blocked ? undefined : onValueChange, blocked ? undefined : onValueCommit)
       )}
     </ShadowHost>
   );
+
+  if (!faded || !onUnavailableTap) return view;
+  // The mark is a sibling of the (faded) widget, not part of it, so it keeps full strength and never takes the widget's own touches.
+  return (
+    <div style={{ position: "relative", width: "100%", height: "100%" }}>
+      {view}
+      <button
+        type="button"
+        title={unavailableLabel}
+        aria-label={unavailableLabel}
+        onPointerDown={(e) => e.stopPropagation()}
+        onClick={(e) => {
+          e.stopPropagation();
+          onUnavailableTap(unavailable);
+        }}
+        style={{
+          position: "absolute",
+          top: 4,
+          right: 4,
+          width: 20,
+          height: 20,
+          padding: 0,
+          border: "none",
+          borderRadius: "50%",
+          background: UNAVAILABLE_MARK_BACKGROUND,
+          color: UNAVAILABLE_MARK_COLOR,
+          font: "700 13px/20px system-ui, sans-serif",
+          textAlign: "center",
+          cursor: "pointer",
+        }}
+      >
+        !
+      </button>
+    </div>
+  );
 }
+
+/** The unavailable mark's colours, in one place. An app (or a theme) sets the CSS variables on a parent element to change them; the fallback is the editor's error red with white text. */
+const UNAVAILABLE_MARK_BACKGROUND = "var(--mg-unavailable-mark-bg, #e5584a)";
+const UNAVAILABLE_MARK_COLOR = "var(--mg-unavailable-mark-fg, #fff)";
+
+/** How strongly an unavailable widget is faded (1 is untouched). Steady, never blinking. */
+const UNAVAILABLE_OPACITY = 0.4;
 
 function renderContent(
   widget: Widget,

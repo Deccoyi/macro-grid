@@ -3,6 +3,92 @@
 New features and fixes in Macro Grid. For technical details, see [CHANGELOG-developer.md](CHANGELOG-developer.md).
 
 ## Unreleased
+### New
+- **Rules can show a page in any profile:** the "Show page" step of an automation rule now switches the phone to the chosen profile first. Steps made before keep working as they did.
+- **Deleted page or profile stays visible in a button:** a "switch page" or "switch profile" step whose target was deleted now says so in its list instead of looking empty. Undo brings the button back to life.
+- **If blocks are easier to build:** add an action straight into an If or Otherwise, drag actions between blocks, and condition rows no longer overlap in a narrow panel.
+- **Crash report:** after a crash, Macro Grid shows a report on the next start that you can save or copy. Nothing is sent.
+- **New setting types for plugins:** plugin settings can now have a shortcut key field, a time field (milliseconds, seconds or minutes) and a field where you tick several choices.
+- **Icons follow the text colour:** an icon you pick now takes the colour of the widget's text, so a dynamic text colour recolours the icon too, also when the icon itself changes with a rule. Icons picked earlier keep their colour until you pick them again.
+- **Diagnostics notice missing values and bad numbers:** a widget that uses a variable with no value gets a warning in Diagnostics (its text shows "n/a"), unless it has a placeholder or an "is unavailable" rule. A number variable compared with text is reported as an error on the widget; the rule can still be saved.
+- **Unavailable buttons show on the phone:** a button whose action cannot work right now (a plugin action that is switched off, a variable an action reads that has no value, a deleted page, profile, web widget or variable) turns grey with a small warning mark, and a press tells you what is missing. A variable with no value that is only shown in the text now shows "n/a" instead, and the button keeps working.
+- **Switch a plugin off and on:** the Plugins window has an On / Off switch for every plugin.
+- **Deleted targets show on the phone:** a button that switches to a page, profile or web widget that was deleted now looks unavailable, with the warning mark, and a press tells you what is missing.
+- **Error List columns:** double-click a column border to fit the column to its content. Right-click the table header to choose which columns are shown; the choice is remembered.
+- **Warnings mark buttons in the editor:** a button with only warnings gets a small yellow triangle, a button with an error keeps the red mark; hover to see all its lines. A step that reads a variable with no value now also gets a warning, as the phone already greys it.
+- **Variable buttons show a missing variable:** a button that changes a variable that was deleted looks unavailable on the phone, like other broken targets.
+- **Plugins no longer fill the status bar:** plugin status items are hidden until you switch "Status bar" on for that plugin in the Plugins window (existing connection chips disappear after the update). The server version and device count always show, and the bar no longer wraps to a second line.
+- **New profiles appear on the phone at once:** adding, renaming or deleting a profile updates the phone's profile list without reopening the app.
+- **Clearer variable action names:** the four variable actions are now "Set variable", "Add to or subtract from number", "Toggle variable" and "Reset to start value", all under one "Variable" group. The older all-in-one action is marked "(old)" and keeps working.
+- **Failed button actions in Diagnostics:** when a button's action fails, it now shows as a line in Diagnostics (one per button, counted) and goes away when the button next works. The warning triangle in the status bar is gone.
+- **No browser menu in the editor:** right-clicking an empty place no longer opens the browser's own menu. Text fields get the editor's own menu (Undo, Redo, Cut, Copy, Paste, Select all).
+- **Smaller variable actions:** "Set variable" is now four actions (set a value, change a number, switch True / False, reset). The variable is picked from the variable list, which shows only variables you can change. Buttons made before keep working.
+- **Go back a version:** a plugin's page in Discover can put the previous version back.
+- **Stay on this version:** stops update reminders for one plugin. Safety warnings still appear.
+- **Shared profile files are now `.mgprofile`:** older `.msprofile` files can still be imported.
+- **Back up everything:** File > Back Up Everything saves your profiles, preferences, variables, phone choices, plugin settings and language packs in one file. File > Restore lets you tick what to bring back. Nothing is deleted, and passwords and phone pairings are not part of a backup.
+- **Restore points:** before a restore, before a profile is deleted or overwritten by an import, and after an update, Macro Grid keeps a copy of your data so you can go back.
+- **Importing a profile tells you about missing files:** actions that use a file which is not on this PC are listed.
+- **Your own language:** add a language to the editor with a language pack. Export a table, translate it, import it, and pick it in Preferences > Language.
+- **New plugin permissions:** a JavaScript plugin can ask to keep a small amount of its own data, to show short notices in the tray, and to keep a live connection open to one address. Each one is listed and can be switched off like the others.
+- **Action lists can now make decisions:** add an If step (with an optional Otherwise) to run steps only when a condition is met or when the step before failed, and a Stop step to end the list early.
+- **A button can change its look from its own state:** while it is held, while its action is running, when it is switched on, and after its action failed. Find them under "This button" in the variable list.
+- **Your own variables:** a new "Global Variable List" in Preferences lets you define text, number and true/false variables and use them anywhere as `{user.name}`: in texts, rules and actions. You can keep a value after a restart.
+- **Automation rules:** run a list of actions by itself when a value crosses a limit, at a time of day or when a device connects (Preferences > Automation). Each rule can be switched off, and all of them can be paused. Rules do not press keys.
+- **Official plugins are checked every time they start:** an official plugin whose files were changed does not run until it is installed again.
+- **Fixed:** updating a plugin no longer leaves files of the old version behind, and a plugin removed and installed again from a folder is no longer shown as official.
+- **Set variable action:** a button can set a variable, switch it, add to it or reset it. A slider can set a number variable.
+- **Plugins can add their own widgets:** a plugin can draw a widget of its own, such as a gauge, and it appears in the Toolbox under the plugin's name. Plugin widgets run in a closed box with no network, so a broken one cannot harm the rest of the deck. If one keeps crashing the app, it is switched off and you can turn it back on.
+- **Switch off a single plugin permission:** in the Plugins window, an installed JavaScript plugin lists its permissions with a tick box each. Untick one and the plugin keeps running without it.
+- **Turn off unencrypted connections:** a new Preferences option "Allow unencrypted connections" (on by default). Turned off, other devices can only connect over the encrypted port; the browser deck and phones paired before encryption stop working.
+- **Rules can react to a variable that is not available:** for example, grey out a button when its plugin is not running. A button also goes back to its own look when no rule applies any more.
+- **A text can show a placeholder when a variable is not available:** for example `CPU {system.cpu|0|--} %`.
+- **Every widget has a name:** you can change it in Properties, and messages use it, so a faulty button is easy to find.
+- **Macro Grid checks your profile:** it lists buttons whose action, plugin or variable is missing, and marks a faulty button in red.
+- **Details for each message:** the Diagnostic Messages window shows more about a message and a button that takes you to the widget.
+- **Export messages and logs:** copy or save the message list, or export the log files from the Help menu. Personal details are removed where they can be recognized; look through the files before you share them.
+- **Quick templates in the rule editor:** on/off, low/medium/high and "grey when unavailable" in one click.
+- **An unsafe official plugin version can be switched off:** if an official plugin version turns out to be unsafe, Macro Grid stops it and tells you why. Nothing is switched off just because the list could not be loaded.
+- **A publisher can withdraw a version:** a withdrawn version cannot be installed, and if you have it you are asked to update or remove it. It keeps working until you do.
+- **A command-line tool for plugin authors (a separate download on the release page):** check, package, start and try out a JavaScript plugin.
+### Changed
+- **Automation messages in your language:** the messages about rules, such as a missing variable or a rule that started too often, are now translated.
+- **If, Else and End look the same in every language:** the logic steps keep their English names, and "Otherwise" is now called "Else".
+- The Dynamize window has a cleaner rule list, and a Presets list with a preview of the rules a preset adds.
+- The Properties panel has a cleaner, aligned layout and adapts to its width.
+- **The Preferences window has a new look:** pages are grouped in the side list, options use switches, variables are shown in a table and automation rules in a clear list. In a narrow window the side list becomes a drop-down.
+- **Wait is now under Logic and is set in seconds.**
+- **The plugin list opens faster and works from a saved copy:** if the internet is down, you still see the last list.
+- **"Check for updates automatically" also covers the plugin safety list.**
+- **A button whose plugin was removed now says so:** pressing it shows an error on the phone instead of doing nothing.
+- **Web widgets can be kept loaded:** a new "Keep loaded" switch in a web widget's properties keeps its page running when you go to another page of the grid, so a chat does not reload each time. The editor warns when a page has more than 3 web widgets, since a phone runs only a few at once.
+- **The Error List is now "Diagnostic Messages":** it shows errors, warnings and information. After every save it tells you how many plugin widgets the profile has and whether a page has more than is recommended (the right number depends on the device), and "No free cell left on this page" is listed there as a warning too.
+- **Hints can be closed:** the hint boxes under a web widget's address now have a close button that asks "Close for now" or "Do not show again". "Show closed notices again" in Preferences brings the second kind back. A warning about the address you typed (not encrypted, not allowed) cannot be closed.
+- **The phone keeps the profile you picked:** after a dropped connection or a restart, the phone opens the profile you last chose on it instead of the assigned one. A profile assigned in the editor replaces your last pick, and automatic switching by the active window still works as before.
+- **The Toolbox can be an A to Z list:** the menu next to "Add widget" switches between plugin groups and one plain alphabetical list, and a plugin group can be folded.
+- **The Toolbox marks the web widget with a small flask icon** instead of the word "Experimental".
+### Fixed
+- **Restoring a backup is safer with plugin widgets:** plugin widget variable choices that point outside their own plugin are cleared on restore (and reported), as they already are on profile import. The restore window reminds you to restore only your own backups.
+- **A pasted plugin link cannot replace an installed plugin from another source:** Macro Grid now refuses it and says why, and warns when the plugin is already installed.
+- **Refused profile delete is no longer missed:** when Macro Grid cannot save a restore point first, so it keeps the profile, a message window now says so instead of a short line in the status bar.
+- **Language packs:** long names no longer spill over the rows below. A right-to-left language now shows a note that the layout is not adapted. If a language pack file is gone, Macro Grid goes back to English and remembers it.
+- **Move arrows skip over a whole If block:** a step next to an If block jumps above or below the block instead of landing inside it. Drag and drop and the "+" slots still put steps inside.
+- **A refused If says why:** adding a fourth nested If now shows a short message instead of doing nothing.
+- **Language pack texts stay in the card:** the "remove pack" question and the status bar no longer spill over with a very long pack name.
+- **The Toolbox search box is always shown,** not only when there are many widgets.
+- **A collapsed If block stays collapsed when you move it.**
+- **A collapsed If block fits in a narrow panel:** the condition and step count use the free room and move to their own line when it is too tight.
+- **Automation rules no longer show "running" after they stopped:** the Automation window now refreshes on its own.
+- A plugin that stopped after you switched one of its permissions off can be switched back on in the Plugins window without installing it again.
+- A profile that cannot be deleted because no restore point could be saved now tells you why.
+- A plugin setting with a wrong kind now names the setting and the kind in its error.
+- Problems a plugin reports while it starts now stay in the Error List.
+- **Imported profiles show at once:** after importing a shared profile, the profile list in the editor updates without a reload.
+- **First start on a new PC:** the very first start no longer stops with a crash report.
+- **Automation rules:** a rule that sets a True / False variable without you changing the value now works instead of failing. Long messages in the Automation window wrap instead of being cut off. A rule that uses a deleted variable shows a warning in the Diagnostic Messages. A "show page" step in a rule now asks for a profile first, then the page.
+- **Set variable:** typing a value no longer clears the chosen variable, and a variable you add in Preferences shows up in the action right away.
+- **A plugin whose start file points outside its own folder is no longer loaded.**
+- **Tighter limits on where a JavaScript plugin can connect:** a plugin can now only reach the kind of address you approved, and never Macro Grid itself.
 
 ## 1.3.1 - 2026-09-29
 ### New

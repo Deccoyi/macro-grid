@@ -7,7 +7,7 @@ Sunucu için Windows 10 veya 11 gerekir. Telefon uygulaması şimdilik yalnızca
 Hayır. Her gün kullandığınız her şey yerel ağınızda kalır ve hesap gerekmez. Macro Grid'in kendiliğinden yaptığı tek şey, yeni bir sürüm var mı diye yaklaşık altı saatte bir github.com'a bakmaktır. Sizinle ya da bilgisayarınızla ilgili hiçbir bilgi göndermez ve siz "Şimdi kur"a basmadan hiçbir şey kurmaz. İstemezseniz Tercihler > Genel bölümündeki "Güncellemeleri otomatik denetle" seçeneğini kapatın; tepsi menüsünden yine elle denetleyebilirsiniz.
 
 ## Bulut senkronizasyonu var mı?
-Hayır. Taşımak için bir profili `.msprofile` dosyasına dışa aktarın.
+Hayır. Taşımak için bir profili `.mgprofile` dosyasına dışa aktarın.
 
 ## Aynı anda birkaç telefon bağlanabilir mi?
 Evet. Eşleşmiş her cihaz kendi profilini açabilir.
@@ -19,7 +19,7 @@ Evet: `http://<bilgisayar adresi>:9820/deck/`. Telefon uygulaması kiosk modu, �
 Henüz hayır. **Web** ve **Eklenti** widget türleri yer tutucudur.
 
 ## Hangi dilde?
-Düzenleyici Türkçe (varsayılan) veya İngilizce. Telefon uygulaması ve tarayıcı deck'i şu an yalnızca Türkçe. Bazı yerleşik aksiyon adları ve sistem tepsisi menüsü yalnızca Türkçe.
+Düzenleyici Türkçe (varsayılan) veya İngilizce. Telefon uygulaması ve tarayıcı deck'i şu an yalnızca Türkçe. Bazı yerleşik eylem adları ve sistem tepsisi menüsü yalnızca Türkçe.
 
 ## Kendi eklentimi yapabilir miyim?
 Evet, JavaScript veya C# ile. Bkz. [eklenti dokümantasyonu](https://deccoyi.github.io/macro-grid-plugin/).

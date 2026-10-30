@@ -1,14 +1,14 @@
-# Security hardening plan
+# Security hardening
 
 Status (checked 2026-09-29): **all parts released** (server 1.1.0/1.2.0, plugin repo `main` — OBS 0.3.0 uses part B, phone
 app `client-v0.3.0` has part A's certificate pinning). What was part D (a native C# plugin's install-time warning) is done
 too — see "Native plugins" below; it was never a permission mechanism to design, just a warning screen, and closing it
 does not need a decision. (2026-09-29: that folder warning was replaced by the rule that only official, signed C# plugins load at all; see
-`../design/plugin-distribution.md`, section 10, and `../architecture.md`.)
+`./plugin-distribution.md`, section 10, and `../architecture.md`.)
 Repositories: `macro-grid` (all parts), `macro-grid-client` (part A), `macro-grid-plugin` (part B). Touches the security
-model: update `../architecture.md` and `../design/security-risk-assessment.md` with each part.
+model: update `../architecture.md` and `./security-risk-assessment.md` with each part.
 
-The risk assessment (`../design/security-risk-assessment.md`) lists what is left after the pairing limits, the security log,
+The risk assessment (`./security-risk-assessment.md`) lists what is left after the pairing limits, the security log,
 the encrypted device tokens, the vulnerability checks and the SBOM. These are the three larger items. None is promised; this is
 a hobby project.
 
@@ -54,8 +54,9 @@ one. Plain `ws://` is what's left over for what can't do better yet (old paired 
 option. "Prefer wss:// when the client supports it" was considered as a live per-connection negotiation and set aside: the two
 fixed ports make that meaningless — which port a client uses is decided once, when it reads the QR, not renegotiated per
 connection.
-- The "Allow unencrypted connections" preference itself is not built yet (both ports just stay open unconditionally in the
-  current code); when it is, default **on**, for the compatibility reasons above.
+- The "Allow unencrypted connections" preference is built (`AppPreferences.AllowUnencrypted`, Preferences window, default **on** for the
+  compatibility reasons above). Off, the plain port answers only this computer (the editor needs it) and refuses every other device with 403
+  (`PlainConnectionPolicy`); the encrypted port is unaffected, and open connections stay until they end.
 - Cutover point, concrete rather than open-ended: default **off** starting the next MAJOR version (2.0.0), once the Android
   client's TLS support has shipped for at least one MINOR release (so "old app, can't do TLS" stops being the common case)
   and the browser deck's story is settled one way or another. Before that MAJOR, a person who wants to require TLS today can
@@ -66,8 +67,8 @@ connection.
 every message is encrypted with it. Works in any browser without certificate warnings, but it is custom cryptography in a hobby
 project, which is harder to get right and to review. Not recommended.
 
-All three open questions above (port, how long to keep plain connections, the deck) are settled by the decision above. Still
-open: the "Allow unencrypted connections" preference itself (currently no-op, both ports always on) is not implemented yet.
+All three open questions above (port, how long to keep plain connections, the deck) are settled by the decision above. The
+"Allow unencrypted connections" preference is implemented.
 
 ## B. Secret storage for plugins (threat T5)
 
@@ -92,7 +93,7 @@ machine: built with `scripts\publish.ps1` + `installer\build-installer.ps1` (Inn
 (data kept), reinstalled, uninstalled with Yes (data deleted) — confirmed by the owner.
 
 - `{userappdata}` resolves for the uninstaller's own process token, the same trap as the agreement hash in
-  `../design/agreement-acceptance.md`: only "Run as a different user" breaks the assumption that it is the person who started
+  `./agreement-acceptance.md`: only "Run as a different user" breaks the assumption that it is the person who started
   the uninstall. Not solved further (same as the agreement hash), the prompt names the exact folder instead.
 - Not tested: uninstalling from a second Windows account than the one that installed it, or on a genuinely clean PC/VM (only
   this dev machine, which already had real paired devices and an OBS password — both confirmed gone after a "Yes" uninstall).
@@ -122,10 +123,16 @@ Status (checked 2026-09-28): **done, released** (server 1.1.0). `OriginGuard.IsA
 whose `Origin` header is present and is not one of the editor's own origins (`http://localhost:9820`, `http://127.0.0.1:9820`,
 `http://[::1]:9820`, and the Vite dev servers that proxy to it, `:5190` and `:5192`); a request with no `Origin` header at all
 (curl, a native app) is unaffected, since only a browser sends it. Wired into `ServerApp.cs` right after `LoopbackGuard`, same
-shape, same 403. Tests: `OriginGuardTests`. See `../design/security-risk-assessment.md`, T13.
+shape, same 403. Tests: `OriginGuardTests`. See `./security-risk-assessment.md`, T13.
 
 `/ws` (the WebSocket the deck and phone use) is not covered: `hello` already requires a PIN or a device token, so an unpaired
 page gets nothing from it either way, and adding an Origin check there was judged not worth the complexity.
+
+## F. A plugin's connections are checked, not only its approved names
+
+Status: **implemented, unreleased.** An approved `http:<host>:<port>` used to be matched by name only. The connection itself is now checked as well: the address
+must be of the kind the name says, Macro Grid's own ports are never reachable, and headers that steer a request cannot be set. Details and the `ws:`, `storage` and
+`notify` permissions that came with it: [js-plugin-runtime.md](js-plugin-runtime.md), "Network rules".
 
 ## Not in this plan
 

@@ -1,10 +1,10 @@
-# Aksiyonlar
+# Eylemler
 
-Bir widget olayına bağlayabileceğiniz tüm aksiyonlar. Aşağıdaki adlar aksiyon seçicide göründükleri gibidir. Yerleşik ve OBS aksiyon adları şu an düzenleyici dilinden bağımsız olarak Türkçe görünür (ikinci sütun).
+Bir widget olayına bağlayabileceğiniz tüm eylemler. Aşağıdaki adlar eylem seçicide göründükleri gibidir. Yerleşik ve OBS eylem adları şu an düzenleyici dilinden bağımsız olarak Türkçe görünür (ikinci sütun).
 
 ## Yerleşik
 
-| Aksiyon | Seçicideki ad | Kategori | Ayarlar |
+| Eylem | Seçicideki ad | Kategori | Ayarlar |
 |---|---|---|---|
 | Kısayol | Kısayol tuşu | Klavye | Tuş kombinasyonu |
 | Metin yazma | Metin yaz | Klavye | Yazılacak metin |
@@ -35,4 +35,4 @@ Bir widget olayına bağlayabileceğiniz tüm aksiyonlar. Aşağıdaki adlar aks
 | Toggle | Açılınca, Kapanınca |
 | Slider, Knob | Değer değişti |
 
-Bir olaya bağlı aksiyonlar sırayla çalışır. Bkz. [Aksiyonlar ve makrolar](/tr/guide/actions).
+Bir olaya bağlı eylemler sırayla çalışır. Bkz. [Eylemler ve makrolar](/tr/guide/actions).

@@ -10,7 +10,7 @@ CPU yükünü gösteren ve yoğunlaşınca önce sarıya, sonra yanıp sönen k�
    - **Koşul ekle**'ye tıklayıp **Yoksa eğer** `system.cpu` **büyükse** `50` **İse** sarı yapın.
    - **Yoksa** kısmını değiştirmeyin, koyu arka planınız görünsün. **Uygula**.
 5. **Animasyon**'un yanındaki şimşeğe tıklayın: **Eğer** `system.cpu` **büyükse** `80` **İse** **Yanıp sönme**. **Uygula**.
-6. İsteğe bağlı: **Basınca** olayına **Uygulama aç** aksiyonunu bağlayın ve Görev Yöneticisi'ni (`taskmgr.exe`) seçin.
+6. İsteğe bağlı: **Basınca** olayına **Uygulama aç** eylemini bağlayın ve Görev Yöneticisi'ni (`taskmgr.exe`) seçin.
 7. **Kaydet**.
 
 Bilgisayarda ağır bir şey başlatın ve kutucuğun telefonunuzda değişmesini izleyin.

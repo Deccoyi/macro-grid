@@ -16,6 +16,11 @@ public static class OriginGuard
     [
         "http://localhost:9820", "http://127.0.0.1:9820", "http://[::1]:9820",
         "http://localhost:5190", "http://localhost:5192",
+#if DEBUG
+        .. (int.TryParse(Environment.GetEnvironmentVariable("MACROGRID_PORT"), out var devPort)
+            ? new[] { $"http://localhost:{devPort}", $"http://127.0.0.1:{devPort}", $"http://[::1]:{devPort}" }
+            : []),
+#endif
     ];
 
     public static bool IsAllowed(string? origin) => origin is null || Allowed.Contains(origin);

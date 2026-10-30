@@ -52,4 +52,4 @@ Bir güncelleme yalnızca kurulu uygulamayla aynı anahtarla imzalıysa kurulur.
 
 ## Bağlantı koptuğunda
 
-Uygulama giderek uzayan aralıklarla yeniden bağlanmayı dener, son düzeni "çevrimdışı, önbellek" rozetiyle gösterir ve simgeleri önbelleğe alır, böylece yeniden bağlanma hızlı olur. Bir aksiyon bilgisayarda başarısız olursa kısa, kırmızı bir hata bildirimi görürsünüz.
+Uygulama giderek uzayan aralıklarla yeniden bağlanmayı dener, son düzeni "çevrimdışı, önbellek" rozetiyle gösterir ve simgeleri önbelleğe alır, böylece yeniden bağlanma hızlı olur. Bir eylem bilgisayarda başarısız olursa kısa, kırmızı bir hata bildirimi görürsünüz.

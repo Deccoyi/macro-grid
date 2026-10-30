@@ -9,6 +9,6 @@ Bu sitedeki her şey Macro Grid'i kullananlar içindir. Bu sayfa, onu derlemek, 
 | [macro-grid-plugin](https://github.com/Deccoyi/macro-grid-plugin) | Resmî eklentiler. |
 
 - [Kaynaktan derleme](/tr/developers/build)
-- [Teknik başvuru](/tr/developers/reference): aksiyon türleri, widget türleri, uç noktalar ve dosyalar
+- [Teknik başvuru](/tr/developers/reference): eylem türleri, widget türleri, uç noktalar ve dosyalar
 - [Eklenti yazma](https://deccoyi.github.io/macro-grid-plugin/): eklenti dokümantasyon sitesi
 - [Mimari](https://github.com/Deccoyi/macro-grid/blob/main/docs/architecture.md), [katkı rehberi](https://github.com/Deccoyi/macro-grid/blob/main/CONTRIBUTING.md) ve [sorunlar](https://github.com/Deccoyi/macro-grid/issues)

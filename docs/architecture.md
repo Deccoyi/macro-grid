@@ -45,12 +45,14 @@ half-written profile).
 
 - **Profile** `{ id, name, pages[], appMatches[], previewDeviceId? }`
 - **Page** `{ id, name, cols, rows, gap, padding, alignment, widgets[] }`: a grid; a profile can have several pages.
-- **Widget** `{ id, type, x, y, w, h, text, style, customCss, props, actions, dynamic }`
-  - `type` is `button`, `toggle`, `slider`, `knob`, `label`, `image`, `web` or `plugin-html`. **The `web` and `plugin-html` types currently render a
-    placeholder only;** the web widget (for example a live chat) and the plugin HTML bridge are not implemented yet.
+- **Widget** `{ id, type, name, x, y, w, h, text, style, customCss, props, actions, dynamic }`
+  - `name` is the instance name: 1 to 64 characters, unique on its page, always present (the server fills it in for older profiles when it loads them). It is for messages and pickers and is never a reference. See [design/diagnostics-and-repair.md](design/diagnostics-and-repair.md).
+  - `type` is `button`, `toggle`, `slider`, `knob`, `label`, `image`, `web`, `plugin-widget` or `plugin-html`. A `web` widget shows a page in a sandboxed iframe; a `plugin-widget` is a
+    custom widget of a plugin (`props`: `plugin`, `widget`, `settings`) whose code runs in a sandboxed worker on the device and draws to a canvas, see
+    [design/plugin-widgets.md](design/plugin-widgets.md). The reserved `plugin-html` type only draws a placeholder.
   - `style`: `background`, `foreground`, `align`, `vAlign`, `fontSize`, `borderColor`, `borderWidth`, `radius`, `icon` (an image URL, normally
     a `data:` SVG baked by the icon picker), `iconSize`, `iconPosition`, `animation` (`none`, `blink`, `pulse`).
-  - `props`: type-specific settings: `min`, `max`, `step` and `valueVariable` for a slider or knob, `src` for an image, `url` for a web widget.
+  - `props`: type-specific settings: `min`, `max`, `step` and `valueVariable` for a slider or knob, `src` for an image, `url` and `keepLoaded` (keep the page running when its page of the grid is left; the phone app reads it) for a web widget.
   - `actions`: event name to an ordered list of `{ type, settings }`. Events: `press`, `release`, `longPress`, `doubleTap` for buttons,
     `toggleOn` and `toggleOff` for a toggle (a press flips the toggle instead of firing `press`), `valueChange` for a slider or knob.
   - `dynamic`: property path to a rule (see [Dynamic values](#dynamic-values)).
@@ -80,7 +82,7 @@ Every frame is `{ "type": "...", "data": { ... } }` in camelCase JSON (`Envelope
 - **Live state.** `widget.state { widgetId, text?, value?, active?, style?, url?, reload? }` pushes a rendered text, a slider position, a toggle state or
   dynamic style values. `url` and `reload` are for a `web` widget only: `url` is the address this device shows instead of the profile's (set by a
   `core.web` button; an empty string goes back to the profile's), `reload` is a counter, a higher number means "load the page again". Old clients
-  ignore both. It is batched at 100 ms (at most about 10 updates a second) and only sent when the value for that client changed.
+  ignore both. It is batched at 100 ms (at most about 10 updates a second) and only sent when the value for that client changed. Clients are served independently, and one that does not accept a frame for 10 seconds is disconnected (it reconnects by itself), so a sleeping phone cannot hold up the others.
 - **Actions run in order** per device, off the receive loop, so a slow action never delays reading the next message.
 - **Navigation.** Page and profile changes belong to one device: `core.page` and `core.profile` actions and the phone's own swipes affect only
   the phone that triggered them, through its `SessionDeviceController`.
@@ -99,13 +101,18 @@ Built-in actions and plugin actions implement the same interface, `IActionHandle
 | `core.page` | Goes to a page, the next or previous page (wrapping around), or back. |
 | `core.profile` | Switches the device to a profile. |
 | `core.web` | Shows another address in a `web` widget, goes back to its own, or reloads it, on the device that pressed the button only (`set`, `reset`, `reload`). The address follows the same rule as the widget's own. Not written to the profile, forgotten on a profile switch, a profile save or a server restart. |
-| `core.delay` | Waits (up to 60 seconds); use it between actions of a sequence. |
+| `core.delay` | Waits (up to 60 seconds); use it between actions of a sequence. Shown as "Wait" under the category Logic. |
+| `core.if`, `core.else`, `core.endIf`, `core.stop` | Logic steps of an action list, see below. |
 | `core.setVolume`, `core.setMute`, `core.toggleMute` | Master volume and mute (Windows core audio). |
 
 A **macro** is simply several actions bound to the same event; they run one after the other, and a failing action is logged and reported without
 stopping the ones after it. A failure is shown as a toast on the phone that pressed the widget and in the editor's status bar, so a stale binding
 (a button pointed at a deleted OBS scene) is never silent. If an action handler also implements `IActionDescriptor`, the editor draws its settings
 form from its `Fields`; text fields marked `AllowVariables` have their `{variables}` resolved by the server before the action runs.
+
+The list stays flat. `core.if` opens a block (its `when` setting is `condition`, `previousFailed` or `previousOk`; a condition is the same `ConditionNode` JSON a dynamic rule uses), `core.else` splits it, `core.endIf` closes it and `core.stop` ends the list. `ActionFlow` (pure) decides for each step whether to run it; `ActionDispatcher` asks it before it looks for a handler. The four types are also registered as handlers that do nothing, so the catalog knows their names. A list that does not match still runs safely (a missing End means the block goes to the end of the list, a stray Otherwise or End does nothing) and there are no loops. See [design/logic-steps.md](design/logic-steps.md).
+
+An action can also implement `IActionOutcomeHandler` and return a coded outcome (success, failed with a code and a short text, or accepted) instead of throwing; the dispatcher then calls only that method. Both ways end as an `ActionFailure` (`Code`, `Message`): the text is cleaned of control and direction characters, cut to 200 characters and, when empty, replaced by a default text for the code. The first failure is shown as the toast and the status bar item. The code is not sent to the phone.
 
 ## Variables and text
 
@@ -139,8 +146,18 @@ Each catalog entry (`VariableInfo`) carries a `Type`: `text` (the default, also 
 the variable picker and picks the value input of a condition from it: a true/false choice for a boolean, a list for `Values`, free input
 otherwise (with the unit as a suffix for a number). Booleans and fixed values only offer `==` and `!=`.
 
-In a condition a boolean matches `true` / `false` and `1` / `0` alike, case-insensitively; other operators never match it. The template words
+In a condition a boolean matches `true` / `false` and `1` / `0` alike, case-insensitively; other operators never match it. `unavailable` / `available` test only whether the variable has a value (never set, removed or `null` means unavailable); a text template can show a placeholder for it, `{name|format|placeholder}`. The template words
 (`On` / `Off`, `Açık` / `Kapalı`) are display only and do not match. A number is compared numerically and anything else as text, case-insensitively.
+
+### Button variables
+
+A button's own state (`self.toggled`, `self.busy`, `self.pressed`, `self.lastResult`, `self.lastError`) is answered per widget and per device by a small store in front of `VariableStore`; `WidgetStateService` evaluates a widget against it and `Refresh` marks a single widget for re-evaluation. See [design/variable-types-and-conditions.md](design/variable-types-and-conditions.md).
+
+### Global Variable List
+
+The person can define variables of their own (text, number, true/false) in Preferences. `UserVariableService` publishes them into the same `VariableStore` as `user.<name>`, so every template, rule and slider works with them unchanged, and the `core.setVariable` action sets, switches, counts or resets them. The list and the values of the variables marked "keep" are saved in the data folder. See [design/user-variables.md](design/user-variables.md).
+
+**Automation rules.** `Core/Automation/` holds `AutomationStore` (the rules in `automation.json`) and `AutomationService`, a hosted loop that starts a rule's ordinary action list when a variable condition becomes true, at a time of day, or when a device connects. Starts are limited per rule and in total, a rule that keeps starting is switched off, and the lists run through `ActionDispatcher.RunListAsync` without a device or a key press unless a device started them. See [design/automation-rules.md](design/automation-rules.md).
 
 ## Custom CSS
 
@@ -192,20 +209,22 @@ Macro Grid is meant for a home or office network you trust. It is not hardened f
   `Origin` on a `GET`, so `/api` also answers `403` unless the `Host` header is a loopback name with one of the server's ports (`HostGuard`).
   `/ws` refuses a browser `Origin` that is neither the server's own origin (the browser deck) nor the phone app's (`WebSocketOriginGuard`); a
   request without `Origin` (a native client) is unaffected. Both refusals are logged as security events.
+- **Plugin icons are served sandboxed.** `GET /api/plugin-catalog/icon` and `GET /api/plugins/{id}/icon` send `Content-Security-Policy: default-src 'none'; style-src 'unsafe-inline'; sandbox` and `X-Content-Type-Options: nosniff` (`PluginIconResponse`), so an author-written SVG opened directly as a URL cannot run a script on the editor's origin.
 - **The `web` widget shows untrusted pages, so it is locked in two places.** The iframe has a `sandbox` without popups, downloads, top navigation,
   dialogs, orientation or pointer lock, an empty `allow` (no camera, location, clipboard, ...) and `no-referrer`. An address must be `http` or `https`,
   without a user name or password, and never this computer or the app's own origin in any loopback form (`WebUrlRule` on the server, `isSafeWebUrl`
   in every renderer); a profile that is saved or imported has a refused address cleared, and the editor asks once, on import, whether to keep the
   sites a profile opens. The editor window itself refuses new windows, downloads, other programs' links, permission prompts and script dialogs
   (`WebViewEnvironment.LockDown`), and the app pages carry a `frame-src http: https:` policy. Only host names are ever logged, never the full address (it
-  may hold a secret token). See [plans/web-widget-plan.md](plans/web-widget-plan.md).
+  may hold a secret token).
+- **A plugin cannot touch the person's own variables.** The `user.` names belong to the Global Variable List: the store a plugin writes through ignores them, and the plugin ids `user`, `system`, `core` and `self` cannot be installed.
 - **Actions run as you.** A paired device can press keys, type text and start programs on the PC, so pair only devices you trust and revoke the
   ones you do not.
 - **Only official, signed C# plugins load**, checked at every load: the plugin folder must carry `signature.json` and `signature.sig` made with
   the official plugin key (the private key stays on the maintainer's PC), every file must still match, and no unlisted file may be loadable or
   executable. A plugin that fails is not loaded (status *Not allowed*). A C# plugin has full trust, so this is what keeps other authors' code out of the
   server process; a build made from source in the Debug configuration (`MACROGRID_UNSIGNED_PLUGINS`) is the only exception, and no setting, switch or
-  environment variable turns it on in a released build. Plugins by other authors are JavaScript and are sandboxed and need approved permissions. The
+  environment variable turns it on in a released build. Plugins by other authors are JavaScript and are sandboxed and need approved permissions. An official JavaScript plugin installed with a contents signature is verified the same way at every load, so editing its files in place stops it. The
   `input` permission (pressing keys and typing) works only while a device button press is being handled, for at most 5 seconds, with at most 200
   characters and 10 key combinations per press, never with the Windows key, never into a terminal, a script host, a system tool or a Macro Grid window,
   never when the server runs as administrator, and text that looks like a harmful command switches the plugin off. An approved plugin with `input` can
@@ -216,16 +235,24 @@ Macro Grid is meant for a home or office network you trust. It is not hardened f
   logs); default is no, and it never asks on a silent uninstall.
 - **The server checks for updates on its own, once every few hours.** This is the one connection it makes without being asked, and it is on by
   default (Preferences, General, "Check for updates automatically"; off stops the schedule, "Check for updates" still works by hand). It reads
-  the public releases list of the project on `api.github.com` (HTTPS, an ETag so an unchanged list costs nothing, a `User-Agent` with the app
+  the public releases list of the project on `api.github.com` (HTTPS, an ETag so an unchanged list is a short answer, though it still counts against the anonymous quota; a `User-Agent` with the app
   version and nothing else) and sends nothing about the person or the PC. Nothing is downloaded or installed until the person clicks
   "Install now". The installer is fetched only from HTTPS addresses on GitHub (every redirect is checked against the same list), must match the
   SHA-256 GitHub reports for the release file, and runs only after Windows asks for administrator permission. The installer is not code-signed,
   so this protects against a broken download but **not against a compromised GitHub account** or release. Release notes are shown as text,
   never as HTML. Design: [design/auto-update.md](design/auto-update.md).
-- **Installing a plugin from Discover is the only other connection the server makes, and only when the person opens Discover or starts an
-  install** — never on its own, never in the background. It reads a fixed `raw.githubusercontent.com/<owner>/<repo>/HEAD/macrogrid-index.json`
-  (or a single plugin's `plugin.json`) and downloads the package only from `github.com/<owner>/<repo>/releases/download/...` (and the hosts that
-  redirect resolves to), never the GitHub API. A package's SHA-256 must match what the index promised; the official source
+- **The official plugin catalog is two signed files, with a saved copy.** `index.signed.json` (the list shown in Discover) and `revoked.signed.json`
+  (the safety list) are signed with the official plugin key; the server checks the signature before it reads a byte, refuses a lower sequence
+  number than it has already accepted, and keeps the last good copy on disk, so Discover opens from the copy and a failed fetch never changes
+  anything. They are read from the GitHub contents API of the plugin repository, then from its Pages site. The server looks at them on its own
+  (the revoke list every 8 hours, the index every 24, each with a random extra wait; a failure backs off from 30 minutes up to a day) only when
+  "Check for updates automatically" is on and an official plugin is installed; opening Discover or the Refresh button also uses them. **A plugin is
+  never switched off because something could not be fetched: only a verified list can switch an official plugin version off**, at load, before an
+  install and when a newer list arrives. A publisher can also withdraw a version (not installable, installed copies are warned and keep running).
+  Another source (an added repository or a pasted link) is read as before from `raw.githubusercontent.com/<owner>/<repo>/HEAD/macrogrid-index.json` (or a
+  single plugin's `plugin.json`), only when the person opens Discover or starts an install. Packages are downloaded only from
+  `github.com/<owner>/<repo>/releases/download/...` (and the hosts that redirect resolves to), or from a mirror address the signed official index lists
+  (the package signature is checked afterwards). A package's SHA-256 must match what the index promised; the official source
   (`Deccoyi/macro-grid-plugin`) additionally signs every release (ECDSA P-256) and a package that fails that signature check is refused, not
   merely warned about. Every other source is always shown as third-party, signed or not. See the plugin repository's
   `website/reference/source-index.md` for the index format and signing, and `docs/design/plugin-distribution.md` for the rollout.

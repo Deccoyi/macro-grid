@@ -15,7 +15,7 @@ internal static class PluginApi
     {
         // trust is Official / ThirdParty / Local — Local also covers a plugin installed before this feature
         // existed (from a folder), which has no recorded origin.
-        api.MapGet("/plugins", (PluginManager plugins, PluginLocalizer localizer, PluginInstallOriginStore origins) =>
+        api.MapGet("/plugins", (PluginManager plugins, PluginLocalizer localizer, PluginInstallOriginStore origins, OfficialCatalog official) =>
             plugins.Plugins.Select(p => new
             {
                 p.Id,
@@ -27,26 +27,43 @@ internal static class PluginApi
                 p.PendingPermissions,
                 p.HasIcon,
                 p.HasTreeItems,
+                p.Permissions,
+                p.SwitchedOffPermissions,
                 Trust = (origins.Get(p.Id)?.Trust ?? PluginTrust.Local).ToString(),
+                Held = origins.Get(p.Id)?.Hold == true,
+                // From the saved catalog copy only: this list is read often and must not use the network.
+                Withdrawn = origins.Get(p.Id)?.Trust == PluginTrust.Official
+                    && official.Index?.Plugins.FirstOrDefault(e => e.Id == p.Id)?.Versions.Any(v => v.Withdrawn && v.Version == p.Version) == true,
             }));
+
+        // "Stay on this version": only a plugin installed from a source has an origin to carry the choice.
+        api.MapPut("/plugins/{id}/hold", (string id, PluginHoldRequest request, PluginInstallOriginStore origins) =>
+        {
+            if (origins.Get(id) is not { } origin) return Results.NotFound();
+            origins.Set(id, origin with { Hold = request.Hold });
+            return Results.NoContent();
+        });
 
         api.MapGet("/icon-packs", (PluginManager plugins, PluginLocalizer localizer) =>
             plugins.IconPacksWithOwner.Select(o => new { o.Pack.Id, DisplayName = localizer.Translate(o.PluginId, o.Pack.DisplayName)!, Icons = o.Pack.IconNames }));
 
-        api.MapGet("/icon-packs/{packId}/{iconName}", (string packId, string iconName, PluginManager plugins) =>
+        api.MapGet("/icon-packs/{packId}/{iconName}", (string packId, string iconName, PluginManager plugins, HttpContext context) =>
         {
             var pack = plugins.IconPacks.FirstOrDefault(p => p.Id == packId);
             var svg = pack?.GetIconSvg(iconName);
-            return svg is null ? Results.NotFound() : Results.Text(svg, "image/svg+xml");
+            if (svg is null) return Results.NotFound();
+            ApiResults.SandboxIcon(context);
+            return Results.Text(svg, "image/svg+xml");
         });
 
         // The manifest's optional logo (LoadedPlugin.HasIcon) — the editor's Plugins window shows this
         // instead of the generic category glyph when present.
-        api.MapGet("/plugins/{id}/icon", (string id, PluginManager plugins) =>
+        api.MapGet("/plugins/{id}/icon", (string id, PluginManager plugins, HttpContext context) =>
         {
             var path = plugins.GetPluginIconPath(id);
             if (path is null) return Results.NotFound();
             var contentType = Path.GetExtension(path).Equals(".svg", StringComparison.OrdinalIgnoreCase) ? "image/svg+xml" : "image/png";
+            ApiResults.SandboxIcon(context);
             return Results.File(path, contentType);
         });
 
@@ -98,6 +115,15 @@ internal static class PluginApi
         // The user approved the permissions a JS plugin declares (shown to them in the Plugins window first).
         api.MapPost("/plugins/{id}/approve", async (string id, PluginManager plugins) =>
             await plugins.ApproveAsync(id) is { } info ? ApiResults.Json(info) : Results.NotFound());
+
+        // Switches one approved permission of a JavaScript plugin off or on; the plugin restarts without it.
+        api.MapPut("/plugins/{id}/permissions", async (string id, PluginPermissionChange change, PluginManager plugins) =>
+            string.IsNullOrWhiteSpace(change.Permission) ? Results.BadRequest()
+            : await plugins.SetPermissionAsync(id, change.Permission, change.Enabled) is { } info ? ApiResults.Json(info) : Results.NotFound());
+
+        // Switches a plugin off (unloaded, variables become unavailable) or on again; kept across restarts.
+        api.MapPut("/plugins/{id}/enabled", async (string id, PluginEnabledRequest request, PluginManager plugins) =>
+            await plugins.SetEnabledAsync(id, request.Enabled) is { } info ? ApiResults.Json(info) : Results.NotFound());
 
         api.MapPost("/plugins/{id}/reload", async (string id, PluginManager plugins) =>
             await plugins.ReloadAsync(id) is { } info ? ApiResults.Json(info) : Results.NotFound());
@@ -218,5 +244,11 @@ internal static class PluginApi
 
     private sealed record SettingsCommandRequest(string? Command, JsonObject? Values);
 
+    private sealed record PluginHoldRequest(bool Hold);
+
+    private sealed record PluginEnabledRequest(bool Enabled);
+
     private sealed record PluginInstallConfirmRequest(string Path);
+
+    private sealed record PluginPermissionChange(string Permission, bool Enabled);
 }

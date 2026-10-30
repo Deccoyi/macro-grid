@@ -87,10 +87,10 @@ Root: HKCU; Subkey: "Software\Macro Grid"; ValueType: string; ValueName: "Accept
 #ifdef WebView2Setup
 Filename: "{tmp}\MicrosoftEdgeWebview2Setup.exe"; Parameters: "/silent /install"; StatusMsg: "Installing the WebView2 Runtime (needs an internet connection)..."; Flags: waituntilterminated; Check: not WebView2Installed
 #endif
-; Phones connect over the local network on port 9820; allow it on private and domain (company) networks, never on public ones.
+; Phones connect over the local network on ports 9820 (plain) and 9821 (TLS); allow them on private and domain (company) networks, never on public ones.
 ; The old rule goes first, so an upgrade replaces it instead of adding another copy of the same rule (no match is not an error).
 Filename: "{sys}\netsh.exe"; Parameters: "advfirewall firewall delete rule name=""Macro Grid"""; Flags: runhidden; StatusMsg: "Allowing phones on your private network..."
-Filename: "{sys}\netsh.exe"; Parameters: "advfirewall firewall add rule name=""Macro Grid"" dir=in action=allow protocol=TCP localport=9820 profile=domain,private program=""{app}\{#AppExe}"""; Flags: runhidden; StatusMsg: "Allowing phones on your private network..."
+Filename: "{sys}\netsh.exe"; Parameters: "advfirewall firewall add rule name=""Macro Grid"" dir=in action=allow protocol=TCP localport=9820,9821 profile=domain,private program=""{app}\{#AppExe}"""; Flags: runhidden; StatusMsg: "Allowing phones on your private network..."
 Filename: "{app}\{#AppExe}"; Description: "Start {#AppName}"; Flags: nowait postinstall skipifsilent; Check: not IsUpdateRun
 ; After an automatic update (the app started this setup with /UPDATE) start it again as the person, not as administrator. The finished page
 ; closes by itself in that case, so the "Start" entry above is left out. Neither runasoriginaluser nor a postinstall entry brought the app back as the

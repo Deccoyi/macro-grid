@@ -272,7 +272,7 @@ public sealed class PluginTrustTests : IAsyncLifetime
     {
         var handler = new FakeHttpHandler(_ => new HttpResponseMessage(HttpStatusCode.OK));
         var installer = new PluginCatalogInstaller(new PluginPackageDownloader(new HttpClient(handler)), _manager,
-            new PluginInstallOriginStore(_root), Path.Combine(_root, "staging"));
+            Path.Combine(_root, "staging"));
         var version = new PluginCatalogVersion("1.0.0", "1.0.0", null, null, null,
             "https://github.com/someone/their-plugins/releases/download/v1/x.zip", new string('a', 64), 10, null, null);
         var entry = new PluginCatalogEntry("x", "X", null, null, null, "csharp", [version]);
@@ -281,6 +281,23 @@ public sealed class PluginTrustTests : IAsyncLifetime
             installer.InstallAsync(entry, version, "https://github.com/someone/their-plugins", isOfficial: false, CancellationToken.None));
 
         Assert.Equal(PluginDownloadException.Refused, ex.Code);
+        Assert.Equal(0, handler.Calls);
+    }
+
+    [Fact]
+    public async Task A_withdrawn_version_is_refused_before_any_request()
+    {
+        var handler = new FakeHttpHandler(_ => new HttpResponseMessage(HttpStatusCode.OK));
+        var installer = new PluginCatalogInstaller(new PluginPackageDownloader(new HttpClient(handler)), _manager,
+            Path.Combine(_root, "staging"));
+        var version = new PluginCatalogVersion("1.0.0", "1.0.0", null, null, null,
+            "https://github.com/Deccoyi/macro-grid-plugin/releases/download/v1/x.zip", new string('a', 64), 10, null, null, Withdrawn: true);
+        var entry = new PluginCatalogEntry("x", "X", null, null, null, "js", [version]);
+
+        var ex = await Assert.ThrowsAsync<PluginDownloadException>(() =>
+            installer.InstallAsync(entry, version, "https://github.com/Deccoyi/macro-grid-plugin", isOfficial: true, CancellationToken.None));
+
+        Assert.Equal(PluginDownloadException.Withdrawn, ex.Code);
         Assert.Equal(0, handler.Calls);
     }
 

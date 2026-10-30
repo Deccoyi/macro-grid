@@ -94,4 +94,36 @@ public sealed class ProfileStoreTests : IDisposable
         Assert.False(store.Delete(first.Id));
         Assert.NotNull(store.Get(first.Id));
     }
+
+    [Fact]
+    public void An_old_file_without_names_loads_with_names_and_the_file_stays_as_it_was_until_a_save()
+    {
+        var first = new ProfileStore(_dir);
+        var profile = first.First();
+        foreach (var widget in profile.Pages.SelectMany(p => p.Widgets)) widget.Name = null;
+        first.Save(profile);
+        var path = Path.Combine(_dir, "profiles", profile.Id + ".json");
+        var before = File.ReadAllText(path);
+        Assert.DoesNotContain("\"name\": \"Label_1\"", before);
+
+        var reloaded = new ProfileStore(_dir).Get(profile.Id)!;
+
+        Assert.All(reloaded.Pages.SelectMany(p => p.Widgets), w => Assert.False(string.IsNullOrEmpty(w.Name)));
+        Assert.Equal(before, File.ReadAllText(path));
+
+        new ProfileStore(_dir).Save(reloaded);
+        Assert.Contains("Label_1", File.ReadAllText(path));
+    }
+
+    [Fact]
+    public void The_default_profile_has_unique_names_on_each_page()
+    {
+        var profile = ProfileStore.CreateDefaultProfile();
+        foreach (var page in profile.Pages)
+        {
+            var names = page.Widgets.Select(w => w.Name).ToList();
+            Assert.All(names, n => Assert.False(string.IsNullOrEmpty(n)));
+            Assert.Equal(names.Count, names.Distinct(StringComparer.OrdinalIgnoreCase).Count());
+        }
+    }
 }

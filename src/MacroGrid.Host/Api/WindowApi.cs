@@ -10,7 +10,7 @@ internal static class WindowApi
     public static RouteGroupBuilder MapWindowApi(this RouteGroupBuilder api)
     {
         api.MapPost("/windows/preferences", (IUiWindowService windows) =>
-            ShowAsync(windows, "preferences", "Preferences", "preferences", 640, 520));
+            ShowAsync(windows, "preferences", "Preferences", "preferences", 920, 640));
 
         // Wider than the other tool windows: Discover shows a card grid plus a detail view, closer to a
         // store page (docs/roadmap.md, "A richer Discover tab").

@@ -1,10 +1,13 @@
 import { useEffect, useRef, useState } from "react";
-import { ChevronDown, ChevronRight, RefreshCw, X } from "lucide-react";
+import { ChevronDown, ChevronRight, Eye, EyeOff, RefreshCw, TriangleAlert, Variable, X } from "lucide-react";
 import { api } from "../../api/client";
 import type { OptionsResult, SettingField, SettingOption, VariableInfo } from "../../api/types";
 import { useT } from "../../i18n/I18nContext";
 import { VariablePicker } from "../VariablePicker";
-import { Seg } from "../fields/controls";
+import { HotkeyCapture } from "./HotkeyCapture";
+import { clampDuration, joinDuration, splitDuration, type DurationUnit } from "./duration";
+import { ColorField, Field, NumberInput, RangeInput, Seg, SelectInput, Switch, TextInput, useFieldId } from "../fields/controls";
+import { layoutFields, segmentedAsSelect } from "./schemaFormLayout";
 
 interface SchemaFormProps {
   fields: SettingField[];
@@ -23,27 +26,41 @@ interface SchemaFormProps {
 /**
  * Generic renderer for a `SettingField[]` schema — the same component draws both action settings forms
  * (see forms.tsx's formFor) and a plugin's own settings window (PluginSettingsWindow.tsx). Fields the
- * plugin didn't provide (a hand-written form exists instead) never reach here.
+ * plugin didn't provide (a hand-written form exists instead) never reach here. Every kind is drawn through
+ * Field (docs/ui/ui-guidelines.md, "Properties panel field system"); consecutive fields that can share a row fill
+ * a two-column grid, and a field that depends on another is indented (see schemaFormLayout.ts).
  */
 export function SchemaForm({ fields, values, onChange, fetchOptions, variableCatalog = [], runCommand }: SchemaFormProps) {
   const set = (key: string, value: unknown) => onChange({ ...values, [key]: value });
 
+  const row = (field: SettingField) => (
+    <SchemaFieldRow
+      key={field.key}
+      field={field}
+      value={values[field.key]}
+      values={values}
+      onChange={(v) => set(field.key, v)}
+      fetchOptions={fetchOptions}
+      variableCatalog={variableCatalog}
+      runCommand={runCommand}
+    />
+  );
+
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-      {fields.filter((f) => isVisible(f, values)).map((field) => (
-        <SchemaFieldRow
-          key={field.key}
-          field={field}
-          value={values[field.key]}
-          values={values}
-          onChange={(v) => set(field.key, v)}
-          fetchOptions={fetchOptions}
-          variableCatalog={variableCatalog}
-          runCommand={runCommand}
-        />
-      ))}
+    <div className="pf-body">
+      {layoutFields(fields.filter((f) => isVisible(f, values))).map((item) => {
+        if (item.type === "grid") return <div key={item.fields[0]!.key} className="pf-grid-2">{item.fields.map(row)}</div>;
+        if (item.type === "nest") return <div key={item.fields[0]!.key} className="pf-nest">{item.fields.map(row)}</div>;
+        return row(item.field);
+      })}
     </div>
   );
+}
+
+/** A MultiSelect value as a list: a plugin that switched a field from Select to MultiSelect may still have a single text saved. */
+function asChosen(value: unknown): string[] {
+  if (Array.isArray(value)) return value.map(String);
+  return typeof value === "string" && value !== "" ? [value] : [];
 }
 
 function isVisible(field: SettingField, values: Record<string, unknown>): boolean {
@@ -82,6 +99,38 @@ function useFieldOptions(field: SettingField, values: Record<string, unknown>, f
   return { ...state, refresh: () => setBump((n) => n + 1) };
 }
 
+/** The text input of a Text or Password field; a password has its show/hide button inside, on the right. */
+function TextValue({ field, value, onChange, inputRef }: { field: SettingField; value: string; onChange: (v: string) => void; inputRef: React.RefObject<HTMLInputElement | null> }) {
+  const { t } = useT();
+  const id = useFieldId();
+  const [shown, setShown] = useState(false);
+  const isPassword = field.kind === "Password";
+  return (
+    <div className={isPassword ? "pf-pw" : undefined}>
+      <input
+        ref={inputRef}
+        id={id}
+        type={isPassword && !shown ? "password" : "text"}
+        value={value}
+        placeholder={field.placeholder ?? undefined}
+        onChange={(e) => onChange(e.target.value)}
+      />
+      {isPassword && (
+        <button
+          type="button"
+          className="pf-icon-btn inside"
+          title={shown ? t("schemaForm.password.hide") : t("schemaForm.password.show")}
+          aria-label={shown ? t("schemaForm.password.hide") : t("schemaForm.password.show")}
+          aria-pressed={shown}
+          onClick={() => setShown((v) => !v)}
+        >
+          {shown ? <EyeOff size={14} /> : <Eye size={14} />}
+        </button>
+      )}
+    </div>
+  );
+}
+
 function SchemaFieldRow({
   field,
   value,
@@ -103,10 +152,16 @@ function SchemaFieldRow({
   const textRef = useRef<HTMLInputElement | null>(null);
   // Called unconditionally (rules-of-hooks) — a no-op internally for kinds that never set optionsSource.
   const opts = useFieldOptions(field, values, fetchOptions);
+  const hint = field.description ?? undefined;
 
   if (field.kind === "Notice") {
+    // A notice whose text is empty (an unresolved plugin string) would show a bare warning icon.
+    if (!field.description?.trim()) return null;
     return (
-      <div style={{ fontSize: 11.5, color: "var(--ms-warning, #facc15)", lineHeight: 1.4 }}>{field.description}</div>
+      <div role="note" className="pf-note">
+        <TriangleAlert size={14} />
+        <span>{field.description}</span>
+      </div>
     );
   }
 
@@ -117,10 +172,9 @@ function SchemaFieldRow({
   if (field.kind === "File") {
     const path = typeof value === "string" ? value : "";
     return (
-      <label className="field">
-        {field.label}
-        <div style={{ display: "flex", gap: 6 }}>
-          <input type="text" value={path} readOnly style={{ flex: 1 }} placeholder={field.placeholder ?? undefined} />
+      <Field label={field.label} hint={hint}>
+        <div className="pf-row">
+          <div className="grow"><TextInput value={path} readOnly placeholder={field.placeholder ?? undefined} /></div>
           <button
             type="button"
             onClick={async () => {
@@ -131,8 +185,7 @@ function SchemaFieldRow({
             {t("schemaForm.browse")}
           </button>
         </div>
-        {field.description && <FieldHint text={field.description} />}
-      </label>
+      </Field>
     );
   }
 
@@ -149,34 +202,124 @@ function SchemaFieldRow({
     );
   }
 
-  if (field.kind === "Bool") {
+  if (field.kind === "Variable") {
+    const name = typeof value === "string" ? value : "";
     return (
-      <label className="field" style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
-        <input type="checkbox" checked={Boolean(value ?? field.default ?? false)} onChange={(e) => onChange(e.target.checked)} />
-        {field.label}
-      </label>
+      <Field label={field.label} hint={hint}>
+        <div className="pf-row">
+          <div className="grow">
+            <VariablePicker
+              catalog={variableCatalog}
+              mode="bare"
+              onInsert={(picked) => onChange(picked)}
+              renderTrigger={(open) => (
+                <button type="button" className="pf-ctl pf-row pf-fill" onClick={open}>
+                  <Variable size={14} />
+                  <span className="pf-ellipsis">{name || t("schemaForm.variable.pick")}</span>
+                </button>
+              )}
+            />
+          </div>
+          {name && (
+            <button type="button" className="ghost pf-icon-btn" title={t("schemaForm.variable.clear")} aria-label={t("schemaForm.variable.clear")} onClick={() => onChange("")}>
+              <X size={14} />
+            </button>
+          )}
+        </div>
+      </Field>
     );
   }
 
-  if (field.kind === "Number" || field.kind === "Slider") {
+  if (field.kind === "Color") {
+    const color = typeof value === "string" ? value : typeof field.default === "string" ? field.default : "";
+    return (
+      <Field single label={field.label} hint={hint}>
+        <ColorField value={color} onChange={onChange} />
+      </Field>
+    );
+  }
+
+  if (field.kind === "Hotkey") {
+    const combo = typeof value === "string" ? value : typeof field.default === "string" ? field.default : "";
+    return (
+      <Field single label={field.label} hint={hint}>
+        <HotkeyCapture value={combo} onChange={onChange} />
+      </Field>
+    );
+  }
+
+  if (field.kind === "Duration") {
+    return (
+      <Field single label={field.label} hint={hint}>
+        <DurationInput field={field} value={value} onChange={onChange} />
+      </Field>
+    );
+  }
+
+  if (field.kind === "MultiSelect") {
+    const chosen = asChosen(value ?? field.default);
+    const known = new Set(opts.options.map((o) => o.value));
+    const stale = chosen.filter((v) => !known.has(v));
+    // The saved array follows the option order; a value that is no longer an option stays, last, so it can be unticked.
+    const toggle = (optionValue: string, on: boolean) => {
+      const next = new Set(chosen);
+      if (on) next.add(optionValue); else next.delete(optionValue);
+      onChange([...opts.options.map((o) => o.value).filter((v) => next.has(v)), ...stale.filter((v) => next.has(v))]);
+    };
+    return (
+      <Field
+        label={field.label}
+        hint={hint}
+        error={opts.error ?? undefined}
+        action={field.optionsSource && (
+          <button type="button" className="ghost" title={t("schemaForm.refresh")} aria-label={t("schemaForm.refresh")} onClick={opts.refresh} disabled={opts.loading}>
+            <RefreshCw size={12} className={opts.loading ? "spin" : undefined} />
+          </button>
+        )}
+      >
+        <div role="group" aria-label={field.label} style={{ maxHeight: 160, overflowY: "auto", display: "flex", flexDirection: "column", gap: 4 }}>
+          {opts.options.map((o) => (
+            <label key={o.value} style={{ display: "flex", gap: 6, alignItems: "center" }}>
+              <input type="checkbox" checked={chosen.includes(o.value)} onChange={(e) => toggle(o.value, e.target.checked)} />
+              {o.group ? `${o.group} › ${o.label}` : o.label}
+            </label>
+          ))}
+          {stale.map((v) => (
+            <label key={v} style={{ display: "flex", gap: 6, alignItems: "center" }}>
+              <input type="checkbox" checked onChange={(e) => toggle(v, e.target.checked)} />
+              {`${v} ${t("schemaForm.notFound")}`}
+            </label>
+          ))}
+        </div>
+      </Field>
+    );
+  }
+
+  if (field.kind === "Bool") {
+    return (
+      <Field inline label={field.label} hint={hint}>
+        <Switch checked={Boolean(value ?? field.default ?? false)} onChange={onChange} />
+      </Field>
+    );
+  }
+
+  if (field.kind === "Slider") {
+    const min = field.min ?? 0;
+    const max = field.max ?? 100;
+    const num = typeof value === "number" ? value : (typeof field.default === "number" ? field.default : min);
+    return (
+      <Field label={field.label} hint={hint}>
+        <RangeInput value={num} min={min} max={max} step={field.step ?? undefined} onChange={onChange} />
+      </Field>
+    );
+  }
+
+  if (field.kind === "Number") {
     const num = typeof value === "number" ? value : (typeof field.default === "number" ? field.default : field.min ?? 0);
     return (
-      <label className="field">
-        {field.label}
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <input
-            type={field.kind === "Slider" ? "range" : "number"}
-            min={field.min ?? undefined}
-            max={field.max ?? undefined}
-            step={field.step ?? undefined}
-            value={num}
-            onChange={(e) => onChange(Number(e.target.value))}
-            style={{ flex: field.kind === "Slider" ? 1 : undefined }}
-          />
-          {field.kind === "Slider" && <span style={{ fontSize: 11.5, color: "var(--ms-text-secondary)", width: 40, textAlign: "right" }}>{num}</span>}
-        </div>
-        {field.description && <FieldHint text={field.description} />}
-      </label>
+      <Field single label={field.label} hint={hint}>
+        <NumberInput value={num} min={field.min ?? undefined} max={field.max ?? undefined} step={field.step ?? undefined} onChange={onChange} />
+      </Field>
     );
   }
 
@@ -185,39 +328,38 @@ function SchemaFieldRow({
     const knownValues = new Set(opts.options.map((o) => o.value));
     const stale = current && !knownValues.has(current);
 
-    if (field.kind === "Segmented" && !field.optionsSource) {
+    if (field.kind === "Segmented" && !segmentedAsSelect(field)) {
       return (
-        <label className="field">
-          {field.label}
+        <Field single label={field.label} hint={hint}>
           <Seg
             value={current}
             options={opts.options.map((o) => ({ value: o.value, label: o.label }))}
             onChange={onChange}
           />
-        </label>
+        </Field>
       );
     }
 
     return (
-      <label className="field">
-        <div style={{ display: "flex", alignItems: "center" }}>
-          <span style={{ flex: 1 }}>{field.label}</span>
-          {field.optionsSource && (
-            <button type="button" className="ghost" title={t("schemaForm.refresh")} onClick={opts.refresh} style={{ display: "flex", padding: 4 }} disabled={opts.loading}>
-              <RefreshCw size={12} className={opts.loading ? "spin" : undefined} />
-            </button>
-          )}
-        </div>
-        <select value={current} onChange={(e) => onChange(e.target.value)}>
+      <Field
+        single
+        label={field.label}
+        hint={hint}
+        error={opts.error ?? undefined}
+        action={field.optionsSource && (
+          <button type="button" className="ghost" title={t("schemaForm.refresh")} aria-label={t("schemaForm.refresh")} onClick={opts.refresh} disabled={opts.loading}>
+            <RefreshCw size={12} className={opts.loading ? "spin" : undefined} />
+          </button>
+        )}
+      >
+        <SelectInput value={current} onChange={onChange}>
           <option value="">{t("form.pickPlaceholder")}</option>
           {stale && <option value={current}>{`${current} ${t("schemaForm.notFound")}`}</option>}
           {opts.options.map((o) => (
             <option key={o.value} value={o.value}>{o.group ? `${o.group} › ${o.label}` : o.label}</option>
           ))}
-        </select>
-        {opts.error && <span style={{ color: "var(--ms-danger)", fontSize: 11 }}>{opts.error}</span>}
-        {field.description && !opts.error && <FieldHint text={field.description} />}
-      </label>
+        </SelectInput>
+      </Field>
     );
   }
 
@@ -237,30 +379,76 @@ function SchemaFieldRow({
   };
 
   return (
-    <label className="field">
-      <div style={{ display: "flex", alignItems: "center" }}>
-        <span style={{ flex: 1 }}>{field.label}</span>
-        {field.allowVariables && variableCatalog.length > 0 && (
-          <VariablePicker
-            catalog={variableCatalog}
-            onInsert={insertVariable}
-            renderTrigger={(open) => (
-              <button type="button" className="ghost" onClick={open} style={{ padding: "2px 6px", fontSize: 11 }}>
-                {t("variable.add")}
-              </button>
-            )}
-          />
-        )}
+    <Field
+      label={field.label}
+      hint={hint}
+      action={field.allowVariables && variableCatalog.length > 0 && (
+        <VariablePicker
+          catalog={variableCatalog}
+          onInsert={insertVariable}
+          renderTrigger={(open) => (
+            <button type="button" className="ghost" onClick={open}>
+              <Variable size={12} />
+              {t("variable.add")}
+            </button>
+          )}
+        />
+      )}
+    >
+      <TextValue field={field} value={strValue} onChange={onChange} inputRef={textRef} />
+    </Field>
+  );
+}
+
+/** The stored value is whole milliseconds; the person types it in the unit they choose. The typed text is kept as typed ("1." must not turn into "1"). */
+function DurationInput({ field, value, onChange }: { field: SettingField; value: unknown; onChange: (v: unknown) => void }) {
+  const { t } = useT();
+  const id = useFieldId();
+  const stored = typeof value === "number" && Number.isFinite(value) ? value : typeof field.default === "number" ? field.default : field.min ?? 0;
+  const [unit, setUnit] = useState<DurationUnit>(() => splitDuration(stored).unit);
+  const [text, setText] = useState(() => String(splitDuration(stored).amount));
+  const factor = { ms: 1, s: 1000, min: 60000 }[unit];
+
+  useEffect(() => {
+    // Something else changed the stored value: show it, unless the text already means it.
+    setText((current) => (joinDuration(Number(current), unit) === stored ? current : String(stored / factor)));
+  }, [stored, unit, factor]);
+
+  const pickUnit = (next: DurationUnit) => {
+    setUnit(next);
+    setText(String(stored / { ms: 1, s: 1000, min: 60000 }[next]));
+  };
+
+  return (
+    <div style={{ display: "flex", gap: 6 }}>
+      <div className="pf-num" style={{ flex: 1 }}>
+        <input
+          type="number"
+          id={id}
+          min={field.min != null ? field.min / factor : undefined}
+          max={field.max != null ? field.max / factor : undefined}
+          step={unit === "ms" ? field.step ?? undefined : "any"}
+          value={text}
+          onChange={(e) => {
+            setText(e.target.value);
+            const amount = Number(e.target.value);
+            if (e.target.value !== "" && Number.isFinite(amount)) onChange(joinDuration(amount, unit));
+          }}
+          onBlur={() => {
+            const clamped = clampDuration(stored, field.min, field.max);
+            if (clamped !== stored) onChange(clamped);
+          }}
+        />
       </div>
-      <input
-        ref={textRef}
-        type={field.kind === "Password" ? "password" : "text"}
-        value={strValue}
-        placeholder={field.placeholder ?? undefined}
-        onChange={(e) => onChange(e.target.value)}
-      />
-      {field.description && <FieldHint text={field.description} />}
-    </label>
+      <div className="pf-sel" style={{ width: 72 }}>
+        <select value={unit} onChange={(e) => pickUnit(e.target.value as DurationUnit)} aria-label={field.label}>
+          <option value="ms">{t("schemaForm.duration.ms")}</option>
+          <option value="s">{t("schemaForm.duration.s")}</option>
+          <option value="min">{t("schemaForm.duration.min")}</option>
+        </select>
+        <span className="chev" aria-hidden="true"><ChevronDown size={14} /></span>
+      </div>
+    </div>
   );
 }
 
@@ -320,78 +508,69 @@ function ListField({
   };
 
   return (
-    <div className="field">
-      <div style={{ display: "flex", alignItems: "center" }}>
-        <span style={{ flex: 1 }}>{field.label}</span>
-        {rows.length > 1 && (
-          <>
-            <button type="button" className="ghost" style={{ fontSize: 11 }} onClick={() => setCollapsed(new Set())}>
-              {t("schemaForm.expandAll")}
-            </button>
-            <button type="button" className="ghost" style={{ fontSize: 11 }} onClick={() => setCollapsed(new Set(rows.map((_, i) => i)))}>
-              {t("schemaForm.collapseAll")}
-            </button>
-          </>
-        )}
-      </div>
-      <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-        {rows.map((row, index) => {
-          const isOpen = !collapsed.has(index);
-          return (
-            <div key={(row.id as string | undefined) || index} style={{ border: "1px solid var(--ms-border)", borderRadius: 6 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 4, padding: "6px 6px 6px 4px" }}>
-                <button
-                  type="button"
-                  className="ghost"
-                  style={{ display: "flex", padding: 4 }}
-                  onClick={() => toggle(index)}
-                  aria-label={isOpen ? t("schemaForm.collapseRow") : t("schemaForm.expandRow")}
-                >
-                  {isOpen ? <ChevronDown size={13} /> : <ChevronRight size={13} />}
-                </button>
-                <span
-                  style={{ flex: 1, fontSize: 12, cursor: "pointer", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
-                  onClick={() => toggle(index)}
-                >
-                  {titleFor(row, index)}
-                </span>
-                <button
-                  type="button"
-                  className="ghost"
-                  style={{ display: "flex", padding: 4 }}
-                  title={t("schemaForm.removeRow")}
-                  aria-label={t("schemaForm.removeRow")}
-                  onClick={() => removeRow(index)}
-                >
-                  <X size={13} />
-                </button>
-              </div>
-              {isOpen && (
-                <div style={{ padding: "0 8px 8px 8px" }}>
-                  <SchemaForm
-                    fields={itemFields}
-                    values={row}
-                    onChange={(nextRow) => setRows(rows.map((r, i) => (i === index ? { ...row, ...nextRow } : r)))}
-                    fetchOptions={fetchOptions}
-                    variableCatalog={variableCatalog}
-                    runCommand={runCommand}
-                  />
+    <Field
+      label={field.label}
+      hint={field.description ?? undefined}
+      action={rows.length > 1 && (
+        <>
+          <button type="button" className="ghost" onClick={() => setCollapsed(new Set())}>
+            {t("schemaForm.expandAll")}
+          </button>
+          <button type="button" className="ghost" onClick={() => setCollapsed(new Set(rows.map((_, i) => i)))}>
+            {t("schemaForm.collapseAll")}
+          </button>
+        </>
+      )}
+    >
+      {rows.length > 0 && (
+        <div className="pf-list">
+          {rows.map((row, index) => {
+            const isOpen = !collapsed.has(index);
+            return (
+              <div key={(row.id as string | undefined) || index}>
+                <div className="pf-list-head">
+                  <button
+                    type="button"
+                    className="ghost pf-icon-btn small"
+                    onClick={() => toggle(index)}
+                    aria-expanded={isOpen}
+                    aria-label={isOpen ? t("schemaForm.collapseRow") : t("schemaForm.expandRow")}
+                  >
+                    {isOpen ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+                  </button>
+                  <span className="grow pf-clickable" onClick={() => toggle(index)}>{titleFor(row, index)}</span>
+                  <button
+                    type="button"
+                    className="ghost pf-icon-btn small"
+                    title={t("schemaForm.removeRow")}
+                    aria-label={t("schemaForm.removeRow")}
+                    onClick={() => removeRow(index)}
+                  >
+                    <X size={14} />
+                  </button>
                 </div>
-              )}
-            </div>
-          );
-        })}
-        <button type="button" className="ghost" style={{ alignSelf: "flex-start" }} onClick={addRow}>
-          {t("schemaForm.addRow")}
-        </button>
-      </div>
-      {field.description && <FieldHint text={field.description} />}
-    </div>
+                {isOpen && (
+                  <div className="pf-list-body">
+                    <SchemaForm
+                      fields={itemFields}
+                      values={row}
+                      onChange={(nextRow) => setRows(rows.map((r, i) => (i === index ? { ...row, ...nextRow } : r)))}
+                      fetchOptions={fetchOptions}
+                      variableCatalog={variableCatalog}
+                      runCommand={runCommand}
+                    />
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+      <button type="button" className="ghost pf-btn small" onClick={addRow}>
+        {t("schemaForm.addRow")}
+      </button>
+    </Field>
   );
-}
-
-function FieldHint({ text }: { text: string }) {
-  return <span style={{ fontSize: 11, color: "var(--ms-text-secondary)", lineHeight: 1.4 }}>{text}</span>;
 }
 
 function ButtonField({
@@ -406,27 +585,29 @@ function ButtonField({
   const { t } = useT();
   const [running, setRunning] = useState(false);
   const [result, setResult] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   const run = async () => {
     if (!field.command || !runCommand) return;
     setRunning(true);
     setResult(null);
+    setError(null);
     try {
       const { text } = await runCommand(field.command, values);
       setResult(text);
     } catch (err) {
-      setResult(err instanceof Error ? err.message : String(err));
+      setError(err instanceof Error ? err.message : String(err));
     } finally {
       setRunning(false);
     }
   };
 
   return (
-    <div className="field">
-      <button type="button" disabled={running || !runCommand} onClick={run}>
+    <div className="pf-field">
+      <button type="button" className="pf-btn" disabled={running || !runCommand} onClick={run}>
         {running ? t("schemaForm.running") : field.label}
       </button>
-      {result && <FieldHint text={result} />}
+      {error ? <span role="alert" className="pf-hint error">{error}</span> : result && <span className="pf-hint">{result}</span>}
     </div>
   );
 }

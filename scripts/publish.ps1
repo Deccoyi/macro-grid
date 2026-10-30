@@ -63,7 +63,7 @@ if (-not $SkipEditor) {
 if (Test-Path $out) { Remove-Item $out -Recurse -Force }
 
 dotnet publish (Join-Path $root "src\MacroGrid.Host") -c $Configuration -r win-x64 --self-contained `
-    -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:EnableCompressionInSingleFile=true `
+    -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true `
     -p:DebugType=None -p:DebugSymbols=false -p:Version=$version -o $out
 if ($LASTEXITCODE) { throw "dotnet publish failed" }
 

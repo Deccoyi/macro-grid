@@ -66,7 +66,7 @@ export default defineConfig({
               items: [
                 { text: 'Düzenleyici', link: '/tr/guide/editor' },
                 { text: "Widget'lar", link: '/tr/guide/widgets' },
-                { text: 'Aksiyonlar ve makrolar', link: '/tr/guide/actions' },
+                { text: 'Eylemler ve makrolar', link: '/tr/guide/actions' },
                 { text: 'Değişkenler ve metin', link: '/tr/guide/variables' },
                 { text: 'Dinamik kurallar', link: '/tr/guide/dynamic' },
                 { text: 'Stil, simgeler ve CSS', link: '/tr/guide/styling' },
@@ -95,7 +95,7 @@ export default defineConfig({
             {
               text: 'Başvuru',
               items: [
-                { text: 'Aksiyonlar', link: '/tr/reference/actions' },
+                { text: 'Eylemler', link: '/tr/reference/actions' },
                 { text: 'Değişkenler', link: '/tr/reference/variables' },
                 { text: 'Kısayol tuş adları', link: '/tr/reference/keys' },
                 { text: 'Dosyalar ve portlar', link: '/tr/reference/files' },

@@ -1,4 +1,6 @@
+using System.Text.Json.Nodes;
 using MacroGrid.Core.Model;
+using MacroGrid.Core.Plugins.Widgets;
 
 namespace MacroGrid.Core.Profiles;
 
@@ -91,6 +93,20 @@ public static class ProfileValidator
             {
                 error = $"Widget '{widget.Id}' must be at least 1 wide and 1 high.";
                 return false;
+            }
+
+            if (widget.Type == WidgetTypes.PluginWidget)
+            {
+                if (!PluginWidgetProps.TryRead(widget, out _, out _))
+                {
+                    error = $"Plugin widget '{widget.Id}' needs the plugin and widget it belongs to.";
+                    return false;
+                }
+                if (widget.Props?["settings"] is { } settings && (settings is not JsonObject || settings.ToJsonString().Length > 16 * 1024))
+                {
+                    error = $"The settings of plugin widget '{widget.Id}' must be an object of at most 16 KB.";
+                    return false;
+                }
             }
 
             if (widget.X < 0 || widget.Y < 0 || widget.X + widget.W > page.Cols || widget.Y + widget.H > page.Rows)

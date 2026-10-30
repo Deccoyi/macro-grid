@@ -35,6 +35,9 @@ public static class DynamicRuleEvaluator
                 yield return v;
     }
 
+    /// <summary>True when the condition is met right now (the same tree walk a dynamic rule uses; the If step of an action list calls it too).</summary>
+    public static bool Matches(ConditionNode node, IVariableStore variables) => EvaluateNode(node, variables);
+
     private static bool EvaluateNode(ConditionNode node, IVariableStore variables) => node.Kind switch
     {
         ConditionKinds.And => node.Children.Count > 0 && node.Children.All(c => EvaluateNode(c, variables)),
@@ -46,8 +49,14 @@ public static class DynamicRuleEvaluator
 
     private static bool EvaluateComparison(ConditionNode node, IVariableStore variables)
     {
-        if (node.Variable is null || node.Operator is null || node.Value is null) return false;
+        if (string.IsNullOrEmpty(node.Variable) || node.Operator is null) return false;
         var liveValue = variables.Get(node.Variable);
+
+        // These two read only whether there is a value, so they come before the value checks below.
+        if (node.Operator == DynamicOperators.IsUnavailable) return liveValue is null;
+        if (node.Operator == DynamicOperators.IsAvailable) return liveValue is not null;
+
+        if (node.Value is null) return false;
 
         if (node.Operator == DynamicOperators.Between)
         {

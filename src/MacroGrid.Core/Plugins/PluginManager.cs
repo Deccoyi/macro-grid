@@ -1,7 +1,9 @@
 using System.Text.Json;
 using MacroGrid.Core.Actions;
 using MacroGrid.Core.Diagnostics;
+using MacroGrid.Core.Plugins.Distribution;
 using MacroGrid.Core.Plugins.Js;
+using MacroGrid.Core.Plugins.Widgets;
 using MacroGrid.Core.Profiles;
 using MacroGrid.Core.Security;
 using MacroGrid.Core.Sessions;
@@ -41,7 +43,13 @@ public sealed partial class PluginManager(
     ISecretProtector? secretProtector = null,
     PluginTrustVerifier? trustVerifier = null,
     IActiveWindowSource? windowSource = null,
-    ProblemList? problems = null) : IHostedService
+    ProblemList? problems = null,
+    PluginWidgetCatalog? widgetCatalog = null,
+    PluginWidgetEventHub? widgetEvents = null,
+    OfficialCatalog? officialCatalog = null,
+    PluginInstallOriginStore? origins = null,
+    IReadOnlyCollection<int>? ownPorts = null,
+    PluginNotifications? notifications = null) : IHostedService, IPluginWidgetHost
 {
     private static readonly JsonSerializerOptions ManifestJson = new(JsonSerializerDefaults.Web);
     private readonly PluginTrustVerifier _trust = trustVerifier ?? PluginTrustVerifier.Official;
@@ -53,6 +61,9 @@ public sealed partial class PluginManager(
         public string Dir { get; } = dir;
         public LoadedPlugin Info { get; set; } = info;
         public Running? Running { get; set; }
+        /// <summary>Whether the saved official safety list named this id and version when the folder was last loaded
+        /// (whether or not the plugin is covered by it); lets <see cref="ApplyRevocationsAsync"/> reload only what changed.</summary>
+        public bool ListedAsRevoked { get; set; }
     }
 
     private sealed class Running(
@@ -69,6 +80,8 @@ public sealed partial class PluginManager(
         /// <summary>The handler subscribed to the instance's <see cref="IPluginTreeProvider.TreeItemsChanged"/>, if
         /// it implements that interface — kept so unloading can unsubscribe exactly it.</summary>
         public Action<string?>? TreeChangedHandler { get; set; }
+        /// <summary>The plugin's answer to its widgets' requests, if it implements <see cref="IPluginWidgetHandler"/>.</summary>
+        public IPluginWidgetHandler? WidgetHandler { get; set; }
     }
 
     private readonly Lock _stateLock = new();
@@ -81,9 +94,20 @@ public sealed partial class PluginManager(
         get
         {
             lock (_stateLock)
-                return [.. _entries.Values.Select(e => e.Running?.Instance is JsPlugin js ? e.Info with { KeyboardUsesToday = js.KeyboardUsesToday } : e.Info), .. _unrecognized];
+                return Snapshot();
         }
     }
+
+    /// <summary>The plugin list without waiting: null when another thread holds the state lock. For the crash handler, which must never block.</summary>
+    public IReadOnlyList<LoadedPlugin>? TryGetPlugins()
+    {
+        if (!_stateLock.TryEnter()) return null;
+        try { return Snapshot(wait: false); }
+        finally { _stateLock.Exit(); }
+    }
+
+    private List<LoadedPlugin> Snapshot(bool wait = true) =>
+        [.. _entries.Values.Select(e => e.Running?.Instance is JsPlugin js ? e.Info with { KeyboardUsesToday = wait ? js.KeyboardUsesToday : js.KeyboardUsesTodayNoWait() } : e.Info), .. _unrecognized];
 
     public IReadOnlyList<IIconPackSource> IconPacks
     {
@@ -152,6 +176,9 @@ public sealed partial class PluginManager(
         catch (Exception ex) when (ex is JsonException or InvalidOperationException) { return null; }
     }
 
+    /// <summary>The running plugin's handler for its widgets' requests, or null when the plugin is not running or has none.</summary>
+    public IPluginWidgetHandler? GetWidgetHandler(string pluginId) => FindEntry(pluginId)?.Running?.WidgetHandler;
+
     private Entry? FindEntry(string pluginId)
     {
         lock (_stateLock)
@@ -177,12 +204,14 @@ public sealed partial class PluginManager(
     }
 
     /// <summary>Copies a plugin folder into <c>plugins/&lt;id&gt;/</c> and loads it right away. If a plugin with that
-    /// id is already installed it is unloaded first and its files are overwritten (its own settings files stay).</summary>
-    public async Task<PluginInstallResult> InstallFromFolderAsync(string sourceDir)
+    /// id is already installed it is unloaded first and its files are overwritten (its own settings files stay). The origin (where it came from) is recorded before the first load, or
+    /// forgotten when there is none (a folder install over a catalog plugin).</summary>
+    public async Task<PluginInstallResult> InstallFromFolderAsync(string sourceDir, PluginInstallOrigin? origin = null)
     {
         var manifest = ReadManifest(Path.Combine(sourceDir, "plugin.json"));
-        if (!IsSafeSegment(manifest.Id))
-            throw new InvalidOperationException($"'{manifest.Id}' is not a valid plugin id.");
+        if (!IsValidPluginId(manifest.Id))
+            throw new InvalidOperationException(
+                $"'{manifest.Id}' is not a valid plugin id. Use 1 to 64 letters, digits, '.', '-' or '_', starting with a letter or digit and not ending with a dot.");
         if (CheckInstallTrust(sourceDir, manifest) is { } refusal)
             throw new InvalidOperationException(refusal);
 
@@ -200,7 +229,10 @@ public sealed partial class PluginManager(
             var destDir = Path.Combine(pluginsRoot, manifest.Id);
             var marker = Path.Combine(destDir, ".uninstall");
             if (File.Exists(marker)) File.Delete(marker);
+            RemoveCodeFiles(destDir);
             CopyDirectory(sourceDir, destDir);
+            if (origin is null) origins?.Remove(manifest.Id);
+            else origins?.Set(manifest.Id, origin);
 
             var info = await LoadFolderCoreAsync(destDir);
             logger.LogInformation(SecurityEvents.PluginInstalled, "Security: plugin {Id} {Version} ({Kind}) installed", manifest.Id, manifest.Version, manifest.Kind);
@@ -225,6 +257,32 @@ public sealed partial class PluginManager(
     /// about to install (in particular its <see cref="PluginManifest.Kind"/>) before the person confirms.</summary>
     public static PluginManifest PeekManifest(string sourceDir) => ReadManifest(Path.Combine(sourceDir, "plugin.json"));
 
+    /// <summary>Compares the saved safety list with what is loaded and reloads only the plugins whose answer changed: a plugin newly
+    /// named is switched off, one that was taken off the list starts again. Everything else keeps running as the same instance.
+    /// Reads only the saved copy; the caller refreshes it first. Returns the ids that were reloaded.</summary>
+    public async Task<IReadOnlyList<string>> ApplyRevocationsAsync()
+    {
+        var list = officialCatalog?.Revoked;
+        var changed = new List<string>();
+        await _gate.WaitAsync();
+        try
+        {
+            List<Entry> entries;
+            lock (_stateLock) entries = [.. _entries.Values];
+            foreach (var entry in entries)
+            {
+                var listed = list?.Find(entry.Info.Id, entry.Info.Version) is not null;
+                if (listed == entry.ListedAsRevoked) continue;
+                await UnloadCoreAsync(entry);
+                lock (_stateLock) _entries.Remove(entry.Info.Id);
+                await LoadFolderCoreAsync(entry.Dir);
+                changed.Add(entry.Info.Id);
+            }
+        }
+        finally { _gate.Release(); }
+        return changed;
+    }
+
     /// <summary>Unloads a plugin and loads it again from its folder (picks up a replaced DLL or changed manifest).</summary>
     public async Task<LoadedPlugin?> ReloadAsync(string pluginId)
     {
@@ -238,6 +296,46 @@ public sealed partial class PluginManager(
             lock (_stateLock) _entries.Remove(pluginId);
             var info = await LoadFolderCoreAsync(entry.Dir);
             return info;
+        }
+        finally { _gate.Release(); }
+    }
+
+    /// <summary>Switches one of a JavaScript plugin's approved permissions off or on and restarts the plugin, which then runs without it
+    /// (the calls that need it answer "not allowed"). Null when there is no such plugin or it did not declare that permission.</summary>
+    public async Task<LoadedPlugin?> SetPermissionAsync(string pluginId, string permission, bool enabled)
+    {
+        await _gate.WaitAsync();
+        try
+        {
+            var entry = FindEntry(pluginId);
+            var declared = entry?.Info.Permissions?.FirstOrDefault(p => p.Equals(permission, StringComparison.OrdinalIgnoreCase));
+            if (entry is null || declared is null) return null;
+
+            permissionStore.SetSwitchedOff(pluginId, declared, off: !enabled);
+            logger.LogInformation(SecurityEvents.PluginPermissionsGranted, "Security: plugin {Id} permission {Permission} was switched {State}",
+                SecurityEvents.ForLog(pluginId), SecurityEvents.ForLog(declared), enabled ? "on" : "off");
+            await UnloadCoreAsync(entry);
+            lock (_stateLock) _entries.Remove(pluginId);
+            return await LoadFolderCoreAsync(entry.Dir);
+        }
+        finally { _gate.Release(); }
+    }
+
+    /// <summary>Switches a plugin off (it is unloaded and stays in the list) or on again (it is loaded from its folder). The choice
+    /// is kept across restarts. Null when there is no such plugin.</summary>
+    public async Task<LoadedPlugin?> SetEnabledAsync(string pluginId, bool enabled)
+    {
+        await _gate.WaitAsync();
+        try
+        {
+            var entry = FindEntry(pluginId);
+            if (entry is null) return null;
+
+            permissionStore.SetDisabled(pluginId, disabled: !enabled);
+            logger.LogInformation("Plugin {Id} was switched {State}", SecurityEvents.ForLog(pluginId), enabled ? "on" : "off");
+            await UnloadCoreAsync(entry);
+            lock (_stateLock) _entries.Remove(pluginId);
+            return await LoadFolderCoreAsync(entry.Dir);
         }
         finally { _gate.Release(); }
     }
@@ -273,6 +371,7 @@ public sealed partial class PluginManager(
             await UnloadCoreAsync(entry);
             entry.Info = entry.Info with { Status = PluginLoadStatus.Error, Detail = reason, HasSettings = false, HasTreeItems = false };
             logger.LogWarning("Plugin {Id} was switched off: {Reason}", pluginId, reason);
+            widgetCatalog?.Set(pluginId, entry.Info.Name, PluginWidgetAvailability.Disabled, false, [], []);
             problems?.Report(pluginId, entry.Info.Name, ProblemSeverity.Error, ProblemCodes.SwitchedOff, reason);
         }
         finally { _gate.Release(); }
@@ -290,7 +389,10 @@ public sealed partial class PluginManager(
 
             await UnloadCoreAsync(entry);
             lock (_stateLock) _entries.Remove(pluginId);
+            widgetCatalog?.Remove(pluginId);
+            widgetEvents?.Forget(pluginId);
             permissionStore.Revoke(pluginId);
+            origins?.Remove(pluginId);
             logger.LogInformation(SecurityEvents.PluginUninstalled, "Security: plugin {Id} uninstalled", SecurityEvents.ForLog(pluginId));
 
             try
@@ -318,8 +420,26 @@ public sealed partial class PluginManager(
             ?? throw new JsonException("plugin.json is empty");
     }
 
-    private static bool IsSafeSegment(string id) =>
-        !string.IsNullOrWhiteSpace(id) && !id.Contains("..") && id.IndexOfAny(Path.GetInvalidFileNameChars()) < 0;
+    /// <summary>Names the host uses for its own variables and actions, so no plugin can claim them.</summary>
+    private static readonly string[] ReservedIds = ["user", "system", "core", "self"];
+
+    private static readonly string[] ReservedDeviceNames =
+        ["CON", "PRN", "AUX", "NUL", "COM1", "COM2", "COM3", "COM4", "COM5", "COM6", "COM7", "COM8", "COM9",
+         "LPT1", "LPT2", "LPT3", "LPT4", "LPT5", "LPT6", "LPT7", "LPT8", "LPT9"];
+
+    /// <summary>The id becomes a folder name, so it is limited to characters that mean the same on every file system: no trailing dot
+    /// (Windows drops it, so two ids could share a folder), no reserved device name, no spaces or other alphabets. Applied at install only;
+    /// plugins that are already installed keep loading.</summary>
+    internal static bool IsValidPluginId(string? id)
+    {
+        if (string.IsNullOrEmpty(id) || id.Length > 64) return false;
+        if (!char.IsAsciiLetterOrDigit(id[0]) || id[^1] == '.') return false;
+        foreach (var c in id)
+            if (!(char.IsAsciiLetterOrDigit(c) || c is '.' or '-' or '_')) return false;
+        if (ReservedIds.Contains(id, StringComparer.OrdinalIgnoreCase)) return false;
+        var stem = id.Split('.')[0];
+        return !ReservedDeviceNames.Contains(stem, StringComparer.OrdinalIgnoreCase);
+    }
 
     /// <summary>The size limit is 100 KB: generous for a small square logo (an SVG is typically a few KB; a
     /// crisp 256x256 PNG rarely exceeds this), small enough that a plugin folder never balloons from it. Pixel
@@ -330,7 +450,20 @@ public sealed partial class PluginManager(
     private const long MaxIconBytes = 100 * 1024;
     private static readonly string[] AllowedIconExtensions = [".svg", ".png"];
 
-    private static string? ResolveIconPath(string dir, PluginManifest manifest)
+    /// <summary>The absolute path of a plugin's start file, or null when the entry is empty, rooted, climbs out of the folder, resolves
+    /// outside it or names a file that does not exist. A start file in a subfolder is fine.</summary>
+    internal static string? ResolveEntryPath(string dir, string entry)
+    {
+        if (string.IsNullOrWhiteSpace(entry)) return null;
+        if (Path.IsPathRooted(entry) || entry.Contains("..") || entry.Contains(':')) return null;
+
+        var rootFull = Path.GetFullPath(dir);
+        var entryFull = Path.GetFullPath(Path.Combine(dir, entry));
+        if (!entryFull.StartsWith(rootFull + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase)) return null;
+        return File.Exists(entryFull) ? entryFull : null;
+    }
+
+    internal static string? ResolveIconPath(string dir, PluginManifest manifest)
     {
         if (string.IsNullOrWhiteSpace(manifest.Icon)) return null;
         if (Path.IsPathRooted(manifest.Icon) || manifest.Icon.Contains("..")) return null;
@@ -342,6 +475,14 @@ public sealed partial class PluginManager(
 
         var file = new FileInfo(iconFull);
         return file.Exists && file.Length <= MaxIconBytes ? iconFull : null;
+    }
+
+    /// <summary>Deletes the loadable files and the signature files of the old version, so the new version is checked against its own list only. Data files (.json and the like) stay.</summary>
+    private static void RemoveCodeFiles(string destDir)
+    {
+        if (!Directory.Exists(destDir)) return;
+        foreach (var file in Directory.EnumerateFiles(destDir, "*", SearchOption.AllDirectories).ToList())
+            if (PluginTrustVerifier.IsCodeFile(file)) File.Delete(file);
     }
 
     private static void CopyDirectory(string sourceDir, string destDir)

@@ -1,7 +1,9 @@
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using MacroGrid.Core.Model;
+using MacroGrid.Plugin.Abstractions;
 using MacroGrid.Protocol;
+using MacroGrid.Core.Plugins.Widgets;
 using MacroGrid.Core.Widgets;
 
 namespace MacroGrid.Core.Sessions;
@@ -23,7 +25,7 @@ public sealed record LayoutSendResult(LayoutSendKind Kind, IReadOnlySet<string> 
 /// <c>hello</c> it gets large <c>data:</c> values as cached asset references, and profile edits as small
 /// <c>layout.patch</c> messages; a client that announced nothing gets the plain full layout, as before.
 /// </summary>
-public sealed class LayoutSender(AssetStore assets)
+public sealed class LayoutSender(AssetStore assets, PluginWidgetCatalog? pluginWidgets = null)
 {
     private static readonly IReadOnlySet<string> NoWidgets = new HashSet<string>();
 
@@ -87,8 +89,55 @@ public sealed class LayoutSender(AssetStore assets)
     private JsonObject Snapshot(ClientSession session, Profile profile)
     {
         var node = JsonSerializer.SerializeToNode(profile, ProtocolJson.Options)!.AsObject();
+        AddPluginWidgetRuntime(session, profile, node);
         if (session.Supports(ClientCapabilities.Assets))
             assets.Externalize(node);
         return node;
+    }
+
+    /// <summary>Gives every plugin widget of the layout its <c>runtime</c>: the script and image references, frame cap and options, or the reason it cannot run
+    /// (a placeholder is drawn). Only for a client that announced the capability; the profile itself never carries it.</summary>
+    private void AddPluginWidgetRuntime(ClientSession session, Profile profile, JsonObject node)
+    {
+        if (pluginWidgets is null || !session.Supports(ClientCapabilities.PluginWidgets) || node["pages"] is not JsonArray pages) return;
+        for (var i = 0; i < profile.Pages.Count && i < pages.Count; i++)
+        {
+            if (pages[i]?["widgets"] is not JsonArray widgetNodes) continue;
+            for (var j = 0; j < profile.Pages[i].Widgets.Count && j < widgetNodes.Count; j++)
+            {
+                var widget = profile.Pages[i].Widgets[j];
+                if (widget.Type != WidgetTypes.PluginWidget || widgetNodes[j] is not JsonObject widgetNode) continue;
+                var props = widgetNode["props"] as JsonObject ?? [];
+                widgetNode["props"] = props;
+                props[PluginWidgetProps.RuntimeKey] = BuildRuntime(widget);
+            }
+        }
+    }
+
+    private JsonObject BuildRuntime(Widget widget)
+    {
+        if (!PluginWidgetProps.TryRead(widget, out var pluginId, out var widgetId)) return new JsonObject { ["unavailable"] = "invalid" };
+        var info = pluginWidgets!.Resolve(pluginId, widgetId, out var unavailable);
+        return info is null ? new JsonObject { ["unavailable"] = unavailable ?? "missing" } : BuildRuntimeFor(info);
+    }
+
+    /// <summary>The <c>props.runtime</c> of a widget that can run: what a device (or the editor's preview) needs to start it.</summary>
+    public static JsonObject BuildRuntimeFor(PluginWidgetInfo info)
+    {
+        var assetRefs = new JsonObject();
+        foreach (var (name, reference) in info.AssetRefs) assetRefs[name] = reference;
+        return new JsonObject
+        {
+            ["name"] = info.Widget.Manifest.Name,
+            ["code"] = info.CodeRef,
+            ["assets"] = assetRefs,
+            ["fps"] = info.Widget.Fps,
+            ["interactive"] = info.Widget.Manifest.Interactive,
+            ["optionsOff"] = new JsonArray(info.Widget.OptionsOffByDefault.Select(o => (JsonNode?)JsonValue.Create(o)).ToArray()),
+            ["options"] = new JsonArray(info.Widget.Options.Select(o => (JsonNode?)JsonValue.Create(o)).ToArray()),
+            // Which settings are Variable fields: the renderer hands these to the widget as its bindings.
+            ["variables"] = new JsonArray((info.Widget.Manifest.Settings ?? []).Where(f => f.Kind == SettingFieldKind.Variable).Select(f => (JsonNode?)JsonValue.Create(f.Key)).ToArray()),
+            ["verified"] = info.Verified,
+        };
     }
 }

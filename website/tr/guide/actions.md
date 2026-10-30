@@ -1,12 +1,12 @@
-# Aksiyonlar ve makrolar
+# Eylemler ve makrolar
 
-Aksiyon, bir widget olayı tetiklendiğinde bilgisayarın yaptığı iştir. Özellikler panelinin **Aksiyonlar** bölümünde **+ Aksiyon ekle** ile eklersiniz. Bu, aranabilir ve kategorilere ayrılmış bir seçici açar.
+Eylem, bir widget olayı tetiklendiğinde bilgisayarın yaptığı iştir. Özellikler panelinin **Eylemler** bölümünde **+ Eylem ekle** ile eklersiniz. Bu, aranabilir ve kategorilere ayrılmış bir seçici açar.
 
-## Yerleşik aksiyonlar
+## Yerleşik eylemler
 
-![Kategorilere ayrılmış, aranabilir aksiyon seçicisi](/img/editor-action-picker.png)
+![Kategorilere ayrılmış, aranabilir eylem seçicisi](/img/editor-action-picker.png)
 
-| Aksiyon | Ne yapar |
+| Eylem | Ne yapar |
 |---|---|
 | **Kısayol** | `ctrl+shift+s` gibi bir tuş kombinasyonuna basar. Alana tıklayıp tuşlara basın. |
 | **Metin yaz** | Bir metin yazar. |
@@ -14,33 +14,33 @@ Aksiyon, bir widget olayı tetiklendiğinde bilgisayarın yaptığı iştir. Öz
 | **URL aç** | Bir `http://` veya `https://` adresini varsayılan tarayıcınızda açar. |
 | **Sayfa değiştir** | Bir sayfaya, sonrakine, öncekine (başa sarar) veya geri gider. |
 | **Profil değiştir** | Bu cihazı başka bir profile geçirir. |
-| **Gecikme** | En fazla 60000 ms bekler. Aksiyonların arasında kullanın. |
+| **Gecikme** | En fazla 60000 ms bekler. Eylemlerin arasında kullanın. |
 | **Ana ses**, **Sesi kapat/aç**, **Sessize al (geçiş)** | Windows ses düzeyi ve sessize alma. |
 
-Eklentiler daha fazlasını ekler. [OBS eklentisi](/tr/guide/plugins#obs) 22 aksiyon ekler.
+Eklentiler daha fazlasını ekler. [OBS eklentisi](/tr/guide/plugins#obs) 22 eylem ekler.
 
-Seçicideki aksiyon adları düzenleyicinin diline uyar. Tam liste: [Aksiyon başvurusu](/tr/reference/actions).
+Seçicideki eylem adları düzenleyicinin diline uyar. Tam liste: [Eylem başvurusu](/tr/reference/actions).
 
 ## Makrolar
 
-Aynı olaya birkaç aksiyon bağlayın. Bunlar **sırayla**, biri bittikten sonra diğeri çalışır. Başarısız olan bir aksiyon kaydedilir ve bildirilir, ama sonrakilerin çalışmasını durdurmaz.
+Aynı olaya birkaç eylem bağlayın. Bunlar **sırayla**, biri bittikten sonra diğeri çalışır. Başarısız olan bir eylem kaydedilir ve bildirilir, ama sonrakilerin çalışmasını durdurmaz.
 
 Örnek, "editörümü aç ve kayda başla":
 
 1. **Uygulama aç** → editörünüz
 2. **Gecikme** → 1500 ms
-3. bir OBS **Kaydı başlat** aksiyonu
+3. bir OBS **Kaydı başlat** eylemi
 
 Sırayı değiştirmek için okları, silmek için **Kaldır**'ı kullanın.
 
-## Aksiyonların içinde değişkenler
+## Eylemlerin içinde değişkenler
 
-Değişkene izin veren eklenti aksiyonu alanları (örneğin OBS metin kaynağı aksiyonu), aksiyon çalışmadan önce `{variable}` ifadesini çözer. Örnek: `Now streaming for {obs.stream.duration}`.
+Değişkene izin veren eklenti eylemi alanları (örneğin OBS metin kaynağı eylemi), eylem çalışmadan önce `{variable}` ifadesini çözer. Örnek: `Now streaming for {obs.stream.duration}`.
 
-## Bir aksiyon başarısız olduğunda
+## Bir eylem başarısız olduğunda
 
-Bir şey ters giderse (artık var olmayan bir sahne, başlatılamayan bir program), telefon kırmızı bir bildirim gösterir ve düzenleyicinin durum çubuğu hatayı yazar. Aksiyonlar asla sessizce başarısız olmaz.
+Bir şey ters giderse (artık var olmayan bir sahne, başlatılamayan bir program), telefon kırmızı bir bildirim gösterir ve düzenleyicinin durum çubuğu hatayı yazar. Eylemler asla sessizce başarısız olmaz.
 
 ## Sıra her cihaz için önemlidir
 
-Bir cihazdan gelen aksiyonlar sırayla ve alma döngüsünün dışında çalışır. Bu yüzden uzun bir gecikme gibi yavaş bir aksiyon, sonraki dokunuşun okunmasını asla engellemez.
+Bir cihazdan gelen eylemler sırayla ve alma döngüsünün dışında çalışır. Bu yüzden uzun bir gecikme gibi yavaş bir eylem, sonraki dokunuşun okunmasını asla engellemez.

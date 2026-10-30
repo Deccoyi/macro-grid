@@ -16,6 +16,11 @@ export interface EditCase {
   result: string;
 }
 
+/** "is unavailable" and "is available" test only whether the variable has a value, so they carry no value of their own. */
+export function isValueless(operator: CompareOperator): boolean {
+  return operator === "unavailable" || operator === "available";
+}
+
 export function newCondition(): EditCondition {
   return { negate: false, variable: "", operator: ">", value: "", value2: "" };
 }
@@ -35,7 +40,7 @@ function conditionToNode(c: EditCondition): ConditionNode {
     kind: "compare",
     variable: c.variable,
     operator: c.operator,
-    value: c.value,
+    value: isValueless(c.operator) ? undefined : c.value,
     value2: c.operator === "between" ? c.value2 : undefined,
   };
   return c.negate ? { kind: "not", children: [compare] } : compare;

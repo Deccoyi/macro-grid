@@ -1,6 +1,6 @@
 # Docking workspace for the editor
 
-**Status:** built in 1.2.0 (the docking workspace, tool windows, auto-hide rail, tabbed document area, saved layouts and the Error List). The Error List has no producer yet, see `../roadmap.md`. User guide: `website/guide/editor.md`. **Repositories:** `macro-grid` only (`editor/` and `src/MacroGrid.Host`, `src/MacroGrid.Core`).
+**Status:** built in 1.2.0 (the docking workspace, tool windows, auto-hide rail, tabbed document area, saved layouts and the Error List). The server and plugins report problems to it (`GET /api/problems`, `IPluginHost.Diagnostics`). User guide: `website/guide/editor.md`. **Repositories:** `macro-grid` only (`editor/` and `src/MacroGrid.Host`, `src/MacroGrid.Core`).
 No change to the plugin SDK, the WebSocket protocol or the phone app.
 
 Related documents: [hierarchy-tree-and-folders.md](hierarchy-tree-and-folders.md) (the Hierarchy panel's content, built on this one) and
@@ -240,8 +240,10 @@ export interface Diagnostic {
 `DiagnosticsContext` exposes `diagnostics`, `report(source, list)` (replaces everything that source reported before, the way a
 validator re-run works), `clear(source?)` and `useDiagnosticsCounts()`. It lives in memory only.
 
-**No producer is part of this plan.** Nothing reports anything yet; the Error List shows its empty state. Do not invent validation
-to fill it. The mockup's rows are illustrations of the layout only.
+**Producers (built):** the server's problems, the save summary, the editor's own notices and the profile check. Details for each line, going
+to the widget, the red marker on the canvas and the two exports are described in [diagnostics-and-repair.md](diagnostics-and-repair.md). The
+mockup's rows are illustrations of the layout only. The `Diagnostic` shape above has since gained `message`, `sourceName`, `count`,
+`firstAt`, `lastAt` and `origin` (server lines) and `DiagnosticTarget` gained `event` and `actionIndex`.
 
 ### UI
 

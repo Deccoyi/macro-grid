@@ -1,10 +1,15 @@
-import type { Profile } from "@macro/renderer";
+import type { ExportLine } from "../diagnostics/exportLines";
+import type { PluginWidgetRuntimeInfo, Profile } from "@macro/renderer";
 import type {
   ServerProblem,
   ActionInfo,
   AppPreferences,
   ExportProfileResult,
   ImportProfileResult,
+  InspectBackupResult,
+  RestoreItemResult,
+  LanguagePackFile,
+  LanguagePackInfo,
   OptionsResult,
   IconPackInfo,
   PairedDeviceInfo,
@@ -19,6 +24,7 @@ import type {
   PluginInstallBrowseResult,
   PluginInstallResult,
   PluginTreeChanges,
+  PluginWidgetInfo,
   PluginTreeItemsResult,
   PluginUninstallResult,
   ProfileSummary,
@@ -28,6 +34,12 @@ import type {
   StatusEntry,
   UpdateCheckOutcome,
   UpdateSnapshot,
+  UserVariableDef,
+  UserVariablesResponse,
+  UserVariableUse,
+  AutomationResponse,
+  AutomationRuleDef,
+  AutomationRuleUse,
   VariableInfo,
   VariableSnapshot,
 } from "./types";
@@ -103,8 +115,34 @@ export const api = {
   getStatus: (): Promise<StatusEntry[]> => get("/api/status"),
 
   variablesSnapshot: (): Promise<VariableSnapshot> => get("/api/variables/snapshot"),
+  /** Custom widgets of every plugin that can run now (the Toolbox groups them by plugin). */
+  pluginWidgets: (): Promise<PluginWidgetInfo[]> => get("/api/plugin-widgets"),
+  /** The `props.runtime` a device would get for one plugin widget (script and image asset references, or why it cannot run). */
+  pluginWidgetRuntime: (plugin: string, widget: string): Promise<PluginWidgetRuntimeInfo> =>
+    get(`/api/plugin-widgets/${encodeURIComponent(plugin)}/${encodeURIComponent(widget)}/runtime`),
+  /** The text of a widget script or the data URI of a widget image, by asset hash. */
+  pluginWidgetAsset: (hash: string): Promise<string> =>
+    req(`/api/plugin-widgets/assets/${encodeURIComponent(hash)}`).then((res) => {
+      if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
+      return res.text();
+    }),
+  /** A request from a widget's preview to its plugin (the plugin sees the device id "editor"). */
+  pluginWidgetRequest: (plugin: string, widget: string, settings: unknown, data: unknown): Promise<{ data?: unknown }> =>
+    send("POST", `/api/plugin-widgets/${encodeURIComponent(plugin)}/${encodeURIComponent(widget)}/request`, { settings, data }),
 
   variableCatalog: (): Promise<VariableInfo[]> => get("/api/variables/catalog"),
+
+  getUserVariables: (): Promise<UserVariablesResponse> => get("/api/user-variables"),
+  /** Replaces the whole Global Variable List; the server refuses the whole list with an error message when any part is invalid. */
+  setUserVariables: (variables: UserVariableDef[]): Promise<void> => send("PUT", "/api/user-variables", { variables }),
+  userVariableUsage: (name: string): Promise<UserVariableUse[]> => get(`/api/user-variables/usage?name=${encodeURIComponent(name)}`),
+
+  getAutomation: (): Promise<AutomationResponse> => get("/api/automation"),
+  /** Replaces the whole rule list and the pause; the server refuses all of it with an error message when any part is invalid. */
+  setAutomation: (rules: AutomationRuleDef[], paused: boolean): Promise<void> => send("PUT", "/api/automation", { rules, paused }),
+  /** "Run now": 409 with the reason when the rule cannot start. */
+  runAutomationRule: (id: string): Promise<void> => send("POST", `/api/automation/${encodeURIComponent(id)}/run`),
+  automationUsage: (name: string): Promise<AutomationRuleUse[]> => get(`/api/automation/usage?name=${encodeURIComponent(name)}`),
 
   /** Shows a native "choose an .exe" dialog on the server's desktop and returns the chosen path, or null if canceled. */
   browseForExecutable: (): Promise<string | null> =>
@@ -156,6 +194,13 @@ export const api = {
 
   /** Approves the permissions a JS plugin declares and starts it. */
   approvePlugin: (id: string): Promise<PluginInfo> => send("POST", `${pluginPath(id)}/approve`),
+
+  /** Switches one approved permission of a JavaScript plugin off or on; the plugin restarts without it. */
+  setPluginPermission: (id: string, permission: string, enabled: boolean): Promise<PluginInfo> =>
+    send("PUT", `${pluginPath(id)}/permissions`, { permission, enabled }),
+
+  /** Switches a plugin off (unloaded, its variables become unavailable) or on again; the choice survives a restart. */
+  setPluginEnabled: (id: string, enabled: boolean): Promise<PluginInfo> => send("PUT", `${pluginPath(id)}/enabled`, { enabled }),
 
   /** Unloads a plugin and loads it again from its folder, picking up a replaced DLL or changed manifest. */
   reloadPlugin: (id: string): Promise<PluginInfo> => send("POST", `${pluginPath(id)}/reload`),
@@ -217,16 +262,29 @@ export const api = {
   /** Discover tab: browses a source's plugins (today, only `"official"`) — fetched fresh every time the tab
    * opens or is refreshed, never in the background. */
   fetchProblems: (): Promise<{ version: number; problems: ServerProblem[] }> => get("/api/problems"),
+  /** The Error List as redacted JSON: `to: "text"` answers the document, `to: "file"` shows the Save dialog and answers the path (null when cancelled). */
+  exportProblems: (to: "text" | "file", lines: ExportLine[]): Promise<{ text?: string; path?: string | null }> =>
+    send("POST", "/api/problems/export", { to, lines }),
+  fetchLogsPreview: (): Promise<{ files: { name: string; bytes: number }[]; totalBytes: number }> => get("/api/diagnostics/logs-preview"),
+  exportLogs: (): Promise<{ path: string | null }> => send("POST", "/api/diagnostics/export-logs"),
   clearProblems: (source?: string): Promise<void> =>
     send("POST", source ? `/api/problems/clear?source=${encodeURIComponent(source)}` : "/api/problems/clear"),
 
-  fetchPluginCatalog: (source: string): Promise<PluginCatalogResponse> =>
-    get(`/api/plugin-catalog?source=${encodeURIComponent(source)}`),
+  /** The icon of a catalog plugin, fetched by the server (404 when there is none). */
+  pluginCatalogIconUrl: (source: string, id: string): string =>
+    `/api/plugin-catalog/icon?source=${encodeURIComponent(source)}&id=${encodeURIComponent(id)}`,
+
+  /** `refresh` (the Refresh button) asks the server to look at the source again instead of using its saved copy. */
+  fetchPluginCatalog: (source: string, refresh = false): Promise<PluginCatalogResponse> =>
+    get(`/api/plugin-catalog?source=${encodeURIComponent(source)}${refresh ? "&refresh=true" : ""}`),
 
   /** Downloads, verifies and installs one version from a catalog source through the same pipeline as a local
    * folder install (PluginManager.InstallFromFolderAsync), plus hash/signature checks first. */
-  installFromPluginCatalog: (source: string, id: string, version: string): Promise<PluginCatalogInstallResult> =>
-    send("POST", "/api/plugin-catalog/install", { source, id, version }),
+  installFromPluginCatalog: (source: string, id: string, version: string, hold = false): Promise<PluginCatalogInstallResult> =>
+    send("POST", "/api/plugin-catalog/install", { source, id, version, hold }),
+
+  /** "Stay on this version": only a plugin installed from a source can be held (404 otherwise). */
+  setPluginHold: (id: string, hold: boolean): Promise<void> => send("PUT", `/api/plugins/${encodeURIComponent(id)}/hold`, { hold }),
 
   listPluginSources: (): Promise<PluginSourcesResponse> => get("/api/plugin-sources"),
 
@@ -251,12 +309,42 @@ export const api = {
 
   savePreferences: (preferences: AppPreferences): Promise<void> => send("PUT", "/api/preferences", preferences),
 
-  /** Shows a native "Open" dialog on the server's desktop and reads the chosen .msprofile (or plain profile JSON)
+  /** Installed language packs (tag, name, version). */
+  listLanguagePacks: (): Promise<LanguagePackInfo[]> => get("/api/languages"),
+
+  getLanguagePack: (tag: string): Promise<LanguagePackFile> => get(`/api/languages/${encodeURIComponent(tag)}`),
+
+  /** Stores a pack (the server checks the tag, size and shape only). */
+  saveLanguagePack: (tag: string, pack: LanguagePackFile): Promise<void> => send("PUT", `/api/languages/${encodeURIComponent(tag)}`, pack),
+
+  deleteLanguagePack: (tag: string): Promise<void> => send("DELETE", `/api/languages/${encodeURIComponent(tag)}`),
+
+  /** Shows a native "Open" dialog and reads the chosen CSV table as text (null path: cancelled). */
+  importLanguageCsvDialog: (): Promise<{ path: string | null; text?: string }> => send("POST", "/api/browse/import-language-csv"),
+
+  /** Shows a native "Save As" dialog and writes the table there as UTF-8 CSV. */
+  exportLanguageCsvDialog: (fileName: string, text: string): Promise<{ path: string | null }> =>
+    send("POST", "/api/browse/export-language-csv", { fileName, text }),
+
+  /** Shows a native "Open" dialog on the server's desktop and reads the chosen .mgprofile (or plain profile JSON)
    * file; the server validates it and reports which plugins it needs that are missing. */
   importProfileDialog: (): Promise<ImportProfileResult> => send("POST", "/api/browse/import-profile"),
 
-  /** Shows a native "Save As" dialog on the server's desktop and writes the profile there as a .msprofile
+  /** Shows a native "Save As" dialog on the server's desktop and writes the profile there as a .mgprofile
    * package (the profile plus a manifest naming the plugins it needs). */
+  /** Saves a full backup (a .mgbackup file) where the person chooses. */
+  exportBackup: (): Promise<{ path: string | null }> => send("POST", "/api/backup/export"),
+
+  /** Opens a .mgbackup file through a native dialog and answers what differs from what is here; nothing changes yet. */
+  inspectBackup: (): Promise<InspectBackupResult> => send("POST", "/api/backup/inspect"),
+
+  /** Applies the chosen items of the backup that was inspected (a restore point is made first). */
+  restoreBackup: (id: string, items: { kind: string; key: string }[]): Promise<RestoreItemResult[]> =>
+    send("POST", "/api/backup/restore", { id, items }),
+
+  /** The editor asks for a restore point before it overwrites a profile by an import. */
+  createRestorePoint: (reason: "import"): Promise<void> => send("POST", "/api/restore-points", { reason }),
+
   exportProfileDialog: (profile: Profile): Promise<ExportProfileResult> => send("POST", "/api/browse/export-profile", profile),
 
   /** Opens (or focuses) a real, separate OS window for a tool panel — see docs/ui/ui-guidelines.md:

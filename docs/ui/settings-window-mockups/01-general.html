@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ayarlar: Genel</title>
+<style>
+body{margin:0}
+.w{--bg:#232529;--cv:#1c1e22;--raised:#2b2e33;--inset:#16171a;--bd:#35383e;--bds:#46494f;--tx:#e6e7ea;--tx2:#9a9ea6;--txd:#7b7f87;--ac:#d97706;--acm:rgba(217,119,6,.15);--dg:#e5584a;--wr:#facc15;--ok:#3f9142;font:12px/1.3 "Segoe UI",system-ui,sans-serif;color:var(--tx);background:var(--cv);width:960px;height:780px;display:grid;grid-template-columns:188px minmax(0,1fr);overflow:hidden}
+.w *{box-sizing:border-box}
+.w svg.i{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.nav{background:var(--bg);border-right:1px solid var(--bd);padding:12px 8px;display:flex;flex-direction:column;gap:2px}
+.ng{font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--txd);height:16px;display:flex;align-items:center;padding:0 10px;margin-top:12px;margin-bottom:2px}
+.ng:first-child{margin-top:0}
+.ni{display:flex;align-items:center;gap:8px;height:28px;padding:0 10px;border:0;border-radius:4px;background:none;color:var(--tx2);font:13px "Segoe UI",system-ui,sans-serif;text-align:left;width:100%;cursor:pointer}
+.ni:hover{background:var(--raised);color:var(--tx)}
+.ni.on{background:var(--raised);color:var(--tx);box-shadow:inset 2px 0 0 var(--ac)}
+.main{overflow:hidden;padding:24px 32px;min-width:0}
+.page{max-width:640px}
+h1{margin:0;font:600 16px/1.3 "Segoe UI",system-ui,sans-serif}
+.lead{margin:4px 0 0;font-size:12px;line-height:1.4;color:var(--tx2);max-width:560px}
+.grp{margin-top:24px}
+.gh{display:flex;align-items:center;height:28px;font:600 13px "Segoe UI",system-ui,sans-serif;margin-bottom:4px}
+.rows{border-top:1px solid var(--bd)}
+.row{display:grid;grid-template-columns:minmax(0,1fr) 220px;column-gap:24px;align-items:center;padding:10px 0;border-bottom:1px solid var(--bd);min-height:48px}
+.row .n{font-size:12px;color:var(--tx)}
+.row .h{font-size:11px;line-height:1.4;color:var(--tx2);margin-top:2px}
+.row .e{justify-self:end}
+.sel{position:relative;min-width:0}
+.sel svg{position:absolute;right:8px;top:7px;color:var(--tx2);pointer-events:none}
+.c{display:block;width:100%;height:28px;padding:0 8px;background:var(--inset);border:1px solid var(--bd);border-radius:4px;color:var(--tx);font:12px "Segoe UI",system-ui,sans-serif;text-align:left}
+select.c{appearance:none;padding-right:26px}
+.c:hover{border-color:var(--bds)}
+.c:focus{outline:none;border-color:var(--ac)}
+.sw{width:28px;height:16px;border-radius:8px;border:0;padding:0;background:var(--bds);position:relative;flex:none;cursor:pointer}
+.sw::after{content:"";position:absolute;top:2px;left:2px;width:12px;height:12px;border-radius:50%;background:#fff}
+.sw.on{background:var(--ac)}.sw.on::after{left:14px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;height:28px;padding:0 10px;background:var(--raised);border:1px solid var(--bd);border-radius:4px;color:var(--tx);font:12px "Segoe UI",system-ui,sans-serif;cursor:pointer;flex:none}
+.btn:hover{background:var(--inset);border-color:var(--bds)}
+.note{display:flex;align-items:flex-start;gap:8px;font-size:11.5px;line-height:1.4;padding:6px 8px;border-radius:4px;background:rgba(250,204,21,.08);color:var(--wr);margin-top:8px}
+.note svg{margin-top:1px}
+.foot{margin-top:24px}
+
+body{background:#101114;padding:24px}</style>
+</head>
+<body>
+
+<div class="w">
+<svg width="0" height="0" style="position:absolute"><defs>
+<symbol id="sl" viewBox="0 0 24 24"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></symbol>
+<symbol id="su" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></symbol>
+<symbol id="gl" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></symbol>
+<symbol id="ph" viewBox="0 0 24 24"><rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/></symbol>
+<symbol id="us" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></symbol>
+<symbol id="br" viewBox="0 0 24 24"><path d="M8 3c-2 0-3 1-3 3v3c0 1.5-1 3-3 3 2 0 3 1.5 3 3v3c0 2 1 3 3 3M16 3c2 0 3 1 3 3v3c0 1.5 1 3 3 3-2 0-3 1.5-3 3v3c0 2-1 3-3 3"/></symbol>
+<symbol id="zp" viewBox="0 0 24 24"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></symbol>
+<symbol id="cd" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+<symbol id="al" viewBox="0 0 24 24"><path d="M12 3 2 20h20zM12 10v5M12 18h.01"/></symbol>
+</defs></svg>
+
+<nav class="nav" aria-label="Ayar kategorileri">
+<div class="ng">Uygulama</div>
+<button class="ni on" type="button" aria-current="page"><svg class="i"><use href="#sl"/></svg>Genel</button>
+<button class="ni" type="button"><svg class="i"><use href="#su"/></svg>Görünüm</button>
+<button class="ni" type="button"><svg class="i"><use href="#gl"/></svg>Dil</button>
+<div class="ng">Cihazlar ve profiller</div>
+<button class="ni" type="button"><svg class="i"><use href="#ph"/></svg>Önizleme profilleri</button>
+<button class="ni" type="button"><svg class="i"><use href="#us"/></svg>Profiller</button>
+<div class="ng">Veri ve kurallar</div>
+<button class="ni" type="button"><svg class="i"><use href="#br"/></svg>Genel değişken listesi</button>
+<button class="ni" type="button"><svg class="i"><use href="#zp"/></svg>Otomasyon</button>
+</nav>
+
+<main class="main"><div class="page">
+<h1>Genel</h1>
+<p class="lead">Macro Grid'in nasıl başladığı, güncellemeleri nasıl aldığı ve cihazların nasıl bağlandığı.</p>
+
+<section class="grp">
+<div class="gh">Başlangıç</div>
+<div class="rows">
+<div class="row"><div><div class="n">Windows'a giriş yaptığımda Macro Grid'i başlat</div><div class="h">Macro Grid oturum açtığınızda bildirim alanında kendiliğinden çalışır, böylece telefonunuz önce uygulamayı açmadan bağlanabilir.</div></div><button class="sw on e" type="button" role="switch" aria-checked="true" aria-label="Windows'a giriş yaptığımda başlat"></button></div>
+<div class="row"><div class="n">Windows Macro Grid'i başlattığında</div><div class="sel"><select class="c" aria-label="Windows Macro Grid'i başlattığında"><option>Yalnızca sistem tepsisinde başlat</option><option>Düzenleyici penceresini aç</option></select><svg class="i"><use href="#cd"/></svg></div></div>
+<div class="row"><div class="n">Macro Grid'i ben açtığımda</div><div class="sel"><select class="c" aria-label="Macro Grid'i ben açtığımda"><option>Düzenleyici penceresini aç</option><option>Yalnızca sistem tepsisinde başlat</option></select><svg class="i"><use href="#cd"/></svg></div></div>
+</div>
+</section>
+
+<section class="grp">
+<div class="gh">Güncellemeler</div>
+<div class="rows">
+<div class="row"><div><div class="n">Güncellemeleri otomatik denetle</div><div class="h">Macro Grid, yeni bir sürüm var mı diye birkaç saatte bir yalnızca github.com adresine bağlanır. Sizinle ilgili hiçbir bilgi gönderilmez.</div></div><button class="sw on e" type="button" role="switch" aria-checked="true" aria-label="Güncellemeleri otomatik denetle"></button></div>
+<div class="row"><div class="n">Ön sürümleri de göster (alfa sürümleri)</div><button class="sw e" type="button" role="switch" aria-checked="false" aria-label="Ön sürümleri de göster"></button></div>
+</div>
+</section>
+
+<section class="grp">
+<div class="gh">Bağlantı güvenliği</div>
+<div class="rows">
+<div class="row"><div><div class="n">Şifrelenmemiş bağlantılara izin ver</div><div class="h">Kapatırsanız diğer cihazlar yalnızca şifreli porttan bağlanabilir. Şifreleme gelmeden önce eşleşmiş telefonlar çalışmaz; telefon uygulaması kodu tarayarak yeniden eşleşir.</div></div><button class="sw on e" type="button" role="switch" aria-checked="true" aria-label="Şifrelenmemiş bağlantılara izin ver"></button></div>
+</div>
+</section>
+
+<div class="foot"><button class="btn" type="button">Kapatılan uyarıları yeniden göster</button></div>
+</div></main>
+</div>
+</body>
+</html>

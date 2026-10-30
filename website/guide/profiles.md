@@ -46,8 +46,8 @@ Folders are only for the editor. A device sees the same pages and profiles in th
 
 ## Export and import
 
-- **File → Export Profile (.msprofile)** saves the current profile to a single file.
-- **File → Import Profile (.msprofile / .json)…** loads one. If a profile with the same name exists you choose **Overwrite** or **Rename**.
+- **File → Export Profile (.mgprofile)** saves the current profile to a single file.
+- **File → Import Profile (.mgprofile / .json)…** loads one. If a profile with the same name exists you choose **Overwrite** or **Rename**.
 - If the imported profile uses a plugin you do not have, the editor lists which one, so you can install it and the buttons will work.
 
 This is the easiest way to back up a deck or share it with someone.

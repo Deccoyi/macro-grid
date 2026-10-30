@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ayarlar: Tetikleyici türleri</title>
+<style>
+body{margin:0}
+.w{--bg:#232529;--cv:#1c1e22;--raised:#2b2e33;--inset:#16171a;--bd:#35383e;--bds:#46494f;--tx:#e6e7ea;--tx2:#9a9ea6;--txd:#7b7f87;--ac:#d97706;--acm:rgba(217,119,6,.15);--dg:#e5584a;--wr:#facc15;font:12px/1.3 "Segoe UI",system-ui,sans-serif;color:var(--tx);background:var(--cv);width:960px;height:700px;padding:24px 32px;overflow:hidden}
+.w *{box-sizing:border-box}
+.w svg.i{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:32px}
+.col h2{margin:0 0 4px;font:600 13px/28px "Segoe UI",system-ui,sans-serif}
+.cap{font-size:11px;color:var(--tx2);line-height:1.4;margin-bottom:12px}
+.box{border:1px solid var(--bd);border-radius:4px;padding:12px;display:flex;flex-direction:column;gap:12px;background:var(--bg)}
+.f{display:flex;flex-direction:column;gap:4px;min-width:0}
+.fl{display:flex;align-items:center;height:18px;font-size:12px;color:var(--tx2)}
+.c{display:flex;align-items:center;width:100%;height:28px;padding:0 8px;background:var(--inset);border:1px solid var(--bd);border-radius:4px;color:var(--tx);font:12px "Segoe UI",system-ui,sans-serif;text-align:left}
+.c:hover{border-color:var(--bds)}
+.c:focus{outline:none;border-color:var(--ac)}
+.sel{position:relative}
+.sel svg{position:absolute;right:8px;top:7px;color:var(--tx2);pointer-events:none}
+select.c{appearance:none;padding-right:26px}
+.seg{display:flex;height:28px;border:1px solid var(--bd);border-radius:4px;overflow:hidden}
+.seg button{flex:1;border:0;border-right:1px solid var(--bd);background:var(--inset);color:var(--tx2);font:11.5px "Segoe UI",system-ui,sans-serif;padding:0;cursor:pointer}
+.seg button:last-child{border-right:0}
+.seg button.on{background:var(--raised);color:var(--tx);box-shadow:inset 0 -2px 0 var(--ac)}
+.days{display:flex;gap:4px}
+.day{flex:1;height:28px;border:1px solid var(--bd);border-radius:4px;background:var(--inset);color:var(--tx2);font:12px "Segoe UI",system-ui,sans-serif;padding:0;cursor:pointer}
+.day:hover{border-color:var(--bds)}
+.day.on{background:var(--acm);border-color:var(--ac);color:var(--ac)}
+.hint{font-size:11px;line-height:1.4;color:var(--tx2)}
+.time{width:120px}
+.cnt{font-size:11px;color:var(--tx2)}
+
+body{background:#101114;padding:24px}</style>
+</head>
+<body>
+
+<div class="w">
+<svg width="0" height="0" style="position:absolute"><defs><symbol id="cd" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol></defs></svg>
+<h1 style="margin:0;font:600 16px/1.3 'Segoe UI',system-ui,sans-serif">Tetikleyici türleri</h1>
+<p style="margin:4px 0 24px;font-size:12px;line-height:1.4;color:var(--tx2);max-width:640px">Kural düzenleyicinin üst kısmı aynı kalır (Ad, Tetikleyici seçimi). Yalnızca seçime göre değişen alanlar aşağıda.</p>
+
+<div class="cols">
+<section class="col">
+<h2>Belirli bir saatte</h2>
+<div class="cap">Saat ve günler. Hiç gün seçilmezse kural her gün çalışır.</div>
+<div class="box">
+<div class="seg" role="group" aria-label="Tetikleyici"><button type="button">Bir değer doğru olunca</button><button class="on" type="button">Belirli bir saatte</button><button type="button">Bir cihaz bağlanınca</button></div>
+<div class="f"><div class="fl">Saat</div><input class="c time" type="text" value="08:30" aria-label="Saat"></div>
+<div class="f"><div class="fl">Günler</div>
+<div class="days" role="group" aria-label="Günler">
+<button class="day on" type="button" aria-pressed="true">Pzt</button><button class="day on" type="button" aria-pressed="true">Sal</button><button class="day on" type="button" aria-pressed="true">Çar</button><button class="day on" type="button" aria-pressed="true">Per</button><button class="day on" type="button" aria-pressed="true">Cum</button><button class="day" type="button" aria-pressed="false">Cmt</button><button class="day" type="button" aria-pressed="false">Paz</button>
+</div></div>
+</div>
+</section>
+
+<section class="col">
+<h2>Bir cihaz bağlanınca</h2>
+<div class="cap">Bir cihaz seçilir, kural o cihaz her bağlandığında çalışır.</div>
+<div class="box">
+<div class="seg" role="group" aria-label="Tetikleyici"><button type="button">Bir değer doğru olunca</button><button type="button">Belirli bir saatte</button><button class="on" type="button">Bir cihaz bağlanınca</button></div>
+<div class="f"><div class="fl">Cihaz</div><div class="sel"><select class="c" aria-label="Cihaz"><option>Pixel 8</option><option>iPad</option></select><svg class="i"><use href="#cd"/></svg></div></div>
+</div>
+</section>
+</div>
+</div>
+</body>
+</html>

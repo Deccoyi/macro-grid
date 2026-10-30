@@ -4,7 +4,7 @@
  * Keep this in sync by hand for now; a generated-types step can replace it later.
  */
 
-export type WidgetType = "button" | "toggle" | "slider" | "knob" | "label" | "image" | "web" | "plugin-html";
+export type WidgetType = "button" | "toggle" | "slider" | "knob" | "label" | "image" | "web" | "plugin-html" | "plugin-widget";
 
 export type Align = "left" | "center" | "right";
 export type VAlign = "top" | "middle" | "bottom";
@@ -38,7 +38,8 @@ export interface WidgetStyle {
 export type WidgetEventName = "press" | "release" | "longPress" | "doubleTap" | "toggleOn" | "toggleOff" | "valueChange";
 
 export type ConditionKind = "compare" | "and" | "or" | "xor" | "not";
-export type CompareOperator = ">" | ">=" | "<" | "<=" | "==" | "!=" | "between";
+/** "unavailable" and "available" take no value: they test whether the variable has a value at all (never set, removed or null means unavailable). */
+export type CompareOperator = ">" | ">=" | "<" | "<=" | "==" | "!=" | "between" | "unavailable" | "available";
 
 /**
  * A boolean condition tree: a single comparison (kind "compare") or a combinator over children
@@ -76,7 +77,7 @@ export interface ActionBinding {
 export interface Widget {
   id: string;
   type: WidgetType;
-  /** Optional name, only used to pick this widget in an action (the target of "Change web page"); unique in a profile. */
+  /** The instance name: shown in messages and pickers, unique on its page, never used as a reference. The server fills it in for old profiles. */
   name?: string;
   x: number;
   y: number;
@@ -161,4 +162,6 @@ export interface WidgetState {
   url?: string;
   /** A `web` widget: a higher number than before loads the page again. */
   reload?: number;
+  /** The variables this widget uses that have no value now (plugin off, removed, disconnected). An empty list means they are all available again; absent means no change. */
+  unavailable?: string[];
 }

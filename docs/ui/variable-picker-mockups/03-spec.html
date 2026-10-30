@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Değişken ekle: spec</title>
+<style>
+body{margin:0}
+.w{--cv:#1c1e22;--bd:#35383e;--inset:#16171a;--tx:#e6e7ea;--tx2:#9a9ea6;--txd:#7b7f87;font:13px/1.5 "Segoe UI",system-ui,sans-serif;color:var(--tx);background:var(--cv);width:900px;height:900px;padding:32px 40px;overflow:hidden}
+.w *{box-sizing:border-box}
+h1{margin:0 0 4px;font:600 20px/1.3 "Segoe UI",system-ui,sans-serif}
+h2{margin:24px 0 8px;font:600 14px/1.3 "Segoe UI",system-ui,sans-serif;padding-bottom:6px;border-bottom:1px solid var(--bd)}
+p{margin:0 0 8px;color:var(--tx2);font-size:12.5px}
+table{border-collapse:collapse;width:100%;font-size:12px}
+th{text-align:left;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--txd);padding:4px 8px;border-bottom:1px solid var(--bd)}
+td{padding:5px 8px;border-bottom:1px solid var(--bd);vertical-align:top;color:var(--tx2)}
+td:first-child{color:var(--tx);white-space:nowrap}
+code{font:11.5px ui-monospace,Consolas,monospace;color:var(--tx);background:var(--inset);padding:1px 4px;border-radius:3px}
+ul{margin:0;padding-left:18px;color:var(--tx2);font-size:12.5px}
+li{margin-bottom:3px}
+
+body{background:#101114;padding:24px}</style>
+</head>
+<body>
+
+<div class="w">
+<h1>Değişken ekle penceresi: ölçüler</h1>
+<p>Özellikler paneli ve Ayarlar penceresiyle aynı dil. Tam metin: <code>docs/ui/variable-picker-design.md</code>.</p>
+<h2>Pencere</h2>
+<table>
+<tr><th>Parça</th><th>Ölçü</th></tr>
+<tr><td>Çerçeve</td><td>620 × 460, yarıçap 6, kenarlık hairline, panel zemini; dışı %50 siyah perde</td></tr>
+<tr><td>Başlık</td><td>40px; başlık 13px/600 solda; Kapat 28×28 simge düğmesi sağda (<code>picker.close</code> etiketi <code>aria-label</code> olur)</td></tr>
+<tr><td>Kategori sütunu</td><td>160px, padding 8, öğe 28px/12px, sayaç 11px soluk; seçili: raised + 2px vurgu çizgisi (Ayarlar gezinmesiyle aynı)</td></tr>
+<tr><td>Arama</td><td>satır 8px 12px padding, altında hairline; kontrol 28px, solda 14px arama simgesi, <code>padding-left 28</code></td></tr>
+<tr><td>Liste</td><td>kaydırılır; satırlar yalnızca alt hairline ile ayrılır</td></tr>
+</table>
+<h2>Satır</h2>
+<table>
+<tr><th>Parça</th><th>Ölçü</th></tr>
+<tr><td>Satır</td><td><code>grid minmax(0,1fr) auto</code>, boşluk 12, padding 8px 12px, <b>min-height 48, height auto</b>; bu bir düğmedir ama sabit yükseklikte olmaz (üst üste binmenin nedeni: iki satır içerik sabit yüksekliğe sığmıyor)</td></tr>
+<tr><td>Birinci satır</td><td>ad (tek aralıklı 12px) + tür rozeti (10.5px, 14px satır, yarıçap 3, inset zemin, hairline)</td></tr>
+<tr><td>Açıklama</td><td>11px, satır 1.4, ikincil renk, adın 2px altında; en fazla 2 satır sonra "…"</td></tr>
+<tr><td>Örnek metin</td><td>sağda, tek aralıklı 11px, soluk; kısaltılmaz, tek satır</td></tr>
+<tr><td>Üzerinde / odak</td><td>raised zemin / 2px vurgu çerçevesi (içeri)</td></tr>
+</table>
+<h2>Uygulama notları</h2>
+<ul>
+<li><code>PickerShell.tsx</code>: başlığı ve kategori sütununu yukarıdaki ölçülere getirir; Kapat metin düğmesi yerine simge düğmesi; <code>role="dialog"</code>, Esc kapatır.</li>
+<li><code>VariablePicker.tsx</code>: satır içi stilleri bir <code>.picker-row</code> sınıfıyla değiştirir (sınıf <code>theme.css</code>'te), <code>className="ghost"</code> ve <code>display:block</code> hilesi kalkar. Satırın <code>min-height</code>'i 48, <code>height:auto</code>, <code>white-space:normal</code>.</li>
+<li>IconPicker aynı kabuğu kullanır; kabuktaki değişiklik ona da geçer. Satır sınıfı yalnızca VariablePicker'a özgü.</li>
+<li>Yeni metin yok: tüm yazılar mevcut anahtarlardır (<code>variable.pickTitle</code>, <code>variable.searchPlaceholder</code>, <code>variable.noMatch</code>, <code>variable.values</code>, <code>picker.all</code>, <code>picker.close</code>). Mockuptaki değişken adları ve açıklamaları örnektir.</li>
+<li>Karar bekleyen konu: modal (620×460) mi, Özellikler panelinde 280px'lik açılır pencere mi. Bu tasarım modalı korur; açılır pencere olursa kategori sütunu üstte seg olur, satır aynı kalır.</li>
+</ul>
+</div>
+</body>
+</html>

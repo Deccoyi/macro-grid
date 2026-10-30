@@ -23,6 +23,22 @@ public class VariableCatalogTests
     }
 
     [Fact]
+    public void The_global_variable_list_shows_up_in_the_picker_with_its_own_group()
+    {
+        var dir = Path.Combine(Path.GetTempPath(), "ms-vc-" + Guid.NewGuid().ToString("N"));
+        try
+        {
+            var service = new UserVariableService(dir, new VariableStore());
+            service.TryReplace([new UserVariable("count", VariableType.Number, 1)], out _);
+            var catalog = new VariableCatalog([new FakeSource(new VariableInfo("a.one", "One", "{a.one}", "Test")), service]);
+
+            Assert.Equal(["a.one", "user.count"], catalog.All.Select(v => v.Name));
+            Assert.Equal("Global Variable List", catalog.All.Single(v => v.Name == "user.count").Category);
+        }
+        finally { try { Directory.Delete(dir, recursive: true); } catch (IOException) { } }
+    }
+
+    [Fact]
     public void Type_metadata_serializes_for_the_editor_and_reads_back()
     {
         var info = new VariableInfo("a.muted", "Muted", "{a.muted}", "Test") { Type = VariableType.Boolean };

@@ -54,7 +54,7 @@ function resolveDropLocation<N extends GenericTreeNode>(
  * expanded (see docs/design/hierarchy-tree-and-folders.md — GET /api/profiles/{id}, cached for the
  * session) so a large profile collection costs nothing until the user actually opens it. */
 export function HierarchyToolWindow() {
-  const { t } = useT();
+  const { t, tn } = useT();
   const state = useEditorStateContext();
   const { openPageContextMenu, showProfileProperties, clearProfileProperties, profilePropertiesTarget, renameTarget, startRename, clearRename, treeSelection, setTreeSelection } = useWorkspaceUi();
   const profileTree = useProfileTreeContext();
@@ -183,7 +183,7 @@ export function HierarchyToolWindow() {
     const { leaves, folders } = countContents(node, leafType);
     if (leaves === 0 && folders === 0) { onDelete(false); return; }
     const choice = await choiceAsync(
-      t("folder.deleteConfirm", String(leaves + folders)),
+      tn("folder.deleteConfirm", leaves + folders),
       [
         { value: "delete", label: t("folder.delete.deleteAndContents"), danger: true },
         { value: "keep", label: t("folder.delete.keepContents"), primary: true },
@@ -374,8 +374,7 @@ export function HierarchyToolWindow() {
               label: t("profile.delete"), icon: <Trash2 size={13} />, danger: true, disabled: !isOpen || state.profiles.length <= 1,
               onSelect: async () => {
                 if (await confirmAsync(t("profile.deleteConfirm", name), { title: t("profile.delete"), danger: true })) {
-                  await state.deleteProfile(node.id);
-                  profileTree.removeProfileNode(node.id);
+                  if (await state.deleteProfile(node.id)) profileTree.removeProfileNode(node.id);
                 }
               },
             });

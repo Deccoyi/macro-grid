@@ -23,13 +23,15 @@ public sealed class ClientHub(
     ActionDispatcher dispatcher,
     ToggleStateStore toggles,
     WidgetStateService widgetState,
+    LastResultStore results,
     DeviceStore devices,
     PairingService pairing,
-    PluginStatusRegistry statusRegistry,
     PreferencesStore preferences,
     AutoProfileSwitcher autoSwitcher,
     ILogger<ClientHub> logger,
-    PluginLocalizer localizer)
+    PluginLocalizer localizer,
+    PluginWidgetRouter widgetRouter,
+    ProblemList problems)
 {
     /// <summary>The server's version. It is the SDK's version on purpose: the two carry one number (docs/guides/versioning.md).</summary>
     public static string ServerVersion => PluginSdk.Version;
@@ -46,6 +48,7 @@ public sealed class ClientHub(
 
     public async Task HandleAsync(WebSocket socket, string remoteAddress, CancellationToken cancellationToken)
     {
+        ListenForProfileChanges();
         var session = new ClientSession(socket) { RemoteAddress = remoteAddress };
         sessions.Add(session);
         logger.LogInformation("Client {Session} connected from {Remote}", session.Id, remoteAddress);
@@ -79,8 +82,10 @@ public sealed class ClientHub(
         }
         finally
         {
+            ReleaseHeld(session, queue.Writer);
             queue.Writer.TryComplete();
             await worker;
+            widgetRouter.Forget(session);
             sessions.Remove(session);
             logger.LogInformation("Client {Session} ({Device}) disconnected", session.Id, session.DeviceName ?? "?");
         }
@@ -167,6 +172,20 @@ public sealed class ClientHub(
                 if (envelope.DataAs<AssetGetMessage>() is { } request)
                     await widgetState.SendAssetsAsync(session, request.Hashes.Take(MaxAssetsPerRequest), ct);
                 break;
+            case MessageTypes.PluginWidgetRequest:
+                if (envelope.DataAs<PluginWidgetRequestMessage>() is { } widgetRequest)
+                {
+                    var device = new SessionDeviceController(session, profiles, widgetState);
+                    // A run goes through the device's action queue like a press (in order); the others must not wait behind a slow action.
+                    if (widgetRequest.Kind == PluginWidgetKinds.Run)
+                        queue.TryWrite(() => widgetRouter.HandleRequestAsync(session, widgetRequest, device, CancellationToken.None));
+                    else
+                        _ = widgetRouter.HandleRequestAsync(session, widgetRequest, device, CancellationToken.None);
+                }
+                break;
+            case MessageTypes.PluginWidgetError:
+                if (envelope.DataAs<PluginWidgetErrorMessage>() is { } widgetError) widgetRouter.HandleError(session, widgetError);
+                break;
             case MessageTypes.PageChange:
                 var page = envelope.DataAs<PageChangeMessage>();
                 if (page is not null) session.PageId = page.PageId;
@@ -213,6 +232,7 @@ public sealed class ClientHub(
 
         if (device is null)
         {
+            logger.LogDebug("Hello from {Remote} without a known token (PIN sent: {HasPin})", session.RemoteAddress, !string.IsNullOrEmpty(hello.Pin));
             var result = pairing.TryPair(hello.Pin, session.RemoteAddress);
             if (result.Outcome != PairingOutcome.Accepted)
             {
@@ -236,7 +256,9 @@ public sealed class ClientHub(
 
         // A device with no assigned profile (or one assigned to a profile that's since been deleted)
         // falls back to the app-wide default, then just the first profile — ProfileResolver.ResolveDefault.
-        var profile = ProfileResolver.ResolveDefault(device, profiles, preferences);
+        var profile = ProfileResolver.ResolveOnConnect(device, profiles, preferences);
+        var deviceId = device.Id;
+        session.ManualProfileChosen = profileId => devices.SetLastProfile(deviceId, profileId);
         session.ProfileId = profile.Id;
         session.AutoSwitch.OnManual(profile.Id); // the resolved-default profile is this session's manual base.
         session.AutoSwitch.SetLocked(device.AutoSwitchLocked);
@@ -289,6 +311,33 @@ public sealed class ClientHub(
         _ => "Pairing is required. Open the Pairing window in the Macro Grid editor on the computer and enter the PIN shown there.",
     };
 
+    private int _listening;
+
+    /// <summary>Starts, once, to push the profile list to connected devices whenever a profile is added, renamed or deleted. The hub is created by the
+    /// first connection, and no device is connected before that, so nothing is missed.</summary>
+    internal void ListenForProfileChanges()
+    {
+        if (Interlocked.Exchange(ref _listening, 1) == 0) profiles.ListChanged += () => _ = PushProfilesListAsync();
+    }
+
+    /// <summary>Sends the current profile list to every connected, identified device (it is tiny and changes rarely). A device that cannot take it is left alone.</summary>
+    internal async Task PushProfilesListAsync()
+    {
+        foreach (var session in sessions.All)
+        {
+            if (!session.IsIdentified || devices.All.FirstOrDefault(d => d.Id == session.DeviceId) is not { } device) continue;
+            try
+            {
+                using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+                await SendProfilesListAsync(session, device, timeout.Token);
+            }
+            catch (Exception ex) when (ex is not OutOfMemoryException)
+            {
+                logger.LogDebug(ex, "Could not send the profile list to {Session}", session.Id);
+            }
+        }
+    }
+
     private Task SendProfilesListAsync(ClientSession session, PairedDevice device, CancellationToken ct) =>
         session.SendAsync(MessageTypes.ProfilesList, new ProfilesListPayload(
             profiles.All.Select(p => new ProfileSummary(p.Id, p.Name)).ToList(),
@@ -311,6 +360,10 @@ public sealed class ClientHub(
         var widget = FindWidget(session, msg.PageId, msg.WidgetId, out _);
         if (widget is null) return;
 
+        // self.pressed is set here, on the receive loop, so a slow action waiting in the queue does not delay it.
+        if (eventName == WidgetEvents.Press) { session.Held[widget.Id] = msg.PageId; widgetState.PressBegan(session, widget.Id); }
+        else if (eventName == WidgetEvents.Release) { session.Held.TryRemove(widget.Id, out _); widgetState.PressEnded(session, widget.Id); }
+
         var device = new SessionDeviceController(session, profiles, widgetState);
         var context = new ActionContext(session.DeviceId!, msg.PageId, msg.WidgetId, device);
 
@@ -321,36 +374,94 @@ public sealed class ClientHub(
             {
                 var active = toggles.Toggle(widget.Id);
                 await BroadcastToggleAsync(session.ProfileId, msg.PageId, widget.Id, active);
-                var errors = await dispatcher.DispatchAsync(widget, active ? WidgetEvents.ToggleOn : WidgetEvents.ToggleOff, context, CancellationToken.None);
-                await ReportActionErrorsAsync(session, errors);
+                widgetState.Refresh(widget.Id); // self.toggled changed: every device showing this button re-evaluates its look
+                await RunAsync(session, widget, active ? WidgetEvents.ToggleOn : WidgetEvents.ToggleOff, context, msg.PageId);
             });
             return;
         }
 
         queue.TryWrite(async () =>
         {
-            var errors = await dispatcher.DispatchAsync(widget, eventName, context, CancellationToken.None);
-            await ReportActionErrorsAsync(session, errors);
+            await RunAsync(session, widget, eventName, context, msg.PageId);
         });
     }
 
-    /// <summary>How long a failed action stays in the status bar if nothing else clears it.</summary>
-    private static readonly TimeSpan ActionErrorStatusLifetime = TimeSpan.FromSeconds(15);
+    /// <summary>Ends what a device that is gone had still held down: the release of each of its presses runs once, so a "while held" action stops
+    /// and the widget's release actions run instead of waiting for a finger that will never report lifting.</summary>
+    internal void ReleaseHeld(ClientSession session, ChannelWriter<Func<Task>> queue)
+    {
+        foreach (var (widgetId, pageId) in session.Held.ToArray())
+        {
+            if (!session.Held.TryRemove(widgetId, out _) || session.DeviceId is null) continue;
+            var widget = FindWidget(session, pageId, widgetId, out _);
+            if (widget is null) continue;
+            var context = new ActionContext(session.DeviceId, pageId, widgetId, new SessionDeviceController(session, profiles, widgetState));
+            queue.TryWrite(() => RunAsync(session, widget, WidgetEvents.Release, context, pageId));
+        }
+    }
+
+    /// <summary>Runs one event's action list and reports its failures. A list that takes a while makes the button busy on this device.
+    /// A release with no actions is still dispatched, because it also ends the "while held" actions of the press.</summary>
+    private async Task RunAsync(ClientSession session, Widget widget, string eventName, ActionContext context, string pageId)
+    {
+        var hasBindings = widget.Actions.TryGetValue(eventName, out var bindings) && bindings.Count > 0;
+        // The result is recorded inside the busy window, so the look goes straight from "busy" to the result.
+        async Task<IReadOnlyList<ActionFailure>> RunAndRecord()
+        {
+            var failures = await dispatcher.DispatchAsync(widget, eventName, context, CancellationToken.None);
+            results.Set(widget.Id, failures);
+            widgetState.Refresh(widget.Id);
+            return failures;
+        }
+
+        // An event with no actions leaves the last result alone, unless the dispatch itself failed.
+        var errors = hasBindings
+            ? await widgetState.RunBusyAsync(session, widget.Id, RunAndRecord)
+            : await dispatcher.DispatchAsync(widget, eventName, context, CancellationToken.None);
+        if (!hasBindings && errors.Count > 0)
+        {
+            results.Set(widget.Id, errors);
+            widgetState.Refresh(widget.Id);
+        }
+        await ReportActionErrorsAsync(session, errors, pageId, widget, eventName);
+    }
 
     /// <summary>Surfaces a failed action both to the device that triggered it (toast, via the same "error"
-    /// envelope pairing failures already use) and in the editor's status bar — a stale binding (e.g. a
-    /// button pointed at a since-deleted scene of a plugin) must never fail silently.</summary>
-    private async Task ReportActionErrorsAsync(ClientSession session, IReadOnlyList<string> errors)
+    /// envelope pairing failures already use) and as a line in the Error List — a stale binding (e.g. a
+    /// button pointed at a since-deleted scene of a plugin) must never fail silently. The line is one per widget and event,
+    /// counted when it repeats, and taken back when that event next runs without a failure. It is not a plugin failure, so it never counts towards switching a plugin off.</summary>
+    private async Task ReportActionErrorsAsync(ClientSession session, IReadOnlyList<ActionFailure> errors, string pageId, Widget widget, string eventName)
     {
+        var runKey = $"run:{widget.Id}:{eventName}";
         if (errors.Count == 0)
         {
-            statusRegistry.RemoveCore("actionError"); // the next action that works clears the old failure
+            problems.ResolveKey("macro-grid", runKey); // the next run that works clears the old failure
             return;
         }
 
-        var message = localizer.TranslateAny(errors[0]) ?? errors[0];
-        statusRegistry.SetCore("actionError", message, StatusLevel.Warning, "triangle-alert", lifetime: ActionErrorStatusLifetime);
+        var raw = errors[0].Message;
+        var message = PlainText.Clean(localizer.TranslateAny(raw) ?? raw, 200); // translate first (the table matches the exact text), then clean
         await session.SendAsync(MessageTypes.Error, new ErrorMessage("action_failed", message));
+
+        // A missing action type has its own line below; every other failure is one line per widget and event.
+        var failed = errors.FirstOrDefault(e => !e.Missing);
+        if (failed is not null)
+        {
+            var failedText = PlainText.Clean(localizer.TranslateAny(failed.Message) ?? failed.Message, 200);
+            var pageLabel = session.ProfileId is null ? null : profiles.Get(session.ProfileId)?.FindPage(pageId)?.Name;
+            problems.Report("macro-grid", "Macro Grid", ProblemSeverity.Warning, ProblemCodes.ActionFailed,
+                $"{widget.Name} on page {pageLabel}: {failedText}", runKey, 100,
+                new ProblemTarget(session.ProfileId ?? "", pageId, widget.Id, eventName));
+        }
+
+        // An action that is not there at all is also a line in the Error List (one per widget and type, counted), so it is found without a press.
+        foreach (var missing in errors.Where(e => e.Missing))
+        {
+            var pageName = session.ProfileId is null ? null : profiles.Get(session.ProfileId)?.FindPage(pageId)?.Name;
+            var line = $"{widget.Name} on page {pageName}: action '{missing.ActionType}' is not available. Its plugin may be removed or switched off.";
+            problems.Report("macro-grid", "Macro Grid", ProblemSeverity.Error, ProblemCodes.ActionMissing, line, $"{widget.Id}:{missing.ActionType}", 50,
+                new ProblemTarget(session.ProfileId ?? "", pageId, widget.Id, eventName));
+        }
     }
 
     /// <summary>A slider/knob drag commit — same dispatch as <see cref="Enqueue"/>, just carrying the live
@@ -367,8 +478,7 @@ public sealed class ClientHub(
         var context = new ActionContext(session.DeviceId!, msg.PageId, msg.WidgetId, device, Value: msg.Value);
         queue.TryWrite(async () =>
         {
-            var errors = await dispatcher.DispatchAsync(widget, WidgetEvents.ValueChange, context, CancellationToken.None);
-            await ReportActionErrorsAsync(session, errors);
+            await RunAsync(session, widget, WidgetEvents.ValueChange, context, msg.PageId);
         });
     }
 

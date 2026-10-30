@@ -29,8 +29,9 @@ export default defineConfig({
     port: 5190,
     proxy: {
       // Talk to the real running server for API/WS during development instead of enabling CORS on it.
-      "/api": "http://localhost:9820",
-      "/ws": { target: "ws://localhost:9820", ws: true },
+      // MACROGRID_PORT points it at a dev copy of the server started with the same variable.
+      "/api": `http://localhost:${process.env.MACROGRID_PORT ?? 9820}`,
+      "/ws": { target: `ws://localhost:${process.env.MACROGRID_PORT ?? 9820}`, ws: true },
     },
   },
 });

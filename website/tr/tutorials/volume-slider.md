@@ -7,7 +7,7 @@ Windows ana ses düzeyini ayarlayan ve ses başka bir yerden değiştiğinde onu
 1. Düzenleyicide **Araç Kutusu**'nda **Slider**'a tıklayın. Geniş olacak şekilde yeniden boyutlandırın (tam bir satır iyi çalışır).
 2. Özellikler panelinde **Min**'i `0`, **Maks**'ı `100` ve **Adım**'ı `1` yapın. `Ses` gibi bir üst yazı verin.
 3. **Konumu gösteren değişken** altında `system.audio.master` seçin. Slider artık geçerli ses düzeyini gösterir ve değiştiğinde hareket eder.
-4. **Aksiyonlar** altında, **Değer değişti** olayında **+ Aksiyon ekle**'ye tıklayın ve **Ana ses seviyesi**'ni seçin. Slider'ın değerini uygular.
+4. **Eylemler** altında, **Değer değişti** olayında **+ Eylem ekle**'ye tıklayın ve **Ana ses seviyesi**'ni seçin. Slider'ın değerini uygular.
 5. **Kaydet**'e tıklayın.
 
 Telefonunuzda slider'ı sürükleyin: bıraktığınızda Windows ses düzeyi onu izler. Klavyenizin ses tuşlarıyla sesi değiştirin, slider hareket eder.
@@ -15,9 +15,9 @@ Telefonunuzda slider'ı sürükleyin: bıraktığınızda Windows ses düzeyi on
 ## Sessize alma butonu ekleyin
 
 1. `Sustur` metniyle bir **Toggle** ekleyin.
-2. **Açılınca** olayına **Sustur** seçili **Sesi kapat/aç** aksiyonunu ekleyin. **Kapanınca** olayına aynı aksiyonu **Aç** ile ekleyin.
+2. **Açılınca** olayına **Sustur** seçili **Sesi kapat/aç** eylemini ekleyin. **Kapanınca** olayına aynı eylemi **Aç** ile ekleyin.
 3. Sesi başka bir yerden kapattığınızda toggle'ın doğru görünmesi için arka planına bir [dinamik kural](/tr/guide/dynamic) ekleyin: `system.audio.muted` **eşitse** `true`, kırmızı.
 
 ::: tip İpucu
-Toggle yerine, **Sesi sessize al/aç** aksiyonuna sahip düz bir **Buton** ve `{system.audio.muted|KAPALI/AÇIK}` gibi dinamik bir metin de kullanabilirsiniz.
+Toggle yerine, **Sesi sessize al/aç** eylemine sahip düz bir **Buton** ve `{system.audio.muted|KAPALI/AÇIK}` gibi dinamik bir metin de kullanabilirsiniz.
 :::

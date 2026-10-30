@@ -1,9 +1,13 @@
 using MacroGrid.Host.Ui;
 using MacroGrid.Core;
 using MacroGrid.Core.Actions;
+using MacroGrid.Core.Automation;
+using MacroGrid.Core.Backup;
 using MacroGrid.Core.Devices;
 using MacroGrid.Core.Diagnostics;
+using MacroGrid.Core.Languages;
 using MacroGrid.Core.Plugins;
+using MacroGrid.Core.Plugins.Widgets;
 using MacroGrid.Core.Plugins.Distribution;
 using MacroGrid.Core.Preferences;
 using MacroGrid.Core.Profiles;
@@ -36,9 +40,12 @@ internal static class ServiceRegistration
         services.AddSingleton(new ProfileStore(dataDir));
         services.AddSingleton(new ProfileTreeStore(dataDir));
         var preferencesStore = new PreferencesStore(dataDir);
+        var languagePacks = new LanguagePackStore(dataDir);
+        languagePacks.ResetMissingLanguage(preferencesStore);
         AppLanguage.Current = preferencesStore.Get().Language;
         preferencesStore.Changed += () => AppLanguage.Current = preferencesStore.Get().Language;
         services.AddSingleton(preferencesStore);
+        services.AddSingleton(languagePacks);
         services.AddSingleton(new LegalDocuments(AppContext.BaseDirectory));
         services.AddSingleton(new AutostartService(Environment.ProcessPath ?? Application.ExecutablePath));
         return services;
@@ -60,6 +67,15 @@ internal static class ServiceRegistration
         services.AddActionHandler<OpenAction>();
         services.AddActionHandler<OpenUrlAction>();
         services.AddActionHandler<DelayAction>();
+        services.AddActionHandler<IfAction>();
+        services.AddActionHandler<ElseAction>();
+        services.AddActionHandler<EndIfAction>();
+        services.AddActionHandler<StopAction>();
+        services.AddActionHandler<SetVariableAction>();
+        services.AddActionHandler<VariableSetValueAction>();
+        services.AddActionHandler<VariableAddAction>();
+        services.AddActionHandler<VariableToggleAction>();
+        services.AddActionHandler<VariableResetAction>();
         services.AddSingleton<IAudioService, WindowsAudioService>();
         services.AddActionHandler<SetVolumeAction>();
         services.AddActionHandler<SetMuteAction>();
@@ -71,10 +87,15 @@ internal static class ServiceRegistration
     }
 
     /// <summary>The variable store, the built-in system providers and the status registry.</summary>
-    public static IServiceCollection AddVariablesAndStatus(this IServiceCollection services)
+    public static IServiceCollection AddVariablesAndStatus(this IServiceCollection services, string dataDir)
     {
         services.AddSingleton<VariableStore>();
         services.AddSingleton<IVariableStore>(sp => sp.GetRequiredService<VariableStore>());
+        services.AddSingleton(sp => new UserVariableService(dataDir, sp.GetRequiredService<VariableStore>()));
+        services.AddHostedService(sp => sp.GetRequiredService<UserVariableService>());
+        services.AddSingleton<IVariableCatalogSource>(sp => sp.GetRequiredService<UserVariableService>());
+        services.AddSingleton(new MacroGrid.Core.Automation.AutomationStore(dataDir));
+        services.AddSingleton<IVariableCatalogSource, SelfVariableCatalog>();
         services.AddVariableProvider<SystemMetricsProvider>();
         services.AddVariableProvider<SystemAudioProvider>();
         var statusRegistry = new PluginStatusRegistry();
@@ -102,8 +123,30 @@ internal static class ServiceRegistration
             sp.GetRequiredService<VariableStore>(), new PluginPermissionStore(dataDir),
             sp.GetRequiredService<IInputService>(), sp.GetRequiredService<ILogger<PluginManager>>(),
             sp.GetRequiredService<PluginLocalizer>(), sp.GetRequiredService<ISecretProtector>(),
-            windowSource: sp.GetRequiredService<IActiveWindowSource>(), problems: sp.GetRequiredService<ProblemList>()));
+            windowSource: sp.GetRequiredService<IActiveWindowSource>(), problems: sp.GetRequiredService<ProblemList>(),
+            widgetCatalog: sp.GetRequiredService<PluginWidgetCatalog>(), widgetEvents: sp.GetRequiredService<PluginWidgetEventHub>(),
+            officialCatalog: sp.GetRequiredService<OfficialCatalog>(), origins: sp.GetRequiredService<PluginInstallOriginStore>(),
+            ownPorts: [ServerApp.Port, ServerApp.TlsPort], notifications: sp.GetRequiredService<PluginNotifications>()));
+        services.AddSingleton(sp => new BackupCollector(sp.GetRequiredService<ProfileStore>(), sp.GetRequiredService<ProfileTreeStore>(),
+            sp.GetRequiredService<PreferencesStore>(), sp.GetRequiredService<UserVariableService>(), sp.GetRequiredService<AutomationStore>(),
+            sp.GetRequiredService<DeviceStore>(), sp.GetRequiredService<PluginManager>(), sp.GetRequiredService<LanguagePackStore>()));
+        services.AddSingleton(sp => new BackupService(sp.GetRequiredService<BackupCollector>(), dataDir, ClientHub.ServerVersion,
+            sp.GetRequiredService<ILogger<BackupService>>()));
+        services.AddSingleton(sp => new BackupRestorer(sp.GetRequiredService<BackupService>(), sp.GetRequiredService<BackupCollector>(),
+            sp.GetRequiredService<ProfileStore>(), sp.GetRequiredService<ProfileTreeStore>(), sp.GetRequiredService<PreferencesStore>(),
+            sp.GetRequiredService<UserVariableService>(), sp.GetRequiredService<AutomationStore>(), sp.GetRequiredService<DeviceStore>(),
+            sp.GetRequiredService<PluginManager>(), sp.GetRequiredService<LanguagePackStore>(), sp.GetRequiredService<ActionDispatcher>(), sp.GetRequiredService<PluginWidgetCatalog>(),
+            profile => sp.GetRequiredService<WidgetStateService>().BroadcastProfileAsync(profile)));
+        services.AddSingleton<PluginNotifications>();
+        services.AddSingleton<PluginWidgetCatalog>();
+        services.AddSingleton(sp => new PluginWidgetEventHub(sp.GetRequiredService<ProblemList>()));
         services.AddHostedService(sp => sp.GetRequiredService<PluginManager>());
+        services.AddSingleton<IPluginWidgetHost>(sp => sp.GetRequiredService<PluginManager>());
+        services.AddSingleton(sp => new PluginWidgetRouter(sp.GetRequiredService<PluginWidgetCatalog>(), sp.GetRequiredService<IPluginWidgetHost>(),
+            new PluginPermissionStore(dataDir), sp.GetRequiredService<ProfileStore>(), sp.GetRequiredService<SessionRegistry>(), sp.GetRequiredService<ActionDispatcher>(),
+            sp.GetRequiredService<VariableStore>(), sp.GetRequiredService<PluginWidgetEventHub>(), sp.GetRequiredService<ProblemList>(),
+            sp.GetRequiredService<ILogger<PluginWidgetRouter>>()));
+        services.AddHostedService(sp => sp.GetRequiredService<PluginWidgetRouter>());
         services.AddSingleton<ProblemList>();
         services.AddSingleton<PluginInstallSelection>();
         return services;
@@ -122,14 +165,20 @@ internal static class ServiceRegistration
         var http = new HttpClient(new SocketsHttpHandler { AllowAutoRedirect = false }) { Timeout = TimeSpan.FromMinutes(2) };
         http.DefaultRequestHeaders.UserAgent.ParseAdd($"MacroGrid/{ClientHub.ServerVersion}");
         services.AddSingleton(new PluginCatalogClient(http));
+        services.AddSingleton(new PluginCatalogStateStore(dataDir));
+        services.AddSingleton(sp => new OfficialCatalog(http, sp.GetRequiredService<PluginCatalogStateStore>(), sp.GetRequiredService<PluginCatalogClient>()));
         services.AddSingleton(new PluginPackageDownloader(http));
+        services.AddSingleton(sp => new PluginCatalogIcons(sp.GetRequiredService<PluginPackageDownloader>()));
         services.AddSingleton(new PluginInstallOriginStore(dataDir));
         services.AddSingleton(new PluginSourceStore(dataDir));
+        services.AddSingleton(sp => new PluginCatalogMonitor(sp.GetRequiredService<OfficialCatalog>(), sp.GetRequiredService<PluginManager>(),
+            sp.GetRequiredService<PluginInstallOriginStore>(), sp.GetRequiredService<ProblemList>()));
+        services.AddHostedSingleton<PluginCatalogService>();
         services.AddSingleton(sp => new PluginCatalogInstaller(
             sp.GetRequiredService<PluginPackageDownloader>(),
             sp.GetRequiredService<PluginManager>(),
-            sp.GetRequiredService<PluginInstallOriginStore>(),
-            Path.Combine(dataDir, "plugins-staging")));
+            Path.Combine(dataDir, "plugins-staging"),
+            sp.GetRequiredService<OfficialCatalog>()));
         return services;
     }
 
@@ -141,11 +190,13 @@ internal static class ServiceRegistration
 
         services.AddSingleton<SessionRegistry>();
         services.AddSingleton<ToggleStateStore>();
+        services.AddSingleton<LastResultStore>();
         services.AddSingleton<AssetStore>();
         services.AddSingleton<LayoutSender>();
         services.AddHostedSingleton<WidgetStateService>();
         services.AddSingleton<IActiveWindowSource, ForegroundWindowMonitor>();
         services.AddHostedSingleton<AutoProfileSwitcher>();
+        services.AddHostedSingleton<MacroGrid.Core.Automation.AutomationService>();
         services.AddSingleton<ClientHub>();
         return services;
     }

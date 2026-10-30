@@ -22,4 +22,4 @@ Her şey `%AppData%\MacroGrid\` içindedir. Sistem tepsisi simgesi menüsünden 
 | `plugin-permissions.json` | JavaScript eklentileri için onayladığınız izinler |
 | `logs\` | Günlükler. Sorun bildirirken ekleyin. |
 
-Dışa aktarılan profiller tek bir `.msprofile` dosyasıdır. İçe aktarma `.json` dosyalarını da kabul eder.
+Dışa aktarılan profiller tek bir `.mgprofile` dosyasıdır. İçe aktarma `.json` dosyalarını da kabul eder.

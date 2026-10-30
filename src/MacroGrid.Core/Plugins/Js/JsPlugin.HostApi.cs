@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
 using MacroGrid.Core.Diagnostics;
 using Microsoft.Extensions.Logging;
@@ -60,19 +61,91 @@ public sealed partial class JsPlugin
         return name;
     }
 
+    /// <summary>A definition the server cannot read (a misspelt kind, a kind from a newer server) becomes an error the script can catch. A bad
+    /// field kind is named with its field; any other fault falls back to the serializer's own text.</summary>
+    private static T? ReadDefinition<T>(string json, string call)
+    {
+        try
+        {
+            return JsonSerializer.Deserialize<T>(json, ProtocolJson.Options);
+        }
+        catch (JsonException ex)
+        {
+            var bad = FindBadKind(JsonNode.Parse(json));
+            throw new JsHostException(bad is { } b
+                ? $"A field of {call} could not be read: the field '{b.Key}' has the unknown kind '{b.Kind}'. Known kinds: {string.Join(", ", Enum.GetNames<SettingFieldKind>())}."
+                : $"A field of {call} could not be read: {ex.Message}");
+        }
+    }
+
+    private static (string Key, string Kind)? FindBadKind(JsonNode? node)
+    {
+        switch (node)
+        {
+            case JsonArray array:
+                foreach (var item in array)
+                    if (FindBadKind(item) is { } inArray) return inArray;
+                break;
+            case JsonObject obj:
+                if (obj["kind"] is JsonValue kind && kind.TryGetValue<string>(out var name) && !Enum.TryParse<SettingFieldKind>(name, true, out _))
+                    return (obj["key"]?.ToString() ?? "?", name);
+                foreach (var (_, child) in obj)
+                    if (FindBadKind(child) is { } inChild) return inChild;
+                break;
+        }
+        return null;
+    }
+
     private void RegisterAction(string json)
     {
         Require(JsPermissions.Actions);
-        var meta = JsonSerializer.Deserialize<JsActionMeta>(json, ProtocolJson.Options)
+        var meta = ReadDefinition<JsActionMeta>(json, "registerAction")
             ?? throw new JsHostException("registerAction needs a definition.");
         if (string.IsNullOrWhiteSpace(meta.Type) || !meta.Type.StartsWith(_manifest.Id + ".", StringComparison.Ordinal))
             throw new JsHostException($"Action types must start with '{_manifest.Id}.'.");
         _host!.RegisterAction(new JsAction(this, meta));
     }
 
+    // ---- notify ----
+
+    private void Notify(string text)
+    {
+        Require(JsPermissions.Notify);
+        if (_notifications?.Post(_manifest.Id, _manifest.Name, text) == NoticeResult.Dropped)
+            ReportLimit("A plugin asked for more notices than allowed (3 in a row, then one every 30 seconds), so some were dropped.");
+    }
+
+    // ---- storage ----
+
+    private JsStorage Storage()
+    {
+        Require(JsPermissions.Storage);
+        return _storage ??= new JsStorage(_host!.DataDirectory, _logger);
+    }
+
+    private string? StorageGet(string key) => Storage().Get(key);
+
+    private void StorageSet(string key, string json)
+    {
+        try { Storage().Set(key, json); }
+        catch (StorageLimitException ex)
+        {
+            ReportLimit(ex.Message);
+            throw new JsHostException(ex.Message);
+        }
+    }
+
+    private void StorageRemove(string key) => Storage().Remove(key);
+
+    private string StorageKeys() => JsonSerializer.Serialize(Storage().Keys());
+
+    /// <summary>One Error List line per kind of limit a plugin reached (the same message counts up instead of adding lines).</summary>
+    private void ReportLimit(string message) =>
+        _problems?.Report(_manifest.Id, _manifest.Name, ProblemSeverity.Warning, ProblemCodes.LimitReached, message);
+
     private void SettingsPage(string json)
     {
-        var fields = JsonSerializer.Deserialize<SettingField[]>(json, ProtocolJson.Options)
+        var fields = ReadDefinition<SettingField[]>(json, "settings.page")
             ?? throw new JsHostException("settings.page needs a list of fields.");
         _settingsPage = new JsSettingsPage(_host!.DataDirectory, fields);
     }
@@ -190,13 +263,42 @@ public sealed partial class JsPlugin
         if (!Uri.TryCreate(url, UriKind.Absolute, out var uri))
             throw new JsHostException("Not a valid URL.");
         if (!_permissions.AllowsHttp(uri))
-            throw new JsHostException($"This plugin has not been granted 'http:{uri.Host}:{uri.Port}'.");
+        {
+            ReportNetworkRefused(uri.Host, uri.Port, "the plugin has not been granted this address.");
+            // The P102 line already says it; a script that does not catch this must not add a second line (P130) for the same refusal.
+            _lastReported = $"This plugin has not been granted 'http:{uri.Host}:{uri.Port}'.";
+            throw new JsHostException(_lastReported);
+        }
 
         var request = new HttpRequestMessage(new HttpMethod(method), uri);
         if (method != "GET") request.Content = new StringContent(body, System.Text.Encoding.UTF8, "application/json");
         foreach (var (key, value) in JsonSerializer.Deserialize<Dictionary<string, string>>(headersJson) ?? [])
+        {
+            if (JsNetworkGuard.IsRefusedHeader(key) || JsNetworkGuard.IsMalformedHeader(key, value))
+            {
+                request.Dispose();
+                ReportNetworkRefused(uri.Host, uri.Port, "A request header is not allowed.");
+                throw new JsHostException(JsNetworkGuard.IsRefusedHeader(key) ? $"The header '{key}' cannot be set." : "A request header is not valid.");
+            }
             request.Headers.TryAddWithoutValidation(key, value);
+        }
         return request;
+    }
+
+    /// <summary>One Error List line and one security log line for a network call the rules refused (never the URL path, a header or a body).</summary>
+    private void ReportNetworkRefused(string host, int port, string reason)
+    {
+        _problems?.Report(_manifest.Id, _manifest.Name, ProblemSeverity.Warning, ProblemCodes.NetworkRefused, $"A network call to {host}:{port} was refused: {reason}");
+        _logger.LogWarning(SecurityEvents.PluginNetworkRefused, "Security: a network call of plugin {Id} to {Host}:{Port} was refused",
+            SecurityEvents.ForLog(_manifest.Id), SecurityEvents.ForLog(host), port);
+    }
+
+    /// <summary>The text of a failed request: the refusal's own words when the network guard stopped it, else the framework's.</summary>
+    private static string DescribeFailure(Exception ex)
+    {
+        for (var e = ex; e is not null; e = e.InnerException)
+            if (e is NetworkRefusedException refused) return refused.Message;
+        return ex.Message;
     }
 
     private string Http(string method, string url, string body, string headersJson)
@@ -215,7 +317,7 @@ public sealed partial class JsPlugin
         }
         catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException or IOException)
         {
-            throw new JsHostException($"The request failed: {ex.Message}");
+            throw new JsHostException($"The request failed: {DescribeFailure(ex)}");
         }
     }
 
@@ -259,7 +361,7 @@ public sealed partial class JsPlugin
             {
                 if (_disposed) return;
                 ok = false;
-                payload = $"The request failed: {ex.Message}";
+                payload = $"The request failed: {DescribeFailure(ex)}";
             }
             finally { Interlocked.Decrement(ref _pendingHttp); }
 

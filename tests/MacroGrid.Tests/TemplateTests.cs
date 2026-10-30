@@ -92,4 +92,53 @@ public class TemplateTests
     {
         Assert.Same(Template.Parse("{x}"), Template.Parse("{x}"));
     }
+
+    [Fact]
+    public void An_unavailable_variable_shows_its_placeholder()
+    {
+        var store = new VariableStore();
+
+        Assert.Equal("CPU --", Template.Parse("CPU {a|0.#|--}").Render(store));
+        Assert.Equal("n/a", Template.Parse("{a||n/a}").Render(store));
+        Assert.Equal("x|y", Template.Parse("{a||x|y}").Render(store));
+    }
+
+    [Fact]
+    public void The_placeholder_is_ignored_while_the_variable_has_a_value()
+    {
+        var store = new VariableStore();
+        store.Set("a", 12.34);
+
+        Assert.Equal("12.3", Template.Parse("{a|0.#|--}").Render(store));
+    }
+
+    [Fact]
+    public void A_null_variable_shows_its_placeholder_but_an_empty_text_does_not()
+    {
+        var store = new VariableStore();
+        store.Set("a", null);
+        store.Set("b", "");
+
+        Assert.Equal("[--]", Template.Parse("[{a||--}]").Render(store));
+        Assert.Equal("[]", Template.Parse("[{b||--}]").Render(store));
+    }
+
+    [Fact]
+    public void A_placeholder_is_plain_text_and_is_cut_when_too_long()
+    {
+        var store = new VariableStore();
+
+        Assert.Equal("{b}", Template.Parse("{a||{b}}").Render(store)); // the placeholder is never parsed for tokens again
+        Assert.Equal(64, Template.Parse("{a||" + new string('x', 200) + "}").Render(store).Length);
+    }
+
+    [Fact]
+    public void Old_tokens_without_a_placeholder_are_unchanged()
+    {
+        var store = new VariableStore();
+
+        Assert.Equal("", Template.Parse("{a}").Render(store));
+        Assert.Equal("", Template.Parse("{a|0}").Render(store));
+        Assert.Equal(["a"], Template.Parse("{a||--} {a|0}").VariableNames);
+    }
 }

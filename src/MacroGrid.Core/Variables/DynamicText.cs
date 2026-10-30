@@ -26,7 +26,7 @@ public static class DynamicText
 
         var parsed = Template.Parse(template);
         if (parsed.VariableNames.Count == 0 && !dynamic) return null;
-        return parsed.Render(variables);
+        return parsed.Render(variables, Template.MissingValue);
     }
 
     /// <summary>Every variable whose change can alter <see cref="Resolve"/>: the rule conditions plus the

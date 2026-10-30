@@ -1,4 +1,5 @@
 using System.Text.Json;
+using MacroGrid.Core.Plugins.Distribution;
 using MacroGrid.Protocol;
 
 namespace MacroGrid.Host.Api;
@@ -13,6 +14,13 @@ internal static class ApiResults
     public static IResult BadRequest(string? error) => Results.BadRequest(new { error });
 
     public static IResult InvalidJson() => BadRequest("Invalid JSON.");
+
+    /// <summary>Adds the sandbox policy and <c>nosniff</c> to an icon response, so a direct visit to an SVG cannot run its script.</summary>
+    public static void SandboxIcon(HttpContext context)
+    {
+        context.Response.Headers.ContentSecurityPolicy = PluginIconResponse.ContentSecurityPolicy;
+        context.Response.Headers.XContentTypeOptions = PluginIconResponse.ContentTypeOptions;
+    }
 
     /// <summary>
     /// Reads the request body as JSON. <c>Valid</c> is false when the body is not well-formed JSON;

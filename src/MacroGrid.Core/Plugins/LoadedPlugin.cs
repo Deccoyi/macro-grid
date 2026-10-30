@@ -10,9 +10,12 @@ public enum PluginLoadStatus
     Error,
     /// <summary>A JS plugin that declares permissions the user has not approved yet; it does not run until they do.</summary>
     NeedsApproval,
-    /// <summary>A C# plugin that is not officially signed, or whose files no longer match its signature. It never runs (the
-    /// reason is in <see cref="LoadedPlugin.Detail"/>); the person can only remove it.</summary>
+    /// <summary>A C# plugin that is not officially signed or whose files no longer match its signature, or an official plugin
+    /// version the official safety list switched off. It does not run (the reason is in <see cref="LoadedPlugin.Detail"/>);
+    /// the person can remove it, or update it when the list only names the old version.</summary>
     NotAllowed,
+    /// <summary>The person switched the plugin off in the Plugins window. It stays installed but does not run until switched on.</summary>
+    Disabled,
 }
 
 /// <summary>One entry in the editor's plugin list (`GET /api/plugins`) — every folder under `plugins/`
@@ -26,4 +29,4 @@ public enum PluginLoadStatus
 /// <paramref name="HasTreeItems"/> is true when the running plugin implements the optional
 /// <see cref="MacroGrid.Plugin.Abstractions.IPluginTreeProvider"/>: only then does the editor's Plugins tool window
 /// give it a chevron and ask <c>GET /api/plugins/{id}/tree-items</c> for anything.</summary>
-public sealed record LoadedPlugin(string Id, string Name, string Version, PluginLoadStatus Status, string? Detail, bool HasSettings = false, IReadOnlyList<string>? PendingPermissions = null, bool HasIcon = false, bool HasTreeItems = false, bool Unsigned = false, int KeyboardUsesToday = 0);
+public sealed record LoadedPlugin(string Id, string Name, string Version, PluginLoadStatus Status, string? Detail, bool HasSettings = false, IReadOnlyList<string>? PendingPermissions = null, bool HasIcon = false, bool HasTreeItems = false, bool Unsigned = false, int KeyboardUsesToday = 0, IReadOnlyList<string>? Permissions = null, IReadOnlyList<string>? SwitchedOffPermissions = null);

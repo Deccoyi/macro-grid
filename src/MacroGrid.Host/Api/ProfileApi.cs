@@ -2,8 +2,10 @@ using MacroGrid.Host.Ui;
 using Microsoft.AspNetCore.Routing;
 using MacroGrid.Core;
 using MacroGrid.Core.Actions;
+using MacroGrid.Core.Backup;
 using MacroGrid.Core.Model;
 using MacroGrid.Core.Plugins;
+using MacroGrid.Core.Plugins.Widgets;
 using MacroGrid.Core.Profiles;
 using MacroGrid.Core.Sessions;
 using MacroGrid.Core.Web;
@@ -39,6 +41,7 @@ internal static class ProfileApi
         api.MapPost("/profiles", (ProfileStore profiles) =>
         {
             var profile = new Profile { Name = AppLanguage.Pick("New profile", "Yeni Profil"), Pages = [new Page { Name = AppLanguage.Pick("Page 1", "Sayfa 1"), Cols = 4, Rows = 3 }] };
+            WidgetNames.Ensure(profile);
             profiles.Save(profile);
             return ApiResults.Json(profile);
         });
@@ -56,18 +59,28 @@ internal static class ProfileApi
                 return ApiResults.BadRequest(error);
 
             WebUrlRule.Sanitize(profile, loggers.CreateLogger("MacroGrid.Security"));
+            PluginWidgetProps.Strip(profile);
+            WidgetNames.Ensure(profile);
             profiles.Save(profile);
             await widgetState.BroadcastProfileAsync(profile);
             return Results.NoContent();
         });
 
-        api.MapDelete("/profiles/{id}", (string id, ProfileStore profiles) =>
-            profiles.Delete(id) ? Results.NoContent() : ApiResults.BadRequest("The last profile cannot be deleted."));
-
-        // .msprofile (a zip with the profile and a manifest naming the plugins it needs) or a plain profile JSON file.
-        api.MapPost("/browse/import-profile", async (IUiDialogService dialogs, PluginManager plugins, ActionDispatcher dispatcher) =>
+        api.MapDelete("/profiles/{id}", (string id, ProfileStore profiles, BackupService backups) =>
         {
-            var (path, bytes) = await dialogs.OpenFileAsync("Import profile", "Macro Grid profile (*.msprofile;*.json)|*.msprofile;*.json");
+            // A delete keeps no copy of its own, so a restore point comes first; when it cannot be made nothing is deleted.
+            if (profiles.Get(id) is not null && profiles.All.Count > 1)
+            {
+                try { backups.CreateRestorePoint(BackupService.ReasonDelete); }
+                catch (BackupException) { return ApiResults.BadRequest("A restore point could not be made, so nothing was deleted."); }
+            }
+            return profiles.Delete(id) ? Results.NoContent() : ApiResults.BadRequest("The last profile cannot be deleted.");
+        });
+
+        // .mgprofile (or an older .msprofile) (a zip with the profile and a manifest naming the plugins it needs) or a plain profile JSON file.
+        api.MapPost("/browse/import-profile", async (IUiDialogService dialogs, PluginManager plugins, ActionDispatcher dispatcher, PluginWidgetCatalog widgetCatalog) =>
+        {
+            var (path, bytes) = await dialogs.OpenFileAsync("Import shared profile", "Macro Grid profile (*.mgprofile;*.msprofile;*.json)|*.mgprofile;*.msprofile;*.json");
             if (bytes is null) return Results.Json(new { path = (string?)null });
 
             ProfilePackageContent package;
@@ -77,7 +90,8 @@ internal static class ProfileApi
             var missing = plugins.MissingPlugins(package.Manifest);
             var known = dispatcher.Handlers.Select(h => h.Type).ToHashSet(StringComparer.OrdinalIgnoreCase);
             var unknownTypes = ProfilePackage.ActionTypes(package.Profile).Where(t => !known.Contains(t)).ToList();
-            return ApiResults.Json(new { path, profile = package.Profile, missingPlugins = missing, unknownActionTypes = unknownTypes });
+            var clearedBindings = PluginWidgetProps.ClearOutsideBindings(package.Profile, widgetCatalog);
+            return ApiResults.Json(new { path, profile = package.Profile, missingPlugins = missing, unknownActionTypes = unknownTypes, clearedWidgetBindings = clearedBindings, missingFiles = ProfileReferences.MissingFiles([package.Profile], dispatcher.Handlers) });
         });
 
         api.MapPost("/browse/export-profile", async (HttpRequest request, IUiDialogService dialogs, PluginManager plugins) =>
@@ -90,8 +104,8 @@ internal static class ProfileApi
                 plugins.DescribeRequiredPlugins(ProfilePackage.ActionTypes(profile)));
             var invalid = Path.GetInvalidFileNameChars();
             var fileName = string.Concat(profile.Name.Select(c => invalid.Contains(c) ? '_' : c)).Trim();
-            var path = await dialogs.SaveFileAsync("Export profile", (fileName.Length > 0 ? fileName : "profile") + ProfilePackage.Extension,
-                "Macro Grid profile (*.msprofile)|*.msprofile", "msprofile", ProfilePackage.Write(profile, manifest));
+            var path = await dialogs.SaveFileAsync("Share profile", (fileName.Length > 0 ? fileName : "profile") + ProfilePackage.Extension,
+                "Macro Grid profile (*.mgprofile)|*.mgprofile", "mgprofile", ProfilePackage.Write(profile, manifest));
             return Results.Json(new { path });
         });
 

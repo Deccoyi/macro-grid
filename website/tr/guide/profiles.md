@@ -20,11 +20,11 @@ Bir cihazın hangi profili açtığı:
 2. [Tercihler](/tr/guide/preferences)'teki **varsayılan profil**, yoksa
 3. ilk profil.
 
-Profil, bir düğmeyle (**Profil değiştir** aksiyonu), telefondaki çekmeceden ya da [uygulama kurallarıyla](/tr/guide/auto-switch) otomatik olarak da değiştirilebilir.
+Profil, bir düğmeyle (**Profil değiştir** eylemi), telefondaki çekmeceden ya da [uygulama kurallarıyla](/tr/guide/auto-switch) otomatik olarak da değiştirilebilir.
 
 ## Sayfalar
 
-Bir profilin birçok sayfası olabilir. Telefonda aralarında geçmek için iki parmakla sola ya da sağa kaydırın. **Sayfa değiştir** aksiyonlu bir düğme de ekleyebilirsiniz (bir sayfaya git, sonraki, önceki ya da geri).
+Bir profilin birçok sayfası olabilir. Telefonda aralarında geçmek için iki parmakla sola ya da sağa kaydırın. **Sayfa değiştir** eylemli bir düğme de ekleyebilirsiniz (bir sayfaya git, sonraki, önceki ya da geri).
 
 Sayfayı ağacın altındaki **Sayfa** düğmesiyle ya da profilin sağ tık menüsünden ekleyin. Sayfa satırındaki simgelerle **çoğaltın** ya da **silin**. Seçili widget'ları başka bir sayfaya ya da profile **taşıyabilir veya kopyalayabilirsiniz**.
 
@@ -46,8 +46,8 @@ Klasörler yalnızca düzenleyici içindir. Bir cihaz, sayfalar ve profiller kla
 
 ## Dışa ve içe aktarma
 
-- **Dosya → Profili Dışa Aktar (.msprofile)** geçerli profili tek bir dosyaya kaydeder.
-- **Dosya → Profili İçe Aktar (.msprofile / .json)…** bir profil yükler. Aynı adlı bir profil varsa **Üzerine yaz** ya da **Adı değiştir** seçeneğini seçersiniz.
+- **Dosya → Profili Dışa Aktar (.mgprofile)** geçerli profili tek bir dosyaya kaydeder.
+- **Dosya → Profili İçe Aktar (.mgprofile / .json)…** bir profil yükler. Aynı adlı bir profil varsa **Üzerine yaz** ya da **Adı değiştir** seçeneğini seçersiniz.
 - İçe aktarılan profil sahip olmadığınız bir eklenti kullanıyorsa Düzenleyici hangisi olduğunu listeler; eklentiyi kurunca düğmeler çalışır.
 
 Bir deck'i yedeklemenin ya da başkasıyla paylaşmanın en kolay yolu budur.

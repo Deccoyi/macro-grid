@@ -1,0 +1,15 @@
+{
+  "v": 3,
+  "createdOnFiles": { "v": 1, "at": "2026-10-02T12:00:00Z" },
+  "title": "Mantık Bloğu Tasarımı",
+  "launch": { "view": "canvas" },
+  "pages": [],
+  "boards": {
+    "Dynamize.dc.html": { "x": 0, "y": 0, "w": 680, "h": 700, "title": "Dinamizasyon penceresi" },
+    "Presets.dc.html": { "x": 760, "y": 0, "w": 720, "h": 540, "title": "Presets penceresi" },
+    "Main.dc.html": { "x": 1560, "y": 0, "w": 760, "h": 1090, "title": "If / Else blok (park edilmiş)" }
+  },
+  "order": ["Dynamize.dc.html", "Presets.dc.html", "Main.dc.html"],
+  "notes": {},
+  "designSystems": []
+}

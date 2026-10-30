@@ -33,6 +33,8 @@ export interface WorkspaceApi {
   pin: (id: string) => void;
   /** View menu: reopen if closed, open the flyout if auto-hidden, focus if already docked. */
   toggleFromMenu: (id: string) => void;
+  /** Makes sure a tool window is visible and in front: reopens it if closed, opens its flyout if auto-hidden, activates its tab if docked. Never closes. */
+  bringForward: (id: string) => void;
   /** The current arrangement as a string, for saving into a DockLayoutProfile or as the "last used"
    * layout. Null before the dockview instance is ready. */
   serializeLayout: () => string | null;
@@ -198,6 +200,17 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
     [autoHiddenIds, dockAtDefaultPlacement],
   );
 
+  const bringForward = useCallback(
+    (id: string) => {
+      if (autoHiddenIds.includes(id)) { setOpenFlyoutId(id); return; }
+      const panel = apiRef.current?.getPanel(id);
+      if (panel) { panel.api.setActive(); return; }
+      setOpenIds((ids) => (ids.includes(id) ? ids : [...ids, id]));
+      dockAtDefaultPlacement(id);
+    },
+    [autoHiddenIds, dockAtDefaultPlacement],
+  );
+
   const serializeLayout = useCallback((): string | null => {
     const api = apiRef.current;
     if (!api) return null;
@@ -276,13 +289,14 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
       unpin,
       pin,
       toggleFromMenu,
+      bringForward,
       serializeLayout,
       applyLayout,
       resetToDefaultLayout,
     }),
     [
       openIds, autoHiddenIds, openFlyoutId, registerApi, buildDefaultLayout, unpin, pin, toggleFromMenu,
-      serializeLayout, applyLayout, resetToDefaultLayout,
+      serializeLayout, applyLayout, resetToDefaultLayout, bringForward,
     ],
   );
 

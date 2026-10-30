@@ -9,13 +9,15 @@ namespace MacroGrid.Host.Api;
 /// <summary>
 /// Discover-tab endpoints: browsing and installing from the official catalog (phase 2), added third-party
 /// multi-plugin sources (phase 3), and a pasted single-plugin repository link (phase 4) of the plugin
-/// distribution plan. Loopback-only, like the rest of <c>/api</c>. The HTTP client behind <see
-/// cref="PluginCatalogClient"/> and <see cref="PluginPackageDownloader"/> is only ever used from these
-/// endpoints — nothing runs in the background.
+/// distribution plan. Loopback-only, like the rest of <c>/api</c>. The official source is read through
+/// <see cref="OfficialCatalog"/> (signed files with a saved copy); every other source goes through
+/// <see cref="PluginCatalogClient"/>. The background look at the official files is <c>PluginCatalogService</c>.
 /// </summary>
 internal static class PluginCatalogApi
 {
     public const string OfficialSourceId = "official";
+    public const string NotOfferedCode = "not-offered";
+    public const string OtherSourceCode = "other-source";
 
     public static RouteGroupBuilder MapPluginCatalogApi(this RouteGroupBuilder api)
     {
@@ -37,7 +39,7 @@ internal static class PluginCatalogApi
 
             try
             {
-                var index = await client.FetchIndexAsync(owner, repo, cancellationToken);
+                var index = await client.FetchIndexAsync(owner, repo, cancellationToken, fresh: true);
                 var source = new PluginSource($"{owner}/{repo}".ToLowerInvariant(), owner, repo, index.Name, DateTimeOffset.UtcNow);
                 sources.Add(source);
                 return ApiResults.Json(source);
@@ -51,14 +53,20 @@ internal static class PluginCatalogApi
         api.MapDelete("/plugin-sources/{id}", (string id, PluginSourceStore sources) =>
             sources.Remove(id) ? Results.NoContent() : Results.NotFound());
 
-        api.MapGet("/plugin-catalog", async (string? source, PluginCatalogClient client, PluginSourceStore sources, PluginManager plugins, PluginInstallOriginStore origins, CancellationToken cancellationToken) =>
+        api.MapGet("/plugin-catalog", async (string? source, bool? refresh, PluginCatalogClient client, OfficialCatalog official, PluginSourceStore sources, PluginManager plugins, PluginInstallOriginStore origins, CancellationToken cancellationToken) =>
         {
             if (!TryResolveSource(source, sources, out var owner, out var repo, out var isOfficial))
                 return ApiResults.BadRequest($"Unknown source: {source}");
 
             try
             {
-                var index = await client.FetchIndexAsync(owner, repo, cancellationToken);
+                var index = await IndexAsync(isOfficial, owner, repo, client, official, refresh == true, cancellationToken);
+                if (isOfficial && refresh == true)
+                {
+                    // The Refresh button also looks at the safety list and applies what it says to the running plugins.
+                    await official.GetRevokedAsync(TimeSpan.FromMinutes(1), cancellationToken, ignoreBackoff: true);
+                    await plugins.ApplyRevocationsAsync();
+                }
                 return ApiResults.Json(new
                 {
                     source,
@@ -67,7 +75,7 @@ internal static class PluginCatalogApi
                     // Only the official source may ship C# plugins; a third-party source's C# entries are not offered.
                     plugins = index.Plugins
                         .Where(entry => isOfficial || !string.Equals(entry.Kind, "csharp", StringComparison.OrdinalIgnoreCase))
-                        .Select(entry => DescribeEntry(entry, plugins, origins)),
+                        .Select(entry => DescribeEntry(entry, $"https://github.com/{owner}/{repo}", plugins, origins, isOfficial ? official : null)),
                 });
             }
             catch (PluginCatalogException ex)
@@ -76,7 +84,26 @@ internal static class PluginCatalogApi
             }
         });
 
-        api.MapPost("/plugin-catalog/install", async (PluginCatalogInstallRequest request, PluginCatalogClient client, PluginSourceStore sources, PluginCatalogInstaller installer, CancellationToken cancellationToken) =>
+        // A catalog plugin's icon, fetched by the host (the editor never loads a remote image itself). 404 when there is none.
+        api.MapGet("/plugin-catalog/icon", async (string? source, string? id, PluginCatalogClient client, OfficialCatalog official, PluginCatalogIcons icons, PluginSourceStore sources, HttpContext context, CancellationToken cancellationToken) =>
+        {
+            if (!TryResolveSource(source, sources, out var owner, out var repo, out var isOfficial) || string.IsNullOrWhiteSpace(id)) return Results.NotFound();
+            try
+            {
+                // The icon endpoint is called once per listed plugin, so it never goes to the network for the index when a copy exists.
+                var index = isOfficial && official.Index is { } copy ? copy : await IndexAsync(isOfficial, owner, repo, client, official, fresh: false, cancellationToken);
+                var entry = index.Plugins.FirstOrDefault(p => p.Id == id);
+                if (entry is null || await icons.GetAsync(owner, repo, entry, cancellationToken) is not { } icon) return Results.NotFound();
+                ApiResults.SandboxIcon(context);
+                return Results.File(icon.Data, icon.ContentType);
+            }
+            catch (PluginCatalogException)
+            {
+                return Results.NotFound();
+            }
+        });
+
+        api.MapPost("/plugin-catalog/install", async (PluginCatalogInstallRequest request, PluginCatalogClient client, OfficialCatalog official, PluginSourceStore sources, PluginCatalogInstaller installer, PluginInstallOriginStore origins, CancellationToken cancellationToken) =>
         {
             if (!TryResolveSource(request.Source, sources, out var owner, out var repo, out var isOfficial))
                 return ApiResults.BadRequest($"Unknown source: {request.Source}");
@@ -85,14 +112,22 @@ internal static class PluginCatalogApi
 
             try
             {
-                var index = await client.FetchIndexAsync(owner, repo, cancellationToken);
+                var index = await IndexAsync(isOfficial, owner, repo, client, official, fresh: false, cancellationToken);
                 var entry = index.Plugins.FirstOrDefault(p => p.Id == request.Id);
                 var version = entry?.Versions.FirstOrDefault(v => v.Version == request.Version);
                 if (entry is null || version is null)
                     return ApiResults.BadRequest("That plugin or version is no longer listed by the source.");
 
                 var sourceUrl = $"https://github.com/{owner}/{repo}";
-                var result = await installer.InstallAsync(entry, version, sourceUrl, isOfficial, cancellationToken);
+                // A plugin that came from another source is not replaced from this one (see "Go back one version" in the distribution design).
+                if (PluginLinkPolicy.IsOtherSource(origins.Get(entry.Id), sourceUrl))
+                    return ApiResults.Json(new { installed = false, error = "This plugin was installed from another source.", code = OtherSourceCode });
+                var choice = PluginCatalogChoice.Choose(entry, ClientHub.ServerVersion, null,
+                    isOfficial ? v => official.Revoked?.Find(entry.Id, v.Version) is not null : null);
+                if (!choice.Offered.Any(v => v.Version == version.Version))
+                    return ApiResults.Json(new { installed = false, error = "That version is not on offer.", code = NotOfferedCode });
+
+                var result = await installer.InstallAsync(entry, version, sourceUrl, isOfficial, cancellationToken, hold: request.Hold == true);
                 return ApiResults.Json(new { installed = true, id = result.Id, name = result.Name, status = result.Plugin.Status, detail = result.Plugin.Detail });
             }
             catch (Exception ex) when (ex is PluginCatalogException or PluginDownloadException or InvalidOperationException or IOException or UnauthorizedAccessException)
@@ -102,7 +137,7 @@ internal static class PluginCatalogApi
             }
         });
 
-        api.MapPost("/plugin-link/inspect", async (PluginLinkRequest request, PluginCatalogClient client, CancellationToken cancellationToken) =>
+        api.MapPost("/plugin-link/inspect", async (PluginLinkRequest request, PluginCatalogClient client, PluginManager plugins, PluginInstallOriginStore origins, CancellationToken cancellationToken) =>
         {
             if (string.IsNullOrWhiteSpace(request.Url) || !PluginSourceUrls.TryParseRepo(request.Url, out var owner, out var repo))
                 return ApiResults.BadRequest("That doesn't look like a GitHub repository (expected a URL or \"owner/repo\").");
@@ -118,6 +153,9 @@ internal static class PluginCatalogApi
                 if (string.Equals(manifest.Kind, "csharp", StringComparison.OrdinalIgnoreCase))
                     return ApiResults.Json(new { error = "Only official C# plugins can be installed.", code = PluginDownloadException.Refused });
                 var compatibility = PluginCompatibility.Check(ClientHub.ServerVersion, manifest.MinMacroGrid, manifest.MacroGrid, manifest.SdkVersion);
+                var sourceUrl = $"https://github.com/{owner}/{repo}";
+                var installedVersion = plugins.Plugins.FirstOrDefault(p => p.Id == manifest.Id)?.Version;
+                var origin = origins.Get(manifest.Id);
                 return ApiResults.Json(new
                 {
                     isMultiPlugin = false,
@@ -137,6 +175,13 @@ internal static class PluginCatalogApi
                     permissions = manifest.Permissions ?? [],
                     compatible = compatibility.Compatible,
                     incompatibleReason = compatibility.Reason,
+                    // Set when this id is already installed: from which source (trust), and whether it is this link's own source.
+                    installed = installedVersion is null && origin is null ? null : new
+                    {
+                        version = installedVersion ?? origin?.Version,
+                        trust = origin?.Trust ?? PluginTrust.Local,
+                        sameSource = !PluginLinkPolicy.IsOtherSource(origin, sourceUrl),
+                    },
                 });
             }
             catch (PluginCatalogException ex)
@@ -145,7 +190,7 @@ internal static class PluginCatalogApi
             }
         });
 
-        api.MapPost("/plugin-link/install", async (PluginLinkRequest request, PluginCatalogClient client, PluginPackageDownloader downloader, PluginCatalogInstaller installer, CancellationToken cancellationToken) =>
+        api.MapPost("/plugin-link/install", async (PluginLinkRequest request, PluginCatalogClient client, PluginPackageDownloader downloader, PluginCatalogInstaller installer, PluginInstallOriginStore origins, CancellationToken cancellationToken) =>
         {
             if (string.IsNullOrWhiteSpace(request.Url) || !PluginSourceUrls.TryParseRepo(request.Url, out var owner, out var repo))
                 return ApiResults.BadRequest("That doesn't look like a GitHub repository (expected a URL or \"owner/repo\").");
@@ -155,13 +200,15 @@ internal static class PluginCatalogApi
                 var manifest = await client.FetchSinglePluginManifestAsync(owner, repo, cancellationToken);
                 if (string.Equals(manifest.Kind, "csharp", StringComparison.OrdinalIgnoreCase))
                     return ApiResults.Json(new { installed = false, error = "Only official C# plugins can be installed.", code = PluginDownloadException.Refused });
+                var sourceUrl = $"https://github.com/{owner}/{repo}";
+                if (PluginLinkPolicy.IsOtherSource(origins.Get(manifest.Id), sourceUrl))
+                    return ApiResults.Json(new { installed = false, error = "This plugin was installed from another source.", code = OtherSourceCode });
                 var zipUrl = PluginSourceUrls.SinglePluginPackageUrl(owner, repo, manifest.Id, manifest.Version);
                 var sha256 = await downloader.FetchTextAssetAsync(PluginSourceUrls.SinglePluginPackageUrl(owner, repo, manifest.Id, manifest.Version, ".sha256"), cancellationToken);
 
                 var version = new PluginCatalogVersion(manifest.Version, manifest.MinMacroGrid, manifest.MacroGrid, manifest.SdkVersion, manifest.MinServerVersion, zipUrl.ToString(), sha256, Size: 0, manifest.Permissions, Signature: null);
                 var entry = new PluginCatalogEntry(manifest.Id, manifest.Name, manifest.Description, manifest.Author, manifest.Homepage, manifest.Kind, [version]);
 
-                var sourceUrl = $"https://github.com/{owner}/{repo}";
                 var result = await installer.InstallAsync(entry, version, sourceUrl, isOfficial: false, cancellationToken);
                 return ApiResults.Json(new { installed = true, id = result.Id, name = result.Name, status = result.Plugin.Status, detail = result.Plugin.Detail });
             }
@@ -174,6 +221,13 @@ internal static class PluginCatalogApi
 
         return api;
     }
+
+    /// <summary>The official source comes from the saved, signed copy (refreshed when it is older than an hour, or a minute for the Refresh
+    /// button); another source from its five-minute memory copy.</summary>
+    private static Task<PluginCatalogIndex> IndexAsync(bool isOfficial, string owner, string repo, PluginCatalogClient client, OfficialCatalog official, bool fresh, CancellationToken cancellationToken) =>
+        isOfficial
+            ? official.GetIndexAsync(fresh ? TimeSpan.FromMinutes(1) : TimeSpan.FromHours(1), cancellationToken, ignoreBackoff: fresh)
+            : client.FetchIndexAsync(owner, repo, cancellationToken, fresh);
 
     /// <summary>"official" resolves to the hard-coded official repository; anything else must be a saved
     /// source's id (<c>"&lt;owner&gt;/&lt;repo&gt;"</c>).</summary>
@@ -200,19 +254,19 @@ internal static class PluginCatalogApi
         return false;
     }
 
-    private static object DescribeEntry(PluginCatalogEntry entry, PluginManager plugins, PluginInstallOriginStore origins)
+    private static object DescribeEntry(PluginCatalogEntry entry, string sourceUrl, PluginManager plugins, PluginInstallOriginStore origins, OfficialCatalog? official)
     {
         var installed = plugins.Plugins.FirstOrDefault(p => p.Id == entry.Id);
         var origin = origins.Get(entry.Id);
 
-        var compatible = entry.Versions
-            .Where(v => PluginCompatibility.Check(ClientHub.ServerVersion, v.MinMacroGrid, v.MacroGrid, v.SdkVersion).Compatible)
-            .OrderByDescending(v => v.Version, Comparer<string>.Create(SemVer.CompareVersionStrings))
-            .FirstOrDefault();
-        var latest = entry.Versions.OrderByDescending(v => v.Version, Comparer<string>.Create(SemVer.CompareVersionStrings)).FirstOrDefault();
-        var incompatibleReason = compatible is null && latest is not null
-            ? PluginCompatibility.Check(ClientHub.ServerVersion, latest.MinMacroGrid, latest.MacroGrid, latest.SdkVersion).Reason
-            : null;
+        var choice = PluginCatalogChoice.Choose(entry, ClientHub.ServerVersion, installed?.Version,
+            official is null ? null : v => official.Revoked?.Find(entry.Id, v.Version) is not null);
+        var compatible = choice.Installable;
+        var latest = choice.Latest;
+        var sameSource = origin is null || string.Equals(origin.SourceUrl, sourceUrl, StringComparison.OrdinalIgnoreCase);
+        var held = origin?.Hold == true;
+        var newerVersion = installed is not null && compatible is not null
+            && SemVer.CompareVersionStrings(compatible.Version, installed.Version) > 0;
 
         return new
         {
@@ -222,22 +276,33 @@ internal static class PluginCatalogApi
             entry.Author,
             entry.Homepage,
             entry.Kind,
+            entry.Category,
+            entry.Tags,
+            hasIcon = entry.Icon is not null,
             latestVersion = latest?.Version,
             installableVersion = compatible?.Version,
             compatible = compatible is not null,
-            incompatibleReason,
+            incompatibleReason = choice.IncompatibleReason,
+            withdrawn = choice.Withdrawn,
+            installedWithdrawn = choice.InstalledWithdrawn,
             permissions = compatible?.Permissions ?? latest?.Permissions ?? [],
             installed = installed is not null,
             installedVersion = installed?.Version,
-            updateAvailable = installed is not null && compatible is not null
-                && SemVer.CompareVersionStrings(compatible.Version, installed.Version) > 0,
+            sameSource,
+            held,
+            newerVersion,
+            // An update is offered only from the source the plugin came from, and not while the person chose to stay on this
+            // version, unless that version was withdrawn or switched off.
+            updateAvailable = newerVersion && sameSource && (!held || choice.InstalledWithdrawn || choice.InstalledRevoked),
+            previous = choice.Previous is { } previous ? new { previous.Version, permissions = previous.Permissions ?? [] } : null,
+            otherSource = !sameSource ? origin!.SourceUrl : null,
             trust = origin?.Trust.ToString() ?? (installed is not null ? PluginTrust.Local.ToString() : null),
         };
     }
 
     private sealed record PluginAddSourceRequest(string? Url);
 
-    private sealed record PluginCatalogInstallRequest(string? Source, string? Id, string? Version);
+    private sealed record PluginCatalogInstallRequest(string? Source, string? Id, string? Version, bool? Hold);
 
     private sealed record PluginLinkRequest(string? Url);
 }

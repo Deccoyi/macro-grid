@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { api } from "../api/client";
-import type { SettingField, StatusEntry } from "../api/types";
+import type { SettingField, StatusEntry, VariableInfo } from "../api/types";
 import { handleLocalUndoRedo } from "../commands/shortcuts";
 import { useT } from "../i18n/I18nContext";
 import { SchemaForm } from "../panels/actionForms/SchemaForm";
@@ -17,6 +17,7 @@ export function PluginSettingsWindow({ id }: { id: string }) {
   const [fields, setFields] = useState<SettingField[] | null>(null);
   const { values, set: setValues, reset: resetValues, undo, redo } = useUndoableValues({});
   const [status, setStatus] = useState<StatusEntry[]>([]);
+  const [variableCatalog, setVariableCatalog] = useState<VariableInfo[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -31,6 +32,7 @@ export function PluginSettingsWindow({ id }: { id: string }) {
       .catch((err) => setError(err instanceof Error ? err.message : String(err)))
       .finally(() => setLoading(false));
     api.getStatus().then(setStatus).catch(() => {});
+    api.variableCatalog().then(setVariableCatalog).catch(() => {});
   }, [id]);
 
   const save = async () => {
@@ -71,6 +73,7 @@ export function PluginSettingsWindow({ id }: { id: string }) {
             <SchemaForm
               fields={fields}
               values={values}
+              variableCatalog={variableCatalog}
               onChange={(next) => { setValues(next); setSaved(false); }}
               fetchOptions={(sourceId, current) => api.getPluginSettingsOptions(id, sourceId, current)}
               runCommand={(command, current) => api.runPluginSettingsCommand(id, command, current)}

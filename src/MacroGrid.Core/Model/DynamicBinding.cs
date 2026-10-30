@@ -55,4 +55,8 @@ public static class DynamicOperators
     public const string NotEqual = "!=";
     /// <summary>Inclusive: min(Value,Value2) &lt;= live &lt;= max(Value,Value2).</summary>
     public const string Between = "between";
+    /// <summary>True when the store has no value for the variable: never set, removed (a plugin that was switched off or removed), or set to null. An empty text, 0 and false are values. Takes no value.</summary>
+    public const string IsUnavailable = "unavailable";
+    /// <summary>The opposite of <see cref="IsUnavailable"/>. Takes no value.</summary>
+    public const string IsAvailable = "available";
 }

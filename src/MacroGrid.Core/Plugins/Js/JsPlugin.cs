@@ -30,7 +30,7 @@ public sealed class JsHostException(string message) : Exception(message);
 /// The script registers everything at its top level (actions, settings page, timers); registrations made later
 /// from a callback are not picked up.
 /// </summary>
-public sealed partial class JsPlugin : IPlugin, IDisposable
+public sealed partial class JsPlugin : IPlugin, IPluginWidgetHandler, IDisposable
 {
     private static readonly TimeSpan InitTimeout = TimeSpan.FromSeconds(10);
     private const int MaxPendingTimerJobs = 50;
@@ -42,6 +42,8 @@ public sealed partial class JsPlugin : IPlugin, IDisposable
     private readonly IInputService? _input;
     private readonly ILogger _logger;
     private readonly ProblemList? _problems;
+    private readonly PluginNotifications? _notifications;
+    private readonly JsNetworkPolicy _network;
     // The last message a refused key press put on the problem list; a script that does not catch it fails the whole call with the same text, which must not be listed twice.
     private volatile string? _lastReported;
     private readonly Action<string> _onFaulted;
@@ -66,9 +68,12 @@ public sealed partial class JsPlugin : IPlugin, IDisposable
     private Engine? _engine;
     private IPluginHost? _host;
     private JsSettingsPage? _settingsPage;
+    private JsStorage? _storage;
     private Thread? _thread;
     private int _pendingTimerJobs;
     private int _pendingHttp;
+    private readonly ConcurrentDictionary<int, TaskCompletionSource<string>> _outcomeWaits = [];
+    private int _nextRunId;
     private readonly CancellationTokenSource _disposeCts = new();
     private int _consecutiveErrors;
     private volatile bool _disposed;
@@ -85,8 +90,12 @@ public sealed partial class JsPlugin : IPlugin, IDisposable
         JsPluginLimits? limits = null,
         IActiveWindowSource? windows = null,
         Func<bool>? isElevated = null,
-        ProblemList? problems = null)
+        ProblemList? problems = null,
+        JsNetworkPolicy? network = null,
+        PluginNotifications? notifications = null)
     {
+        _notifications = notifications;
+        _network = network ?? JsNetworkPolicy.None;
         _problems = problems;
         _windows = windows;
         _isElevated = isElevated ?? JsInputPolicy.ServerIsElevated;
@@ -98,8 +107,8 @@ public sealed partial class JsPlugin : IPlugin, IDisposable
         _logger = logger;
         _onFaulted = onFaulted;
         _limits = limits ?? JsPluginLimits.Default;
-        // Redirects are off: a redirect could send an approved request to a host that was never approved.
-        _http = new HttpClient(new SocketsHttpHandler { AllowAutoRedirect = false }) { Timeout = _limits.HttpTimeout };
+        // Redirects and the system proxy are off and the connection is made by the network guard: an approved request may only reach the kind of address that was approved.
+        _http = new HttpClient(JsNetworkGuard.CreateHandler(_network, ReportNetworkRefused)) { Timeout = _limits.HttpTimeout };
     }
 
     public void Initialize(IPluginHost host)
@@ -132,19 +141,80 @@ public sealed partial class JsPlugin : IPlugin, IDisposable
         _initialized = true;
     }
 
-    /// <summary>Runs a registered action's function on the plugin thread and completes when it returns.</summary>
-    internal Task RunActionAsync(string type, ActionContext context, JsonObject settings, CancellationToken ct)
+    /// <summary>How many runs wait for their outcome right now (for tests).</summary>
+    internal int PendingOutcomeWaits => _outcomeWaits.Count;
+
+    /// <summary>The most async actions one plugin may have waiting for their outcome at once.</summary>
+    private const int MaxPendingOutcomes = 16;
+
+    /// <summary>The longest outcome text read back from a script (anything larger is a provider error with the default text).</summary>
+    private const int MaxOutcomeJson = 4096;
+
+    /// <summary>Runs a registered action's function on the plugin thread. A reported failure (<c>ok: false</c>) is a result here, not an
+    /// exception: it is no script fault, so it adds no Error List line and does not count towards switching the plugin off. A thrown error still does.</summary>
+    internal async Task<ActionOutcome> RunActionAsync(string type, bool waitsForOutcome, ActionContext context, JsonObject settings, CancellationToken ct)
     {
         var contextJson = JsonSerializer.Serialize(new { context.DeviceId, context.PageId, context.WidgetId, context.Value }, ProtocolJson.Options);
-        var run = Post(() =>
+        TaskCompletionSource<string>? wait = null;
+        var runId = 0;
+        var run = Post<ActionOutcome?>(() =>
         {
-            // A person touched a device: keyboard input is allowed for this job and the continuations it starts.
-            _press = new JsPressWindow(Stopwatch.GetTimestamp() + (long)(_limits.PressWindow.TotalSeconds * Stopwatch.Frequency));
-            try { Invoke("__runAction", type, contextJson, settings.ToJsonString()); }
+            if (waitsForOutcome)
+            {
+                if (_outcomeWaits.Count >= MaxPendingOutcomes) return ActionOutcome.Failed(ActionFailureCode.Unavailable, "Too many runs are waiting.");
+                runId = Interlocked.Increment(ref _nextRunId);
+                wait = new TaskCompletionSource<string>(TaskCreationOptions.RunContinuationsAsynchronously);
+                _outcomeWaits[runId] = wait;
+            }
+
+            // A person touched a device: keyboard input is allowed for this job and the continuations it starts. An action a widget's script
+            // started without a real touch (ActionContext.UserGesture false) gets no press window, so it cannot type.
+            _press = context.UserGesture ? new JsPressWindow(Stopwatch.GetTimestamp() + (long)(_limits.PressWindow.TotalSeconds * Stopwatch.Frequency)) : null;
+            string? shape;
+            try { shape = Invoke("__runAction", type, contextJson, settings.ToJsonString(), runId); }
+            catch { _outcomeWaits.TryRemove(runId, out _); throw; }
             finally { _press = null; }
-            return 0;
+
+            if (shape is null && wait is not null) return null; // an async action: its promise settles later
+            _outcomeWaits.TryRemove(runId, out _);
+            return ReadOutcome(shape);
         });
-        return run.WaitAsync(ct);
+
+        var immediate = await run.WaitAsync(ct);
+        if (immediate is not null || wait is null) return immediate ?? ActionOutcome.Success;
+
+        try { return ReadOutcome(await wait.Task.WaitAsync(_limits.ActionOutcomeTimeout, ct)); }
+        catch (TimeoutException) { return ActionOutcome.Failed(ActionFailureCode.Timeout); }
+        finally { _outcomeWaits.TryRemove(runId, out _); }
+    }
+
+    /// <summary>Reads what a script reported: null or '' is success; otherwise <c>{ ok: false | "accepted", code?, message? }</c>.</summary>
+    private static ActionOutcome ReadOutcome(string? json)
+    {
+        if (string.IsNullOrEmpty(json)) return ActionOutcome.Success;
+        if (json.Length > MaxOutcomeJson) return ActionOutcome.Failed(ActionFailureCode.ProviderError);
+        try
+        {
+            using var doc = JsonDocument.Parse(json);
+            var root = doc.RootElement;
+            var message = root.TryGetProperty("message", out var m) && m.ValueKind == JsonValueKind.String ? m.GetString() : null;
+            if (root.TryGetProperty("ok", out var ok) && ok.ValueKind == JsonValueKind.String) return ActionOutcome.Accepted(message);
+            var code = root.TryGetProperty("code", out var c) && c.ValueKind == JsonValueKind.String
+                && Enum.TryParse<ActionFailureCode>(c.GetString(), ignoreCase: true, out var parsed) && Enum.IsDefined(parsed)
+                ? parsed
+                : ActionFailureCode.ProviderError;
+            return ActionOutcome.Failed(code, message);
+        }
+        catch (JsonException)
+        {
+            return ActionOutcome.Failed(ActionFailureCode.ProviderError);
+        }
+    }
+
+    /// <summary>Called by the script when an <c>outcome: true</c> action's promise settles (on the plugin thread).</summary>
+    private void ActionDone(int runId, string json)
+    {
+        if (_outcomeWaits.TryRemove(runId, out var wait)) wait.TrySetResult(json);
     }
 
     /// <summary>How many button presses used the keyboard through this plugin today (shown in the Plugins window).</summary>
@@ -154,6 +224,14 @@ public sealed partial class JsPlugin : IPlugin, IDisposable
         {
             lock (_usageLock) return _usageDay == DateOnly.FromDateTime(DateTime.Now) ? _usesToday : 0;
         }
+    }
+
+    /// <summary>Like <see cref="KeyboardUsesToday"/> but never waits: 0 when another thread holds the usage lock (for the crash path).</summary>
+    internal int KeyboardUsesTodayNoWait()
+    {
+        if (!_usageLock.TryEnter()) return 0;
+        try { return _usageDay == DateOnly.FromDateTime(DateTime.Now) ? _usesToday : 0; }
+        finally { _usageLock.Exit(); }
     }
 
     public void Dispose()
@@ -166,9 +244,13 @@ public sealed partial class JsPlugin : IPlugin, IDisposable
             _timers.Clear();
         }
         _jobs.CompleteAdding();
+        foreach (var wait in _outcomeWaits.Values) wait.TrySetResult("""{"ok":false,"code":"Unavailable"}""");
+        _outcomeWaits.Clear();
         _disposeCts.Cancel();
+        CloseAllSockets();
         _http.Dispose();
         _disposeCts.Dispose();
+        _storage?.Dispose();
         // The loop ends when it has drained; an engine call cannot be interrupted, but every call has a time limit.
     }
 
@@ -232,21 +314,36 @@ public sealed partial class JsPlugin : IPlugin, IDisposable
         engine.SetValue("__pressEnd", new Action(() => { if (_press is { } press) press.Settled = true; }));
         engine.SetValue("__http", new Func<string, string, string, string, string>(Http));
         engine.SetValue("__httpAsync", new Action<int, string, string, string, string>(HttpAsync));
+        engine.SetValue("__storageGet", new Func<string, string?>(StorageGet));
+        engine.SetValue("__storageSet", new Action<string, string>(StorageSet));
+        engine.SetValue("__storageRemove", new Action<string>(StorageRemove));
+        engine.SetValue("__storageKeys", new Func<string>(StorageKeys));
+        engine.SetValue("__notify", new Action<string>(Notify));
+        engine.SetValue("__wsConnect", new Action<int, string, string, string>(WsConnect));
+        engine.SetValue("__wsSend", new Action<int, string>(WsSend));
+        engine.SetValue("__wsClose", new Action<int>(WsClose));
+        engine.SetValue("__widgetPost", new Action<string>(WidgetPost));
+        engine.SetValue("__diagnosticsReport", new Action<string, string, string?>(DiagnosticsReport));
+        engine.SetValue("__diagnosticsClear", new Action(() => _host!.Diagnostics.Clear()));
+        engine.SetValue("__diagnosticsResolve", new Action<string>(key => _host!.Diagnostics.Resolve(key)));
+        engine.SetValue("__widgetReply", new Action<int, bool, string>(WidgetReply));
         engine.SetValue("__timer", new Action<int, int, bool>(StartTimer));
         engine.SetValue("__cancel", new Action<int>(CancelTimer));
+        engine.SetValue("__actionDone", new Action<int, string>(ActionDone));
         return engine;
     }
 
     /// <summary>Calls a global script function under the per-call budget and does the error accounting.</summary>
-    private void Invoke(string function, params object[] args)
+    private string? Invoke(string function, params object[] args)
     {
         try
         {
-            _engine!.Invoke(function, args);
+            var result = _engine!.Invoke(function, args);
             // Promise callbacks (an awaited async request, a .then) only run when the engine is asked to; without this a
             // settled promise would sit unnoticed until the next unrelated call.
             _engine.Advanced.ProcessTasks();
             if (_initialized) Interlocked.Exchange(ref _consecutiveErrors, 0);
+            return result.IsString() ? result.AsString() : null;
         }
         catch (Exception ex)
         {

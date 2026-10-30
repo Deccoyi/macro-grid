@@ -1,6 +1,7 @@
 using MacroGrid.Host.Ui;
 using MacroGrid.Core.Actions;
 using MacroGrid.Core.Plugins;
+using MacroGrid.Core.Profiles;
 using MacroGrid.Core.Variables;
 using MacroGrid.Plugin.Abstractions;
 using Microsoft.AspNetCore.Routing;
@@ -39,6 +40,29 @@ internal static class CatalogApi
         api.MapGet("/variables/snapshot", (VariableStore variables) =>
             ApiResults.Json(variables.Snapshot()));
 
+        api.MapGet("/user-variables", (UserVariableService user) => ApiResults.Json(new
+        {
+            variables = user.List(),
+            limits = new
+            {
+                maxCount = UserVariables.MaxCount,
+                maxNameLength = UserVariables.MaxNameLength,
+                maxDescriptionLength = UserVariables.MaxDescriptionLength,
+                maxTextLength = UserVariables.MaxTextLength,
+            },
+        }));
+
+        // The whole list at once: the editor sends what the person arranged, the server validates all of it or none of it.
+        api.MapPut("/user-variables", async (HttpRequest request, UserVariableService user) =>
+        {
+            var (valid, body) = await ApiResults.ReadJsonAsync<UserVariablesBody>(request);
+            if (!valid || body?.Variables is null) return ApiResults.InvalidJson();
+            return user.TryReplace(body.Variables, out var error) ? Results.NoContent() : ApiResults.BadRequest(error);
+        });
+
+        api.MapGet("/user-variables/usage", (string name, ProfileStore profiles) =>
+            ApiResults.Json(UserVariableUsage.Find(profiles.All, UserVariables.Prefix + name)));
+
         api.MapGet("/variables/catalog", (VariableCatalog catalog, PluginLocalizer localizer) => catalog.Localized(localizer));
 
         api.MapPost("/browse/executable", async (IUiDialogService dialogs) =>
@@ -62,4 +86,6 @@ internal static class CatalogApi
     }
 
     private sealed record BrowseFileRequest(string? Title, string? Filter);
+
+    private sealed record UserVariablesBody(List<UserVariable>? Variables);
 }

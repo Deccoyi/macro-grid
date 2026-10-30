@@ -11,11 +11,13 @@ public sealed partial class JsPlugin
           'use strict';
           const g = globalThis;
           const names = ['permissions', 'log', 'varSet', 'varGet', 'varRemove', 'varDescribe', 'registerAction',
-            'settingsPage', 'settingsGet', 'status', 'hotkey', 'type', 'pressEnd', 'http', 'httpAsync', 'timer', 'cancel'];
+            'settingsPage', 'settingsGet', 'status', 'hotkey', 'type', 'pressEnd', 'http', 'httpAsync', 'storageGet', 'storageSet', 'storageRemove', 'storageKeys', 'notify', 'wsConnect', 'wsSend', 'wsClose', 'widgetPost', 'widgetReply', 'diagnosticsReport', 'diagnosticsResolve', 'diagnosticsClear', 'timer', 'cancel', 'actionDone'];
           const n = {};
           for (const name of names) { n[name] = g['__' + name]; delete g['__' + name]; }
 
           const actions = Object.create(null);
+          const outcomeActions = Object.create(null);
+          let widgetHandler = null;
           const timers = Object.create(null);
           let nextTimer = 1;
           const start = (fn, ms, repeat) => {
@@ -41,6 +43,25 @@ public sealed partial class JsPlugin
             }
           });
 
+          const sockets = Object.create(null);
+          let nextSocket = 1;
+          const connectSocket = (url, options) => {
+            const o = options || {};
+            const id = nextSocket++;
+            sockets[id] = {
+              onOpen: typeof o.onOpen === 'function' ? o.onOpen : null,
+              onMessage: typeof o.onMessage === 'function' ? o.onMessage : null,
+              onClose: typeof o.onClose === 'function' ? o.onClose : null,
+            };
+            try {
+              n.wsConnect(id, String(url), JSON.stringify(Array.isArray(o.protocols) ? o.protocols.map(String) : []), JSON.stringify(o.headers || {}));
+            } catch (e) {
+              delete sockets[id];
+              throw e;
+            }
+            return Object.freeze({ send: (text) => n.wsSend(id, String(text)), close: () => n.wsClose(id) });
+          };
+
           const host = {
             permissions: Object.freeze(JSON.parse(n.permissions())),
             log: (message) => n.log(String(message)),
@@ -56,6 +77,7 @@ public sealed partial class JsPlugin
               delete meta.run;
               n.registerAction(JSON.stringify(meta));
               actions[definition.type] = definition.run;
+              outcomeActions[definition.type] = definition.outcome === true;
             },
             settings: Object.freeze({
               page: (fields) => n.settingsPage(JSON.stringify(fields)),
@@ -69,21 +91,82 @@ public sealed partial class JsPlugin
               getAsync: (url, options) => requestAsync('GET', url, undefined, options),
               postAsync: (url, body, options) => requestAsync('POST', url, body, options),
             }),
+            ws: Object.freeze({ connect: connectSocket }),
+            notify: (text) => n.notify(String(text)),
+            storage: Object.freeze({
+              get: (key) => { const v = n.storageGet(String(key)); return v === null ? null : JSON.parse(v); },
+              set: (key, value) => n.storageSet(String(key), JSON.stringify(value === undefined ? null : value)),
+              remove: (key) => n.storageRemove(String(key)),
+              keys: () => JSON.parse(n.storageKeys()),
+            }),
+            widgets: Object.freeze({
+              onMessage: (fn) => {
+                if (typeof fn !== 'function') throw new Error('widgets.onMessage needs a function.');
+                widgetHandler = fn;
+              },
+              post: (widget, name, data, options) => n.widgetPost(JSON.stringify({
+                widget: String(widget), name: String(name), data: data === undefined ? null : data,
+                widgetId: options && options.widgetId ? String(options.widgetId) : null,
+                deviceId: options && options.deviceId ? String(options.deviceId) : null,
+                retain: !!(options && options.retain),
+              })),
+            }),
+            diagnostics: Object.freeze({
+              report: (level, message, key) => n.diagnosticsReport(String(level), String(message), key === undefined || key === null ? null : String(key)),
+              resolve: (key) => n.diagnosticsResolve(String(key)),
+              clear: () => n.diagnosticsClear(),
+            }),
             every: (ms, fn) => start(fn, ms, true),
             after: (ms, fn) => start(fn, ms, false),
             cancel: (id) => { delete timers[id]; n.cancel(id); },
           };
           Object.defineProperty(g, 'host', { value: Object.freeze(host), writable: false, configurable: false });
 
-          g.__runAction = function (type, contextJson, settingsJson) {
+          // What an action reports: { ok: false, code, message } or { ok: 'accepted', message }. Anything else is success ('').
+          const outcomeOf = (v) => {
+            if (!v || typeof v !== 'object' || (v.ok !== false && v.ok !== 'accepted')) return '';
+            const o = { ok: v.ok };
+            if (typeof v.code === 'string') o.code = v.code;
+            if (typeof v.message === 'string') o.message = v.message;
+            return JSON.stringify(o);
+          };
+          // Returns the outcome of a synchronous run (a JSON string, '' for success) or null while an 'outcome: true' promise is pending.
+          g.__runAction = function (type, contextJson, settingsJson, runId) {
             const run = actions[type];
             if (!run) throw new Error('Unknown action ' + type);
             // Keyboard input is allowed only until the action, and the promise it returns, have settled.
             let result;
             try { result = run(JSON.parse(contextJson), JSON.parse(settingsJson)); }
             catch (e) { n.pressEnd(); throw e; }
-            if (result && typeof result.then === 'function') result.then(() => n.pressEnd(), () => n.pressEnd());
-            else n.pressEnd();
+            if (result && typeof result.then === 'function') {
+              if (runId && outcomeActions[type]) {
+                result.then(
+                  (v) => { n.pressEnd(); n.actionDone(runId, outcomeOf(v)); },
+                  (e) => { n.pressEnd(); n.actionDone(runId, JSON.stringify({ ok: false, code: 'ProviderError', message: String(e && e.message ? e.message : e) })); });
+                return null;
+              }
+              result.then(() => n.pressEnd(), () => n.pressEnd());
+              return '';
+            }
+            n.pressEnd();
+            return outcomeOf(result);
+          };
+          g.__widgetMessage = function (id, messageJson) {
+            if (!widgetHandler) { n.widgetReply(id, false, 'This plugin does not answer widget requests.'); return; }
+            let result;
+            try { result = widgetHandler(JSON.parse(messageJson)); }
+            catch (e) { n.widgetReply(id, false, String(e && e.message ? e.message : e)); return; }
+            if (result && typeof result.then === 'function')
+              result.then((v) => n.widgetReply(id, true, JSON.stringify(v === undefined ? null : v)),
+                          (e) => n.widgetReply(id, false, String(e && e.message ? e.message : e)));
+            else n.widgetReply(id, true, JSON.stringify(result === undefined ? null : result));
+          };
+          g.__wsEvent = function (id, kind, payload) {
+            const s = sockets[id];
+            if (!s) return;
+            if (kind === 'open') { if (s.onOpen) s.onOpen(); }
+            else if (kind === 'message') { if (s.onMessage) s.onMessage(payload); }
+            else { delete sockets[id]; if (s.onClose) s.onClose(JSON.parse(payload)); }
           };
           g.__httpDone = function (id, ok, payload) {
             const p = pending[id];

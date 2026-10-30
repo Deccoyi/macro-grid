@@ -1,8 +1,11 @@
-import type { JSX } from "react";
+import { useEffect, useState, type JSX } from "react";
+import { Variable, X } from "lucide-react";
 import { webUrlHost, type ActionBinding, type Page } from "@macro/renderer";
 import { api } from "../../api/client";
-import type { ActionInfo, ProfileSummary, VariableInfo } from "../../api/types";
+import type { ActionInfo, OptionsResult, ProfileSummary, SettingField, VariableInfo } from "../../api/types";
 import { useT } from "../../i18n/I18nContext";
+import { Field, NumberInput, SelectInput, TextAreaInput, TextInput, useFieldId } from "../fields/controls";
+import { VariablePicker } from "../VariablePicker";
 import { WebWarning } from "../fields/WebFields";
 import { HotkeyCapture } from "./HotkeyCapture";
 import { SchemaForm } from "./SchemaForm";
@@ -22,64 +25,106 @@ const num = (v: unknown, fallback = 0) => (typeof v === "number" ? v : fallback)
 function HotkeyForm({ binding, onChange }: ActionFormProps) {
   const { t } = useT();
   return (
-    <label className="field">
-      {t("form.hotkey.label")}
+    <Field label={t("form.hotkey.label")}>
       <HotkeyCapture value={str(binding.settings.keys)} onChange={(keys) => onChange({ keys })} />
-    </label>
+    </Field>
   );
 }
 
 function TypeTextForm({ binding, onChange }: ActionFormProps) {
   const { t } = useT();
   return (
-    <label className="field">
-      {t("form.typeText.label")}
-      <textarea rows={2} value={str(binding.settings.text)} onChange={(e) => onChange({ text: e.target.value })} />
-    </label>
+    <Field label={t("form.typeText.label")}>
+      <TextAreaInput value={str(binding.settings.text)} onChange={(text) => onChange({ text })} />
+    </Field>
   );
 }
 
-function PageActionForm({ binding, onChange, pages }: ActionFormProps) {
+/** A rule has no open profile, so its page is picked from a profile chosen here. The profile is saved with the page, so the rule switches the device to it first; a step saved before that has only the page and the profile is found again from it. */
+function RulePagePicker({ pageId, savedProfileId, profiles, onPick }: { pageId: string; savedProfileId: string; profiles: ProfileSummary[]; onPick: (pageId: string, profileId: string) => void }) {
+  const { t } = useT();
+  const [profileId, setProfileId] = useState(savedProfileId);
+  const [pages, setPages] = useState<{ id: string; name: string }[]>([]);
+  useEffect(() => {
+    let live = true;
+    void (async () => {
+      for (const p of profileId ? profiles.filter((x) => x.id === profileId) : profiles) {
+        const full = await api.getProfile(p.id).catch(() => null);
+        if (!live || !full) continue;
+        if (profileId) { setPages(full.pages.map((pg) => ({ id: pg.id, name: pg.name }))); return; }
+        if (pageId && full.pages.some((pg) => pg.id === pageId)) { setProfileId(p.id); return; }
+      }
+    })();
+    return () => { live = false; };
+    // The saved page only decides the first profile; later picks come from the select.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [profileId, profiles]);
+  return (
+    <>
+      <Field label={t("form.profile.label")}>
+        <SelectInput value={profileId} onChange={(v) => { setProfileId(v); setPages([]); onPick("", v); }}>
+          <option value="">{t("form.pickPlaceholder")}</option>
+          {profiles.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+        </SelectInput>
+      </Field>
+      <Field label={t("form.page.page")}>
+        <SelectInput value={pageId} onChange={(v) => onPick(v, profileId)}>
+          <option value="">{t("form.pickPlaceholder")}</option>
+          {pages.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+        </SelectInput>
+      </Field>
+    </>
+  );
+}
+
+function PageActionForm({ binding, onChange, pages, profiles }: ActionFormProps) {
   const { t } = useT();
   const mode = str(binding.settings.mode, "goto");
+  const pageId = str(binding.settings.pageId);
+  // The id is kept when its page is deleted, so undoing the delete brings the button back; the select must not look cleared.
+  const pageMissing = pageId !== "" && !pages.some((p) => p.id === pageId);
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-      <label className="field">
-        {t("form.page.mode")}
-        <select value={mode} onChange={(e) => onChange({ mode: e.target.value, pageId: binding.settings.pageId })}>
+    <>
+      <Field label={t("form.page.mode")}>
+        <SelectInput value={mode} onChange={(v) => onChange({ mode: v, pageId: binding.settings.pageId, profileId: binding.settings.profileId })}>
           <option value="goto">{t("form.page.mode.goto")}</option>
           <option value="next">{t("form.page.mode.next")}</option>
           <option value="prev">{t("form.page.mode.prev")}</option>
           <option value="back">{t("form.page.mode.back")}</option>
-        </select>
-      </label>
-      {mode === "goto" && (
-        <label className="field">
-          {t("form.page.page")}
-          <select value={str(binding.settings.pageId)} onChange={(e) => onChange({ mode, pageId: e.target.value })}>
+        </SelectInput>
+      </Field>
+      {mode === "goto" && pages.length === 0 && (
+        <RulePagePicker pageId={str(binding.settings.pageId)} savedProfileId={str(binding.settings.profileId)} profiles={profiles} onPick={(pageId, profileId) => onChange({ mode, pageId, profileId })} />
+      )}
+      {mode === "goto" && pages.length > 0 && (
+        <Field label={t("form.page.page")} error={pageMissing ? t("form.page.missing") : undefined}>
+          <SelectInput value={pageId} onChange={(v) => onChange({ mode, pageId: v })}>
             <option value="">{t("form.pickPlaceholder")}</option>
+            {pageMissing && <option value={pageId}>{t("form.page.missing")}</option>}
             {pages.map((p) => (
               <option key={p.id} value={p.id}>{p.name}</option>
             ))}
-          </select>
-        </label>
+          </SelectInput>
+        </Field>
       )}
-    </div>
+    </>
   );
 }
 
 function ProfileActionForm({ binding, onChange, profiles }: ActionFormProps) {
   const { t } = useT();
+  const profileId = str(binding.settings.profileId);
+  const profileMissing = profileId !== "" && !profiles.some((p) => p.id === profileId);
   return (
-    <label className="field">
-      {t("form.profile.label")}
-      <select value={str(binding.settings.profileId)} onChange={(e) => onChange({ profileId: e.target.value })}>
+    <Field label={t("form.profile.label")} error={profileMissing ? t("form.profile.missing") : undefined}>
+      <SelectInput value={profileId} onChange={(v) => onChange({ profileId: v })}>
         <option value="">{t("form.pickPlaceholder")}</option>
+        {profileMissing && <option value={profileId}>{t("form.profile.missing")}</option>}
         {profiles.map((p) => (
           <option key={p.id} value={p.id}>{p.name}</option>
         ))}
-      </select>
-    </label>
+      </SelectInput>
+    </Field>
   );
 }
 
@@ -100,73 +145,63 @@ function WebActionForm({ binding, onChange, pages }: ActionFormProps) {
   const missing = widgetId !== "" && !widgets.some((w) => w.id === widgetId);
   const set = (patch: Record<string, unknown>) => onChange({ widgetId, mode, url, ...patch });
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-      <label className="field">
-        {t("form.web.widget")}
-        <select value={widgetId} onChange={(e) => set({ widgetId: e.target.value })} style={missing ? { borderColor: "var(--ms-danger)" } : undefined}>
+    <>
+      <Field label={t("form.web.widget")} error={missing ? t("form.web.missing") : undefined}>
+        <SelectInput value={widgetId} onChange={(v) => set({ widgetId: v })}>
           <option value="">{t("form.pickPlaceholder")}</option>
           {missing && <option value={widgetId}>{t("form.web.missing")}</option>}
           {widgets.map((w) => (
             <option key={w.id} value={w.id}>{w.label}</option>
           ))}
-        </select>
-      </label>
-      <label className="field">
-        {t("form.web.mode")}
-        <select value={mode} onChange={(e) => set({ mode: e.target.value })}>
+        </SelectInput>
+      </Field>
+      <Field label={t("form.web.mode")}>
+        <SelectInput value={mode} onChange={(v) => set({ mode: v })}>
           <option value="set">{t("form.web.mode.set")}</option>
           <option value="reset">{t("form.web.mode.reset")}</option>
           <option value="reload">{t("form.web.mode.reload")}</option>
-        </select>
-      </label>
+        </SelectInput>
+      </Field>
       {mode === "set" && (
         <>
-          <label className="field">
-            {t("form.web.url")}
-            <input type="text" value={url} onChange={(e) => set({ url: e.target.value })} placeholder={t("fields.web.urlPlaceholder")} />
-          </label>
+          <Field label={t("form.web.url")}>
+            <TextInput value={url} onChange={(v) => set({ url: v })} placeholder={t("fields.web.urlPlaceholder")} />
+          </Field>
           <WebWarning url={url} />
         </>
       )}
-      <p style={{ fontSize: 11, color: "var(--ms-text-secondary)", margin: 0 }}>{t("form.web.thisDevice")}</p>
-    </div>
+      <span className="pf-hint">{t("form.web.thisDevice")}</span>
+    </>
   );
 }
 
 function OpenApplicationForm({ binding, onChange }: ActionFormProps) {
   const { t } = useT();
+  const browse = async () => {
+    const path = await api.browseForExecutable();
+    if (path) onChange({ target: path, arguments: binding.settings.arguments });
+  };
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-      <label className="field">
-        {t("form.openApp.label")}
-        <div style={{ display: "flex", gap: 6 }}>
-          <input
-            type="text"
-            readOnly
-            value={str(binding.settings.target)}
-            placeholder={t("form.openApp.browsePlaceholder")}
-            onClick={async () => {
-              const path = await api.browseForExecutable();
-              if (path) onChange({ target: path, arguments: binding.settings.arguments });
-            }}
-          />
-          <button
-            type="button"
-            className="ghost"
-            onClick={async () => {
-              const path = await api.browseForExecutable();
-              if (path) onChange({ target: path, arguments: binding.settings.arguments });
-            }}
-          >
+    <>
+      <Field label={t("form.openApp.label")}>
+        <div className="pf-row">
+          <div className="grow">
+            <TextInput
+              readOnly
+              value={str(binding.settings.target)}
+              placeholder={t("form.openApp.browsePlaceholder")}
+              onClick={browse}
+            />
+          </div>
+          <button type="button" className="ghost pf-ctl" onClick={browse}>
             {t("form.openApp.browse")}
           </button>
         </div>
-      </label>
-      <label className="field">
-        {t("form.openApp.arguments")}
-        <input type="text" value={str(binding.settings.arguments)} onChange={(e) => onChange({ target: binding.settings.target, arguments: e.target.value })} />
-      </label>
-    </div>
+      </Field>
+      <Field label={t("form.openApp.arguments")}>
+        <TextInput value={str(binding.settings.arguments)} onChange={(v) => onChange({ target: binding.settings.target, arguments: v })} />
+      </Field>
+    </>
   );
 }
 
@@ -175,53 +210,207 @@ function OpenUrlActionForm({ binding, onChange }: ActionFormProps) {
   const url = str(binding.settings.url);
   const looksValid = url === "" || /^https?:\/\/.+/i.test(url);
   return (
-    <label className="field">
-      {t("form.openUrl.label")}
-      <input
-        type="url"
-        value={url}
-        onChange={(e) => onChange({ url: e.target.value })}
-        placeholder="https://example.com/..."
-        style={!looksValid ? { borderColor: "var(--ms-danger)" } : undefined}
-      />
-      {!looksValid && <span style={{ color: "var(--ms-danger)", fontSize: 11 }}>{t("form.openUrl.invalid")}</span>}
-    </label>
+    <Field label={t("form.openUrl.label")} error={looksValid ? undefined : t("form.openUrl.invalid")}>
+      <TextInput value={url} onChange={(v) => onChange({ url: v })} placeholder="https://example.com/..." />
+    </Field>
   );
 }
 
+/** The text of a number of seconds, kept as typed, labelled by the nearest Field. */
+function SecondsInput({ text, onChange }: { text: string; onChange: (text: string) => void }) {
+  const id = useFieldId();
+  return (
+    <div className="pf-num has-unit">
+      <input id={id} type="number" min={0} max={60} step={0.1} value={text} onChange={(e) => onChange(e.target.value)} />
+      <span className="unit" aria-hidden="true">s</span>
+    </div>
+  );
+}
+
+/** The wait is shown in seconds; the stored setting stays in milliseconds. The text is kept as typed ("0." must not turn into "0"). */
 function DelayActionForm({ binding, onChange }: ActionFormProps) {
   const { t } = useT();
+  const ms = num(binding.settings.ms);
+  const [text, setText] = useState(() => String(ms / 1000));
+  useEffect(() => {
+    setText((current) => (Math.round(Number(current) * 1000) === ms ? current : String(ms / 1000)));
+  }, [ms]);
   return (
-    <label className="field">
-      {t("form.delay.label")}
-      <input
-        type="number"
-        min={0}
-        max={60000}
-        value={num(binding.settings.ms)}
-        onChange={(e) => onChange({ ms: Number(e.target.value) })}
+    <Field label={t("form.delay.label")}>
+      <SecondsInput
+        text={text}
+        onChange={(value) => {
+          setText(value);
+          const seconds = Number(value);
+          if (value !== "" && Number.isFinite(seconds)) onChange({ ms: Math.round(seconds * 1000) });
+        }}
       />
-    </label>
+    </Field>
   );
+}
+
+function StopForm() {
+  const { t } = useT();
+  return <div className="pf-note info">{t("action.logic.stopNote")}</div>;
 }
 
 /** No settings to configure — the action reads the widget's live dragged value instead (core.setVolume). */
 function NoSettingsForm() {
   const { t } = useT();
-  return <p style={{ fontSize: 11.5, color: "var(--ms-text-secondary)", margin: 0 }}>{t("form.noSettings")}</p>;
+  return <div className="pf-note info">{t("form.noSettings")}</div>;
 }
 
 function SetMuteActionForm({ binding, onChange }: ActionFormProps) {
   const { t } = useT();
   const muted = binding.settings.muted !== false;
   return (
-    <label className="field">
-      {t("form.setMute.label")}
-      <select value={muted ? "mute" : "unmute"} onChange={(e) => onChange({ muted: e.target.value === "mute" })}>
+    <Field label={t("form.setMute.label")}>
+      <SelectInput value={muted ? "mute" : "unmute"} onChange={(v) => onChange({ muted: v === "mute" })}>
         <option value="mute">{t("form.setMute.mute")}</option>
         <option value="unmute">{t("form.setMute.unmute")}</option>
-      </select>
-    </label>
+      </SelectInput>
+    </Field>
+  );
+}
+
+/** Only the person's own variables can be written; system and plugin variables are read-only, so these forms never offer them. */
+function writableVariables(catalog: VariableInfo[] | undefined, type?: string): VariableInfo[] {
+  return (catalog ?? []).filter((v) => v.name.startsWith("user.") && (type === undefined || (v.type ?? "text") === type));
+}
+
+/** The variable a small variable action changes, picked the same way as everywhere else (the variable picker). Keeps the other settings. */
+function VariableTargetField({ binding, onChange, variableCatalog, type, hintKey }: ActionFormProps & { type?: string; hintKey?: "form.variable.onlyNumber" | "form.variable.onlyBoolean" }) {
+  const { t } = useT();
+  const options = writableVariables(variableCatalog, type);
+  const name = str(binding.settings.variable);
+  const known = (variableCatalog ?? []).some((v) => v.name === name);
+  const hint = options.length === 0 ? t(hintKey ?? "form.variable.none") : undefined;
+  return (
+    <Field label={t("form.variable.target")} hint={hint} error={name && !known ? t("form.variable.missing") : undefined}>
+      <div className="pf-row">
+        <div className="grow">
+          <VariablePicker
+            catalog={options}
+            mode="bare"
+            onInsert={(picked) => onChange({ ...binding.settings, variable: picked })}
+            renderTrigger={(open) => (
+              <button type="button" className="pf-ctl pf-row pf-fill" onClick={open} disabled={options.length === 0 && !name}>
+                <Variable size={14} />
+                <span className="pf-ellipsis">{name || t("form.variable.pick")}</span>
+              </button>
+            )}
+          />
+        </div>
+        {name && (
+          <button type="button" className="ghost pf-icon-btn" title={t("schemaForm.variable.clear")} aria-label={t("schemaForm.variable.clear")} onClick={() => onChange({ ...binding.settings, variable: "" })}>
+            <X size={14} />
+          </button>
+        )}
+      </div>
+    </Field>
+  );
+}
+
+/** The value field of a set: True / False for a True/False variable, a text box (with variables) otherwise. */
+function VariableValueField({ binding, onChange, variableCatalog }: ActionFormProps) {
+  const { t } = useT();
+  const type = (variableCatalog ?? []).find((v) => v.name === str(binding.settings.variable))?.type ?? "text";
+  const set = (value: unknown) => onChange({ ...binding.settings, value });
+  if (type === "boolean") {
+    const current = str(binding.settings.value).toLowerCase() === "false" ? "false" : "true";
+    return (
+      <Field label={t("form.variable.value")}>
+        <SelectInput value={current} onChange={set}>
+          <option value="true">{t("form.variable.true")}</option>
+          <option value="false">{t("form.variable.false")}</option>
+        </SelectInput>
+      </Field>
+    );
+  }
+  const valueField = { key: "value", label: t("form.variable.value"), kind: "Text", allowVariables: true, description: type === "number" ? t("form.variable.valueNumberHint") : undefined } as SettingField;
+  return (
+    <SchemaForm
+      fields={[valueField]}
+      values={binding.settings as Record<string, unknown>}
+      onChange={(values) => set(values.value)}
+      fetchOptions={() => Promise.resolve({ options: [] } as unknown as OptionsResult)}
+      variableCatalog={variableCatalog}
+    />
+  );
+}
+
+function VariableSetValueForm(props: ActionFormProps) {
+  return (
+    <>
+      <VariableTargetField {...props} />
+      <VariableValueField {...props} />
+    </>
+  );
+}
+
+function VariableAddForm(props: ActionFormProps) {
+  const { t } = useT();
+  const raw = props.binding.settings.amount;
+  return (
+    <>
+      <VariableTargetField {...props} type="number" hintKey="form.variable.onlyNumber" />
+      <Field label={t("form.variable.amount")}>
+        <NumberInput step="any" value={typeof raw === "number" ? raw : 1} onChange={(v) => props.onChange({ ...props.binding.settings, amount: v })} />
+      </Field>
+    </>
+  );
+}
+
+function VariableToggleForm(props: ActionFormProps) {
+  return <VariableTargetField {...props} type="boolean" hintKey="form.variable.onlyBoolean" />;
+}
+
+function VariableResetForm(props: ActionFormProps) {
+  const { t } = useT();
+  return (
+    <>
+      <VariableTargetField {...props} />
+      <span className="pf-hint">{t("form.variable.resetNote")}</span>
+    </>
+  );
+}
+
+/** The ways the older all-in-one Set variable action can change a variable of each type (the server refuses the others). */
+export function setVariableModes(type: string | undefined): string[] {
+  if (type === "number") return ["set", "add", "reset"];
+  if (type === "boolean") return ["set", "toggle", "reset"];
+  return ["set", "reset"];
+}
+
+const SET_VARIABLE_MODE_KEYS = {
+  set: "form.setVariable.mode.set",
+  add: "form.setVariable.mode.add",
+  toggle: "form.setVariable.mode.toggle",
+  reset: "form.setVariable.mode.reset",
+} as const;
+
+/** Only for buttons saved before the four small variable actions existed; the picker no longer offers the old action. */
+function SetVariableForm(props: ActionFormProps) {
+  const { t } = useT();
+  const { binding, onChange, variableCatalog } = props;
+  const current = writableVariables(variableCatalog).find((v) => v.name === str(binding.settings.variable));
+  const modes = setVariableModes(current?.type);
+  const mode = modes.includes(str(binding.settings.mode, "set")) ? str(binding.settings.mode, "set") : "set";
+  return (
+    <>
+      <VariableTargetField {...props} onChange={(settings) => onChange({ ...settings, mode: "set" })} />
+      <Field label={t("form.setVariable.mode")}>
+        <SelectInput value={mode} onChange={(v) => onChange({ ...binding.settings, mode: v })}>
+          {modes.map((m) => <option key={m} value={m}>{t(SET_VARIABLE_MODE_KEYS[m as keyof typeof SET_VARIABLE_MODE_KEYS])}</option>)}
+        </SelectInput>
+      </Field>
+      {mode === "set" && <VariableValueField {...props} />}
+      {mode === "add" && (
+        <Field label={t("form.variable.amount")}>
+          <NumberInput step="any" value={num(binding.settings.amount, 1)} onChange={(v) => onChange({ ...binding.settings, amount: v })} />
+        </Field>
+      )}
+    </>
   );
 }
 
@@ -230,21 +419,20 @@ function GenericJsonForm({ binding, onChange }: ActionFormProps) {
   const { t } = useT();
   const text = JSON.stringify(binding.settings, null, 2);
   return (
-    <label className="field">
-      {t("form.json.label")}
-      <textarea
+    <Field label={t("form.json.label")}>
+      <TextAreaInput
         rows={4}
-        style={{ fontFamily: "ui-monospace, monospace", fontSize: 12 }}
+        mono
         defaultValue={text}
-        onBlur={(e) => {
+        onBlur={(value) => {
           try {
-            onChange(JSON.parse(e.target.value || "{}"));
+            onChange(JSON.parse(value || "{}"));
           } catch {
             // Leave the last valid settings in place rather than corrupting them on invalid JSON.
           }
         }}
       />
-    </label>
+    </Field>
   );
 }
 
@@ -257,9 +445,15 @@ const ACTION_FORMS: Record<string, (props: ActionFormProps) => JSX.Element> = {
   "core.open": OpenApplicationForm,
   "core.openUrl": OpenUrlActionForm,
   "core.delay": DelayActionForm,
+  "core.stop": StopForm,
   "core.setVolume": NoSettingsForm,
   "core.toggleMute": NoSettingsForm,
   "core.setMute": SetMuteActionForm,
+  "core.setVariable": SetVariableForm,
+  "core.variable.set": VariableSetValueForm,
+  "core.variable.add": VariableAddForm,
+  "core.variable.toggle": VariableToggleForm,
+  "core.variable.reset": VariableResetForm,
 };
 
 /** A plugin action with a declared schema (`ActionInfo.fields`, from IActionDescriptor) and no

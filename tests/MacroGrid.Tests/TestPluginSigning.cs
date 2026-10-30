@@ -59,6 +59,14 @@ internal static class TestPluginSigning
         File.WriteAllText(Path.Combine(dir, "signature.sig"), Convert.ToBase64String((key ?? Key).SignData(bytes, HashAlgorithmName.SHA256)), new UTF8Encoding(false));
     }
 
+    /// <summary>A signed catalog file as the publisher writes it: a base64 payload and a signature over exactly those bytes.</summary>
+    public static byte[] SignEnvelope(string payloadJson, ECDsa? key = null)
+    {
+        var payload = Encoding.UTF8.GetBytes(payloadJson);
+        var signature = Convert.ToBase64String((key ?? Key).SignData(payload, HashAlgorithmName.SHA256));
+        return JsonSerializer.SerializeToUtf8Bytes(new { payload = Convert.ToBase64String(payload), signature });
+    }
+
     /// <summary>A key that is not the test key, for a signature by someone else.</summary>
     public static ECDsa NewOtherKey() => ECDsa.Create(ECCurve.NamedCurves.nistP256);
 }

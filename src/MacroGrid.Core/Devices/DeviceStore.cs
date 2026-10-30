@@ -32,6 +32,27 @@ public sealed class DeviceStore
         Load();
     }
 
+    /// <summary>The names of the paired devices, read straight from <c>devices.json</c> without a protector (names are plain JSON there; only
+    /// the tokens are protected). Read-only: it never writes and never moves a broken file. Empty on any error. For a crash report that is built
+    /// before the stores exist.</summary>
+    public static IReadOnlyList<string> ReadNames(string dataDir)
+    {
+        try
+        {
+            var path = Path.Combine(dataDir, "devices.json");
+            if (!File.Exists(path) || JsonNode.Parse(File.ReadAllText(path)) is not JsonArray array) return [];
+            var key = FileJson.PropertyNamingPolicy?.ConvertName(nameof(PairedDevice.Name)) ?? nameof(PairedDevice.Name);
+            return array.OfType<JsonObject>()
+                .Select(d => d[key] is JsonValue v && v.TryGetValue<string>(out var name) ? name : null)
+                .OfType<string>()
+                .ToList();
+        }
+        catch (Exception)
+        {
+            return [];
+        }
+    }
+
     /// <summary>Devices dropped at load because their token could not be decrypted here.</summary>
     public int UnreadableOnLoad { get; private set; }
 
@@ -94,6 +115,20 @@ public sealed class DeviceStore
         {
             if (!_devices.TryGetValue(deviceId, out var device)) return false;
             device.AssignedProfileId = profileId;
+            device.LastProfileId = null; // an editor assignment is newer than a pick made on the device
+        }
+        Save();
+        return true;
+    }
+
+    /// <summary>Remembers the profile the person picked on the device, so it is opened again after a reconnect. Returns false if the device isn't paired.</summary>
+    public bool SetLastProfile(string deviceId, string profileId)
+    {
+        lock (_lock)
+        {
+            if (!_devices.TryGetValue(deviceId, out var device)) return false;
+            if (device.LastProfileId == profileId) return true;
+            device.LastProfileId = profileId;
         }
         Save();
         return true;

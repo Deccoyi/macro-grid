@@ -51,7 +51,7 @@ This repository is the **server and editor**. The three parts are versioned inde
 - **Several devices and profiles.** Each paired device can show a different profile, and a device can follow the active window on the PC (a media player
   comes to the front, the deck switches to its profile).
 - **Plugins.** OBS control, icon packs and your own, in C# or in sandboxed JavaScript; installed and reloaded without a restart.
-- **Profile files.** Export a profile as a single `.msprofile` file and import it elsewhere.
+- **Profile files.** Export a profile as a single `.mgprofile` file and import it elsewhere.
 - **Browser deck.** Any browser on the network can act as a deck at `http://<PC address>:9820/deck/`.
 
 All communication stays on your local network.
@@ -67,6 +67,12 @@ All communication stays on your local network.
 Get the latest Windows installer (`MacroGrid-Setup-<version>.exe`) from the [download page](https://deccoyi.github.io/macro-grid/download), which also lists the
 previous versions, or from the [GitHub Releases](https://github.com/Deccoyi/macro-grid/releases) page, and run it. You can also build from source (below). The installer is not
 code-signed yet, so Windows SmartScreen may warn on first run. How releases are made: [docs/guides/release.md](docs/guides/release.md).
+
+**Antivirus warnings.** Because the installer and the app are not code-signed and every release is a new, rarely downloaded file, an antivirus can flag it as
+a generic detection (for example "IDP.Generic" in Norton) or block it as "new, few users". That is a reputation guess, not a finding of malware. To check the file
+you downloaded, compare its SHA-256 with the `sha256:` value GitHub shows next to it on the release page. If your antivirus blocks it, report it to the
+vendor as a false positive; do not switch your protection off. The app also sends key presses when a plugin asks for them, and it can start with Windows,
+which some behavior-based scanners react to.
 
 ## Getting started
 

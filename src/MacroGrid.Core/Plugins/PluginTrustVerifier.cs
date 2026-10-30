@@ -50,6 +50,12 @@ public sealed class PluginTrustVerifier
         ".dll", ".exe", ".so", ".dylib", ".node", ".ps1", ".bat", ".cmd", ".com", ".scr", ".msi", ".js", ".vbs", ".wsf", ".hta", ".lnk",
     };
 
+    /// <summary>True for a file that can be loaded or run, and for the two signature files: what a replaced plugin must lose before the new files are copied.</summary>
+    internal static bool IsCodeFile(string path) =>
+        ExecutableExtensions.Contains(Path.GetExtension(path))
+        || Path.GetFileName(path).Equals(SignatureJsonName, StringComparison.OrdinalIgnoreCase)
+        || Path.GetFileName(path).Equals(SignatureName, StringComparison.OrdinalIgnoreCase);
+
     private readonly byte[] _publicKey;
     private readonly bool _allowUnsigned;
 
@@ -73,7 +79,8 @@ public sealed class PluginTrustVerifier
         return new PluginTrustResult(true, true, strict.Reason, null);
     }
 
-    private PluginTrustResult VerifyStrict(string dir, PluginManifest manifest)
+    /// <summary>The signature check with no development-build leniency: used for an official JavaScript plugin, which was installed with a contents signature.</summary>
+    internal PluginTrustResult VerifyStrict(string dir, PluginManifest manifest)
     {
         var jsonPath = Path.Combine(dir, SignatureJsonName);
         var sigPath = Path.Combine(dir, SignatureName);

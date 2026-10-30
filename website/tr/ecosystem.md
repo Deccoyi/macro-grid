@@ -4,7 +4,7 @@ Macro Grid, birlikte çalışan üç parçadır. İlki şart, diğerleri isteğe
 
 ## Sunucu ve düzenleyici (Windows)
 
-Sistemin kalbi. Windows bilgisayarınızda bildirim alanında çalışır, deck'lerinizi saklar, bir butona bastığınızda aksiyonları çalıştırır ve her şeyi tasarladığınız **düzenleyiciyi** barındırır. Diğer tüm parçalar onunla konuşur.
+Sistemin kalbi. Windows bilgisayarınızda bildirim alanında çalışır, deck'lerinizi saklar, bir butona bastığınızda eylemleri çalıştırır ve her şeyi tasarladığınız **düzenleyiciyi** barındırır. Diğer tüm parçalar onunla konuşur.
 
 [Kurun](/tr/guide/install) · [Düzenleyici](/tr/guide/editor)
 

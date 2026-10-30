@@ -57,6 +57,29 @@ public sealed class PluginCatalogClientTests
     }
 
     [Fact]
+    public async Task Reads_the_category_and_tags_and_cleans_them()
+    {
+        var json = ValidIndexJson().Replace("\"kind\": \"csharp\",", "\"kind\": \"csharp\", \"category\": \"  Stream\u202Eing  \", \"tags\": [\"obs\", \"OBS\", \"\", 5, \"a-very-long-tag-that-goes-past-the-limit\", \"t3\", \"t4\", \"t5\", \"t6\"],");
+        var client = new PluginCatalogClient(new HttpClient(new FakeHttpHandler(_ => Text200(json))));
+
+        var plugin = Assert.Single((await client.FetchIndexAsync(Owner, Repo, CancellationToken.None)).Plugins);
+
+        Assert.Equal("Streaming", plugin.Category);
+        Assert.Equal(["obs", "a-very-long-tag-that-goe", "t3", "t4", "t5"], plugin.Tags);
+    }
+
+    [Fact]
+    public async Task An_entry_without_category_or_tags_has_none()
+    {
+        var client = new PluginCatalogClient(new HttpClient(new FakeHttpHandler(_ => Text200(ValidIndexJson()))));
+
+        var plugin = Assert.Single((await client.FetchIndexAsync(Owner, Repo, CancellationToken.None)).Plugins);
+
+        Assert.Null(plugin.Category);
+        Assert.Empty(plugin.Tags);
+    }
+
+    [Fact]
     public async Task Parses_a_format_2_index_with_min_macro_grid_and_no_legacy_fields()
     {
         var json = ValidIndexJson()

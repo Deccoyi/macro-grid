@@ -1,0 +1,16 @@
+[
+{ "name": "no logic steps: all run", "steps": ["a", "b"], "met": [], "run": [0, 1], "depths": [0, 0] },
+{ "name": "if met runs the then branch", "steps": ["a", "core.if", "b", "core.endIf", "c"], "met": [true], "run": [0, 2, 4], "depths": [0, 0, 1, 0, 0] },
+{ "name": "if not met skips the then branch", "steps": ["a", "core.if", "b", "core.endIf", "c"], "met": [false], "run": [0, 4], "depths": [0, 0, 1, 0, 0] },
+{ "name": "else runs when the if was not met", "steps": ["core.if", "a", "core.else", "b", "core.endIf"], "met": [false], "run": [3], "depths": [0, 1, 0, 1, 0] },
+{ "name": "else is skipped when the if was met", "steps": ["core.if", "a", "core.else", "b", "core.endIf"], "met": [true], "run": [1], "depths": [0, 1, 0, 1, 0] },
+{ "name": "nested if inside a branch that is taken", "steps": ["core.if", "core.if", "a", "core.endIf", "b", "core.endIf", "c"], "met": [true, true], "run": [2, 4, 6], "depths": [0, 1, 2, 1, 1, 0, 0] },
+{ "name": "nested if is not evaluated inside a skipped branch", "steps": ["core.if", "core.if", "a", "core.else", "b", "core.endIf", "c", "core.endIf", "d"], "met": [false], "run": [8], "depths": [0, 1, 2, 1, 2, 1, 1, 0, 0] },
+{ "name": "nested if in the otherwise branch", "steps": ["core.if", "a", "core.else", "core.if", "b", "core.else", "c", "core.endIf", "core.endIf"], "met": [false, false], "run": [6], "depths": [0, 1, 0, 1, 2, 1, 2, 1, 0] },
+{ "name": "stop outside a block ends the list", "steps": ["a", "core.stop", "b"], "met": [], "run": [0], "depths": [0, 0, 0] },
+{ "name": "stop inside a taken block ends the list", "steps": ["core.if", "a", "core.stop", "b", "core.endIf", "c"], "met": [true], "run": [1], "depths": [0, 1, 1, 1, 0, 0] },
+{ "name": "stop inside a skipped block does nothing", "steps": ["core.if", "core.stop", "core.endIf", "a"], "met": [false], "run": [3], "depths": [0, 1, 0, 0] },
+{ "name": "missing end: the block goes to the end of the list", "steps": ["core.if", "a", "b"], "met": [false], "run": [], "depths": [0, 1, 1] },
+{ "name": "missing end with a met if runs the rest", "steps": ["core.if", "a", "b"], "met": [true], "run": [1, 2], "depths": [0, 1, 1] },
+{ "name": "stray otherwise and end do nothing", "steps": ["a", "core.else", "b", "core.endIf", "c"], "met": [], "run": [0, 2, 4], "depths": [0, 0, 0, 0, 0] }
+]

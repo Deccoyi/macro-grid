@@ -7,6 +7,9 @@
     <ProjectReference Include="..\MacroGrid.Core\MacroGrid.Core.csproj" />
   </ItemGroup>
   <ItemGroup>
+    <InternalsVisibleTo Include="MacroGrid.Tests" />
+  </ItemGroup>
+  <ItemGroup>
     <PackageReference Include="NAudio.Wasapi" Version="3.1.0" />
     <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="10.0.12" />
   </ItemGroup>

@@ -4,8 +4,11 @@ import { Circle } from "lucide-react";
 import { api } from "../api/client";
 import type { StatusEntry, StatusLevel } from "../api/types";
 import { useT } from "../i18n/I18nContext";
+import { isBuiltIn } from "../i18n/language";
+import { usePack } from "../i18n/packStore";
 import { useStatusNotice } from "../state/statusNotice";
 import { usePluginUpdateCount } from "../state/pluginUpdates";
+import { usePreferences } from "../preferences/PreferencesContext";
 
 const LEVEL_COLOR: Record<StatusLevel, string> = {
   Idle: "var(--ms-text-disabled)",
@@ -37,15 +40,32 @@ function StatusChip({ entry, onClick }: { entry: StatusEntry; onClick?: () => vo
       className={onClick ? "ghost" : undefined}
       disabled={!onClick}
       style={{
-        display: "flex", alignItems: "center", gap: 5, fontSize: 11.5, padding: "2px 6px",
+        display: "flex", alignItems: "center", gap: 5, fontSize: 11.5, padding: "2px 6px", minWidth: 0,
         color: "var(--ms-text-secondary)", background: "none", border: "none",
         cursor: onClick ? "pointer" : "default",
       }}
     >
       <StatusIcon name={entry.icon} />
-      <span>{entry.text}</span>
+      <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{entry.text}</span>
       <Circle size={7} fill={LEVEL_COLOR[entry.level]} color={LEVEL_COLOR[entry.level]} />
     </button>
+  );
+}
+
+/**
+ * The fixed mark of a language pack and the one-click way back to English. Its words are deliberately not in the dictionaries: a pack
+ * must not be able to change or hide them.
+ */
+function LanguagePackMark() {
+  const { lang, setLang } = useT();
+  const pack = usePack();
+  if (isBuiltIn(lang)) return null;
+  const text = `Unofficial language pack: ${pack?.tag === lang ? pack.name : lang}`;
+  return (
+    <span style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11.5, padding: "0 6px", flexShrink: 0, color: "var(--ms-warning)" }}>
+      <span title={text} style={{ maxWidth: 280, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{text}</span>
+      <button type="button" className="ghost" style={{ fontSize: 11.5, padding: "0 6px" }} onClick={() => setLang("en")}>English</button>
+    </span>
   );
 }
 
@@ -56,26 +76,29 @@ function StatusChip({ entry, onClick }: { entry: StatusEntry; onClick?: () => vo
  * with no registered IPluginSettingsPage just shows an empty window (see PluginSettingsWindow.tsx).
  */
 export function StatusBar({ items }: { items: StatusEntry[] }) {
-  const { t } = useT();
+  const { t, tn } = useT();
   const notice = useStatusNotice();
   const pluginUpdates = usePluginUpdateCount();
   const core = items.filter((i) => i.pluginId === "core");
-  const plugins = items.filter((i) => i.pluginId !== "core");
+  const { statusBarPlugins } = usePreferences();
+  // Plugin items show only for the plugins the person switched on in the Plugins window.
+  const plugins = items.filter((i) => i.pluginId !== "core" && (statusBarPlugins ?? {})[i.pluginId]);
 
   return (
     <footer
       style={{
         display: "flex", alignItems: "center", borderTop: "1px solid var(--ms-border)",
-        padding: "0 8px", height: 26, background: "var(--ms-bg-surface)",
+        padding: "0 8px", height: 26, background: "var(--ms-bg-surface)", whiteSpace: "nowrap", overflow: "hidden",
       }}
     >
-      <div style={{ display: "flex", alignItems: "center" }}>
+      <div style={{ display: "flex", alignItems: "center", flexShrink: 0 }}>
+        <LanguagePackMark />
         {core.map((entry) => (
           <StatusChip key={entry.id} entry={entry} onClick={entry.id === "update" ? () => api.openToolWindow("update") : undefined} />
         ))}
         {pluginUpdates > 0 && (
           <StatusChip
-            entry={{ id: "plugin-updates", pluginId: "core", text: t("status.pluginUpdates", String(pluginUpdates)), level: "Warning", updatedAt: "" }}
+            entry={{ id: "plugin-updates", pluginId: "core", text: tn("status.pluginUpdates", pluginUpdates), level: "Warning", updatedAt: "" }}
             onClick={() => api.openToolWindow("plugins")}
           />
         )}
@@ -86,7 +109,7 @@ export function StatusBar({ items }: { items: StatusEntry[] }) {
         </div>
       )}
       <div style={{ flex: 1 }} />
-      <div style={{ display: "flex", alignItems: "center" }}>
+      <div style={{ display: "flex", alignItems: "center", minWidth: 0, overflow: "hidden" }}>
         {plugins.map((entry) => (
           <StatusChip key={`${entry.pluginId}.${entry.id}`} entry={entry} onClick={() => api.openPluginSettingsWindow(entry.pluginId)} />
         ))}

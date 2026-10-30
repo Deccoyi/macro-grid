@@ -5,12 +5,11 @@ namespace MacroGrid.Windows.Audio;
 /// <summary>
 /// Publishes "system.audio.*" from <see cref="IAudioService"/> once a second — same polling cadence and
 /// pattern as <see cref="Variables.SystemMetricsProvider"/> (see its doc comment). Polling instead of a
-/// WASAPI change-notification callback is a deliberate simplicity/risk trade-off: the callback interface
-/// (<c>IAudioEndpointVolumeCallback</c>) must marshal back onto the right apartment/thread and unregister
-/// itself correctly or it leaks — a once-a-second poll can't get that wrong. <c>system.audio.master</c> is
-/// what a slider/knob widget binds its <c>props.valueVariable</c> to (see WidgetStateService), so the UI
-/// reflects the volume even when it was changed by something other than this app (the hardware keys,
-/// another app, Windows' own flyout).
+/// WASAPI volume-change callback is a deliberate simplicity/risk trade-off; the poll is cheap because
+/// <see cref="WindowsAudioService"/> keeps the default device instead of resolving it on every read.
+/// <c>system.audio.master</c> is what a slider/knob widget binds its <c>props.valueVariable</c> to (see
+/// WidgetStateService), so the UI reflects the volume even when it was changed by something other than this
+/// app (the hardware keys, another app, Windows' own flyout).
 /// </summary>
 public sealed class SystemAudioProvider(IAudioService audio) : IVariableProvider, IVariableCatalogSource
 {

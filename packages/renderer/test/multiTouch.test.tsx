@@ -17,6 +17,20 @@ function TestButton(options: PressGestureOptions) {
   );
 }
 
+// Older jsdom versions have no PointerEvent, so pointerType and pointerId would be lost and every touch would look like a mouse press.
+if (typeof PointerEvent === "undefined") {
+  class PointerEventPolyfill extends MouseEvent {
+    pointerId: number;
+    pointerType: string;
+    constructor(type: string, init: PointerEventInit = {}) {
+      super(type, init);
+      this.pointerId = init.pointerId ?? 0;
+      this.pointerType = init.pointerType ?? "";
+    }
+  }
+  Object.defineProperty(globalThis, "PointerEvent", { value: PointerEventPolyfill, configurable: true, writable: true });
+}
+
 const touch = (pointerId: number) => ({ pointerId, pointerType: "touch" });
 
 /** Lifts every finger the test put down, so the global finger count starts at zero in the next test. */

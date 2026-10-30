@@ -5,6 +5,18 @@ namespace MacroGrid.Tests;
 
 public class DynamicTextTests
 {
+    [Fact]
+    public void A_variable_without_a_value_shows_n_a_unless_it_has_its_own_placeholder()
+    {
+        var widget = new Widget { Text = "{obs.streaming|ON/OFF} {obs.fps|0|--} {user.x}" };
+        var store = StoreWith("user.x", "v");
+
+        Assert.Equal("n/a -- v", DynamicText.Resolve(widget, store));
+
+        store.Set("obs.streaming", true);
+        Assert.Equal("ON -- v", DynamicText.Resolve(widget, store));
+    }
+
     private static Widget Dynamized(string? staticText, string variable, string op, string value, string result, string? fallback = null) => new()
     {
         Text = staticText,

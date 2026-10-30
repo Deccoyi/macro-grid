@@ -93,4 +93,14 @@ describe("web widget", () => {
 
     expect(shadow().querySelector("iframe")).not.toBe(first);
   });
+
+  it("draws a placeholder with a button instead of the page when it is blocked, and the button calls back", () => {
+    let taps = 0;
+    render(<WidgetView widget={web("https://example.org/chat")} webBlocked={{ text: "example.org", action: "Tap to load", onAction: () => void taps++ }} />);
+
+    expect(shadow().querySelector("iframe")).toBeNull();
+    expect(shadow().textContent).toContain("example.org");
+    (shadow().querySelector("button") as HTMLButtonElement).click();
+    expect(taps).toBe(1);
+  });
 });

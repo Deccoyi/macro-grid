@@ -1,0 +1,13 @@
+[
+{ "name": "unnamed widgets get Prefix_n per type", "widgets": [ { "type": "button" }, { "type": "button" }, { "type": "label" }, { "type": "toggle" }, { "type": "slider" }, { "type": "knob" }, { "type": "image" }, { "type": "web" }, { "type": "plugin-widget" }, { "type": "plugin-html" }, { "type": "mystery" } ], "expected": ["Button_1", "Button_2", "Label_1", "Toggle_1", "Slider_1", "Knob_1", "Image_1", "Web_1", "Widget_1", "Widget_2", "Widget_3"] },
+{ "name": "an existing name is kept", "widgets": [ { "type": "button", "name": "Play" }, { "type": "button" } ], "expected": ["Play", "Button_1"] },
+{ "name": "a default never takes a name a later widget already has", "widgets": [ { "type": "button" }, { "type": "button", "name": "Button_1" } ], "expected": ["Button_2", "Button_1"] },
+{ "name": "the smallest free number is used", "widgets": [ { "type": "button", "name": "Button_1" }, { "type": "button", "name": "Button_3" }, { "type": "button" } ], "expected": ["Button_1", "Button_3", "Button_2"] },
+{ "name": "a repeated name is renamed after the first", "widgets": [ { "type": "web", "name": "Cam" }, { "type": "web", "name": "Cam" }, { "type": "web", "name": "Cam" } ], "expected": ["Cam", "Cam_2", "Cam_3"] },
+{ "name": "names are compared without case", "widgets": [ { "type": "button", "name": "Play" }, { "type": "button", "name": "play" } ], "expected": ["Play", "play_2"] },
+{ "name": "a repair never takes a name that exists", "widgets": [ { "type": "button", "name": "A" }, { "type": "button", "name": "A" }, { "type": "button", "name": "A_2" } ], "expected": ["A", "A_3", "A_2"] },
+{ "name": "names are trimmed and a blank name counts as no name", "widgets": [ { "type": "button", "name": "  Go  " }, { "type": "button", "name": "   " } ], "expected": ["Go", "Button_1"] },
+{ "name": "a name is cut to 64 characters", "widgets": [ { "type": "button", "name": "012345678901234567890123456789012345678901234567890123456789012345678" } ], "expected": ["0123456789012345678901234567890123456789012345678901234567890123"] },
+{ "name": "a repair keeps the result within 64 characters", "widgets": [ { "type": "button", "name": "0123456789012345678901234567890123456789012345678901234567890123" }, { "type": "button", "name": "0123456789012345678901234567890123456789012345678901234567890123" } ], "expected": ["0123456789012345678901234567890123456789012345678901234567890123", "01234567890123456789012345678901234567890123456789012345678901_2"] },
+{ "name": "control characters are removed", "widgets": [ { "type": "button", "name": "A\u0000B\n" } ], "expected": ["AB"] }
+]

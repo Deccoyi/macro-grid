@@ -62,6 +62,62 @@ public sealed class PluginManagerTests : IAsyncLifetime
         return dir;
     }
 
+    [Theory]
+    [InlineData("obs", true)]
+    [InlineData("plc-icons", true)]
+    [InlineData("a.b_c-1", true)]
+    [InlineData("abc.", false)]
+    [InlineData("abc ", false)]
+    [InlineData("con", false)]
+    [InlineData("NUL.x", false)]
+    [InlineData("a/b", false)]
+    [InlineData("a b", false)]
+    [InlineData("", false)]
+    [InlineData("-abc", false)]
+    [InlineData("pluginç", false)]
+    [InlineData("user", false)]
+    [InlineData("System", false)]
+    [InlineData("core", false)]
+    [InlineData("self", false)]
+    [InlineData("user.tools", true)]
+    [InlineData("userland", true)]
+    public void Plugin_id_rule(string id, bool valid) => Assert.Equal(valid, PluginManager.IsValidPluginId(id));
+
+    [Fact]
+    public async Task TryGetPlugins_returns_the_list_when_free_and_null_when_the_lock_is_busy()
+    {
+        Assert.NotNull(_manager.TryGetPlugins());
+
+        var stateLock = (System.Threading.Lock)typeof(PluginManager)
+            .GetField("_stateLock", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)!.GetValue(_manager)!;
+        var held = new ManualResetEventSlim();
+        var release = new ManualResetEventSlim();
+        var holder = Task.Run(() => { lock (stateLock) { held.Set(); release.Wait(); } });
+        held.Wait();
+        try { Assert.Null(_manager.TryGetPlugins()); }
+        finally { release.Set(); await holder; }
+
+        Assert.NotNull(_manager.TryGetPlugins());
+    }
+
+    [Fact]
+    public void Plugin_id_longer_than_64_characters_is_refused()
+    {
+        Assert.True(PluginManager.IsValidPluginId(new string('a', 64)));
+        Assert.False(PluginManager.IsValidPluginId(new string('a', 65)));
+    }
+
+    [Fact]
+    public async Task Installing_a_folder_with_a_refused_id_creates_nothing()
+    {
+        await _manager.StartAsync(CancellationToken.None);
+        var source = NewStubSource(id: "stub.");
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() => _manager.InstallFromFolderAsync(source));
+
+        Assert.Empty(Directory.GetDirectories(_pluginsDir));
+    }
+
     [Fact]
     public async Task Start_on_a_missing_folder_lists_nothing()
     {
@@ -225,6 +281,62 @@ public sealed class PluginManagerTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task A_permission_switched_off_keeps_the_plugin_running_without_it_and_can_be_switched_back_on()
+    {
+        WriteJsPlugin(NewPluginFolder("js-five"), "js-five", ["variables", "actions"],
+            "try { host.registerAction({ type: 'js-five.say', name: 'Say', run() {} }); } catch (e) { host.variables.set('js-five.refused', e.message); } host.variables.set('js-five.ran', 1);");
+        await _manager.StartAsync(CancellationToken.None);
+        await _manager.ApproveAsync("js-five");
+        Assert.Equal("js-five", _manager.GetActionPluginId("js-five.say"));
+
+        var off = await _manager.SetPermissionAsync("js-five", "actions", enabled: false);
+
+        Assert.Equal(PluginLoadStatus.Loaded, off?.Status);
+        Assert.Equal(["actions"], off?.SwitchedOffPermissions);
+        Assert.Equal(["variables", "actions"], off?.Permissions);
+        Assert.Null(_manager.GetActionPluginId("js-five.say"));
+        Assert.Equal(1.0, _variables.Get("js-five.ran"));
+        Assert.NotNull(_variables.Get("js-five.refused"));
+
+        var reloaded = await _manager.ReloadAsync("js-five");
+        Assert.Equal(["actions"], reloaded?.SwitchedOffPermissions);
+
+        var on = await _manager.SetPermissionAsync("js-five", "actions", enabled: true);
+        Assert.Empty(on!.SwitchedOffPermissions!);
+        Assert.Equal("js-five", _manager.GetActionPluginId("js-five.say"));
+    }
+
+    [Fact]
+    public async Task A_plugin_that_fails_without_a_permission_can_get_it_back_without_a_reinstall()
+    {
+        WriteJsPlugin(NewPluginFolder("js-needs"), "js-needs", ["variables"], "host.variables.set('js-needs.ran', 1);");
+        await _manager.StartAsync(CancellationToken.None);
+        await _manager.ApproveAsync("js-needs");
+
+        var off = await _manager.SetPermissionAsync("js-needs", "variables", enabled: false);
+
+        Assert.Equal(PluginLoadStatus.Error, off?.Status);
+        Assert.Equal(["variables"], off?.Permissions);
+        Assert.Equal(["variables"], off?.SwitchedOffPermissions);
+
+        var on = await _manager.SetPermissionAsync("js-needs", "variables", enabled: true);
+
+        Assert.Equal(PluginLoadStatus.Loaded, on?.Status);
+        Assert.Equal(1.0, _variables.Get("js-needs.ran"));
+    }
+
+    [Fact]
+    public async Task A_permission_the_plugin_did_not_declare_cannot_be_switched()
+    {
+        WriteJsPlugin(NewPluginFolder("js-six"), "js-six", ["variables"], "");
+        await _manager.StartAsync(CancellationToken.None);
+        await _manager.ApproveAsync("js-six");
+
+        Assert.Null(await _manager.SetPermissionAsync("js-six", "input", enabled: false));
+        Assert.Null(await _manager.SetPermissionAsync("nobody", "variables", enabled: false));
+    }
+
+    [Fact]
     public async Task Uninstalling_a_js_plugin_unloads_it_and_forgets_its_approval()
     {
         WriteJsPlugin(NewPluginFolder("js-four"), "js-four", ["variables"], "host.variables.set('js-four.a', 1);");
@@ -270,6 +382,20 @@ public sealed class PluginManagerTests : IAsyncLifetime
         Assert.Equal("stub", manifest.Id);
         Assert.Equal(PluginKind.Csharp, manifest.Kind);
         Assert.Empty(_manager.Plugins); // nothing was actually installed
+    }
+
+    [Fact]
+    public async Task A_loaded_plugin_can_report_an_action_outcome()
+    {
+        await _manager.StartAsync(CancellationToken.None);
+        await _manager.InstallFromFolderAsync(NewStubSource());
+        var context = new ActionContext("d", "p", "w", null!);
+
+        Assert.Null(await _dispatcher.RunAsync("stub.action", new() { ["value"] = "ok" }, context, default));
+        var failure = await _dispatcher.RunAsync("stub.action", new() { ["value"] = "missing" }, context, default);
+
+        Assert.Equal(ActionFailureCode.NotFound, failure!.Code);
+        Assert.Equal("No such item.", failure.Message);
     }
 
     [Fact]
@@ -320,6 +446,24 @@ public sealed class PluginManagerTests : IAsyncLifetime
 
         Assert.False(result.Plugin.HasIcon);
         Assert.Null(_manager.GetPluginIconPath("stub"));
+    }
+
+    [Fact]
+    public async Task Replacing_a_plugin_removes_the_code_files_of_the_old_version_but_keeps_its_data()
+    {
+        await _manager.StartAsync(CancellationToken.None);
+        var first = NewStubSource();
+        File.WriteAllText(Path.Combine(first, "extra.js"), "// old");
+        File.WriteAllText(Path.Combine(first, "signature.json"), "{}");
+        await _manager.InstallFromFolderAsync(first);
+        var installed = Path.Combine(_pluginsDir, "stub");
+        File.WriteAllText(Path.Combine(installed, "settings.json"), "{\"a\":1}");
+
+        await _manager.InstallFromFolderAsync(NewStubSource());
+
+        Assert.False(File.Exists(Path.Combine(installed, "extra.js")));
+        Assert.False(File.Exists(Path.Combine(installed, "signature.json")));
+        Assert.Equal("{\"a\":1}", File.ReadAllText(Path.Combine(installed, "settings.json")));
     }
 
     [Fact]
@@ -420,6 +564,45 @@ public sealed class PluginManagerTests : IAsyncLifetime
         await _manager.StartAsync(CancellationToken.None);
 
         Assert.Null(await _manager.UninstallAsync("nope"));
+    }
+
+    [Theory]
+    [InlineData("../outside.js")]
+    [InlineData("sub/../../outside.js")]
+    [InlineData("C:/Windows/win.ini")]
+    [InlineData("/etc/passwd")]
+    [InlineData("")]
+    public void An_entry_that_leaves_the_plugin_folder_is_not_resolved(string entry)
+    {
+        var dir = NewPluginFolder("entry-one");
+        File.WriteAllText(Path.Combine(Path.GetDirectoryName(dir)!, "outside.js"), "");
+
+        Assert.Null(PluginManager.ResolveEntryPath(dir, entry));
+    }
+
+    [Fact]
+    public void An_entry_in_a_subfolder_is_resolved_and_a_missing_one_is_not()
+    {
+        var dir = NewPluginFolder("entry-two");
+        Directory.CreateDirectory(Path.Combine(dir, "src"));
+        File.WriteAllText(Path.Combine(dir, "src", "main.js"), "");
+
+        Assert.Equal(Path.Combine(Path.GetFullPath(dir), "src", "main.js"), PluginManager.ResolveEntryPath(dir, "src/main.js"));
+        Assert.Null(PluginManager.ResolveEntryPath(dir, "src/missing.js"));
+    }
+
+    [Fact]
+    public async Task A_js_plugin_whose_entry_points_outside_its_folder_is_not_run()
+    {
+        var dir = NewPluginFolder("js-out");
+        File.WriteAllText(Path.Combine(Path.GetDirectoryName(dir)!, "outside.js"), "host.variables.set('js-out.ran', 1);");
+        WriteManifest(dir, id: "js-out", kind: "js", entry: "../outside.js");
+
+        await _manager.StartAsync(CancellationToken.None);
+
+        var plugin = Assert.Single(_manager.Plugins);
+        Assert.Equal(PluginLoadStatus.Error, plugin.Status);
+        Assert.Contains("Entry file not found", plugin.Detail);
     }
 
     private static void WriteJsPlugin(string dir, string id, string[] permissions, string script)

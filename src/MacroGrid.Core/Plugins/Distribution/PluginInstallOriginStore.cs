@@ -14,7 +14,10 @@ public enum PluginTrust
     ThirdParty,
 }
 
-public sealed record PluginInstallOrigin(string SourceUrl, string Version, PluginTrust Trust);
+/// <param name="Hold">The person chose to stay on this version: no "update available" while it is not withdrawn or revoked.</param>
+/// <param name="ContentsSigned">An official package that carried a contents signature, so its files are checked at every load.</param>
+/// <param name="CodeFiles">Reserved for the third-party changed-files warning (file name to hash).</param>
+public sealed record PluginInstallOrigin(string SourceUrl, string Version, PluginTrust Trust, bool Hold = false, bool ContentsSigned = false, IReadOnlyDictionary<string, string>? CodeFiles = null);
 
 /// <summary>
 /// Persists where each installed plugin came from, in <c>%AppData%\MacroGrid\plugin-installs.json</c>

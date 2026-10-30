@@ -181,10 +181,11 @@ main ─────────●──[tag]───●──[tag]
    size, following `ProfilePackage`.
 4. **Check the manifest** against the index / `plugin.json` it came from, then
    compatibility. JS permissions go through the existing approval flow.
-5. **Install** via `InstallFromFolderAsync(stagingDir)`, then delete the staging folder.
-   User files survive because `CopyDirectory` only overwrites.
+5. **Install** via `InstallFromFolderAsync(stagingDir, origin)`, then delete the staging folder.
+   When a plugin is replaced, the old version's code files are removed first (loadable files and the two signature files); its data files survive.
 6. **Record the origin** in `%AppData%\MacroGrid\plugin-installs.json`:
-   `{ "<id>": { "sourceUrl", "version", "trust" } }`. Used for badges and updates.
+   `{ "<id>": { "sourceUrl", "version", "trust", "hold"?, "contentsSigned"?, "codeFiles"? } }`. Used for badges and updates. It is written inside the install,
+   after the copy and before the first load, so the load already sees it. A folder install without an origin, and uninstall, remove the entry.
 
 Saved sources live in `%AppData%\MacroGrid\plugin-sources.json`.
 
@@ -256,3 +257,40 @@ the installed folder. What each install path does:
 
 A plugin that fails the check at start, install, reload or update is not loaded and shows *Not allowed* with the reason, and a `Security:` line is logged. A build made from
 source in the Debug configuration still loads an unsigned C# plugin and says so in red in the status bar; released builds never do. There is no setting for it.
+
+## 11. Catalog lifecycle, phase 1
+
+The official source is read through `OfficialCatalog` (Core, `Plugins/Distribution`), not through the plain index client.
+
+- **Files:** `index.signed.json` and `revoked.signed.json` in `website/public/catalog/` of the plugin repository. Each is `{ "payload": base64, "signature": base64 }`;
+  the signature (ECDSA P-256, SHA-256, the official plugin key) covers the decoded payload bytes, and the reader verifies before it parses (`SignedCatalogFile`).
+  The payload has `kind` (`index` or `revoked`), `sequence` (from 1, always rising) and `issuedAt`.
+- **Sources, in order:** the GitHub contents API (`Accept: application/vnd.github.raw+json`), then the Pages site. An ETag is only sent back to the address it came from, a redirect is a
+  failure, bodies are capped (1.5 MB index, 256 KB revoke list), the timeout is 20 s. Without a token the API counts a 304 against its quota too, so the API is left alone when few calls remain
+  or after a 403/429 until it says it is over.
+- **Acceptance:** a lower sequence than the saved one is refused; the same sequence is "nothing new". The accepted envelope is saved in `plugin-catalog-state.json`
+  and re-verified when read. A computer that has never accepted a signed index falls back, once, to the plain `macrogrid-index.json`.
+- **Schedule** (`PluginCatalogPolicy`, run by `PluginCatalogService`): first look 3 minutes plus up to 10 after start; revoke list every 8 hours plus up to 60 minutes; index every 24 hours plus up to
+  120; a failure waits 30 minutes, doubling to at most 24 hours; two refreshes of one file are never closer than 60 seconds. It runs only when update checks are on and an official plugin is installed.
+- **Safety list:** `{ "formatVersion": 1, "plugins": [ { "id", "versions"?, "reason" } ] }` (no `versions` means every version). It reaches plugins installed from the official source and officially signed C# plugins; third-party and folder-installed
+  JavaScript plugins are not covered. A hit gives *Not allowed* with the reason (`P111`, security event 1107). The installer refuses a listed version before any download (`revoked`), and `PluginManager.ApplyRevocationsAsync`
+  stops or starts only the plugins whose answer changed. **With no saved list, or a failed fetch, everything loads and installs.**
+- **Withdrawn:** an index version can carry `withdrawn: true`. It is not installable (`withdrawn`), an installed copy keeps running and gets a `P112` warning. A version can list up to three download addresses (`urls`);
+  a mirror is only used when it comes from the verified signed index and the package signature is checked afterwards.
+- **Staleness:** 14 days without a successful safety-list check adds one quiet line (`P113`); nothing is switched off because of it.
+- **Plugin id:** 1 to 64 characters of letters, digits, `.`, `-`, `_`, starting with a letter or digit, no trailing dot, no reserved device names.
+
+## 12. Catalog lifecycle, phase 2
+
+- **Offered versions:** for one plugin the server offers at most five versions: not withdrawn, not switched off by the safety list, compatible with this server, newest first
+  (`PluginCatalogChoice.MaxOffered`). The install endpoint refuses any other version (`not-offered`). The index format is unchanged and nothing is pruned, so the release files of
+  those versions must stay online.
+- **Go back:** the entry carries `previous` (the newest offered version below the installed one, with its permissions). The editor confirms and installs it with `hold` set, one step at a time.
+- **Stay on this version:** `hold` in the origin (`PUT /api/plugins/{id}/hold`, `held` in `GET /api/plugins`). A hold only stops "update available"; it is ignored when the installed version was
+  withdrawn or switched off, so a safety message is never hidden. Installing or updating without `hold` ends it.
+- **One source per plugin:** a plugin installed from one source is not updated or replaced from another (`other-source`); the other source's entry shows it as installed. Remove it first.
+- **Official JavaScript plugins are verified at every load:** a package from the official source that carries `signature.json` is recorded with `contentsSigned`. At every load the same
+  verifier as for C# plugins checks the signature, every listed file's hash, and that no other loadable file was added; a plugin that fails is *Not allowed* (`P114`, security event 1109) until
+  it is installed again. This covers files that change after install; it does not cover a package that was never signed. Data files (for example `storage.json`) are not listed in the
+  signature, so a signed package must not ship a file the plugin writes to. The safety list also reaches such a plugin when it is verified.
+- **Not built:** a warning when the files of a third-party plugin change (`codeFiles` is reserved in the origin for it).

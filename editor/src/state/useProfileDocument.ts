@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, type SetStateAction 
 import type { AppMatch, Page, Profile, Widget } from "@macro/renderer";
 import { api } from "../api/client";
 import type { ProfileSummary } from "../api/types";
-import { choiceAsync, confirmAsync } from "../dialogs/dialogStore";
+import { alertAsync, choiceAsync, confirmAsync } from "../dialogs/dialogStore";
 import { useT } from "../i18n/I18nContext";
 import type { DictKey } from "../i18n/tr";
 import {
@@ -11,6 +11,10 @@ import {
 } from "./history";
 import { normalizePageTree, reorderPagesByTree } from "./pageTree";
 import { showStatusNotice } from "./statusNotice";
+
+function noteCleared(count: number) {
+  if (count > 0) showStatusNotice("profile.importCleared", String(count));
+}
 
 /** What one undo step restores: the profile, the page that was showing and the widget selection. */
 export interface DocumentSnapshot {
@@ -44,6 +48,8 @@ export function useProfileDocument() {
   const [history, setHistoryState] = useState<History<DocumentSnapshot>>(createHistory);
   // The profile as last opened or saved: what the Hierarchy tree's "*" markers compare against.
   const [savedProfile, setSavedProfile] = useState<Profile | null>(null);
+  /** How many times the profile was saved in this session; the Diagnostic Messages show a summary after each one. */
+  const [saveCount, setSaveCount] = useState(0);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -258,7 +264,7 @@ export function useProfileDocument() {
    * (never decided silently): "Overwrite" replaces that profile's content in place (keeping its id),
    * "Rename" imports as a new profile named name_1, name_2, ... and Cancel aborts the import. */
   const importProfileFromJson = useCallback(
-    async (data: Profile) => {
+    async (data: Profile, clearedWidgetBindings = 0) => {
       if (!(await confirmDiscardIfDirty())) return;
       const originalName = data.name || t("profile.defaultName");
       const existing = profiles.find((p) => p.name === originalName);
@@ -276,8 +282,21 @@ export function useProfileDocument() {
         if (choice === null) return;
 
         if (choice === "overwrite") {
-          await api.saveProfile({ ...data, id: existing.id, name: originalName });
+          // The overwrite keeps no copy of its own, so a restore point comes first; when it cannot be made nothing is overwritten.
+          try {
+            await api.createRestorePoint("import");
+          } catch {
+            await alertAsync(t("restore.point.failed"), { title: t("restore.point.failedTitle") });
+            return;
+          }
+          try {
+            await api.saveProfile({ ...data, id: existing.id, name: originalName });
+          } catch {
+            showStatusNotice("profile.importSaveFailed");
+            return;
+          }
           await loadProfileList(existing.id);
+          noteCleared(clearedWidgetBindings);
           return;
         }
 
@@ -290,19 +309,35 @@ export function useProfileDocument() {
       }
 
       const created = await api.createProfile();
-      await api.saveProfile({ ...data, id: created.id, name });
+      try {
+        await api.saveProfile({ ...data, id: created.id, name });
+      } catch {
+        // The new profile is still empty: it must not stay behind as a stray "New profile".
+        await api.deleteProfile(created.id).catch(() => {});
+        showStatusNotice("profile.importSaveFailed");
+        return;
+      }
       await loadProfileList(created.id);
+      noteCleared(clearedWidgetBindings);
     },
     [confirmDiscardIfDirty, loadProfileList, profiles, t],
   );
 
   const deleteProfile = useCallback(
-    async (id: string) => {
-      await api.deleteProfile(id);
+    async (id: string): Promise<boolean> => {
+      try {
+        await api.deleteProfile(id);
+      } catch {
+        // The server deletes nothing when it cannot save a restore point first. A dialog, not a status-bar line:
+        // a refused destructive action must not be missable (the status line fades after a few seconds).
+        await alertAsync(t("profile.deleteFailed"), { title: t("restore.point.failedTitle") });
+        return false;
+      }
       await loadProfileList();
       showStatusNotice("undo.notUndoable");
+      return true;
     },
-    [loadProfileList],
+    [loadProfileList, t],
   );
 
   /** Refreshes just the profile summary list (the Hierarchy tree's profile names/ids) without touching
@@ -339,6 +374,7 @@ export function useProfileDocument() {
       await api.saveProfile(toSave);
       setHistory(markSaved(historyRef.current, savedId));
       setSavedProfile(toSave);
+      setSaveCount((n) => n + 1);
       setProfiles((prev) => prev.map((p) => (p.id === toSave.id ? { ...p, name: toSave.name } : p)));
     } catch (e) {
       setError(String(e));
@@ -361,6 +397,7 @@ export function useProfileDocument() {
     saving,
     error,
     setError,
+    saveCount,
     setCurrentPageId,
     setSelectedIds,
     toggleSelected,
@@ -375,6 +412,7 @@ export function useProfileDocument() {
     selectProfile,
     createProfile,
     importProfileFromJson,
+    confirmDiscardIfDirty,
     deleteProfile,
     refreshProfileList,
     renameProfile,

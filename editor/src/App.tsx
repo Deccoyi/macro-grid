@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { Page, Profile, Widget } from "@macro/renderer";
 import { Copy, Smartphone, Trash2 } from "lucide-react";
 import { api } from "./api/client";
@@ -11,6 +11,8 @@ import { EditToolbar } from "./commands/EditToolbar";
 import { confirmAsync } from "./dialogs/dialogStore";
 import { DialogHost } from "./dialogs/DialogHost";
 import { DiagnosticsProvider } from "./diagnostics/DiagnosticsContext";
+import { ProfileCheckReporter } from "./diagnostics/ProfileCheckReporter";
+import { SaveSummaryReporter } from "./diagnostics/SaveSummaryReporter";
 import type { DeviceSize } from "./grid/DevicePreviewFrame";
 import { useT } from "./i18n/I18nContext";
 import { useDocumentTitle } from "./i18n/useDocumentTitle";
@@ -28,7 +30,7 @@ import { findNode, flattenLeafIds } from "./state/tree";
 import { useEditorState } from "./state/useEditorState";
 import { DockWorkspace } from "./workspace/DockWorkspace";
 import { WorkspaceProvider } from "./workspace/WorkspaceContext";
-import { WorkspaceUiProvider, type WorkspaceUi } from "./workspace/WorkspaceUiContext";
+import { WorkspaceUiProvider, type FocusAction, type WorkspaceUi } from "./workspace/WorkspaceUiContext";
 
 /** Common phone/tablet CSS-px viewport sizes (device-independent px, same units widget fontSize uses)
  * for the "Preview" picker. User-defined sizes from Preferences are appended after these. "Custom"
@@ -55,10 +57,12 @@ export function App() {
 }
 
 function AppContent() {
-  const { t } = useT();
+  const { t, tn } = useT();
   useDocumentTitle("app.title");
   const { previewProfiles } = usePreferences();
   const state = useEditorState();
+  // The names of the variables that have a value, as one text: the 2-second value poll then re-runs the profile check only when a name appears or goes.
+  const liveNames = useMemo(() => Object.keys(state.variables).filter((k) => state.variables[k] != null).sort().join("\n"), [state.variables]);
   const { profile, currentPage } = state;
   const [devicePresetId, setDevicePresetId] = useState("free");
   const [customSize, setCustomSize] = useState<DeviceSize>({ width: 390, height: 844 });
@@ -71,6 +75,7 @@ function AppContent() {
   const [pageMenu, setPageMenu] = useState<{ x: number; y: number; pageId: string } | null>(null);
   const [moveCopyOpen, setMoveCopyOpen] = useState(false);
   const [copyPageTarget, setCopyPageTarget] = useState<string | null>(null);
+  const [focusAction, setFocusAction] = useState<FocusAction | null>(null);
   const [profilePropertiesTarget, setProfilePropertiesTarget] = useState<{ profileId: string } | null>(null);
   const [renameTarget, setRenameTarget] = useState<{ kind: "page" | "profile"; id: string } | null>(null);
   const [treeSelection, setTreeSelection] = useState<WorkspaceUi["treeSelection"]>(null);
@@ -303,7 +308,11 @@ function AppContent() {
     <div style={{ display: "grid", gridTemplateRows: "auto auto 1fr auto", height: "100%" }}>
       <MenuBar
         profile={profile}
-        onImportProfile={(data: Profile) => state.importProfileFromJson(data)}
+        onImportProfile={async (data: Profile, clearedWidgetBindings?: number) => {
+          await state.importProfileFromJson(data, clearedWidgetBindings);
+          await profileTree.refresh();
+        }}
+        confirmDiscardIfDirty={state.confirmDiscardIfDirty}
         editCommands={editCommands}
       />
 
@@ -348,6 +357,8 @@ function AppContent() {
 
       <EditorStateProvider value={state}>
        <DiagnosticsProvider>
+        <SaveSummaryReporter profile={state.profile} saveCount={state.saveCount} />
+        <ProfileCheckReporter profile={state.profile} profiles={state.profiles} actions={state.actions} variableCatalog={state.variableCatalog} liveNames={liveNames} />
         <WorkspaceUiProvider
           value={{
             openPageContextMenu: (x, y, pageId) => setPageMenu({ x, y, pageId }),
@@ -361,6 +372,8 @@ function AppContent() {
             clearRename: () => setRenameTarget(null),
             treeSelection,
             setTreeSelection,
+            focusAction,
+            setFocusAction,
           }}
         >
           <div style={{ display: "flex", flexDirection: "column", minHeight: 0, minWidth: 0 }}>
@@ -395,7 +408,7 @@ function AppContent() {
 
           {moveCopyOpen && currentPage && (
             <MoveCopyDialog
-              title={t("moveCopy.widgetsTitle", String(state.selectedIds.length))}
+              title={tn("moveCopy.widgetsTitle", state.selectedIds.length)}
               profiles={state.profiles}
               currentProfileId={profile.id}
               currentProfilePages={profile.pages}

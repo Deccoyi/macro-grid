@@ -1,9 +1,11 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { api } from "../api/client";
 import type { AppPreferences, DockLayoutProfile, PreviewProfileInfo } from "../api/types";
+import type { Language } from "../i18n/language";
+import { ensurePack, refreshPackIfChanged } from "../i18n/packStore";
 
 export type Theme = "dark" | "light";
-export type Language = "tr" | "en";
+export type { Language } from "../i18n/language";
 type PreviewProfile = PreviewProfileInfo;
 
 const DEFAULTS: AppPreferences = {
@@ -11,11 +13,14 @@ const DEFAULTS: AppPreferences = {
   language: navigator.language.toLowerCase().startsWith("tr") ? "tr" : "en",
   previewProfiles: [],
   collapsedInspectorSections: {},
+  dismissedNotices: {},
+  statusBarPlugins: {},
   defaultProfileId: null,
   launchMode: "window",
   autostartMode: "tray",
   checkForUpdates: true,
   includePreReleases: true,
+  allowUnencrypted: true,
   dockLayoutJson: "",
   dockLayoutProfiles: [],
 };
@@ -32,6 +37,12 @@ interface PreferencesContextValue {
   removePreviewProfile: (id: string) => void;
   collapsedInspectorSections: Record<string, boolean>;
   setInspectorSectionCollapsed: (id: string, collapsed: boolean) => void;
+  dismissedNotices: Record<string, boolean>;
+  /** Closes one note for good ("do not show again"); `undefined` for the id shows every closed note again. */
+  dismissNotice: (id?: string) => void;
+  /** Plugins whose status items show in the status bar (id to true). */
+  statusBarPlugins: Record<string, boolean>;
+  setPluginInStatusBar: (pluginId: string, shown: boolean) => void;
   defaultProfileId: string | null;
   setDefaultProfileId: (id: string | null) => void;
   launchMode: AppPreferences["launchMode"];
@@ -42,6 +53,8 @@ interface PreferencesContextValue {
   setCheckForUpdates: (enabled: boolean) => void;
   includePreReleases: boolean;
   setIncludePreReleases: (enabled: boolean) => void;
+  allowUnencrypted: boolean;
+  setAllowUnencrypted: (allowed: boolean) => void;
   /** True once the initial GET /api/preferences has resolved (or failed) — callers that must not act on
    * still-default values (like restoring the saved dock layout) wait for this. */
   loaded: boolean;
@@ -66,7 +79,14 @@ const PreferencesContext = createContext<PreferencesContextValue | null>(null);
 const CHANNEL_NAME = "macro-grid-preferences";
 
 export function PreferencesProvider({ children }: { children: ReactNode }) {
-  const [prefs, setPrefs] = useState<AppPreferences>(DEFAULTS);
+  const [prefs, setPrefsState] = useState<AppPreferences>(DEFAULTS);
+  // The newest preferences, updated at once (not at the next render). Every setter builds its change from this, never from the `prefs` of the render it
+  // was made in: two changes in one tick (closing a hint and a dock layout save) must not start from the same old copy, or the second one undoes the first.
+  const latest = useRef<AppPreferences>(DEFAULTS);
+  const setPrefs = useCallback((next: AppPreferences) => {
+    latest.current = next;
+    setPrefsState(next);
+  }, []);
   const loaded = useRef(false);
   const [loadedState, setLoadedState] = useState(false);
   const [savedLanguage, setSavedLanguage] = useState<Language>(DEFAULTS.language);
@@ -89,7 +109,7 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
       loaded.current = true;
       setLoadedState(true);
     });
-  }, []);
+  }, [setPrefs]);
 
   useEffect(() => {
     refetch();
@@ -101,7 +121,10 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
       channel.current = null;
     }
 
-    const onFocus = () => refetch();
+    const onFocus = () => {
+      refetch();
+      void refreshPackIfChanged(latest.current.language);
+    };
     const onVisibility = () => { if (document.visibilityState === "visible") refetch(); };
     window.addEventListener("focus", onFocus);
     document.addEventListener("visibilitychange", onVisibility);
@@ -111,7 +134,7 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
       window.removeEventListener("focus", onFocus);
       document.removeEventListener("visibilitychange", onVisibility);
     };
-  }, [refetch]);
+  }, [refetch, setPrefs]);
 
   const persist = useCallback((next: AppPreferences) => {
     setPrefs(next);
@@ -123,71 +146,90 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
       api.savePreferences(next).then(() => setSavedLanguage(next.language)).catch(() => {}).finally(() => { savesInFlight.current--; });
       channel.current?.postMessage(next);
     }
-  }, []);
+  }, [setPrefs]);
 
-  const setTheme = useCallback((theme: Theme) => persist({ ...prefs, theme }), [prefs, persist]);
-  const setLanguage = useCallback((language: Language) => persist({ ...prefs, language }), [prefs, persist]);
+  const setTheme = useCallback((theme: Theme) => persist({ ...latest.current, theme }), [persist]);
+  const setLanguage = useCallback((language: Language) => persist({ ...latest.current, language }), [persist]);
 
   const addPreviewProfile = useCallback(
     (p: Omit<PreviewProfile, "id">) => {
       const profile: PreviewProfile = { ...p, id: `preview-${Date.now().toString(36)}` };
-      persist({ ...prefs, previewProfiles: [...prefs.previewProfiles, profile] });
+      persist({ ...latest.current, previewProfiles: [...latest.current.previewProfiles, profile] });
     },
-    [prefs, persist],
+    [persist],
   );
 
   const removePreviewProfile = useCallback(
-    (id: string) => persist({ ...prefs, previewProfiles: prefs.previewProfiles.filter((p) => p.id !== id) }),
-    [prefs, persist],
+    (id: string) => persist({ ...latest.current, previewProfiles: latest.current.previewProfiles.filter((p) => p.id !== id) }),
+    [persist],
   );
 
   const setInspectorSectionCollapsed = useCallback(
     (id: string, collapsed: boolean) =>
-      persist({ ...prefs, collapsedInspectorSections: { ...prefs.collapsedInspectorSections, [id]: collapsed } }),
-    [prefs, persist],
+      persist({ ...latest.current, collapsedInspectorSections: { ...latest.current.collapsedInspectorSections, [id]: collapsed } }),
+    [persist],
+  );
+
+  const dismissNotice = useCallback(
+    (id?: string) => persist({ ...latest.current, dismissedNotices: id === undefined ? {} : { ...latest.current.dismissedNotices, [id]: true } }),
+    [persist],
+  );
+
+  const setPluginInStatusBar = useCallback(
+    (pluginId: string, shown: boolean) => {
+      const next = { ...latest.current.statusBarPlugins };
+      if (shown) next[pluginId] = true; else delete next[pluginId];
+      persist({ ...latest.current, statusBarPlugins: next });
+    },
+    [persist],
   );
 
   const setDefaultProfileId = useCallback(
-    (defaultProfileId: string | null) => persist({ ...prefs, defaultProfileId }),
-    [prefs, persist],
+    (defaultProfileId: string | null) => persist({ ...latest.current, defaultProfileId }),
+    [persist],
   );
 
   const setLaunchMode = useCallback(
-    (launchMode: AppPreferences["launchMode"]) => persist({ ...prefs, launchMode }),
-    [prefs, persist],
+    (launchMode: AppPreferences["launchMode"]) => persist({ ...latest.current, launchMode }),
+    [persist],
   );
 
   const setAutostartMode = useCallback(
-    (autostartMode: AppPreferences["autostartMode"]) => persist({ ...prefs, autostartMode }),
-    [prefs, persist],
+    (autostartMode: AppPreferences["autostartMode"]) => persist({ ...latest.current, autostartMode }),
+    [persist],
   );
 
   const setCheckForUpdates = useCallback(
-    (checkForUpdates: boolean) => persist({ ...prefs, checkForUpdates }),
-    [prefs, persist],
+    (checkForUpdates: boolean) => persist({ ...latest.current, checkForUpdates }),
+    [persist],
   );
 
   const setIncludePreReleases = useCallback(
-    (includePreReleases: boolean) => persist({ ...prefs, includePreReleases }),
-    [prefs, persist],
+    (includePreReleases: boolean) => persist({ ...latest.current, includePreReleases }),
+    [persist],
+  );
+
+  const setAllowUnencrypted = useCallback(
+    (allowUnencrypted: boolean) => persist({ ...latest.current, allowUnencrypted }),
+    [persist],
   );
 
   const setDockLayoutJson = useCallback(
-    (dockLayoutJson: string) => persist({ ...prefs, dockLayoutJson }),
-    [prefs, persist],
+    (dockLayoutJson: string) => persist({ ...latest.current, dockLayoutJson }),
+    [persist],
   );
 
   const saveDockLayoutProfile = useCallback(
     (name: string, layoutJson: string) => {
       const profile: DockLayoutProfile = { id: `layout-${Date.now().toString(36)}`, name, layoutJson };
-      persist({ ...prefs, dockLayoutProfiles: [...prefs.dockLayoutProfiles, profile] });
+      persist({ ...latest.current, dockLayoutProfiles: [...latest.current.dockLayoutProfiles, profile] });
     },
-    [prefs, persist],
+    [persist],
   );
 
   const deleteDockLayoutProfile = useCallback(
-    (id: string) => persist({ ...prefs, dockLayoutProfiles: prefs.dockLayoutProfiles.filter((p) => p.id !== id) }),
-    [prefs, persist],
+    (id: string) => persist({ ...latest.current, dockLayoutProfiles: latest.current.dockLayoutProfiles.filter((p) => p.id !== id) }),
+    [persist],
   );
 
   useEffect(() => {
@@ -197,6 +239,11 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
   // The page starts as lang="tr"; CSS upper-casing follows it, so an English label showed a Turkish dotted capital I ("VERSİON").
   useEffect(() => {
     document.documentElement.lang = prefs.language;
+  }, [prefs.language]);
+
+  // A language pack is fetched and checked here, once per language change; a built-in language clears it.
+  useEffect(() => {
+    void ensurePack(prefs.language);
   }, [prefs.language]);
 
   const value = useMemo(
@@ -211,6 +258,10 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
       removePreviewProfile,
       collapsedInspectorSections: prefs.collapsedInspectorSections,
       setInspectorSectionCollapsed,
+      dismissedNotices: prefs.dismissedNotices,
+      dismissNotice,
+      statusBarPlugins: prefs.statusBarPlugins,
+      setPluginInStatusBar,
       defaultProfileId: prefs.defaultProfileId,
       setDefaultProfileId,
       launchMode: prefs.launchMode,
@@ -220,6 +271,8 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
       checkForUpdates: prefs.checkForUpdates,
       setCheckForUpdates,
       includePreReleases: prefs.includePreReleases,
+      allowUnencrypted: prefs.allowUnencrypted,
+      setAllowUnencrypted,
       setIncludePreReleases,
       loaded: loadedState,
       dockLayoutJson: prefs.dockLayoutJson,
@@ -230,8 +283,8 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
     }),
     [
       prefs, savedLanguage, loadedState, setTheme, setLanguage, addPreviewProfile, removePreviewProfile,
-      setInspectorSectionCollapsed, setDefaultProfileId, setLaunchMode, setAutostartMode, setCheckForUpdates,
-      setIncludePreReleases, setDockLayoutJson, saveDockLayoutProfile, deleteDockLayoutProfile,
+      setInspectorSectionCollapsed, dismissNotice, setPluginInStatusBar, setDefaultProfileId, setLaunchMode, setAutostartMode, setCheckForUpdates,
+      setIncludePreReleases, setAllowUnencrypted, setDockLayoutJson, saveDockLayoutProfile, deleteDockLayoutProfile,
     ],
   );
 

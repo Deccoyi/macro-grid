@@ -1,6 +1,8 @@
 using System.Text.Json;
 using MacroGrid.Core.Diagnostics;
+using MacroGrid.Core.Plugins.Distribution;
 using MacroGrid.Core.Plugins.Js;
+using MacroGrid.Core.Plugins.Widgets;
 using MacroGrid.Core.Variables;
 using MacroGrid.Plugin.Abstractions;
 using Microsoft.Extensions.Logging;
@@ -71,20 +73,31 @@ public sealed partial class PluginManager
         lock (_stateLock)
             _unrecognized.RemoveAll(p => p.Id == folderName);
 
-        LoadedPlugin Fail(PluginLoadStatus status, string detail, IReadOnlyList<string>? pending = null)
+        var listedAsRevoked = officialCatalog?.Revoked?.Find(manifest.Id, manifest.Version);
+
+        LoadedPlugin Fail(PluginLoadStatus status, string detail, IReadOnlyList<string>? pending = null, string? problemCode = null)
         {
             var info = new LoadedPlugin(manifest.Id, manifest.Name, manifest.Version, status, detail, false, pending);
+            if (manifest.Widgets is { Length: > 0 })
+                widgetCatalog?.Set(manifest.Id, manifest.Name, status switch
+                {
+                    PluginLoadStatus.NeedsApproval => PluginWidgetAvailability.NeedsApproval,
+                    PluginLoadStatus.Incompatible => PluginWidgetAvailability.Incompatible,
+                    _ => PluginWidgetAvailability.Disabled,
+                }, false, [], []);
+            else
+                widgetCatalog?.Remove(manifest.Id);
             // Needs approval is not a fault: the Plugins window already asks for it.
-            if (status != PluginLoadStatus.NeedsApproval)
+            if (status is not (PluginLoadStatus.NeedsApproval or PluginLoadStatus.Disabled))
                 problems?.Report(manifest.Id, manifest.Name, status == PluginLoadStatus.Incompatible ? ProblemSeverity.Warning : ProblemSeverity.Error,
-                    status switch { PluginLoadStatus.NotAllowed => ProblemCodes.NotAllowed, PluginLoadStatus.Incompatible => ProblemCodes.Incompatible, _ => ProblemCodes.LoadFailed }, detail);
+                    problemCode ?? status switch { PluginLoadStatus.NotAllowed => ProblemCodes.NotAllowed, PluginLoadStatus.Incompatible => ProblemCodes.Incompatible, _ => ProblemCodes.LoadFailed }, detail);
             lock (_stateLock)
             {
                 // A second folder with the same id must not replace the first one's entry.
                 if (_entries.TryGetValue(manifest.Id, out var existing) && !string.Equals(existing.Dir, dir, StringComparison.OrdinalIgnoreCase))
                     _unrecognized.Add(info);
                 else
-                    _entries[manifest.Id] = new Entry(dir, info);
+                    _entries[manifest.Id] = new Entry(dir, info) { ListedAsRevoked = listedAsRevoked is not null };
             }
             return info;
         }
@@ -94,6 +107,10 @@ public sealed partial class PluginManager
             logger.LogError("Plugin id clash: {Id} ({Folder})", manifest.Id, folderName);
             return Fail(PluginLoadStatus.Error, "This id is already used by another installed plugin");
         }
+
+        // Switched off by the person: nothing of the plugin runs, and its variables, actions and widgets disappear.
+        if (permissionStore.IsDisabled(manifest.Id))
+            return Fail(PluginLoadStatus.Disabled, "Switched off in the Plugins window");
 
         // Only official, signed C# plugins run; checked at every load. Nothing of the plugin has executed before this point.
         PluginTrustResult? trust = null;
@@ -109,12 +126,37 @@ public sealed partial class PluginManager
                 logger.LogWarning("C# plugin {Id} is not signed; loaded because this is a development build", SecurityEvents.ForLog(manifest.Id));
         }
 
+        // An official JavaScript plugin that was installed with a contents signature is checked again at every load: an edit
+        // in place (or a file added next to it) stops it until it is reinstalled. Other JavaScript plugins are not checked.
+        var origin = origins?.Get(manifest.Id);
+        var contentsVerified = false;
+        if (manifest.Kind == PluginKind.Js && origin is { Trust: PluginTrust.Official, ContentsSigned: true })
+        {
+            contentsVerified = _trust.VerifyStrict(dir, manifest).Allowed;
+            if (!contentsVerified)
+            {
+                logger.LogWarning(SecurityEvents.PluginFilesChanged, "Security: official plugin {Id} was not loaded: its files changed after install", SecurityEvents.ForLog(manifest.Id));
+                return Fail(PluginLoadStatus.NotAllowed, "The plugin's files changed after it was installed. Reinstall it from the Plugins window.", problemCode: ProblemCodes.FilesChanged);
+            }
+        }
+        problems?.Resolve(manifest.Id, ProblemCodes.FilesChanged);
+
+        // The official safety list only reaches what the official project vouches for: plugins installed from the official
+        // catalog, officially signed C# plugins and signed JavaScript folders. A saved list is all this reads; with none, everything loads.
+        if (listedAsRevoked is not null
+            && (origin?.Trust == PluginTrust.Official || contentsVerified || trust is { Allowed: true, Unsigned: false }))
+        {
+            logger.LogWarning(SecurityEvents.PluginRevoked, "Security: plugin {Id} {Version} was not loaded: switched off by the official plugin list",
+                SecurityEvents.ForLog(manifest.Id), SecurityEvents.ForLog(manifest.Version));
+            return Fail(PluginLoadStatus.NotAllowed, $"Switched off by the official plugin list: {listedAsRevoked.Reason}", problemCode: ProblemCodes.Revoked);
+        }
+
         var compatibility = PluginCompatibility.Check(serverVersion, manifest.MinMacroGrid, manifest.MacroGrid, manifest.SdkVersion);
         if (!compatibility.Compatible)
             return Fail(PluginLoadStatus.Incompatible, compatibility.Reason!);
 
-        var entryPath = Path.Combine(dir, manifest.Entry);
-        if (!File.Exists(entryPath))
+        var entryPath = ResolveEntryPath(dir, manifest.Entry);
+        if (entryPath is null)
             return Fail(PluginLoadStatus.Error, $"Entry file not found: {manifest.Entry}");
 
         var variableStore = new TrackingVariableStore(variables);
@@ -124,9 +166,30 @@ public sealed partial class PluginManager
             var unknown = declared.FirstOrDefault(p => !JsPermissions.IsKnown(p));
             if (unknown is not null)
                 return Fail(PluginLoadStatus.Error, $"Unknown permission '{unknown}'");
-            if (!permissionStore.IsGranted(manifest.Id, declared))
-                return Fail(PluginLoadStatus.NeedsApproval, "Needs your approval before it can run", declared);
         }
+
+        // A C# plugin is verified when it is officially signed; a JavaScript plugin never is (its widgets get the stricter limits).
+        var verified = manifest.Kind == PluginKind.Csharp && trust?.Unsigned != true;
+        var widgetCheck = PluginWidgetValidator.Validate(dir, manifest, verified);
+        foreach (var refused in widgetCheck.Problems)
+        {
+            logger.LogWarning("Plugin {Id}: widget '{Widget}' was left out: {Reason}", SecurityEvents.ForLog(manifest.Id), SecurityEvents.ForLog(refused.WidgetId), refused.Reason);
+            problems?.Report(manifest.Id, manifest.Name, ProblemSeverity.Warning, ProblemCodes.WidgetInvalid, $"Widget '{refused.WidgetId}' was left out: {refused.Reason}");
+        }
+        if (widgetCheck.Problems.Count == 0) problems?.Resolve(manifest.Id, ProblemCodes.WidgetInvalid);
+
+        // What the person approves: a JavaScript plugin's permissions plus every option a widget declares (keep loaded, storage).
+        // Both kinds of plugin wait for approval; the C# ones only when they have widgets that declare options.
+        string[] widgetKeys = [.. widgetCheck.Widgets.SelectMany(w => w.Options.Select(o => PluginWidgetOptions.ApprovalKey(w.Manifest.Id, o)))];
+        string[] required = [.. declared, .. widgetKeys];
+        if (required.Length > 0 && !permissionStore.IsGranted(manifest.Id, required))
+            return Fail(PluginLoadStatus.NeedsApproval, "Needs your approval before it can run", required);
+
+        // An approved widget option the person switched off is left out of the widget, so it runs without it.
+        var switchedOff = permissionStore.SwitchedOff(manifest.Id);
+        var widgets = widgetCheck.Widgets
+            .Select(w => w with { Options = [.. w.Options.Where(o => !switchedOff.Contains(PluginWidgetOptions.ApprovalKey(w.Manifest.Id, o), StringComparer.OrdinalIgnoreCase))] })
+            .ToList();
 
         PluginLoadContext? context = null;
         PluginHostCollector? host = null;
@@ -136,8 +199,8 @@ public sealed partial class PluginManager
         {
             if (manifest.Kind == PluginKind.Js)
             {
-                instance = new JsPlugin(manifest, entryPath, new JsPermissions(declared), variableStore, input, logger,
-                    reason => _ = Task.Run(() => DisableAsync(manifest.Id, reason)), windows: windowSource, problems: problems);
+                instance = new JsPlugin(manifest, entryPath, new JsPermissions(declared.Except(permissionStore.SwitchedOff(manifest.Id), StringComparer.OrdinalIgnoreCase)), variableStore, input, logger,
+                    reason => _ = Task.Run(() => DisableAsync(manifest.Id, reason)), windows: windowSource, problems: problems, network: new JsNetworkPolicy(ownPorts ?? []), notifications: notifications);
             }
             else
             {
@@ -148,7 +211,7 @@ public sealed partial class PluginManager
                 instance = (IPlugin)(Activator.CreateInstance(pluginType) ?? throw new InvalidOperationException("The plugin instance could not be created"));
             }
 
-            host = new PluginHostCollector(serverVersion, dir, manifest.Id, statusRegistry, logger, secretProtector);
+            host = new PluginHostCollector(serverVersion, dir, manifest.Id, statusRegistry, logger, secretProtector, widgetEvents, manifest.Name, problems);
             instance.Initialize(host);
 
             // All-or-nothing: a clash on any action type fails the whole plugin instead of half-registering it.
@@ -166,19 +229,26 @@ public sealed partial class PluginManager
             }
 
             localizer?.Register(manifest.Id, dir, manifest.DefaultLanguage);
-            problems?.Resolve(manifest.Id, ProblemCodes.NotAllowed, ProblemCodes.LoadFailed, ProblemCodes.Incompatible, ProblemCodes.SwitchedOff);
+            problems?.Resolve("macro-grid", ProblemCodes.ActionMissing);
+            problems?.Resolve(manifest.Id, ProblemCodes.NotAllowed, ProblemCodes.Revoked, ProblemCodes.LoadFailed, ProblemCodes.Incompatible, ProblemCodes.SwitchedOff);
             var treeProvider = instance as IPluginTreeProvider;
             var info = new LoadedPlugin(manifest.Id, manifest.Name, manifest.Version, PluginLoadStatus.Loaded, null,
                 host.SettingsPage is not null, HasIcon: ResolveIconPath(dir, manifest) is not null, HasTreeItems: treeProvider is not null,
-                Unsigned: trust?.Unsigned == true);
-            var running = new Running(context, instance, host, variableStore);
+                Unsigned: trust?.Unsigned == true,
+                Permissions: required.Length > 0 ? required : null,
+                SwitchedOffPermissions: required.Length > 0 ? [.. required.Where(p => switchedOff.Contains(p, StringComparer.OrdinalIgnoreCase))] : null);
+            var running = new Running(context, instance, host, variableStore) { WidgetHandler = instance as IPluginWidgetHandler };
+            if (manifest.Widgets is { Length: > 0 })
+                widgetCatalog?.Set(manifest.Id, manifest.Name, PluginWidgetAvailability.Available, verified, widgets, widgetCheck.Problems, manifest.Kind);
+            else
+                widgetCatalog?.Remove(manifest.Id);
             if (treeProvider is not null)
             {
                 var pluginId = manifest.Id;
                 running.TreeChangedHandler = parentId => TreeChanges.Record(pluginId, parentId);
                 treeProvider.TreeItemsChanged += running.TreeChangedHandler;
             }
-            var entry = new Entry(dir, info) { Running = running };
+            var entry = new Entry(dir, info) { Running = running, ListedAsRevoked = listedAsRevoked is not null };
             lock (_stateLock) _entries[manifest.Id] = entry;
             if (treeProvider is not null) TreeChanges.Record(manifest.Id, null, wholePlugin: true);
             RefreshUnsignedNotice();
@@ -205,7 +275,13 @@ public sealed partial class PluginManager
             variableStore.RemoveAll();
             context?.Unload();
 
-            return Fail(PluginLoadStatus.Error, ex.Message);
+            // The approved permissions stay listed, so the person can switch a permission back on and reload without reinstalling.
+            var failed = Fail(PluginLoadStatus.Error, ex.Message);
+            if (required.Length == 0) return failed;
+            var withPermissions = failed with { Permissions = required, SwitchedOffPermissions = [.. required.Where(p => switchedOff.Contains(p, StringComparer.OrdinalIgnoreCase))] };
+            lock (_stateLock)
+                if (_entries.TryGetValue(manifest.Id, out var failedEntry) && ReferenceEquals(failedEntry.Info, failed)) failedEntry.Info = withPermissions;
+            return withPermissions;
         }
     }
 

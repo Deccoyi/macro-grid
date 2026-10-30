@@ -9,6 +9,11 @@ namespace MacroGrid.Core.Profiles;
 /// <see cref="Sessions.AutoProfileSwitcher"/> agree on the same chain.</summary>
 public static class ProfileResolver
 {
+    /// <summary>What a device opens when it connects: the profile it was last switched to by hand, if that still exists, otherwise
+    /// <see cref="ResolveDefault"/>. An auto switch (a following device) acts on top of this after the connection is up.</summary>
+    public static Profile ResolveOnConnect(PairedDevice device, ProfileStore profiles, PreferencesStore preferences) =>
+        device.LastProfileId is { } lastId && profiles.Get(lastId) is { } last ? last : ResolveDefault(device, profiles, preferences);
+
     /// <summary>Device's own assignment, then the app-wide default, then just the first profile.</summary>
     public static Profile ResolveDefault(PairedDevice device, ProfileStore profiles, PreferencesStore preferences)
     {

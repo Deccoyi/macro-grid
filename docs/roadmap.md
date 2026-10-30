@@ -8,13 +8,13 @@ Where the project stands. The server and the SDK are at 1.0.0 and under active d
   URLs, page and profile switching, delays, volume), live variables (`system.*`), text templates with formats, toggles, sliders and knobs with a
   two-way value, dynamic rules for colors, animation, icon and text.
 - **Editor:** profiles and pages, drag-and-drop widget design with snapping and overlap checks, a style panel, custom CSS with sanitizer warnings, action
-  assignment (press, long press, double tap), variable insertion, live preview, device list, plugin list, `.msprofile` export and import, preferences (language,
+  assignment (press, long press, double tap), variable insertion, live preview, device list, plugin list, `.mgprofile` export and import, preferences (language,
   theme, default profile, start with Windows and what a start does: tray only or open the editor window), automatic profile switching rules, settings windows
   that block the editor while open, a Help window with the disclaimer, the user agreement and all bundled license texts.
 - **Docking workspace and hierarchy tree:** dockable, tabbed, floating and auto-hide tool windows, page tabs, a remembered layout
   ([design/docking-workspace.md](design/docking-workspace.md)); one tree for every profile and page, with page and profile folders,
   drag-and-drop, copy/paste and lazily loaded profiles ([design/hierarchy-tree-and-folders.md](design/hierarchy-tree-and-folders.md)).
-  The Error List has no producer yet and plugin-provided tree entries (phase 6) are not started, see "Next" below.
+  The server and plugins (through the plugin SDK's diagnostics) report to the Error List.
 - **Editor edit commands:** right-click Undo/Redo/Cut/Copy/Paste/Duplicate/Delete/Select All, an Edit menu, one shared undo/redo
   history stack, standard Windows shortcuts, and a header toolbar ([design/editor-edit-commands.md](design/editor-edit-commands.md)).
 - **Pairing and devices:** PIN and QR pairing, per-device tokens, a device list with revoke, a profile per device.
@@ -44,33 +44,47 @@ Where the project stands. The server and the SDK are at 1.0.0 and under active d
 - **Plugin SDK 0.4.0:** file, list, button and notice setting fields, an action that learns when its button is released, a settings page that runs a
   host command (used for a sound preview), and an optional plugin icon; first used by the official **SoundBoard** plugin
   ([design/sdk-0.4.0-and-soundboard.md](design/sdk-0.4.0-and-soundboard.md)).
+- **Custom plugin widgets:** a plugin ships its own widget (server, SDK, shared renderer, browser deck, phone app and editor preview all built) that
+  runs in a sandboxed Web Worker with no network access, so a slow, looping or broken widget cannot freeze the deck; a per-device live-widget
+  recommendation (not a hard limit), a crash guard, a `storage` option, per-widget option switches, plugin SVG icons, a `Color` setting kind, a
+  Toolbox search and grouping menu, and Diagnostic Messages in the editor. Example plugins Hello Gauge and Hello Weather
+  ([design/plugin-widgets.md](design/plugin-widgets.md)).
+- **The `web` widget:** an embedded page (a live chat, an alerts panel) in an iframe with popups, downloads and navigation blocked, a "Change web page" button
+  action, and on the phone a crash guard, a recommended number of live pages and a "Keep loaded" option. Still marked experimental in the editor.
+- **"Allow unencrypted connections" preference:** off makes the plain port answer only this computer. Default on; default off is planned for the next MAJOR version once the browser deck and old paired phones are settled ([design/security-hardening.md](design/security-hardening.md)).
+- **A phone-app style permission system for plugins that are not C#:** each permission is explained in plain words and approved before an install or an
+  update runs, and every installed plugin lists what it may do with a tick box per permission (and per widget option: keep loaded, data kept on the
+  device) to switch one off without uninstalling ([design/js-plugin-runtime.md](design/js-plugin-runtime.md#approval)).
+- **Security hardening:** an encrypted connection (TLS, see "Done" above), device tokens and plugin secrets encrypted at rest, pairing rate limits and
+  a security log, a security event log, dependency vulnerability scanning and an SBOM in CI, and only official signed C# plugins load
+  ([design/security-hardening.md](design/security-hardening.md)).
+- **Crash report window:** after a crash, the next start shows the report in a native window that the person saves or copies and shares; nothing is sent
+  ([design/crash-report.md](design/crash-report.md)).
 
 ## Next
 
-The order of the bigger pieces of work, and their plans, are in [plans/README.md](plans/README.md). The items below have no plan file yet.
+The order of the bigger pieces of work, and their plans, are in [plans/README.md](plans/README.md). Each item below has its own plan file.
 
-- **The "Allow unencrypted connections" preference:** now that the server and the phone app both support `wss://` (see "Done"
-  above), plain `ws://`/`http://` (port 9820) stay open unconditionally; a preference to turn them off is not built yet. Default
-  on for now (the browser deck cannot use `wss://` at all, and older paired phones have no TLS support), default off starting
-  the next MAJOR version once both are settled. See [plans/security-hardening-plan.md](plans/security-hardening-plan.md), part A.
-- **A branded installer:** done.
-- **A much faster install and update (fewer files):** done.
-- **The `plugin-html` widget:** a plugin ships its own HTML and JavaScript widget. It would run in a sandboxed iframe on the client and talk to the
-  server only through `postMessage`. It needs the widget type in the renderers, a bridge in the client and a message route on the server. Today the
-  `plugin-html` type draws a placeholder.
-- **The `web` widget** (an embedded page such as a live chat, or an alerts panel): an iframe with popups, downloads and device features blocked, plus a
-  "Change web page" button action. See [plans/web-widget-plan.md](plans/web-widget-plan.md).
+- **One design language for the whole editor.** Three designs are done on paper and share one field system (28 px controls, 12 px text, 4 px radius,
+  hairline rows, switches for on/off). The Properties panel design is mostly in the editor; what remains is a live comparison at 320 px and the default dock
+  width. The Settings window (General, Global variable list, Automation) is built from its design: grouped 188 px navigation, setting rows,
+  a variable table and rule rows, with new tokens and a few new texts; what remains is a live check of every page against a running host. The variable picker ("Add variable") overlap is fixed and its new look is in review.
+  See [ui/ui-guidelines.md](ui/ui-guidelines.md), [ui/settings-window-design.md](ui/settings-window-design.md) and [ui/variable-picker-design.md](ui/variable-picker-design.md).
+- **A live-stream chat plugin** (one plugin per streaming platform, sharing one chat view): a custom widget that shows the channel's live chat, with
+  a per-chatter menu (ban, or one of a few preset timeouts), plus actions for ad breaks, switching the stream category between saved favorites, and
+  chat modes where the platform's API offers them. Needs deciding first, per platform: how chat is received without a server of our own (a platform
+  that only delivers chat events to a public web address cannot be reached by an offline app, so it needs either a small relay we run or an
+  unofficial route; a platform with a WebSocket event stream needs neither), and how the account is linked without shipping a secret in the plugin
+  (a device-code sign-in with no client secret is the preferred shape; a platform that requires a secret for every token exchange needs each
+  person to register their own app, or a relay that holds the secret). A plugin that holds a WebSocket needs C#, because a JavaScript plugin has
+  no WebSocket and cannot listen for incoming connections; the widget itself only draws on a canvas and gets its messages from the plugin. Emote
+  images are a separate problem: a widget has no network, so only bundled assets can be drawn. The actions alone (no live chat) need no server on
+  any platform and can ship first. See [plans/live-stream-chat-plugin.md](plans/live-stream-chat-plugin.md).
 - **The rest of a store-like Discover tab.** Discover now shows a card grid and a per-plugin detail view (description, author,
-  homepage, declared permissions, install/update) built from what the catalog already carries, in a wider Plugins window. Still
-  open, and each needs a catalog field first: a real plugin icon (cards show the plugin's initial on a stable color for now),
-  screenshots, category/tags to browse by, and (later) install counts or a rating. Needs deciding what's worth adding to
+  homepage, declared permissions, install/update) built from what the catalog already carries, in a wider Plugins window. A category, search tags and a plugin icon now come from the catalog. Still
+  open, and each needs a catalog field first: screenshots, and (later) install counts or a rating. Needs deciding what's worth adding to
   `macrogrid-index.json` (author-supplied vs. computed by the release workflow) versus what stays editor-only presentation,
-  since every new field is something plugin authors have to fill in and the host has to validate and cap. It needs a plan file first (`plans/`).
-- **Plugins feeding the editor's Error List panel:** the docking workspace's Error List (`docs/design/docking-workspace.md`) is wired up but has
-  no producer yet — it only ever shows "no problems". The status bar used to be where a plugin's own errors/warnings surfaced (`StatusEntry.level`
-  `Warning`/`Error`); the Error List should take over that role instead, since it's a proper list with filtering and severity counts rather than a
-  single status-bar item. Needs an SDK addition (a way for a plugin to report a diagnostic, not just a status-bar entry) — planned for whenever the
-  SDK's next version bumps, not before.
+  since every new field is something plugin authors have to fill in and the host has to validate and cap. See [plans/discover-store-fields.md](plans/discover-store-fields.md).
 
 ## Release status
 

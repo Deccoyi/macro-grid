@@ -11,8 +11,8 @@ public sealed record FeedResponse(string? ETag, string? Body)
 }
 
 /// <summary>
-/// The GitHub releases list as a source of server updates: one HTTP call (with <c>If-None-Match</c>, so an unchanged list is a 304 that does
-/// not count against the anonymous rate limit), and pure functions that turn the JSON into <see cref="ReleaseInfo"/> and pick the update.
+/// The GitHub releases list as a source of server updates: one HTTP call (with <c>If-None-Match</c>, so an unchanged list is a 304; without a token a 304 still counts against the
+/// anonymous rate limit, which is why the checks are few and spread out), and pure functions that turn the JSON into <see cref="ReleaseInfo"/> and pick the update.
 /// Nothing here runs by itself; the host's update service decides when to call it.
 /// </summary>
 public sealed class ReleaseFeed(HttpClient http, Uri endpoint)

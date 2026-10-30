@@ -113,3 +113,55 @@ In `DynamizeModal.tsx` (condition row) and `VariablePicker.tsx`:
 - Manual: dynamize a widget's color on `system.audio.muted`, confirm the editor offers a true/false select, mute/unmute and watch the preview
   and the phone change.
 - Load an old profile with a `== true` rule and one from a plugin without type info; both must behave as before.
+
+## Unavailable variables
+
+A variable is **unavailable** when the store has no value for it: it was never set, was removed (a plugin that is switched off or removed loses its
+variables), or was set to `null`. An empty text, `0` and `false` are values, not unavailable. A rule can test this with two comparisons that take
+no value: `unavailable` and `available`. They are offered for every variable type, and the editor then hides the value input.
+
+Every older comparison keeps its result for a variable without a value (`==` false, `!=` true, ordering and `between` false); profiles in use
+depend on it. A plugin that is loaded but has lost its source should set its variables to `null` (or remove them) instead of leaving the last
+value or writing zero.
+
+The phone merges widget state, so when no rule matches any more and the binding has no default, the server sends one empty `style` to drop the
+old style. A shared case table, `tests/shared/dynamic-rule-cases.json`, is read by both the server tests and the editor preview tests.
+
+A text can also show a placeholder while a variable is unavailable: `{name|format|placeholder}`, for example `CPU {system.cpu|0|--} %`.
+`{name||n/a}` keeps the default format. The placeholder is plain text (it is never read for `{}` tokens again), may contain `|`, and is cut at
+64 characters. Without a placeholder an unavailable variable shows nothing, as before. The same syntax applies to action settings that
+contain variables.
+
+## Quick templates
+
+The rule editor has a row of three buttons that add ready-made rules for a variable of the right type, with no plugin involved: **On / Off** (a boolean:
+`== true` and `== false`), **Low / Medium / High** (a number: `>= 80`, `>= 50`, `< 50`, checked in that order; the person edits the thresholds) and
+**Grey when unavailable** (any variable: one `unavailable` rule put at the top so it wins). A button is disabled with a reason when no variable of its type
+exists. Colors come from fixed presets, a text result gets short translated words, an icon result is left empty, a fixed-choice result uses its first
+option (and "grey" is not offered for those two). A template adds ordinary rules to the list (it replaces the untouched first rule) and nothing is
+saved until Apply, so it leaves no trace in the profile other than the rules.
+
+Also: a number variable's value input is marked when the text is not a number (it can still be saved), and a fresh row on a text variable starts with
+"equal" instead of "greater than".
+
+The variables a person defines themselves (see [user-variables.md](user-variables.md)) are ordinary entries of this catalog under the category "Global Variable List", with their type, so the same inputs and templates apply.
+
+## Button variables (`self.*`)
+
+A button can change its look from its own state. Five variables are listed in the picker under "This button". They are answered by a small store placed in front of the shared one while a widget is evaluated for one device, so they never enter the shared store, the live snapshot or a plugin's view. The server still resolves text and style; the phone and the browser client receive the usual `widget.state` messages and need no change.
+
+| Name | Type | Scope | Value |
+|---|---|---|---|
+| `self.toggled` | True/False | the button, all devices | On while a toggle is on. False for a button that is not a toggle. |
+| `self.busy` | True/False | the button on one device | On while an action list started there has run for more than 150 ms. |
+| `self.pressed` | True/False | the button on one device | On while the finger is down, and for at least 150 ms. |
+| `self.lastResult` | Text: `Success`, `Failed` | the button, all devices | How the last action list ended. Empty until it has run. |
+| `self.lastError` | Text: the failure codes | the button, all devices | The code of the first failure of that run. Empty after a success. |
+
+- They work only in the button's own text and rules. An action setting or a slider's variable has no value for them, and the profile check warns (`W232`).
+- Nothing is saved: after a restart a toggle is off and there is no last result. An action the server accepted without confirmation counts as `Success`.
+- A change marks only that widget for a quick re-evaluation (`WidgetStateService.Refresh`), so a press costs a few small sends and a device that is not concerned sends nothing.
+- A name that is not one of the five is unavailable. The prefix `self.` is reserved: a plugin cannot write it and cannot be installed under that id.
+- The editor draws the resting look. When a button uses these variables, the Inspector offers a "Preview state" (Normal, Pressed, Busy, On, Failed, Success) that only changes the canvas and is not saved.
+
+The condition of an If step in an action list is the same condition tree and is edited with the same editor; see [logic-steps.md](logic-steps.md).

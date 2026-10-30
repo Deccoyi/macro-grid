@@ -11,7 +11,7 @@ export interface WebImportSite {
 /** The body of the "this profile opens web pages" dialog, shown when a profile is imported. Same look as the plugin install consent:
  * a header tile, what it means, one row per site, and a notice. Only host names are shown (the rest of an address may hold a secret). */
 export function WebImportConsent({ sites }: { sites: WebImportSite[] }) {
-  const { t } = useT();
+  const { t, tn } = useT();
   const accent = "var(--ms-accent)";
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
@@ -23,7 +23,7 @@ export function WebImportConsent({ sites }: { sites: WebImportSite[] }) {
           <Globe size={24} />
         </span>
         <div style={{ minWidth: 0 }}>
-          <div style={{ fontSize: 14, fontWeight: 600 }}>{t("importWeb.count", String(sites.length))}</div>
+          <div style={{ fontSize: 14, fontWeight: 600 }}>{tn("importWeb.count", sites.length)}</div>
           <div style={{ fontSize: 11.5, color: accent }}>{t("importWeb.kind")}</div>
         </div>
       </div>

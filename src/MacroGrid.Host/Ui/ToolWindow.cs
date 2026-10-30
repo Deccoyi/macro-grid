@@ -22,7 +22,10 @@ internal sealed class ToolWindow : Form
         Text = title;
         Width = width;
         Height = height;
-        MinimumSize = new Size(480, 360);
+        // The Preferences page switches its side list to a drop-down below 720 px wide, so the window never gets that narrow.
+        MinimumSize = url.Contains("window=preferences")
+            ? new Size(LogicalToDeviceUnits(760), LogicalToDeviceUnits(520))
+            : new Size(480, 360);
         StartPosition = FormStartPosition.CenterScreen;
         Icon = Icon.ExtractAssociatedIcon(Application.ExecutablePath);
         // A plugin's settings window is titled with the plugin's name, which the page does not know.

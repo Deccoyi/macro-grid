@@ -1,6 +1,7 @@
 using MacroGrid.Core.Devices;
 using MacroGrid.Core.Diagnostics;
 using MacroGrid.Core.Plugins;
+using MacroGrid.Core.Preferences;
 using MacroGrid.Core.Profiles;
 using MacroGrid.Core.Security;
 using MacroGrid.Core.Sessions;
@@ -15,11 +16,15 @@ namespace MacroGrid.Host;
 /// <summary>Composition root of the embedded server: services, middleware, the WebSocket endpoint and the editor API.</summary>
 internal static class ServerApp
 {
-    public const int Port = 9820;
+    public static readonly int Port =
+#if DEBUG
+        int.TryParse(Environment.GetEnvironmentVariable("MACROGRID_PORT"), out var devPort) ? devPort :
+#endif
+        MacroGrid.Core.ServerPorts.Default;
 
     /// <summary><c>wss://</c>/<c>https://</c>, next to the plain <see cref="Port"/>. A Kestrel listener is either plain or
     /// TLS, not both, so a second port is the only way to add TLS without breaking clients that only speak plain.</summary>
-    public const int TlsPort = 9821;
+    public static readonly int TlsPort = Port + 1;
 
     public static WebApplication Build(string[] args, IUiDialogService dialogs, IUiWindowService windows)
     {
@@ -43,14 +48,16 @@ internal static class ServerApp
         });
 
         builder.Logging.ClearProviders();
+#if DEBUG
         builder.Logging.AddDebug();
+#endif
         builder.Logging.AddProvider(new FileLoggerProvider(Path.Combine(dataDir, "logs")));
 
         builder.Services
             .AddSingleton(certificates)
             .AddHostStores(dataDir)
             .AddBuiltInActions(dialogs, windows)
-            .AddVariablesAndStatus()
+            .AddVariablesAndStatus(dataDir)
             .AddPlugins(dataDir)
             .AddPluginDistribution(dataDir)
             .AddClientSessions(dataDir)
@@ -67,7 +74,25 @@ internal static class ServerApp
             app.Services.GetRequiredService<ILoggerFactory>().CreateLogger("MacroGrid.Security").LogWarning(SecurityEvents.DeviceTokenUnreadable,
                 "Security: {Count} paired device(s) dropped because their token cannot be decrypted by this Windows user on this PC; they have to pair again", deviceStore.UnreadableOnLoad);
 
-        app.UseWebSockets(new WebSocketOptions { KeepAliveInterval = TimeSpan.FromSeconds(15) });
+        // "Allow unencrypted connections" off: the plain port answers only this computer (PlainConnectionPolicy).
+        var preferences = app.Services.GetRequiredService<PreferencesStore>();
+        var refusedPlain = 0;
+        app.Use(async (ctx, next) =>
+        {
+            if (!PlainConnectionPolicy.IsAllowed(preferences.Get().AllowUnencrypted, ctx.Connection.LocalPort, Port, ctx.Connection.RemoteIpAddress))
+            {
+                if (Interlocked.Exchange(ref refusedPlain, 1) == 0)
+                    app.Services.GetRequiredService<ILoggerFactory>().CreateLogger("MacroGrid.Security").LogInformation(
+                        "Security: a connection on the unencrypted port was refused because unencrypted connections are switched off (logged once per start)");
+                ctx.Response.StatusCode = StatusCodes.Status403Forbidden;
+                await ctx.Response.WriteAsync("Unencrypted connections are switched off. Use the encrypted port.");
+                return;
+            }
+            await next();
+        });
+
+        // The timeout makes the server drop a phone whose connection died silently (screen locked, out of range), which ends its session and releases what it held.
+        app.UseWebSockets(new WebSocketOptions { KeepAliveInterval = TimeSpan.FromSeconds(15), KeepAliveTimeout = TimeSpan.FromSeconds(30) });
         app.Map("/ws", async (HttpContext http, ClientHub hub) =>
         {
             if (!http.WebSockets.IsWebSocketRequest)
@@ -178,10 +203,15 @@ internal static class ServerApp
         app.MapGroup("/api")
             .MapProfileApi()
             .MapAppApi()
+            .MapLanguageApi()
+            .MapBackupApi()
             .MapCatalogApi()
+            .MapAutomationApi()
             .MapPluginApi()
+            .MapPluginWidgetApi()
             .MapPluginCatalogApi()
             .MapProblemApi()
+            .MapDiagnosticsApi()
             .MapWindowApi()
             .MapDeviceApi()
             .MapUpdateApi();
