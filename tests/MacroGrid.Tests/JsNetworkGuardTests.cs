@@ -178,6 +178,23 @@ public sealed class JsNetworkGuardTests : IDisposable
     }
 
     [Fact]
+    public void A_request_to_an_address_that_was_not_declared_is_a_catchable_error_with_one_problem_line()
+    {
+        var port = FreePort();
+        var hits = 0;
+        using var listener = Serve(port, _ => Interlocked.Increment(ref hits));
+
+        Start($"try {{ host.http.get('http://localhost:{port}/x'); }} catch (e) {{ host.variables.set('t.err', e.message); }} host.variables.set('t.after', 'ran');",
+            ["variables"], JsNetworkPolicy.None);
+
+        Assert.Contains("has not been granted", (string)_variables.Get("t.err")!);
+        Assert.Equal("ran", _variables.Get("t.after"));
+        Assert.Equal(0, hits);
+        Assert.Single(_problems.Snapshot(), p => p.Code == ProblemCodes.NetworkRefused);
+        Assert.DoesNotContain(_problems.Snapshot(), p => p.Code == ProblemCodes.LoadFailed);
+    }
+
+    [Fact]
     public void The_same_port_is_fine_when_it_is_not_one_of_the_servers()
     {
         var port = FreePort();

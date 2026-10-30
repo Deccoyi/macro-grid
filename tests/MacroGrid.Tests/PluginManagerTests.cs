@@ -307,6 +307,25 @@ public sealed class PluginManagerTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task A_plugin_that_fails_without_a_permission_can_get_it_back_without_a_reinstall()
+    {
+        WriteJsPlugin(NewPluginFolder("js-needs"), "js-needs", ["variables"], "host.variables.set('js-needs.ran', 1);");
+        await _manager.StartAsync(CancellationToken.None);
+        await _manager.ApproveAsync("js-needs");
+
+        var off = await _manager.SetPermissionAsync("js-needs", "variables", enabled: false);
+
+        Assert.Equal(PluginLoadStatus.Error, off?.Status);
+        Assert.Equal(["variables"], off?.Permissions);
+        Assert.Equal(["variables"], off?.SwitchedOffPermissions);
+
+        var on = await _manager.SetPermissionAsync("js-needs", "variables", enabled: true);
+
+        Assert.Equal(PluginLoadStatus.Loaded, on?.Status);
+        Assert.Equal(1.0, _variables.Get("js-needs.ran"));
+    }
+
+    [Fact]
     public async Task A_permission_the_plugin_did_not_declare_cannot_be_switched()
     {
         WriteJsPlugin(NewPluginFolder("js-six"), "js-six", ["variables"], "");

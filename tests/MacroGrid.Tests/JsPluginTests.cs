@@ -240,7 +240,10 @@ public sealed class JsPluginTests : IDisposable
     {
         Start("try { host.settings.page([{ key: 'a', label: 'A', kind: 'Nope' }]); } catch (e) { host.variables.set('t.err', e.message); }");
 
-        Assert.Contains("A field of settings.page could not be read", (string)_variables.Get("t.err")!);
+        var message = (string)_variables.Get("t.err")!;
+        Assert.Contains("A field of settings.page could not be read", message);
+        Assert.Contains("the field 'a' has the unknown kind 'Nope'", message);
+        Assert.DoesNotContain("BytePositionInLine", message);
     }
 
     /// <summary>A local server that answers every request with <c>hello</c> after <paramref name="delayMs"/> ms.</summary>

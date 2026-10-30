@@ -506,6 +506,7 @@ export const tr = {
   "profile.new": "Yeni profil",
   "profile.delete": "Profili sil",
   "profile.deleteConfirm": "\"{name}\" profili silinsin mi?",
+  "profile.deleteFailed": "Profil silinmedi: önce bir geri yükleme noktası kaydedilemedi.",
   "profile.autoSwitch": "Otomatik geçiş kuralları",
   "profile.autoSwitch.hint": "Bu uygulamalardan biri öne gelince, takip eden cihazlar bu profile geçer.",
   "profile.autoSwitch.remove": "Kuralı kaldır",

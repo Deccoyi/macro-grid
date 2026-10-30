@@ -35,7 +35,10 @@ public sealed partial class JsPlugin
         if (!Uri.TryCreate(url, UriKind.Absolute, out var uri) || (uri.Scheme != Uri.UriSchemeWs && uri.Scheme != Uri.UriSchemeWss))
             throw new JsHostException("Only ws:// and wss:// addresses can be connected.");
         if (!_permissions.AllowsWs(uri))
+        {
+            ReportNetworkRefused(uri.Host, uri.Port, "the plugin has not been granted this address.");
             throw new JsHostException($"This plugin has not been granted a web socket to {uri.Host}:{uri.Port}.");
+        }
         if (uri.Scheme == Uri.UriSchemeWs && JsNetworkGuard.ScopeOf(uri.Host) == NetworkScope.Internet)
             throw new JsHostException("A web socket to the internet must use wss://.");
 

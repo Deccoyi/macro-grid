@@ -502,6 +502,7 @@ export const en: Record<DictKey, string> = {
   "profile.new": "New profile",
   "profile.delete": "Delete profile",
   "profile.deleteConfirm": "Delete profile \"{name}\"?",
+  "profile.deleteFailed": "The profile was not deleted: a restore point could not be saved first.",
   "profile.autoSwitch": "Auto-switch rules",
   "profile.autoSwitch.hint": "When one of these apps comes to the foreground, a following device switches to this profile.",
   "profile.autoSwitch.remove": "Remove rule",

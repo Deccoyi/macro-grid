@@ -374,8 +374,7 @@ export function HierarchyToolWindow() {
               label: t("profile.delete"), icon: <Trash2 size={13} />, danger: true, disabled: !isOpen || state.profiles.length <= 1,
               onSelect: async () => {
                 if (await confirmAsync(t("profile.deleteConfirm", name), { title: t("profile.delete"), danger: true })) {
-                  await state.deleteProfile(node.id);
-                  profileTree.removeProfileNode(node.id);
+                  if (await state.deleteProfile(node.id)) profileTree.removeProfileNode(node.id);
                 }
               },
             });

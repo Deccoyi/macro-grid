@@ -154,6 +154,18 @@ public sealed class PluginRevocationTests : IAsyncLifetime
     private static PluginInstallOrigin FromOfficialSigned() => FromOfficial() with { ContentsSigned = true };
 
     [Fact]
+    public async Task A_line_a_plugin_reports_while_it_loads_stays_on_the_problem_list()
+    {
+        var dir = NewJs("reporter");
+        File.WriteAllText(Path.Combine(dir, "index.js"), "host.diagnostics.report('warning', 'diag test line', 'diag-test-key');");
+
+        var installed = await _manager.InstallFromFolderAsync(dir, FromOfficial());
+
+        Assert.Equal(PluginLoadStatus.Loaded, installed.Plugin.Status);
+        Assert.Contains(_problems.Snapshot(), p => p.Code == ProblemCodes.PluginReported && p.Message == "diag test line");
+    }
+
+    [Fact]
     public async Task An_official_javascript_plugin_with_a_contents_signature_stops_when_a_file_is_edited()
     {
         var dir = NewJs("demo");
