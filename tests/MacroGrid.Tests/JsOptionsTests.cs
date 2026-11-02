@@ -68,7 +68,7 @@ public sealed class JsOptionsTests : IDisposable
         var field = ((IActionDescriptor)host.Actions.Single()).Fields.Single();
         Assert.True(field.Searchable);
         Assert.Equal("items", field.OptionsSource);
-        Assert.Equal(["mode"], field.DependsOn);
+        Assert.Equal("mode", Assert.Single(field.DependsOn!));
 
         var first = await Ask(host);
         Assert.Equal(20, first.Options.Count);
@@ -132,7 +132,7 @@ public sealed class JsOptionsTests : IDisposable
             """);
 
         var icons = (await Ask(host)).Options.Select(o => o.Icon).ToArray();
-        Assert.Equal([null, "plugin-image:t/cat.1", null, "mic", null], icons);
+        Assert.Equal(new string?[] { null, "plugin-image:t/cat.1", null, "mic", null }, icons);
     }
 
     [Fact]

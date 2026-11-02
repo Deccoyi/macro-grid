@@ -322,6 +322,7 @@ export const en: Record<DictKey, string> = {
   "plugins.permission.http.internet": "Send web requests to {target} on the internet (it can send data out of your network)",
   "plugins.permission.ws.local": "Keep a live connection open to {target} on this computer",
   "plugins.permission.ws.lan": "Keep a live connection open to {target} on your local network",
+  "plugins.permission.wsLarge": "Receives large messages from a local app",
   "plugins.permission.ws.internet": "Keep a live connection open to {target} on the internet (it can send data out of your network)",
   "plugins.permission.widget.keepLoaded": "One of its widgets keeps running in the background when you leave its page",
   "plugins.permission.widget.storage": "One of its widgets keeps a small amount of its own data on your devices",

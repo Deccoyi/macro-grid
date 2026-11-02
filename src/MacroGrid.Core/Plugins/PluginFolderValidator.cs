@@ -61,7 +61,7 @@ public static class PluginFolderValidator
 
         CheckCompatibility(manifest, macroGridVersion, Error, Warn);
         CheckEntry(dir, manifest, Error);
-        if (manifest.Kind == PluginKind.Js) CheckPermissions(manifest, Error, Warn);
+        if (manifest.Kind == PluginKind.Js) { CheckPermissions(manifest, Error, Warn); CheckLimits(manifest, Error, Warn); }
         CheckWidgets(dir, manifest, Error);
         CheckIcon(dir, manifest, Warn);
         CheckCatalogFields(manifest, Warn);
@@ -116,6 +116,15 @@ public static class PluginFolderValidator
             if (permission.Contains(':') && int.TryParse(permission[(colon + 1)..], out var port) && port is < 1 or > 65535)
                 error($"The permission '{permission}' has a port outside 1-65535");
         }
+    }
+
+    private static void CheckLimits(PluginManifest manifest, Action<string> error, Action<string> warn)
+    {
+        if (manifest.Limits?.WsMessageKB is not { } kb) return;
+        if (!JsWsLimits.InRange(kb))
+            error($"limits.wsMessageKB must be {JsWsLimits.MinKB} to {JsWsLimits.MaxKB}, not {kb}");
+        else if (kb > JsWsLimits.MinKB && !JsWsLimits.HasLoopbackPermission(manifest.Permissions))
+            warn("limits.wsMessageKB only applies to a ws: permission for localhost or 127.0.0.1; every other address keeps 64 KB");
     }
 
     private static void CheckWidgets(string dir, PluginManifest manifest, Action<string> error)

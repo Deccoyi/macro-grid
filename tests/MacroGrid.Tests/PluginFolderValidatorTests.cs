@@ -37,6 +37,28 @@ public sealed class PluginFolderValidatorTests : IDisposable
         Assert.Equal("demo.one", report.Manifest?.Id);
     }
 
+    [Theory]
+    [InlineData(63, true)]
+    [InlineData(1025, true)]
+    [InlineData(64, false)]
+    [InlineData(1024, false)]
+    public void The_ws_message_limit_must_be_64_to_1024(int kb, bool error)
+    {
+        var report = Check(Folder(Manifest(extra: "\"minMacroGrid\": \"1.0.0\", \"permissions\": [\"ws:localhost:9000\"], \"limits\": { \"wsMessageKB\": " + kb + " }")));
+
+        Assert.Equal(error, report.HasErrors);
+        Assert.Equal(kb, report.Manifest?.Limits?.WsMessageKB);
+    }
+
+    [Fact]
+    public void A_larger_ws_message_limit_without_a_local_ws_permission_is_a_warning()
+    {
+        var report = Check(Folder(Manifest(extra: "\"minMacroGrid\": \"1.0.0\", \"permissions\": [\"ws:example.com:443\"], \"limits\": { \"wsMessageKB\": 256 }")));
+
+        Assert.False(report.HasErrors);
+        Assert.Contains(report.Findings, f => f.Message.Contains("wsMessageKB"));
+    }
+
     [Fact]
     public void A_missing_folder_is_an_error()
     {
