@@ -160,8 +160,7 @@ export function EditorCanvas({ page, selectedIds, onSelect, onToggleSelect, onRe
                 liveText={renderPreviewText(evaluateWidgetDynamicText(widget, widgetVariables), widgetVariables)}
                 liveStyle={evaluateWidgetDynamicStyle(widget, widgetVariables)}
                 haptics={false}
-                // The real page, as the phone will show it; the frame ignores the pointer so the widget can still be selected and dragged.
-                webInteractive={false}
+                removedText={t("widget.web.removed")}
                 style={{ pointerEvents: "none", opacity: isDraggingThis || isSwapTarget ? 0.55 : 1 }}
               />
               <div

@@ -62,8 +62,6 @@ internal static class ServiceRegistration
         services.AddActionHandler<TypeTextAction>();
         services.AddActionHandler<PageAction>();
         services.AddActionHandler<ProfileAction>();
-        services.AddSingleton<WebViewState>();
-        services.AddActionHandler<WebAction>();
         services.AddActionHandler<OpenAction>();
         services.AddActionHandler<OpenUrlAction>();
         services.AddActionHandler<DelayAction>();

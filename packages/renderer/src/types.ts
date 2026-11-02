@@ -4,6 +4,7 @@
  * Keep this in sync by hand for now; a generated-types step can replace it later.
  */
 
+/** "web" is gone (no longer creatable); profiles that still hold one draw it as unavailable. */
 export type WidgetType = "button" | "toggle" | "slider" | "knob" | "label" | "image" | "web" | "plugin-html" | "plugin-widget";
 
 export type Align = "left" | "center" | "right";
@@ -158,10 +159,6 @@ export interface WidgetState {
   active?: boolean;
   /** From a dynamized property (see DynamicBinding server-side): property name to resolved value ("animation" is one of WidgetAnimation, "icon" is an image URL or an empty string for no icon, the rest are CSS colors). */
   style?: Partial<Record<"background" | "foreground" | "borderColor" | "animation" | "icon", string>>;
-  /** A `web` widget: the address this device shows instead of the profile's (set by a button); an empty string goes back to the profile's. */
-  url?: string;
-  /** A `web` widget: a higher number than before loads the page again. */
-  reload?: number;
   /** The variables this widget uses that have no value now (plugin off, removed, disconnected). An empty list means they are all available again; absent means no change. */
   unavailable?: string[];
 }

@@ -4,8 +4,8 @@ export interface PlaceholderContentProps {
 
 /**
  * Stand-in for widget types whose real content is rendered above the shared renderer
- * (a "web" widget's iframe/native WebView overlay, a "plugin-html" widget's sandboxed iframe).
- * Keeps the grid cell visible and correctly sized while that layer isn't wired up yet.
+ * (a "plugin-html" widget's sandboxed iframe) and for a removed "web" widget.
+ * Keeps the grid cell visible and correctly sized.
  */
 export function PlaceholderContent({ label }: PlaceholderContentProps) {
   return (

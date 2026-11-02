@@ -125,4 +125,12 @@ describe("WidgetView", () => {
     expect(styleTags).not.toContain("999px");
     expect(styleTags).toContain("background: gold");
   });
+
+  it("draws a removed web widget as unavailable text and never loads its address", () => {
+    render(<WidgetView widget={button({ type: "web", props: { url: "https://example.org/" } })} removedText="Web widget removed" />);
+
+    const host = document.querySelector("[data-ms-widget-host]") as HTMLElement;
+    expect(host.shadowRoot!.textContent).toContain("Web widget removed");
+    expect(host.shadowRoot!.querySelector("iframe")).toBeNull();
+  });
 });

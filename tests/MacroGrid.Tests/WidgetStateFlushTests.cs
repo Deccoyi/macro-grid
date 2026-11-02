@@ -68,7 +68,7 @@ public sealed class WidgetStateFlushTests : IDisposable
         sessions.Add(Identified(healthy));
 
         using var service = new WidgetStateService(variables, sessions, profiles, new ToggleStateStore(), new LayoutSender(new AssetStore()),
-            new WebViewState(), NullLogger<WidgetStateService>.Instance) { SendTimeout = TimeSpan.FromMilliseconds(200) };
+            NullLogger<WidgetStateService>.Instance) { SendTimeout = TimeSpan.FromMilliseconds(200) };
 
         variables.Set("test.value", 7);
         await service.FlushAsync();
@@ -77,6 +77,28 @@ public sealed class WidgetStateFlushTests : IDisposable
         Assert.False(healthy.Aborted);
         var message = Assert.Single(healthy.Sent);
         Assert.Equal(MessageTypes.WidgetState, message.Type);
+    }
+
+    [Fact]
+    public async Task A_removed_web_widget_gets_no_live_text_or_style()
+    {
+        var profiles = new ProfileStore(_dir);
+        profiles.Save(new Profile { Id = "p", Name = "P", Pages = [new Page { Id = "a", Widgets = [new Widget { Id = "w", Type = WidgetTypes.Web, Text = "v={test.value}" }] }] });
+        var variables = new VariableStore();
+        var sessions = new SessionRegistry();
+        var socket = new TestSocket(hangs: false);
+        var session = Identified(socket);
+        session.ProfileId = "p";
+        session.PageId = "a";
+        sessions.Add(session);
+        using var service = new WidgetStateService(variables, sessions, profiles, new ToggleStateStore(), new LayoutSender(new AssetStore()),
+            NullLogger<WidgetStateService>.Instance);
+
+        variables.Set("test.value", 7);
+        await service.FlushAsync();
+        await service.SendInitialAsync(session, profiles.Get("p")!.Pages[0], default);
+
+        Assert.Empty(socket.Sent);
     }
 
     [Fact]
@@ -112,7 +134,7 @@ public sealed class WidgetStateFlushTests : IDisposable
         var socket = new TestSocket(hangs: false);
         sessions.Add(Identified(socket));
         using var service = new WidgetStateService(variables, sessions, profiles, new ToggleStateStore(), new LayoutSender(new AssetStore()),
-            new WebViewState(), NullLogger<WidgetStateService>.Instance);
+            NullLogger<WidgetStateService>.Instance);
 
         variables.Set("test.on", true);
         await service.FlushAsync();
@@ -159,7 +181,7 @@ public sealed class WidgetStateFlushTests : IDisposable
         var socket = new TestSocket(hangs: false);
         var session = Identified(socket);
         using var service = new WidgetStateService(variables, new SessionRegistry(), profiles, new ToggleStateStore(), new LayoutSender(new AssetStore()),
-            new WebViewState(), NullLogger<WidgetStateService>.Instance);
+            NullLogger<WidgetStateService>.Instance);
 
         variables.Set("test.on", true);
         await service.SendInitialAsync(session, page, default);

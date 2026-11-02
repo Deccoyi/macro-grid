@@ -10,7 +10,6 @@ A widget is one element on a page's grid. Pick the type when you add it.
 | **Image** | Show a picture from an `https://` URL or a `data:image/...` URL, with an optional caption. |
 | **Slider** | A drag control with min, max and step. |
 | **Knob** | A rotary control with the same settings as a slider. |
-| **Web** | Shows a web page, for example a chat, on your deck. It has a small flask icon in the Toolbox. |
 | **Plugin** | A widget a plugin draws, such as a gauge. It is listed under the plugin's name. See [Plugins](/guide/plugins). |
 
 ## Events
@@ -43,9 +42,9 @@ To make the control *show* a value from the PC, pick a **variable driving its po
 
 A toggle has a state (on or off) that the server tracks. Bind actions to **Turns on** and **Turns off**, for example mute and unmute. To keep its look in step with reality (for example a mic that was muted elsewhere), use a [dynamic rule](/guide/dynamic) based on a variable.
 
-## Web widgets
+## Web widgets (removed)
 
-A web widget has a **Keep loaded** switch in its properties. It keeps its page running when you go to another page of the grid, so a chat does not reload each time. A phone runs only a few at once, so the editor warns when a page has more than three web widgets.
+The web widget no longer exists and cannot be added. A profile made earlier still opens: the old widget is drawn as unavailable in the editor and as a plain label on the phone, and it does nothing. Delete it or replace it with another widget.
 
 ## Names
 

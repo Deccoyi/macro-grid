@@ -64,7 +64,7 @@ public class ActionUnavailableTests
     }
 
     [Fact]
-    public void A_deleted_page_profile_or_web_widget_target_is_an_unavailable_source()
+    public void A_deleted_page_or_profile_target_is_an_unavailable_source()
     {
         var dispatcher = new ActionDispatcher([new PageAction(), new ProfileAction()], NullLogger<ActionDispatcher>.Instance);
         var store = new VariableStore();

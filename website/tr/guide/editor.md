@@ -11,7 +11,7 @@ Düzenleyici, istediğiniz gibi düzenleyebileceğiniz panellerden oluşan bir �
 - **Menü çubuğu:** **Dosya** (profilleri paylaşma ve içe aktarma, her şeyi yedekleme ve geri yükleme), **Görünüm** (panelleri gösterme veya gizleme, yerleşimleri kaydetme), **Ayarlar** (Tercihler), **Eklentiler** (Eklentileri Yönet), **Yardım** (sürüm, hakkında ve sorumluluk reddi, lisanslar, kullanıcı sözleşmesi).
 - **Üst bölüm:** önizleme için cihaz boyutu, **Önizleme**, **Değişkenleri yenile**, **Eşleştirme** ve **Kaydet**.
 - **Hiyerarşi:** tüm profillerin ve sayfalarının tek bir ağaçta gösterildiği panel. Ekleyebilir, yeniden adlandırabilir, çoğaltabilir, silebilir ve klasörlerde gruplayabilirsiniz. Bkz. [Profiller ve sayfalar](/tr/guide/profiles).
-- **Araç Kutusu:** widget türleri. Birine tıklayarak açık sayfaya ekleyin. **Widget ekle** yanındaki menü bunları eklentiye göre gruplar ya da A'dan Z'ye tek bir liste gösterir. Web widget'larının yanında küçük bir deney şişesi simgesi vardır.
+- **Araç Kutusu:** widget türleri. Birine tıklayarak açık sayfaya ekleyin. **Widget ekle** yanındaki menü bunları eklentiye göre gruplar ya da A'dan Z'ye tek bir liste gösterir.
 - **Sayfa sekmeleri ve tuval:** açtığınız her sayfa bir sekme olur. Tuval ızgaradır: widget'ları sürükleyin, köşeden boyutlandırın, sağ tıklayarak menü açın.
 - **Özellikler:** seçtiğiniz şeyin özellikleri: bir widget, sayfa ya da profil.
 - **Tanılama Mesajları** (eski adı Hata Listesi): profiliniz ve eklentileriniz hakkında hatalar, uyarılar ve bilgiler; önem derecesine göre süzülebilir. Pencerenin alt kenarında durur, tıklayınca açılır. Bkz. [Sorun giderme](/tr/guide/troubleshooting).

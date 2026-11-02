@@ -269,7 +269,8 @@ public sealed class JsWsTests : IDisposable
             host.ws.connect('ws://localhost:{{port}}/', { onClose(info) { host.variables.set('t.err', info.error); } });
             """, ["variables", $"ws:localhost:{port}"]);
 
-        Assert.NotNull(WaitFor("t.err"));
+        // A refused connection to a closed port can take a few seconds on Windows (loopback retries, IPv6 then IPv4); the contract is an error before the 10 s connect timeout.
+        Assert.NotNull(WaitFor("t.err", 20));
     }
 
     [Fact]

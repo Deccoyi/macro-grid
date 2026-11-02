@@ -11,7 +11,7 @@ The editor is a workspace of panels you can arrange. The default layout has the 
 - **Menu bar:** **File** (share and import profiles, back up and restore everything), **View** (show or hide panels, save layouts), **Settings** (Preferences), **Plugins** (Manage Plugins), **Help** (version, about and disclaimer, licenses, user agreement).
 - **Header:** a device size for the preview, **Preview**, **Refresh variables**, **Pairing**, and **Save**.
 - **Hierarchy:** one tree with all your profiles and their pages. Add, rename, duplicate, delete and group them in folders. See [Profiles and pages](/guide/profiles).
-- **Toolbox:** the widget types. Click one to add it to the open page. The menu next to **Add widget** groups them by plugin or shows one A to Z list. Web widgets have a small flask icon, because they are experimental.
+- **Toolbox:** the widget types. Click one to add it to the open page. The menu next to **Add widget** groups them by plugin or shows one A to Z list.
 - **Page tabs and canvas:** every page you open gets a tab. The canvas is the grid: drag widgets, resize them from the corner, right-click for a menu.
 - **Properties:** the properties of what you selected: a widget, the page, or a profile.
 - **Diagnostic Messages** (formerly the Error List): errors, warnings and information about your profile and plugins, with a severity filter. It sits at the bottom edge and slides open when you click it. See [Troubleshooting](/guide/troubleshooting).

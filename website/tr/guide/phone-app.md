@@ -52,7 +52,7 @@ Bir güncelleme yalnızca kurulu uygulamayla aynı anahtarla imzalıysa kurulur.
 
 ## Gri düğmeler
 
-Şu anda çalışamayan bir eylemi olan düğme gri görünür ve küçük bir uyarı işareti taşır. Bu, eklentisi kapalı ya da kaldırılmış bir eylem, değeri olmayan okunan bir değişken ya da silinmiş bir hedef (sayfa, profil, web widget'ı ya da değişken) için olur. Düğmeye basarsanız telefon neyin eksik olduğunu söyler. Düğmeyi Düzenleyici'de düzeltin; Tanılama Mesajları'ndaki satır hangi parçanın eksik olduğunu gösterir.
+Şu anda çalışamayan bir eylemi olan düğme gri görünür ve küçük bir uyarı işareti taşır. Bu, eklentisi kapalı ya da kaldırılmış bir eylem, değeri olmayan okunan bir değişken ya da silinmiş bir hedef (sayfa, profil ya da değişken) için olur. Düğmeye basarsanız telefon neyin eksik olduğunu söyler. Düğmeyi Düzenleyici'de düzeltin; Tanılama Mesajları'ndaki satır hangi parçanın eksik olduğunu gösterir.
 
 ## Bağlantı koptuğunda
 

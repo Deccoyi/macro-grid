@@ -19,6 +19,5 @@ Düzenleyici Türkçe ve İngilizce ile gelir. Başka bir dil eklemek için Dil 
 ## Bildirimler
 
 - **Şifrelenmemiş bağlantılara izin ver** varsayılan olarak açıktır. Kapatırsanız diğer cihazlara yalnızca şifreli bağlantı noktası hizmet verir. Bkz. [Güvenlik](/tr/guide/security).
-- Bir web widget'ının adresinin altındaki ipuçları şimdilik ya da kalıcı olarak kapatılabilir. **Kapatılan uyarıları yeniden göster**, "Bir daha gösterme" ile kapatılanları geri getirir.
 
 Tercihler `%AppData%\MacroGrid\preferences.json` dosyasına kaydedilir.

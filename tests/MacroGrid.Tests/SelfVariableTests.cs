@@ -66,8 +66,7 @@ public sealed class SelfVariableTests : IDisposable
         var toggles = new ToggleStateStore();
         var results = new LastResultStore();
         var sessions = new SessionRegistry();
-        var service = new WidgetStateService(variables, sessions, profiles, toggles, new LayoutSender(new AssetStore()), new WebViewState(),
-            NullLogger<WidgetStateService>.Instance, results: results);
+        var service = new WidgetStateService(variables, sessions, profiles, toggles, new LayoutSender(new AssetStore()), NullLogger<WidgetStateService>.Instance, results: results);
         return (service, variables, toggles, results, sessions);
     }
 
@@ -360,8 +359,7 @@ public sealed class SelfVariableTests : IDisposable
         };
         var profiles = new ProfileStore(_dir);
         profiles.Save(new Profile { Id = "p", Name = "P", Pages = [new Page { Id = "a", Widgets = [button] }, new Page { Id = "b", Widgets = [] }] });
-        using var service = new WidgetStateService(new VariableStore(), new SessionRegistry(), profiles, new ToggleStateStore(), new LayoutSender(new AssetStore()), new WebViewState(),
-            NullLogger<WidgetStateService>.Instance, results: new LastResultStore());
+        using var service = new WidgetStateService(new VariableStore(), new SessionRegistry(), profiles, new ToggleStateStore(), new LayoutSender(new AssetStore()), NullLogger<WidgetStateService>.Instance, results: new LastResultStore());
         var socket = new TestSocket();
         var session = Identified(socket);
         var controller = new SessionDeviceController(session, profiles, service);
@@ -420,8 +418,7 @@ public sealed class SelfVariableTests : IDisposable
         var button = new Widget { Id = "w", Actions = { [WidgetEvents.Press] = [new ActionBinding(handler.Type, [])] } };
         var profiles = new ProfileStore(_dir);
         profiles.Save(new Profile { Id = "p", Name = "P", Pages = [new Page { Id = "a", Widgets = [button] }] });
-        using var service = new WidgetStateService(new VariableStore(), new SessionRegistry(), profiles, new ToggleStateStore(), new LayoutSender(new AssetStore()), new WebViewState(),
-            NullLogger<WidgetStateService>.Instance, results: new LastResultStore());
+        using var service = new WidgetStateService(new VariableStore(), new SessionRegistry(), profiles, new ToggleStateStore(), new LayoutSender(new AssetStore()), NullLogger<WidgetStateService>.Instance, results: new LastResultStore());
         var hub = new ClientHub(new SessionRegistry(), profiles, new ActionDispatcher([handler], NullLogger<ActionDispatcher>.Instance), new ToggleStateStore(), service,
             new LastResultStore(), null!, null!, null!, null!, NullLogger<ClientHub>.Instance, null!, null!, new ProblemList());
         var session = Identified(new TestSocket());
@@ -453,8 +450,7 @@ public sealed class SelfVariableTests : IDisposable
         var button = new Widget { Id = "w", Name = "Btn", Actions = { [WidgetEvents.Release] = [new ActionBinding(handler.Type, [])] } };
         var profiles = new ProfileStore(_dir);
         profiles.Save(new Profile { Id = "p", Name = "P", Pages = [new Page { Id = "a", Name = "Main", Widgets = [button] }] });
-        using var service = new WidgetStateService(new VariableStore(), new SessionRegistry(), profiles, new ToggleStateStore(), new LayoutSender(new AssetStore()), new WebViewState(),
-            NullLogger<WidgetStateService>.Instance, results: new LastResultStore());
+        using var service = new WidgetStateService(new VariableStore(), new SessionRegistry(), profiles, new ToggleStateStore(), new LayoutSender(new AssetStore()), NullLogger<WidgetStateService>.Instance, results: new LastResultStore());
         var problems = new ProblemList();
         var hub = new ClientHub(new SessionRegistry(), profiles, new ActionDispatcher([handler], NullLogger<ActionDispatcher>.Instance), new ToggleStateStore(), service,
             new LastResultStore(), null!, null!, null!, null!, NullLogger<ClientHub>.Instance, new PluginLocalizer(() => "en"), null!, problems);

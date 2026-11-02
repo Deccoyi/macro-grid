@@ -52,7 +52,8 @@ Yükleyici henüz kod imzalı değil. **Ek bilgi**'yi, ardından **Yine de çal�
 | `E210` | Bir düğme, eklentisi kullanılamayan bir eylemi çalıştırır. | Eklentiyi kurun ya da açın, ya da başka bir eylem seçin. |
 | `E211` | Bir eklenti widget'ı kullanılamıyor. | Eklentiyi kurun ya da açın, ya da widget'ı silin. |
 | `E212` | Bir kural sayı değişkenini metinle karşılaştırıyor; bu yüzden hiçbir zaman doğru olmaz. | Kuralda bir sayı yazın. Profil yine de kaydedilebilir. |
-| `E220` | Bir eylem artık var olmayan bir sayfaya, profile ya da web widget'ına işaret ediyor. | Var olan bir hedef seçin. |
+| `E220` | Bir eylem artık var olmayan bir sayfaya ya da profile işaret ediyor. | Var olan bir hedef seçin. |
+| `W213` | Kaldırılmış bir tür olan web widget'ı hâlâ profilde duruyor. | Silin ya da başka bir widget ile değiştirin. |
 | `W221` | Bir eylemin ayarı izin verilen bir değer değil. | Geçerli bir değer seçin. |
 | `W230` | Bir metin ya da kural, o anda hiçbir eklentinin sağlamadığı bir değişkeni kullanıyor. | Eklentinin açık olduğunu ve adın doğru yazıldığını kontrol edin. |
 | `W231` | Bir metin, kural ya da eylem, Genel Değişken Listesi'nde olmayan bir ad kullanıyor. | Tercihler'de yeniden ekleyin ya da adı değiştirin. |

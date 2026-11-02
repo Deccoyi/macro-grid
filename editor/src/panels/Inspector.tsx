@@ -12,7 +12,6 @@ import { TextFields } from "./fields/TextFields";
 import { PluginWidgetFields, PluginWidgetIdentity } from "./fields/PluginWidgetFields";
 import { NameField } from "./fields/NameField";
 import { SelfPreviewField } from "./fields/SelfPreviewField";
-import { WebFields } from "./fields/WebFields";
 
 interface InspectorProps {
   selectedWidgets: Widget[];
@@ -122,7 +121,7 @@ export function Inspector({
 
       <div className="pf-section">
         <CollapsibleSection id="typeFields" label={t("fields.content.title")}>
-          {renderTypeFields(widget, onChange, variableCatalog, page.widgets.filter((w) => w.type === "web").length)}
+          {renderTypeFields(widget, onChange, variableCatalog, t)}
         </CollapsibleSection>
       </div>
 
@@ -231,13 +230,12 @@ function PageProperties({ page, onRename, onSetGrid, onSetGap, onSetPadding, onS
   );
 }
 
-function renderTypeFields(widget: Widget, onChange: InspectorProps["onChange"], variableCatalog: VariableInfo[], webWidgetsOnPage: number) {
+function renderTypeFields(widget: Widget, onChange: InspectorProps["onChange"], variableCatalog: VariableInfo[], t: ReturnType<typeof useT>["t"]) {
   switch (widget.type) {
     case "image":
       return <ImageFields widget={widget} onChange={onChange} />;
     case "web":
-    case "plugin-html":
-      return <WebFields widget={widget} onChange={onChange} webWidgetsOnPage={webWidgetsOnPage} />;
+      return <div className="pf-note"><span>{t("widget.web.removedNote")}</span></div>;
     case "plugin-widget":
       return <PluginWidgetFields widget={widget} onChange={onChange} variableCatalog={variableCatalog} />;
     case "slider":

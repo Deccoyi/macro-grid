@@ -90,6 +90,19 @@ public sealed class BackupRestorerTests : IDisposable
     }
 
     [Fact]
+    public async Task A_restored_profile_with_a_removed_web_widget_keeps_the_widget()
+    {
+        var widget = new Widget { Id = "web1", Type = MacroGrid.Core.Model.WidgetTypes.Web, W = 2, Props = new System.Text.Json.Nodes.JsonObject { ["url"] = "https://example.org/chat" } };
+        var profile = new Profile { Id = "oldweb", Name = "OldWeb", Pages = [new Page { Id = "a", Name = "Main", Widgets = [widget] }] };
+        var result = InspectOf(new BackupContent { Profiles = [profile] });
+
+        var done = await _world.Restorer.RestoreAsync(result.Id, [Pick(result.Items.Single())]);
+
+        Assert.True(Assert.Single(done).Ok);
+        Assert.Equal(MacroGrid.Core.Model.WidgetTypes.Web, _world.Profiles.Get("oldweb")!.Pages[0].Widgets[0].Type);
+    }
+
+    [Fact]
     public async Task A_stored_profile_that_fails_validation_does_not_block_inspect_or_restore()
     {
         var broken = new Profile { Id = "bad", Name = "Bad", Pages = [new Page { Id = "a", Name = "One" }, new Page { Id = "a", Name = "Two" }] };

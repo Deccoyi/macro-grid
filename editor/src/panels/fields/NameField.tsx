@@ -27,7 +27,6 @@ export function NameField({ widget, siblings, onRename }: { widget: Widget; sibl
     <Field
       label={t("fields.name.label")}
       error={error ? t(error === "empty" ? "fields.name.empty" : "fields.name.taken") : undefined}
-      hint={widget.type === "web" && !error ? t("fields.web.nameHint") : undefined}
     >
       {/* Commit on blur or Enter, Escape restores. */}
       <div onBlur={commit} onKeyDown={(e) => { if (e.key === "Enter") (e.target as HTMLElement).blur(); if (e.key === "Escape") { setText(widget.name ?? ""); setError(null); } }}>
