@@ -3,6 +3,8 @@
 This file follows the [Keep a Changelog](https://keepachangelog.com/) format. For versioning rules, see [versioning.md](guides/versioning.md). The short, public changelog is [CHANGELOG.md](CHANGELOG.md).
 
 ## [Unreleased]
+
+## [1.6.0] - 2026-11-02
 ### Changed
 - **JavaScript plugins: `Password` settings fields are stored protected (host; no SDK or protocol change):** `JsSettingsPage.Save` writes the value of every `Password` field (also in list rows) as `mgp1:` + `IPluginSecrets.Protect`; `host.settings.get()` and the settings API get the plain value, and the editor still receives it blanked. A plain value from an older save is protected on disk at its first load. Passwords in list rows are protected and blanked for the editor too (shared walker in `PluginSettingsSecrets`); a blank row password is restored on save or backup restore only from the row at the same position whose other values are equal. A non-text `Password` value is refused (HTTP 400). A value that cannot be unprotected (another Windows user or PC) loads as an empty string and puts one Error List line, code `P104`, per field on the plugin until the settings are saved again. A plugin that needs a protected key must require the Macro Grid version that contains this change; on an older host the same field is stored as plain text. Tests: `JsSettingsPasswordTests`.
 

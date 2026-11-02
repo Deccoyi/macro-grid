@@ -63,6 +63,8 @@ OBS Studio'yu yerleşik WebSocket'i üzerinden kontrol eder (OBS 28 ya da daha y
 
 ![OBS eklentisi ayar formu](/img/obs-settings.png)
 
+Eklenti ayarlarına yazdığınız parolalar ve anahtarlar Windows hesabınıza özel olarak korunarak saklanır. Ayarları başka bir bilgisayarda veya başka bir Windows hesabında açarsanız parola orada okunamaz: yeniden girin.
+
 Deneyin: [OBS ile bir yayın deck'i](/tr/tutorials/obs-deck). Ayrıntılar: [OBS kılavuzu](https://deccoyi.github.io/macro-grid-plugin/guides/obs-plugin).
 
 ### PLC Icons {#plc-icons}

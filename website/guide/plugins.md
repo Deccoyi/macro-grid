@@ -63,6 +63,8 @@ Controls OBS Studio over its built-in WebSocket (OBS 28 or newer). It adds **22 
 
 ![The OBS plugin settings form](/img/obs-settings.png)
 
+Passwords and keys you type into a plugin's settings are stored protected for your Windows account. If you open the settings on another PC or Windows account, the password cannot be read there: enter it again.
+
 Try it: [A streaming deck with OBS](/tutorials/obs-deck). Details: [OBS guide](https://deccoyi.github.io/macro-grid-plugin/guides/obs-plugin).
 
 ### PLC Icons {#plc-icons}

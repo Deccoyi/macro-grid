@@ -3,6 +3,8 @@
 New features and fixes in Macro Grid. For technical details, see [CHANGELOG-developer.md](CHANGELOG-developer.md).
 
 ## Unreleased
+
+## 1.6.0 - 2026-11-02
 ### New
 - **Voicemod tutorial:** a new guide explains how to request your own Voicemod API key and connect it to Macro Grid.
 
