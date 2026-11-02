@@ -35,6 +35,9 @@ public sealed partial class BackupService(BackupCollector collector, string data
     private readonly Lock _lock = new();
     private readonly string _folder = Path.Combine(dataDir, FolderName);
 
+    /// <summary>Lists the files of the folder; tests replace it to make the listing fail.</summary>
+    internal Func<string, string, IEnumerable<string>> EnumerateFiles { get; set; } = Directory.EnumerateFiles;
+
     public static bool IsKnownReason(string? reason) => reason is not null && Reasons.Contains(reason);
 
     /// <summary>A full backup of what is here now, for the person to save.</summary>
@@ -79,7 +82,7 @@ public sealed partial class BackupService(BackupCollector collector, string data
     public void Prune(DateTimeOffset? now = null)
     {
         try { lock (_lock) PruneLocked(now ?? DateTimeOffset.UtcNow); }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        catch (Exception ex)
         {
             log?.LogWarning(ex, "Old restore points could not be cleaned up: {Message}", ex.Message);
         }
@@ -122,13 +125,14 @@ public sealed partial class BackupService(BackupCollector collector, string data
             var tmp = path + ".tmp";
             File.WriteAllBytes(tmp, bytes);
             File.Move(tmp, path);
-            PruneLocked(DateTimeOffset.UtcNow);
         }
         catch (Exception ex) when (ex is not BackupException)
         {
             // Anything the collecting threw (a damaged store, a plugin) refuses the action that wanted the point, like a full disk does.
             throw new BackupException("A restore point could not be made.", ex);
         }
+        // The point is written; a failed clean-up must never refuse the action that asked for it.
+        Prune();
     }
 
     private byte[] Build(string kind, string reason, BackupContent content) =>
@@ -137,30 +141,45 @@ public sealed partial class BackupService(BackupCollector collector, string data
     private sealed record Point(RestorePointInfo Info, string Path, string Hash);
 
     /// <summary>The restore points, newest first by the time inside the file (a clock set back must not reorder them by name).</summary>
-    private List<Point> Points()
+    /// <param name="damaged">Receives the files that are not a readable backup at all (a broken zip or manifest); a file that is merely locked or is another kind of backup is not one of them.</param>
+    private List<Point> Points(List<string>? damaged = null)
     {
         var found = new List<Point>();
         if (!Directory.Exists(_folder)) return found;
-        foreach (var file in Directory.EnumerateFiles(_folder, "*" + BackupFile.Extension))
+        foreach (var file in EnumerateFiles(_folder, "*" + BackupFile.Extension))
         {
             try
             {
                 using var zip = ZipFile.OpenRead(file);
                 var entry = zip.GetEntry("manifest.json");
-                if (entry is null || entry.Length > 1024 * 1024) continue;
+                if (entry is null || entry.Length > 1024 * 1024) { damaged?.Add(file); continue; }
                 using var stream = entry.Open();
                 var manifest = JsonSerializer.Deserialize<BackupManifest>(stream, Json);
-                if (manifest is null || manifest.Kind != BackupFile.KindRestorePoint) continue;
+                if (manifest is null) { damaged?.Add(file); continue; }
+                if (manifest.Kind != BackupFile.KindRestorePoint) continue;
                 found.Add(new Point(new RestorePointInfo(Path.GetFileName(file), manifest.CreatedAt, manifest.Reason, new FileInfo(file).Length), file, manifest.ContentHash));
             }
-            catch (Exception ex) when (ex is IOException or InvalidDataException or JsonException or UnauthorizedAccessException) { /* not a usable point; left alone */ }
+            catch (Exception ex) when (ex is InvalidDataException or JsonException) { damaged?.Add(file); }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { /* locked or unreadable right now; left alone */ }
         }
         return [.. found.OrderByDescending(p => p.Info.CreatedAt).ThenByDescending(p => p.Info.FileName, StringComparer.Ordinal)];
     }
 
     private void PruneLocked(DateTimeOffset now)
     {
-        var points = Points();
+        var damaged = new List<string>();
+        var points = Points(damaged);
+        // A damaged file is no restore point and cannot be ordered by its manifest, so it goes by the age of the file.
+        foreach (var file in damaged)
+        {
+            try
+            {
+                if (now - File.GetLastWriteTimeUtc(file) <= MaxAge) continue;
+                log?.LogWarning("Removing a damaged restore point file older than {Days} days: {File}", MaxAge.TotalDays, Path.GetFileName(file));
+                File.Delete(file);
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { /* left for the next run */ }
+        }
         var keep = points.Count;
         long total = points.Sum(p => p.Info.Size);
         // Beyond the newest ten, over the size cap or older than 30 days go first (oldest first), but never below the newest two.

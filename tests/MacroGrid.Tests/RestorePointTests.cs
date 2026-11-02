@@ -168,4 +168,66 @@ public sealed class RestorePointTests : IDisposable
         Assert.Equal("delete", result.Manifest.Reason);
         Assert.Contains(result.Items, i => i.Kind == RestoreItemKind.Profile && i.Name == "Kept");
     }
+
+    [Theory]
+    [InlineData(@"..\x.mgbackup")]
+    [InlineData("../preferences.json")]
+    [InlineData(@"C:\Windows\win.ini")]
+    [InlineData("")]
+    public void A_path_or_unknown_name_is_refused_with_a_BackupException(string name)
+    {
+        _world.Service.CreateRestorePoint(BackupService.ReasonImport);
+
+        Assert.Throws<BackupException>(() => _world.Service.ReadRestorePoint(name));
+    }
+
+    [Fact]
+    public void A_damaged_file_goes_by_its_own_age_and_valid_points_still_prune()
+    {
+        MakePoints(3);
+        var oldDamaged = Path.Combine(_world.RestorePointsFolder, "old.mgbackup");
+        var newDamaged = Path.Combine(_world.RestorePointsFolder, "new.mgbackup");
+        File.WriteAllText(oldDamaged, "not a zip");
+        File.WriteAllText(newDamaged, "not a zip");
+        File.SetLastWriteTimeUtc(oldDamaged, DateTime.UtcNow.AddDays(-40));
+
+        _world.Service.Prune(DateTimeOffset.UtcNow);
+
+        Assert.False(File.Exists(oldDamaged));
+        Assert.True(File.Exists(newDamaged));
+        Assert.Equal(3, _world.Service.ListRestorePoints().Count);
+
+        _world.Service.Prune(DateTimeOffset.UtcNow.AddDays(400));
+
+        Assert.Equal(BackupService.KeepAtLeast, _world.Service.ListRestorePoints().Count);
+    }
+
+    [Fact]
+    public void A_recent_damaged_file_is_left_alone()
+    {
+        _world.Service.CreateRestorePoint(BackupService.ReasonImport);
+        var damaged = Path.Combine(_world.RestorePointsFolder, "new.mgbackup");
+        File.WriteAllText(damaged, "not a zip");
+
+        _world.Service.Prune();
+
+        Assert.True(File.Exists(damaged));
+    }
+
+    [Fact]
+    public void A_failing_clean_up_does_not_refuse_the_point()
+    {
+        _world.Service.CreateRestorePoint(BackupService.ReasonImport);
+        var calls = 0;
+        // The first listing (looking for an identical newest point) works, the clean-up listing after the write fails.
+        _world.Service.EnumerateFiles = (dir, pattern) => ++calls == 1 ? Directory.EnumerateFiles(dir, pattern) : throw new IOException("listing failed");
+        _world.AddProfile("Changed");
+
+        _world.Service.CreateRestorePoint(BackupService.ReasonDelete);
+
+        Assert.Equal(2, Files().Length);
+        Assert.Equal(2, calls);
+        _world.Service.EnumerateFiles = Directory.EnumerateFiles;
+        Assert.Equal(2, _world.Service.ListRestorePoints().Count);
+    }
 }

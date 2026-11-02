@@ -9,7 +9,7 @@ internal static class BackupApi
 {
     public static RouteGroupBuilder MapBackupApi(this RouteGroupBuilder api)
     {
-        api.MapGet("/restore-points", (BackupService backups) => ApiResults.Json(backups.ListRestorePoints()));
+        api.MapGet("/restore-points", async (BackupService backups) => ApiResults.Json(await Task.Run(backups.ListRestorePoints)));
 
         // The editor asks for a point before it overwrites a profile by an import; the other reasons are made by the server itself.
         api.MapPost("/restore-points", async (HttpRequest request, BackupService backups) =>
