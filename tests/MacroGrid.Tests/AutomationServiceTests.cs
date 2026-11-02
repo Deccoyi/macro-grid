@@ -75,8 +75,7 @@ public sealed class AutomationServiceTests : IDisposable
         var dispatcher = new ActionDispatcher([_ok, _keys], NullLogger<ActionDispatcher>.Instance, _variables);
         _userVariables = new UserVariableService(_dir, _variables);
         var profiles = new ProfileStore(_dir);
-        var widgetState = new WidgetStateService(_variables, _sessions, profiles, new ToggleStateStore(), new LayoutSender(new AssetStore()), new WebViewState(),
-            NullLogger<WidgetStateService>.Instance);
+        var widgetState = new WidgetStateService(_variables, _sessions, profiles, new ToggleStateStore(), new LayoutSender(new AssetStore()), NullLogger<WidgetStateService>.Instance);
         _service = new AutomationService(_store, _variables, _sessions, dispatcher, _problems, profiles, widgetState, NullLogger<AutomationService>.Instance, _clock, _userVariables);
     }
 

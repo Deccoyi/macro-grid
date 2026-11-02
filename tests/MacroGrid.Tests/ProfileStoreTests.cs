@@ -126,4 +126,18 @@ public sealed class ProfileStoreTests : IDisposable
             Assert.Equal(names.Count, names.Distinct(StringComparer.OrdinalIgnoreCase).Count());
         }
     }
+
+    [Fact]
+    public void A_profile_with_a_removed_web_widget_loads_and_keeps_the_widget()
+    {
+        var json = """{"id":"old","name":"Old","pages":[{"id":"a","name":"Main","cols":4,"rows":3,"widgets":[{"id":"web1","type":"web","x":0,"y":0,"w":2,"h":1,"props":{"url":"https://example.org/chat"},"actions":{"press":[{"type":"core.web","settings":{"widgetId":"web1","mode":"reload"}}]}}]}]}""";
+        Directory.CreateDirectory(Path.Combine(_dir, "profiles"));
+        File.WriteAllText(Path.Combine(_dir, "profiles", "old.json"), json);
+
+        var loaded = new ProfileStore(_dir).Get("old")!;
+
+        var widget = Assert.Single(loaded.Pages[0].Widgets);
+        Assert.Equal(WidgetTypes.Web, widget.Type);
+        Assert.Equal("core.web", widget.Actions[WidgetEvents.Press][0].Type);
+    }
 }

@@ -37,7 +37,7 @@ public sealed class ActionDispatcher(IEnumerable<IActionHandler> handlers, ILogg
     }
 
     /// <summary>What the widget's action steps need and cannot get now: an action type that is not registered (its plugin is off or gone), named by its type id,
-    /// variables read by a step's text fields that have no value (and no placeholder), and, when the widget's <paramref name="profile"/> is given, a page, profile or web widget
+    /// variables read by a step's text fields that have no value (and no placeholder), and, when the widget's <paramref name="profile"/> is given, a page or profile
     /// the step points to that was deleted. Empty when the widget opts out with <c>props.hideUnavailable</c>.</summary>
     public IReadOnlyList<string> UnavailableSources(Widget widget, IVariableStore store, Profile? profile = null, Func<string, bool>? profileExists = null, Func<string, bool>? userVariableExists = null)
     {
@@ -54,7 +54,7 @@ public sealed class ActionDispatcher(IEnumerable<IActionHandler> handlers, ILogg
         return [.. names.Distinct()];
     }
 
-    /// <summary>The page, profile or web widget a step points to when it no longer exists, so a press that could only fail is marked instead.</summary>
+    /// <summary>The page or profile a step points to when it no longer exists, so a press that could only fail is marked instead.</summary>
     private static string? MissingTarget(ActionBinding binding, Profile? profile, Func<string, bool>? profileExists, Func<string, bool>? userVariableExists)
     {
         string? Id(string key) => binding.Settings[key] is JsonValue v && v.TryGetValue<string>(out var text) && text.Length > 0 ? text : null;
@@ -64,8 +64,6 @@ public sealed class ActionDispatcher(IEnumerable<IActionHandler> handlers, ILogg
                 return profile.FindPage(page) is null ? "deleted page" : null;
             case ProfileAction.TypeId when profileExists is not null && Id("profileId") is { } target:
                 return profileExists(target) ? null : "deleted profile";
-            case WebAction.TypeId when profile is not null && Id("widgetId") is { } web:
-                return profile.Pages.SelectMany(p => p.Widgets).Any(w => w.Id == web && w.Type == WidgetTypes.Web) ? null : "deleted web widget";
             case SetVariableAction.TypeId or VariableSetValueAction.TypeId or VariableAddAction.TypeId or VariableToggleAction.TypeId or VariableResetAction.TypeId
                 when userVariableExists is not null && Id("variable") is { } variable:
                 return userVariableExists(variable) ? null : "deleted variable";

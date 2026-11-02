@@ -189,6 +189,13 @@
       "five": "Page \"5\", 5: this plugin widget is not available (plugin 5). The plugin may be removed or switched off.",
       "words": "Page \"Arg1\", Arg2: this plugin widget is not available (plugin Arg3). The plugin may be removed or switched off."
     },
+    "diag.check.W213": {
+      "zero": "Page \"0\", 0: the web widget was removed from Macro Grid. It is shown as unavailable and does nothing. Delete it.",
+      "one": "Page \"1\", 1: the web widget was removed from Macro Grid. It is shown as unavailable and does nothing. Delete it.",
+      "two": "Page \"2\", 2: the web widget was removed from Macro Grid. It is shown as unavailable and does nothing. Delete it.",
+      "five": "Page \"5\", 5: the web widget was removed from Macro Grid. It is shown as unavailable and does nothing. Delete it.",
+      "words": "Page \"Arg1\", Arg2: the web widget was removed from Macro Grid. It is shown as unavailable and does nothing. Delete it."
+    },
     "diag.check.E220": {
       "zero": "Page \"0\", 0, 0 event: action 0 points to a 0 that does not exist.",
       "one": "Page \"1\", 1, 1 event: action 1 points to a 1 that does not exist.",
@@ -308,13 +315,6 @@
       "five": "Undo 5",
       "words": "Undo Arg1"
     },
-    "fields.web.manyOnPage": {
-      "zero": "This page has 0 web widgets. A phone is recommended to run 0 at most at once (a small one 1); the rest wait with a \"Tap to load\" button.",
-      "one": "This page has 1 web widgets. A phone is recommended to run 1 at most at once (a small one 1); the rest wait with a \"Tap to load\" button.",
-      "two": "This page has 2 web widgets. A phone is recommended to run 2 at most at once (a small one 1); the rest wait with a \"Tap to load\" button.",
-      "five": "This page has 5 web widgets. A phone is recommended to run 5 at most at once (a small one 1); the rest wait with a \"Tap to load\" button.",
-      "words": "This page has Arg1 web widgets. A phone is recommended to run Arg2 at most at once (a small one 1); the rest wait with a \"Tap to load\" button."
-    },
     "folder.deleteConfirm.one": {
       "zero": "This folder contains 0 item.",
       "one": "This folder contains 1 item.",
@@ -391,20 +391,6 @@
       "two": "Search 2 icons… (e.g. \"volume\", \"play\")",
       "five": "Search 5 icons… (e.g. \"volume\", \"play\")",
       "words": "Search Arg1 icons… (e.g. \"volume\", \"play\")"
-    },
-    "importWeb.count.one": {
-      "zero": "0 site",
-      "one": "1 site",
-      "two": "2 site",
-      "five": "5 site",
-      "words": "Arg1 site"
-    },
-    "importWeb.count.other": {
-      "zero": "0 sites",
-      "one": "1 sites",
-      "two": "2 sites",
-      "five": "5 sites",
-      "words": "Arg1 sites"
     },
     "layoutProfiles.deleteConfirm": {
       "zero": "Delete layout \"0\"?",
@@ -1185,6 +1171,13 @@
       "five": "\"5\" sayfası, 5: bu plugin widget'ı kullanılamıyor (plugin 5). Plugin kaldırılmış veya kapatılmış olabilir.",
       "words": "\"Arg1\" sayfası, Arg2: bu plugin widget'ı kullanılamıyor (plugin Arg3). Plugin kaldırılmış veya kapatılmış olabilir."
     },
+    "diag.check.W213": {
+      "zero": "\"0\" sayfası, 0: web widget'ı Macro Grid'den kaldırıldı. Kullanılamaz olarak gösterilir ve hiçbir şey yapmaz. Silin.",
+      "one": "\"1\" sayfası, 1: web widget'ı Macro Grid'den kaldırıldı. Kullanılamaz olarak gösterilir ve hiçbir şey yapmaz. Silin.",
+      "two": "\"2\" sayfası, 2: web widget'ı Macro Grid'den kaldırıldı. Kullanılamaz olarak gösterilir ve hiçbir şey yapmaz. Silin.",
+      "five": "\"5\" sayfası, 5: web widget'ı Macro Grid'den kaldırıldı. Kullanılamaz olarak gösterilir ve hiçbir şey yapmaz. Silin.",
+      "words": "\"Arg1\" sayfası, Arg2: web widget'ı Macro Grid'den kaldırıldı. Kullanılamaz olarak gösterilir ve hiçbir şey yapmaz. Silin."
+    },
     "diag.check.E220": {
       "zero": "\"0\" sayfası, 0, 0 olayı: 0. eylem var olmayan bir hedefe işaret ediyor (0).",
       "one": "\"1\" sayfası, 1, 1 olayı: 1. eylem var olmayan bir hedefe işaret ediyor (1).",
@@ -1304,13 +1297,6 @@
       "five": "5 işlemini geri al",
       "words": "Arg1 işlemini geri al"
     },
-    "fields.web.manyOnPage": {
-      "zero": "Bu sayfada 0 web widget'ı var. Bir telefonun aynı anda en fazla 0 tanesini çalıştırması önerilir (küçük telefonlarda 1); fazlası \"Yüklemek için dokun\" düğmesiyle bekler.",
-      "one": "Bu sayfada 1 web widget'ı var. Bir telefonun aynı anda en fazla 1 tanesini çalıştırması önerilir (küçük telefonlarda 1); fazlası \"Yüklemek için dokun\" düğmesiyle bekler.",
-      "two": "Bu sayfada 2 web widget'ı var. Bir telefonun aynı anda en fazla 2 tanesini çalıştırması önerilir (küçük telefonlarda 1); fazlası \"Yüklemek için dokun\" düğmesiyle bekler.",
-      "five": "Bu sayfada 5 web widget'ı var. Bir telefonun aynı anda en fazla 5 tanesini çalıştırması önerilir (küçük telefonlarda 1); fazlası \"Yüklemek için dokun\" düğmesiyle bekler.",
-      "words": "Bu sayfada Arg1 web widget'ı var. Bir telefonun aynı anda en fazla Arg2 tanesini çalıştırması önerilir (küçük telefonlarda 1); fazlası \"Yüklemek için dokun\" düğmesiyle bekler."
-    },
     "folder.deleteConfirm.one": {
       "zero": "Bu klasör 0 öğe içeriyor.",
       "one": "Bu klasör 1 öğe içeriyor.",
@@ -1387,20 +1373,6 @@
       "two": "2 ikon içinde ara… (İngilizce, örn. \"volume\", \"play\")",
       "five": "5 ikon içinde ara… (İngilizce, örn. \"volume\", \"play\")",
       "words": "Arg1 ikon içinde ara… (İngilizce, örn. \"volume\", \"play\")"
-    },
-    "importWeb.count.one": {
-      "zero": "0 site",
-      "one": "1 site",
-      "two": "2 site",
-      "five": "5 site",
-      "words": "Arg1 site"
-    },
-    "importWeb.count.other": {
-      "zero": "0 site",
-      "one": "1 site",
-      "two": "2 site",
-      "five": "5 site",
-      "words": "Arg1 site"
     },
     "layoutProfiles.deleteConfirm": {
       "zero": "\"0\" yerleşimi silinsin mi?",

@@ -68,7 +68,7 @@ public sealed class WidgetStateFlushTests : IDisposable
         sessions.Add(Identified(healthy));
 
         using var service = new WidgetStateService(variables, sessions, profiles, new ToggleStateStore(), new LayoutSender(new AssetStore()),
-            new WebViewState(), NullLogger<WidgetStateService>.Instance) { SendTimeout = TimeSpan.FromMilliseconds(200) };
+            NullLogger<WidgetStateService>.Instance) { SendTimeout = TimeSpan.FromMilliseconds(200) };
 
         variables.Set("test.value", 7);
         await service.FlushAsync();
@@ -112,7 +112,7 @@ public sealed class WidgetStateFlushTests : IDisposable
         var socket = new TestSocket(hangs: false);
         sessions.Add(Identified(socket));
         using var service = new WidgetStateService(variables, sessions, profiles, new ToggleStateStore(), new LayoutSender(new AssetStore()),
-            new WebViewState(), NullLogger<WidgetStateService>.Instance);
+            NullLogger<WidgetStateService>.Instance);
 
         variables.Set("test.on", true);
         await service.FlushAsync();
@@ -159,7 +159,7 @@ public sealed class WidgetStateFlushTests : IDisposable
         var socket = new TestSocket(hangs: false);
         var session = Identified(socket);
         using var service = new WidgetStateService(variables, new SessionRegistry(), profiles, new ToggleStateStore(), new LayoutSender(new AssetStore()),
-            new WebViewState(), NullLogger<WidgetStateService>.Instance);
+            NullLogger<WidgetStateService>.Instance);
 
         variables.Set("test.on", true);
         await service.SendInitialAsync(session, page, default);

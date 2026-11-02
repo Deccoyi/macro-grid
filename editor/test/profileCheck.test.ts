@@ -8,10 +8,10 @@ const action = (type: string, extra: Partial<ActionInfo> = {}): ActionInfo => ({
 const widget = (over: Partial<Widget>): Widget => ({ id: "w1", type: "button", name: "Button_1", x: 0, y: 0, w: 1, h: 1, actions: {}, ...over });
 
 const profile = (widgets: Widget[]): Profile =>
-  ({ id: "p1", name: "P", pages: [{ id: "pg1", name: "Main", cols: 4, rows: 3, widgets }, { id: "pg2", name: "Two", cols: 4, rows: 3, widgets: [widget({ id: "web1", type: "web", name: "Web_1" })] }] }) as unknown as Profile;
+  ({ id: "p1", name: "P", pages: [{ id: "pg1", name: "Main", cols: 4, rows: 3, widgets }, { id: "pg2", name: "Two", cols: 4, rows: 3, widgets: [widget({ id: "web1", type: "label", name: "Label_1" })] }] }) as unknown as Profile;
 
 const catalogs = (over: Partial<CheckCatalogs> = {}): CheckCatalogs => ({
-  actions: [action("core.page"), action("core.profile"), action("core.web"), action("a.b", { fields: [
+  actions: [action("core.page"), action("core.profile"), action("a.b", { fields: [
     { key: "mode", label: "Mode", kind: "Select", options: [{ value: "x", label: "X" }] },
     { key: "level", label: "Level", kind: "Number", min: 0, max: 10 },
     { key: "text", label: "Text", kind: "Text", allowVariables: true },
@@ -46,15 +46,18 @@ describe("checkProfile", () => {
     expect(run([widget({ type: "plugin-widget", props: { plugin: "p", widget: "w" } })], catalogs({ pluginWidgets: [{ plugin: "p", widget: "w" } as never] }))).toEqual([]);
   });
 
-  it("flags jumps to a page, profile or web widget that is missing", () => {
+  it("flags a web widget left in an old profile as removed", () => {
+    const d = run([widget({ id: "w9", type: "web" })]);
+    expect(d.map((x) => `${x.code}:${x.target?.widgetId}`)).toContain("W213:w9");
+  });
+
+  it("flags jumps to a page or profile that is missing", () => {
     const d = run([widget({ actions: { press: [
       { type: "core.page", settings: { mode: "goto", pageId: "nope" } },
       { type: "core.page", settings: { mode: "next", pageId: "nope" } },
       { type: "core.profile", settings: { profileId: "zzz" } },
-      { type: "core.web", settings: { widgetId: "w1" } },
-      { type: "core.web", settings: { widgetId: "web1" } },
     ] } })]);
-    expect(d.map((x) => `${x.code}:${x.target?.actionIndex}`)).toEqual(["E220:0", "E220:2", "E220:3"]);
+    expect(d.map((x) => `${x.code}:${x.target?.actionIndex}`)).toEqual(["E220:0", "E220:2"]);
   });
 
   it("flags invalid settings of a described action but not empty ones", () => {

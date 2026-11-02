@@ -8,8 +8,8 @@ type Translate = (key: DictKey, ...args: string[]) => string;
 
 export type RuleProblem = "name" | "time" | "condition";
 
-/** Steps that need a device to act on (they change a page, a profile or a web widget); only a rule started by a device has one. */
-const DEVICE_STEPS = new Set(["core.page", "core.profile", "core.web"]);
+/** Steps that need a device to act on (they change a page or a profile); only a rule started by a device has one. */
+const DEVICE_STEPS = new Set(["core.page", "core.profile"]);
 /** Steps that press keys by themselves; the server refuses them inside a rule. */
 const KEY_STEPS = new Set(["core.hotkey", "core.typeText"]);
 

@@ -154,4 +154,44 @@ public class LayoutSenderTests
         Assert.Equal(LayoutSendKind.Full, result.Kind);
         Assert.Equal(MessageTypes.LayoutFull, Assert.Single(socket.Sent).Type);
     }
+
+    private static Profile ProfileWithWebWidget() => new()
+    {
+        Id = "p",
+        Name = "P",
+        Pages =
+        [
+            new Page
+            {
+                Id = "a",
+                Widgets =
+                [
+                    new Widget
+                    {
+                        Id = "web1", Type = WidgetTypes.Web, Text = "Chat", Props = new System.Text.Json.Nodes.JsonObject { ["url"] = "https://example.org/chat" },
+                        Actions = { [WidgetEvents.Press] = [new ActionBinding("core.web", new System.Text.Json.Nodes.JsonObject { ["widgetId"] = "web1" })] },
+                    },
+                    new Widget { Id = "w2", Text = "two" },
+                ],
+            },
+        ],
+    };
+
+    [Fact]
+    public async Task A_removed_web_widget_reaches_a_device_as_a_label_without_address_or_actions()
+    {
+        var (session, socket) = NewSession();
+        var profile = ProfileWithWebWidget();
+
+        await new LayoutSender(new AssetStore()).SendFullAsync(session, profile, "a");
+
+        var widgets = socket.Sent[0].Data!["profile"]!["pages"]![0]!["widgets"]!.AsArray();
+        Assert.Equal(WidgetTypes.Label, widgets[0]!["type"]!.GetValue<string>());
+        Assert.Equal("Web widget removed", widgets[0]!["text"]!.GetValue<string>());
+        Assert.DoesNotContain("example.org", widgets[0]!.ToJsonString());
+        Assert.Empty(widgets[0]!["actions"]!.AsObject());
+        Assert.Equal("two", widgets[1]!["text"]!.GetValue<string>());
+        // The stored profile is untouched, so the editor still shows the widget as unavailable.
+        Assert.Equal(WidgetTypes.Web, profile.Pages[0].Widgets[0].Type);
+    }
 }

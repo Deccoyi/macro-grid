@@ -2,7 +2,6 @@ using MacroGrid.Core.Plugins.Widgets;
 using System.IO.Compression;
 using System.Text.Json;
 using MacroGrid.Core.Model;
-using MacroGrid.Core.Web;
 using MacroGrid.Protocol;
 
 namespace MacroGrid.Core.Profiles;
@@ -107,8 +106,6 @@ public static class ProfilePackage
         if (profile is null) throw new InvalidDataException("The profile is empty.");
         if (!ProfileValidator.Validate(profile, out var error))
             throw new InvalidDataException(error ?? "The profile is not valid.");
-        // A profile from someone else must not point a web widget at this PC or at a page that runs code as this app.
-        WebUrlRule.Sanitize(profile);
         // The server-made script and asset references of a plugin widget never travel in a profile; only installed plugins' code runs.
         PluginWidgetProps.Strip(profile);
         WidgetNames.Ensure(profile);

@@ -3,6 +3,8 @@
 New features and fixes in Macro Grid. For technical details, see [CHANGELOG-developer.md](CHANGELOG-developer.md).
 
 ## Unreleased
+### Changed
+- **The web widget is gone:** it can no longer be added, and the "Change web page" button action no longer exists. A profile that still has a web widget opens as before; the widget shows as unavailable and does nothing. Delete it when you like.
 
 ## 1.4.0 - 2026-10-30
 ### New

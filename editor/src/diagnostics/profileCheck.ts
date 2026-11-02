@@ -21,7 +21,6 @@ export interface CheckCatalogs {
 
 const PAGE_ACTION = "core.page";
 const PROFILE_ACTION = "core.profile";
-const WEB_ACTION = "core.web";
 const SET_VARIABLE_ACTIONS = new Set(["core.setVariable", "core.variable.set", "core.variable.add", "core.variable.toggle", "core.variable.reset"]);
 const SELF_PREFIX = "self.";
 const LOGIC_TYPES = new Set([FLOW_IF, FLOW_ELSE, FLOW_END]);
@@ -67,13 +66,12 @@ export function conditionVariables(node: ConditionNode, into: string[]) {
 
 /**
  * Looks for what is wrong inside a profile without running it: an action whose plugin is gone, a plugin widget that is not installed, a jump to a
- * page, profile or web widget that does not exist, a setting that is not valid, a variable nobody provides. Pure: the caller passes what the server
+ * page or profile that does not exist, a setting that is not valid, a variable nobody provides. Pure: the caller passes what the server
  * offers right now. `eventLabel` turns an event name into its translated text. One line per finding, with a stable id.
  */
 export function checkProfile(profile: Profile, catalogs: CheckCatalogs, eventLabel: (event: string) => string): Diagnostic[] {
   const list: Diagnostic[] = [];
   const pageIds = new Set(profile.pages.map((p) => p.id));
-  const webWidgetIds = new Set(profile.pages.flatMap((p) => p.widgets).filter((w) => w.type === "web").map((w) => w.id));
   const actionByType = new Map(catalogs.actions.map((a) => [a.type.toLowerCase(), a]));
   const known = (name: string) => catalogs.variableNames.has(name) || catalogs.liveVariableNames.has(name);
   // A "user." name that is not in the Global Variable List gets its own, more helpful message than a variable some plugin does not provide.
@@ -98,6 +96,10 @@ export function checkProfile(profile: Profile, catalogs: CheckCatalogs, eventLab
         if (!catalogs.pluginWidgets.some((w) => w.plugin === plugin && w.widget === kind)) {
           add({ id: `E211:${widget.id}`, severity: "error", code: "E211", messageKey: "diag.check.E211", messageArgs: [page.name, name, plugin || "?"], target: base });
         }
+      }
+
+      if (widget.type === "web") {
+        add({ id: `W213:${widget.id}`, severity: "warning", code: "W213", messageKey: "diag.check.W213", messageArgs: [page.name, name], target: base });
       }
 
       checkVariables(widget, page.name, name, base, known, missingVariable, noValue, add, catalogs.variableTypes);
@@ -140,7 +142,6 @@ export function checkProfile(profile: Profile, catalogs: CheckCatalogs, eventLab
             add({ id: `E220:${widget.id}:${event}:${index}:${code}`, severity: "error", code: "E220", messageKey: "diag.check.E220", messageArgs: [...args, what], target });
           if (info.type === PAGE_ACTION && (s.mode ?? "goto") === "goto" && typeof s.pageId === "string" && s.pageId && !pageIds.has(s.pageId)) missing("page", "page");
           if (info.type === PROFILE_ACTION && typeof s.profileId === "string" && s.profileId && !catalogs.profileIds.has(s.profileId)) missing("profile", "profile");
-          if (info.type === WEB_ACTION && typeof s.widgetId === "string" && s.widgetId && !webWidgetIds.has(s.widgetId)) missing("web", "web widget");
           if (SET_VARIABLE_ACTIONS.has(info.type) && typeof s.variable === "string" && s.variable && !known(s.variable)) missing("variable", "variable");
 
           for (const field of info.fields ?? []) {

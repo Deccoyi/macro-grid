@@ -10,7 +10,6 @@ import { KnobContent } from "./KnobContent";
 import { PlaceholderContent } from "./PlaceholderContent";
 import { SliderContent } from "./SliderContent";
 import { PluginWidgetContent } from "./pluginWidget/PluginWidgetContent";
-import { WebContent, type WebBlocked, type WebTexts } from "./WebContent";
 
 export interface WidgetViewProps {
   widget: Widget;
@@ -22,20 +21,8 @@ export interface WidgetViewProps {
   liveValue?: number;
   /** Resolved dynamic-style overrides (background/foreground/borderColor) from widget.state; merged on top of widget.style. */
   liveStyle?: Partial<Pick<WidgetStyle, "background" | "foreground" | "borderColor" | "icon">> & { animation?: string };
-  /** A `web` widget only: the address this device shows instead of the widget's own (set by a button; from widget.state). Empty or absent means the widget's own. */
-  webUrl?: string;
-  /** A `web` widget only: a higher number than before loads the page again. */
-  webReload?: number;
-  /** A `web` widget only: false in the editor, so the widget can still be selected and dragged over the page. Default true. */
-  webInteractive?: boolean;
-  /** A `web` widget only: false draws the host name instead of the page (not the shown page of the grid, app in the background). Default true. */
-  webLive?: boolean;
-  /** A `web` widget only: host names to refuse besides the built-in rule, for example the server's own address. */
-  webBlockedHosts?: readonly string[];
-  /** A `web` widget only: replaces the English words of the placeholder. */
-  webTexts?: Partial<WebTexts>;
-  /** A `web` widget only: draw a placeholder with a button instead of the page (the site crashed the app, or the widget waits with "Tap to load"). */
-  webBlocked?: WebBlocked;
+  /** A removed `web` widget (old profiles still hold them) draws this instead of a page. Default "Unavailable". */
+  removedText?: string;
   /** A `plugin-widget` only: false when its page is not the one shown (its worker is stopped, or paused when it keeps itself loaded). Default true. */
   pluginLive?: boolean;
   /** Variables this widget uses that have no value now (from widget.state). A non-empty list fades the widget; the editor preview passes it too. */
@@ -55,8 +42,8 @@ export interface WidgetViewProps {
   style?: CSSProperties;
 }
 
-// A label is pure display; every other type reacts to touch (even "web"/"plugin-html", which may
-// still bind a press action alongside their embedded content).
+// A label is pure display; every other type reacts to touch (even "plugin-html" and a removed "web" widget, which may
+// still bind a press action).
 const NON_INTERACTIVE_TYPES = new Set<Widget["type"]>(["label"]);
 
 /** Renders one widget: sanitizes its CSS, wires up press/long-press/double-tap, and dispatches to the right content by type. */
@@ -66,13 +53,7 @@ export function WidgetView({
   liveActive,
   liveValue,
   liveStyle,
-  webUrl,
-  webReload,
-  webInteractive,
-  webLive,
-  webBlockedHosts,
-  webTexts,
-  webBlocked,
+  removedText,
   pluginLive,
   unavailable,
   onUnavailableTap,
@@ -104,7 +85,7 @@ export function WidgetView({
 
   const faded = unavailable !== undefined && unavailable.length > 0;
   const hostStyle: CSSProperties = {
-    touchAction: interactive && widget.type !== "web" ? "none" : "auto",
+    touchAction: interactive ? "none" : "auto",
     cursor: interactive ? "pointer" : "default",
     ...style,
     ...(faded ? { opacity: Number(style?.opacity ?? 1) * UNAVAILABLE_OPACITY, ...(blocked ? { filter: "grayscale(1)" } : null) } : null),
@@ -116,22 +97,13 @@ export function WidgetView({
       customCss={customCss}
       active={liveActive}
       className={className}
-      // A web page scrolls and zooms inside its own frame: the widget's press handling must not claim its touches.
       style={hostStyle}
       onPointerDown={blocked ? () => onUnavailableTap(unavailable) : interactive ? gesture.onPointerDown : undefined}
       onPointerUp={interactive && !blocked ? gesture.onPointerUp : undefined}
       onPointerCancel={interactive && !blocked ? gesture.onPointerCancel : undefined}
     >
       {widget.type === "web" ? (
-        <WebContent
-          url={webUrl ? webUrl : typeof widget.props?.url === "string" ? widget.props.url : undefined}
-          reload={webReload}
-          interactive={webInteractive}
-          live={webLive}
-          blockedHosts={webBlockedHosts}
-          texts={webTexts}
-          blocked={webBlocked}
-        />
+        <PlaceholderContent label={removedText ?? "Unavailable"} />
       ) : widget.type === "plugin-widget" ? (
         <PluginWidgetContent widget={widget} live={pluginLive} />
       ) : (

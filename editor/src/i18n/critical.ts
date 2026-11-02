@@ -13,8 +13,6 @@ const CRITICAL_PREFIXES = [
   "plugins.uninstall",
   "plugins.discover.thirdParty.",
   "palette.unverified",
-  "importWeb.",
-  "profile.importWeb",
   "pairing.revoke",
 ] as const;
 

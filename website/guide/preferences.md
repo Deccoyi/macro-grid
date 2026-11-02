@@ -19,6 +19,5 @@ The editor ships in Turkish and English. To add another language, open **Languag
 ## Notices
 
 - **Allow unencrypted connections** is on by default. Turn it off and only the encrypted port serves other devices. See [Security](/guide/security).
-- Hints under a web widget's address can be closed for now or for good. **Show closed notices again** brings back the ones closed with "Do not show again".
 
 Preferences are saved in `%AppData%\MacroGrid\preferences.json`.
