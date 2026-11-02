@@ -3,6 +3,8 @@
 New features and fixes in Macro Grid. For technical details, see [CHANGELOG-developer.md](CHANGELOG-developer.md).
 
 ## Unreleased
+### Changed
+- **Passwords in plugin settings are now stored protected:** a password or key typed into the settings of a script plugin is no longer saved as plain text. If you open the settings on another PC or Windows account, enter it again.
 
 ## 1.5.0 - 2026-11-02
 ### New

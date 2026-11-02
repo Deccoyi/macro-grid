@@ -433,6 +433,7 @@ export const tr = {
   "errorHelp.P101": "Bir plugin engelli bir komutu yazmaya çalıştı, bu yüzden kapatıldı. Güvenmiyorsanız kapalı bırakın veya yapımcısından düzeltme isteyin.",
   "errorHelp.P102": "Bir plugin onaylanmadığı bir adrese ulaşmaya çalıştı, bu yüzden istek reddedildi. Pluginin ağ izinlerine bakın veya yapımcısına sorun.",
   "errorHelp.P103": "Bir plugin sınırlarından birine ulaştı (depolama boyutu, bildirimler veya bağlantılar), bu yüzden denediği bir şey reddedildi.",
+  "errorHelp.P104": "Bir plugin ayarında kayıtlı parola başka bir Windows kullanıcısı veya başka bir bilgisayarda kaydedildiği için burada okunamıyor. Plugin ayarlarından parolayı yeniden girin.",
   "errorHelp.P110": "Bu C# plugin'i resmi ve değiştirilmemiş olmadığı için yüklenmedi. Resmi sürümü Plugin'ler penceresinden kurun.",
   "errorHelp.P111": "Resmi plugin listesi bu sürümü güvensiz olduğu için kapattı. Plugin'i Plugin'ler penceresinden güncelleyin veya kaldırın.",
   "errorHelp.P112": "Yayıncı bu sürümü yayından kaldırdı. Çalışmaya devam eder; Plugin'ler penceresinden güncelleyin veya kaldırın.",

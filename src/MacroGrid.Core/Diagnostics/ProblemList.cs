@@ -27,6 +27,8 @@ public static class ProblemCodes
     /// <summary>A network call of a JavaScript plugin was refused by the rules (the address is not what was approved, it is Macro Grid itself, or a header is not allowed).</summary>
     public const string NetworkRefused = "P102";
     public const string LimitReached = "P103";
+    /// <summary>A password saved in a plugin's settings cannot be unprotected here (another Windows user or PC). Cleared when the settings are saved again.</summary>
+    public const string SecretUnreadable = "P104";
     /// <summary>A C# plugin was not loaded because it is not an official, unchanged plugin.</summary>
     public const string NotAllowed = "P110";
     /// <summary>A plugin could not be loaded or started.</summary>
