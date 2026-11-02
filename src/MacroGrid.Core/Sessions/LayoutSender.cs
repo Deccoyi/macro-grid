@@ -96,8 +96,8 @@ public sealed class LayoutSender(AssetStore assets, PluginWidgetCatalog? pluginW
         return node;
     }
 
-    /// <summary>The text a device draws where a removed <c>web</c> widget used to be.</summary>
-    internal const string RemovedWidgetText = "Web widget removed";
+    /// <summary>The text (in the app language) a device draws where a removed <c>web</c> widget used to be.</summary>
+    internal static string RemovedWidgetText => AppLanguage.Pick("Web widget removed", "Web widget kaldırıldı");
 
     /// <summary>The <c>web</c> widget type was removed. An old profile still holds such widgets (the editor shows them as unavailable); a device gets a plain
     /// label in their place, with no address and no actions, so no client ever loads a page and an older phone app needs no change.</summary>

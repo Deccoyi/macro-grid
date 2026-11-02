@@ -188,6 +188,8 @@ public sealed class WidgetStateService : IHostedService, IDisposable
         var profile = session.ProfileId is null ? null : _profiles.Get(session.ProfileId);
         foreach (var widget in page.Widgets)
         {
+            // A removed web widget reaches the device as a plain label with fixed text: no live state may overwrite it.
+            if (widget.Type == WidgetTypes.Web) continue;
             var scope = ScopeFor(session, widget);
             var text = DynamicText.Resolve(widget, scope);
             if (text is not null)
@@ -391,6 +393,7 @@ public sealed class WidgetStateService : IHostedService, IDisposable
 
         foreach (var widget in page.Widgets)
         {
+            if (widget.Type == WidgetTypes.Web) continue; // see SendInitialAsync
             var forced = marked.Contains(widget.Id);
             var scope = ScopeFor(session, widget);
             string? text = null;
