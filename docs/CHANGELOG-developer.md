@@ -3,6 +3,8 @@
 This file follows the [Keep a Changelog](https://keepachangelog.com/) format. For versioning rules, see [versioning.md](guides/versioning.md). The short, public changelog is [CHANGELOG.md](CHANGELOG.md).
 
 ## [Unreleased]
+### Added
+- **Restore point retention and inspect-by-name (host, editor; no SDK or protocol change):** `BackupService.Prune` also deletes restore points older than `MaxAge` (30 days, strictly older), never below the newest `KeepAtLeast` (2); it runs at server start and after each new point. New `POST /api/backup/inspect-point` `{ fileName }` returns the same `{ result }` as `/api/backup/inspect` for a name from `GET /api/restore-points`; a name outside the list is a 400. The restore step is unchanged.
 
 ## [1.4.0] - 2026-10-30
 ### Added

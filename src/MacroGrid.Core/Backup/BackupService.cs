@@ -20,6 +20,7 @@ public sealed partial class BackupService(BackupCollector collector, string data
     public const string FolderName = "restore-points";
     public const int KeepNewest = 10;
     public const int KeepAtLeast = 2;
+    public static readonly TimeSpan MaxAge = TimeSpan.FromDays(30);
     public const long MaxTotalBytes = 500L * 1024 * 1024;
 
     /// <summary>The reasons a restore point can have; the editor may ask only for <see cref="ReasonImport"/>.</summary>
@@ -73,6 +74,17 @@ public sealed partial class BackupService(BackupCollector collector, string data
         }
     }
 
+    /// <summary>Applies the retention rules (count, size, age). Runs at start and after each new point; a folder that cannot be cleaned is left as it is.</summary>
+    /// <param name="now">The time the age is measured against; tests pass their own.</param>
+    public void Prune(DateTimeOffset? now = null)
+    {
+        try { lock (_lock) PruneLocked(now ?? DateTimeOffset.UtcNow); }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            log?.LogWarning(ex, "Old restore points could not be cleaned up: {Message}", ex.Message);
+        }
+    }
+
     public IReadOnlyList<RestorePointInfo> ListRestorePoints()
     {
         lock (_lock) return [.. Points().Select(p => p.Info)];
@@ -110,7 +122,7 @@ public sealed partial class BackupService(BackupCollector collector, string data
             var tmp = path + ".tmp";
             File.WriteAllBytes(tmp, bytes);
             File.Move(tmp, path);
-            Prune();
+            PruneLocked(DateTimeOffset.UtcNow);
         }
         catch (Exception ex) when (ex is not BackupException)
         {
@@ -146,13 +158,13 @@ public sealed partial class BackupService(BackupCollector collector, string data
         return [.. found.OrderByDescending(p => p.Info.CreatedAt).ThenByDescending(p => p.Info.FileName, StringComparer.Ordinal)];
     }
 
-    private void Prune()
+    private void PruneLocked(DateTimeOffset now)
     {
         var points = Points();
         var keep = points.Count;
         long total = points.Sum(p => p.Info.Size);
-        // Older than the newest ten go first; then the oldest ones while the folder is over the size cap, but never below the newest two.
-        while (keep > KeepAtLeast && (keep > KeepNewest || total > MaxTotalBytes))
+        // Beyond the newest ten, over the size cap or older than 30 days go first (oldest first), but never below the newest two.
+        while (keep > KeepAtLeast && (keep > KeepNewest || total > MaxTotalBytes || now - points[keep - 1].Info.CreatedAt > MaxAge))
         {
             var oldest = points[keep - 1];
             try { File.Delete(oldest.Path); }

@@ -8,6 +8,7 @@ import type {
   ImportProfileResult,
   InspectBackupResult,
   RestoreItemResult,
+  RestorePointInfo,
   LanguagePackFile,
   LanguagePackInfo,
   OptionsResult,
@@ -337,6 +338,12 @@ export const api = {
 
   /** Opens a .mgbackup file through a native dialog and answers what differs from what is here; nothing changes yet. */
   inspectBackup: (): Promise<InspectBackupResult> => send("POST", "/api/backup/inspect"),
+
+  /** The automatic restore points, newest first. */
+  listRestorePoints: (): Promise<RestorePointInfo[]> => get("/api/restore-points"),
+
+  /** Answers what differs for one of the listed restore points; nothing changes yet. */
+  inspectRestorePoint: (fileName: string): Promise<InspectBackupResult> => send("POST", "/api/backup/inspect-point", { fileName }),
 
   /** Applies the chosen items of the backup that was inspected (a restore point is made first). */
   restoreBackup: (id: string, items: { kind: string; key: string }[]): Promise<RestoreItemResult[]> =>

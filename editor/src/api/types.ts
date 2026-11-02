@@ -579,6 +579,13 @@ export interface InspectBackupResult {
   };
 }
 
+export interface RestorePointInfo {
+  fileName: string;
+  createdAt: string;
+  reason: string;
+  size: number;
+}
+
 export interface RestoreItemResult {
   kind: RestoreItemKind;
   key: string;

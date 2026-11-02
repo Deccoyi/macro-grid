@@ -102,7 +102,9 @@ internal static class Program
         var updateState = server.Services.GetRequiredService<UpdateStateStore>();
         var updated = StartupPolicy.WasUpdated(args, updateState.Get().LastRunVersion, ClientHub.ServerVersion);
         // Once per new version: a restore point of the data as the older version left it, before the new one touches anything.
-        server.Services.GetRequiredService<BackupService>().TryCreateUpdatePoint(updateState.Get().LastRunVersion, ClientHub.ServerVersion);
+        var backups = server.Services.GetRequiredService<BackupService>();
+        backups.TryCreateUpdatePoint(updateState.Get().LastRunVersion, ClientHub.ServerVersion);
+        backups.Prune();
         updateState.Update(s => s with { LastRunVersion = ClientHub.ServerVersion });
         // Downloaded installers never pile up: on every start only the newest one that is still newer than this version stays.
         server.Services.GetRequiredService<UpdateInstaller>().CleanUpDownloads();

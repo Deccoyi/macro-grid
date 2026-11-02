@@ -6,6 +6,7 @@ import type { Command } from "../commands/types";
 import { alertAsync, choiceAsync, confirmAsync, confirmRichAsync, promptAsync } from "../dialogs/dialogStore";
 import { BackupContent } from "../dialogs/BackupContent";
 import { LogExportContent } from "../dialogs/LogExportContent";
+import { RestorePointList } from "../dialogs/RestorePointList";
 import { RestoreContent, restoreItemId, restoreWarningText } from "../dialogs/RestoreContent";
 import { showStatusNotice } from "../state/statusNotice";
 import { usePreferences } from "../preferences/PreferencesContext";
@@ -132,9 +133,24 @@ export function MenuBar({ profile, onImportProfile, confirmDiscardIfDirty, editC
 
   const restoreBackup = async () => {
     if (!(await confirmDiscardIfDirty())) return;
+    const source = await choiceAsync(t("restore.source.message"), [
+      { value: "file", label: t("restore.source.file"), primary: true },
+      { value: "point", label: t("restore.source.point") },
+    ], { title: t("restore.source.title") });
+    if (!source) return;
     let inspected;
     try {
-      inspected = await api.inspectBackup();
+      if (source === "file") inspected = await api.inspectBackup();
+      else {
+        const points = await api.listRestorePoints();
+        if (points.length === 0) {
+          await alertAsync(t("restore.point.none"), { title: t("restore.source.title") });
+          return;
+        }
+        const chosen = { name: points[0]?.fileName ?? null };
+        if (!(await confirmRichAsync({ title: t("restore.point.title"), content: <RestorePointList points={points} chosen={chosen} />, confirmLabel: t("restore.point.next") })) || !chosen.name) return;
+        inspected = await api.inspectRestorePoint(chosen.name);
+      }
     } catch (err) {
       await alertAsync(err instanceof Error ? err.message : String(err), { title: t("restore.inspectFailedTitle") });
       return;

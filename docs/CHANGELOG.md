@@ -3,6 +3,11 @@
 New features and fixes in Macro Grid. For technical details, see [CHANGELOG-developer.md](CHANGELOG-developer.md).
 
 ## Unreleased
+### New
+- **Restore from a restore point:** File > Restore now asks whether to restore from a file or from one of the automatic restore points, listed with date, reason and size.
+
+### Changed
+- **Old restore points are removed:** restore points older than 30 days are deleted. The newest two are always kept.
 
 ## 1.4.0 - 2026-10-30
 ### New
