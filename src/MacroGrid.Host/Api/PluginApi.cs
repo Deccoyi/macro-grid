@@ -1,6 +1,7 @@
 using MacroGrid.Host.Ui;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using MacroGrid.Core.Backup;
 using MacroGrid.Core.Plugins;
 using MacroGrid.Core.Plugins.Distribution;
 using MacroGrid.Plugin.Abstractions;
@@ -214,32 +215,19 @@ internal static class PluginApi
     }
 
     /// <summary><paramref name="values"/> (a form's current values, from a settings page or a plugin tree item) with
-    /// every top-level <see cref="SettingFieldKind.Password"/> field blanked out, so the editor never receives an
-    /// existing password back over the API — only what the person just typed. Fields nested in a
-    /// <see cref="SettingFieldKind.List"/> row are not covered; no shipped plugin nests a password there yet.</summary>
-    internal static JsonObject RedactPasswords(IReadOnlyList<SettingField> fields, JsonObject values)
-    {
-        foreach (var field in fields)
-            if (field.Kind == SettingFieldKind.Password && values.ContainsKey(field.Key))
-                values[field.Key] = "";
-        return values;
-    }
+    /// every <see cref="SettingFieldKind.Password"/> field blanked out, also inside list rows, so the editor never receives an
+    /// existing password back over the API — only what the person just typed.</summary>
+    internal static JsonObject RedactPasswords(IReadOnlyList<SettingField> fields, JsonObject values) =>
+        PluginSettingsSecrets.Blank(fields, values);
 
     /// <summary>An empty <see cref="SettingFieldKind.Password"/> field means "leave as is" (the editor never
     /// shows the real value to blank it against, see <see cref="RedactPasswords"/>), so it is restored from the
-    /// stored values (<paramref name="loadStored"/>) before the form is saved. A non-empty value is a real change
-    /// and passes through.</summary>
+    /// stored values (<paramref name="loadStored"/>) before the form is saved; a list row only from the same row
+    /// (see <see cref="PluginSettingsSecrets.RestoreBlankPasswords"/>). A non-empty value is a real change and passes through.</summary>
     internal static void RestoreUnchangedPasswords(IReadOnlyList<SettingField> fields, JsonObject values, Func<JsonObject> loadStored)
     {
-        List<SettingField>? passwordFields = null;
-        foreach (var field in fields)
-            if (field.Kind == SettingFieldKind.Password && values[field.Key] is JsonValue v && v.GetValueKind() == JsonValueKind.String && v.GetValue<string>().Length == 0)
-                (passwordFields ??= []).Add(field);
-        if (passwordFields is null) return;
-
-        var stored = loadStored();
-        foreach (var field in passwordFields)
-            values[field.Key] = stored[field.Key]?.DeepClone();
+        if (PluginSettingsSecrets.HasBlankPassword(fields, values))
+            PluginSettingsSecrets.RestoreBlankPasswords(fields, values, loadStored());
     }
 
     private sealed record SettingsCommandRequest(string? Command, JsonObject? Values);

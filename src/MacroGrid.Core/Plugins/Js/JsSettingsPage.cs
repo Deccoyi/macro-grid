@@ -1,5 +1,7 @@
+using System.Security.Cryptography;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using MacroGrid.Core.Backup;
 using MacroGrid.Plugin.Abstractions;
 
 namespace MacroGrid.Core.Plugins.Js;
@@ -34,12 +36,52 @@ internal sealed class JsSettingsPage(string dataDirectory, IReadOnlyList<Setting
             try
             {
                 if (File.Exists(_path) && JsonNode.Parse(File.ReadAllText(_path)) is JsonObject saved)
+                {
+                    MigratePlainValues(saved);
                     foreach (var (key, value) in saved) values[key] = value?.DeepClone();
+                }
             }
             catch (Exception ex) when (ex is JsonException or IOException) { /* fall back to the defaults */ }
         }
-        Transform(fields, values, Unprotect);
+        PluginSettingsSecrets.ForEachPassword(fields, values, (holder, field) =>
+        {
+            if (holder[field.Key] is JsonValue v && v.TryGetValue<string>(out var text) && text.Length > 0)
+                holder[field.Key] = Unprotect(field.Key, text);
+        });
         return values;
+    }
+
+    /// <summary>A plain value from an older save is protected and written back at the first load, so it does not stay on disk until the
+    /// next save. Best effort: when it cannot be done the file stays as it was.</summary>
+    private void MigratePlainValues(JsonObject saved)
+    {
+        try
+        {
+            if (!ProtectPasswords(saved, onlyPlain: true)) return;
+            File.WriteAllText(_path, saved.ToJsonString(new JsonSerializerOptions { WriteIndented = true }));
+        }
+        catch (Exception ex) when (ex is InvalidOperationException or CryptographicException or IOException or UnauthorizedAccessException) { }
+    }
+
+    /// <summary>Protects every non-empty password in place. A password that is not a string is refused when saving
+    /// (it would be stored unprotected) and skipped when migrating. Returns whether anything changed.</summary>
+    private bool ProtectPasswords(JsonObject values, bool onlyPlain)
+    {
+        var changed = false;
+        PluginSettingsSecrets.ForEachPassword(fields, values, (holder, field) =>
+        {
+            if (holder[field.Key] is not { } node) return;
+            if (node is not JsonValue v || !v.TryGetValue<string>(out var text))
+            {
+                if (!onlyPlain) throw new InvalidOperationException($"The setting '{field.Key}' is a password and must be text, so it was not saved.");
+                return;
+            }
+            if (text.Length == 0 || (onlyPlain && text.StartsWith(ProtectedPrefix, StringComparison.Ordinal))) return;
+            holder[field.Key] = ProtectedPrefix + (secrets?.Protect(text)
+                ?? throw new InvalidOperationException("This host cannot protect a password field, so it was not saved."));
+            changed = true;
+        });
+        return changed;
     }
 
     private string Unprotect(string key, string stored)
@@ -52,24 +94,6 @@ internal sealed class JsSettingsPage(string dataDirectory, IReadOnlyList<Setting
         return plain ?? "";
     }
 
-    /// <summary>Runs <paramref name="convert"/> on every non-empty string value of a password field, nested list rows included.</summary>
-    private static void Transform(IReadOnlyList<SettingField> fields, JsonObject values, Func<string, string, string> convert)
-    {
-        foreach (var field in fields)
-        {
-            if (field.Kind == SettingFieldKind.Password)
-            {
-                if (values[field.Key] is JsonValue v && v.TryGetValue<string>(out var text) && text.Length > 0)
-                    values[field.Key] = convert(field.Key, text);
-            }
-            else if (field.Kind == SettingFieldKind.List && field.ItemFields is { Length: > 0 } itemFields && values[field.Key] is JsonArray rows)
-            {
-                foreach (var row in rows)
-                    if (row is JsonObject rowValues) Transform(itemFields, rowValues, convert);
-            }
-        }
-    }
-
     public void Save(JsonObject values)
     {
         // Only keys the plugin declared are kept, so a caller cannot store arbitrary data in the plugin's folder.
@@ -77,8 +101,8 @@ internal sealed class JsSettingsPage(string dataDirectory, IReadOnlyList<Setting
         foreach (var field in fields)
             if (values[field.Key] is { } value) kept[field.Key] = value.DeepClone();
         // Always protect: the values come from Load (plain) or from the person, never raw from the file.
-        Transform(fields, kept, (_, plain) => ProtectedPrefix + (secrets?.Protect(plain)
-            ?? throw new InvalidOperationException("This host cannot protect a password field, so it was not saved.")));
+        try { ProtectPasswords(kept, onlyPlain: false); }
+        catch (CryptographicException) { throw new InvalidOperationException("A password could not be protected on this PC, so the settings were not saved."); }
 
         var json = kept.ToJsonString(new JsonSerializerOptions { WriteIndented = true });
         if (System.Text.Encoding.UTF8.GetByteCount(json) > MaxBytes)

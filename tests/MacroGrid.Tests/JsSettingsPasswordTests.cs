@@ -76,6 +76,46 @@ public sealed class JsSettingsPasswordTests : IDisposable
     }
 
     [Fact]
+    public void An_old_plain_value_is_protected_on_disk_at_the_first_load_including_list_rows()
+    {
+        Directory.CreateDirectory(_dir);
+        File.WriteAllText(Path.Combine(_dir, "settings.json"), $$"""{ "name": "n", "undeclared": 1, "apiKey": "{{Secret}}", "rows": [ { "token": "{{Secret}}" } ] }""");
+        var page = Page();
+
+        var loaded = page.Load();
+
+        Assert.DoesNotContain(Secret, Raw());
+        Assert.Contains("undeclared", Raw());
+        Assert.Equal(Secret, loaded["apiKey"]!.GetValue<string>());
+        Assert.Equal(Secret, loaded["rows"]![0]!["token"]!.GetValue<string>());
+        Assert.Equal(Secret, page.Load()["apiKey"]!.GetValue<string>());
+    }
+
+    [Fact]
+    public void A_password_that_is_not_text_is_refused()
+    {
+        var page = Page();
+
+        Assert.Throws<InvalidOperationException>(() => page.Save(new JsonObject { ["apiKey"] = 1234 }));
+        Assert.Throws<InvalidOperationException>(() => page.Save(new JsonObject { ["rows"] = new JsonArray(new JsonObject { ["token"] = true }) }));
+        Assert.False(File.Exists(Path.Combine(_dir, "settings.json")));
+    }
+
+    [Fact]
+    public void A_protector_failure_is_a_clean_refusal()
+    {
+        var page = new JsSettingsPage(_dir, Fields, new ThrowingSecrets());
+
+        Assert.Throws<InvalidOperationException>(() => page.Save(new JsonObject { ["apiKey"] = Secret }));
+    }
+
+    private sealed class ThrowingSecrets : IPluginSecrets
+    {
+        public string Protect(string secret) => throw new System.Security.Cryptography.CryptographicException("no");
+        public string? Unprotect(string protectedSecret) => null;
+    }
+
+    [Fact]
     public void A_value_that_cannot_be_unprotected_loads_empty_and_is_reported_without_the_value()
     {
         Page().Save(new JsonObject { ["apiKey"] = Secret });
