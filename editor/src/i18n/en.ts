@@ -430,6 +430,7 @@ export const en: Record<DictKey, string> = {
   "errorHelp.P101": "A plugin tried to type a blocked command, so it was switched off. Leave it off unless you trust it, or ask its author for a fix.",
   "errorHelp.P102": "A plugin tried to reach an address it was not approved for, so the request was refused. Check the plugin's network permissions or ask its author.",
   "errorHelp.P103": "A plugin reached one of its limits (storage size, notices or connections), so something it tried was refused.",
+  "errorHelp.P104": "A password saved in a plugin's settings was saved by another Windows user or on another PC, so it cannot be read here. Enter it again in the plugin's settings.",
   "errorHelp.P110": "This C# plugin was not loaded because it is not an official, unchanged plugin. Install the official version from the Plugins window.",
   "errorHelp.P111": "The official plugin list switched this version off because it is unsafe. Update the plugin in the Plugins window, or remove it.",
   "errorHelp.P112": "The publisher withdrew this version. It keeps running; update it or remove it in the Plugins window.",

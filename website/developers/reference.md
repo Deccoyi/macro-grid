@@ -41,6 +41,8 @@ A plugin settings page is built from fields. The kinds are `Text`, `Password`, `
 | `Duration` | A time that can be shown in milliseconds, seconds or minutes. |
 | `MultiSelect` | Several of the options, each ticked on its own. |
 
+A `Password` field is stored protected for the current Windows user, in a JavaScript plugin as well as a C# one (from the Macro Grid version that added this; see the changelog). `host.settings.get()` gives your script the plain value. The editor never shows it back, and backups leave it out. If the settings are opened by another Windows user or on another PC, the value cannot be read: it comes back empty and the Error List asks the person to enter it again. A value saved by an older version stays readable and is protected the next time the settings are saved.
+
 ## Network
 
 | What | Where |

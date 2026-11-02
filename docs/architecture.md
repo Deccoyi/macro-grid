@@ -230,7 +230,7 @@ Macro Grid is meant for a home or office network you trust. It is not hardened f
   never when the server runs as administrator, and text that looks like a harmful command switches the plugin off. An approved plugin with `input` can
   still type up to 200 characters into an ordinary program when a button is pressed: the person's approval is the real decision. A plugin can protect a
   secret value of its own (for example a password field) with `IPluginHost.Secrets` (DPAPI-backed, same trust boundary as the device tokens) in an official
-  C# plugin; a plugin author has to opt in and call it, the host does not enforce it. A JavaScript plugin's saved settings are capped at 64 KB.
+  C# plugin; a plugin author has to opt in and call it, the host does not enforce it. A JavaScript plugin's `Password` settings fields are stored protected the same way (a `mgp1:` prefix and the host's secret protector, also inside list rows): the script and the API get the plain value back, the editor never does, and a value that cannot be unprotected on another Windows user or PC loads empty with an Error List line (`P104`). A JavaScript plugin's saved settings are capped at 64 KB.
 - **Uninstalling can remove your data.** The uninstaller asks whether to also delete `%AppData%\MacroGrid` (profiles, paired devices, plugins,
   logs); default is no, and it never asks on a silent uninstall.
 - **The server checks for updates on its own, once every few hours.** This is the one connection it makes without being asked, and it is on by
