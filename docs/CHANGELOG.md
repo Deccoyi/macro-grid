@@ -6,6 +6,8 @@ New features and fixes in Macro Grid. For technical details, see [CHANGELOG-deve
 
 ## 1.6.0 - 2026-11-02
 ### New
+- **Search in long lists of plugin options:** a plugin can now show a list with a search box that loads in pages, so even a very long list stays fast.
+- **Local apps can send bigger messages to plugins:** a script plugin that talks to an app on your own PC can ask to receive larger messages. You see and approve this like any other permission.
 - **Voicemod tutorial:** a new guide explains how to request your own Voicemod API key and connect it to Macro Grid.
 
 ### Changed

@@ -85,9 +85,17 @@ The connection and the read loop run on the thread pool and each event is a job 
 next message, so a fast sender is slowed down by the network and nothing is dropped. A job that comes from a socket never has a press window, so a message cannot press
 keys. `Dispose` aborts all sockets (reload, permission switched off, fault switch-off, uninstall, revocation).
 
-Limits (`JsPluginLimits`): 2 sockets per plugin; 10 connects a minute; connect timeout 10 s; text messages only, at most 64 KB each way (a larger incoming one closes the
-socket and adds a `P103` line); 50 incoming messages a second (the read loop waits, nothing is dropped); 20 outgoing a second with at most 32 waiting (`send` throws);
+Limits (`JsPluginLimits`): 2 sockets per plugin; 10 connects a minute; connect timeout 10 s; text messages only, at most 64 KB each way, or more incoming for a local app that opted in (below); a larger incoming one closes the
+socket and adds a `P103` line; 50 incoming messages a second (the read loop waits, nothing is dropped); 20 outgoing a second with at most 32 waiting (`send` throws);
 keep-alive ping every 30 s.
+
+### Larger incoming messages
+
+`"limits": { "wsMessageKB": 64..1024 }` in `plugin.json` (`PluginManifest.Limits`) raises the incoming message limit of a socket whose host is `localhost` or `127.0.0.1` (decided per connection in `WsConnect`, `JsWsLimits.MessageBytes`; `*.localhost` and other 127.x addresses do not count, and `::1` cannot be declared because the permission pattern has no `:` in the host). The loader and `PluginFolderValidator` refuse a value outside the range; the validator warns when no loopback `ws:` permission exists. A valid opt-in above 64 adds the approval entry `limit:ws-large-messages` (`JsWsLimits.ApprovalKey`) to the plugin's required permissions, so it is listed at install and approval and can be switched off; switched off means 64 KB again. Messages over 64 KB are charged to a per-socket budget (`MaxWsLargeBytesPerSecond`, 2 MB a second); an over-budget message is read to its end and dropped without closing the socket, with one deduplicated `P103` line. The send limit stays 64 KB.
+
+## Options sources
+
+`host.options.source(id, fn)` registers `fn(query, values)` for the `optionsSource` of an action or settings field. `JsAction` and `JsSettingsPage` implement `IOptionsSearch` and post the call to the plugin thread (`JsPlugin.SearchOptionsAsync`); the answer is read and checked by `JsOptions.Read` (string types and length caps, at most 50 options, `icon` only a built-in name or the plugin's own `plugin-image:` reference, never data). The call runs the bootstrap function `__optionsSource` directly on the engine, not through `Invoke`: a throw, a promise or an unknown id becomes `{ error }` inside the script, a timeout or engine fault becomes an `error` result, and none of them counts towards the consecutive-error switch-off or adds an Error List line, because the editor asks on every keystroke. The request waits at most `CallTimeout` plus 1 s for its turn on the plugin thread. Only the kind of failure is logged, never labels or error texts. Static `options` of fields declared with `registerAction` and `settings.page` pass the same icon check. The server side (`OptionsPaging`) adds search and paging for sources without `IOptionsSearch` and the 50 option / 256 KB ceilings.
 
 ## Reporting problems
 
