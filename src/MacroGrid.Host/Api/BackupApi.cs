@@ -48,6 +48,16 @@ internal static class BackupApi
             catch (InvalidDataException ex) { return ApiResults.BadRequest(ex.Message); }
         });
 
+        // The same answer for one of the automatic restore points; the name must be one from the list.
+        api.MapPost("/backup/inspect-point", async (HttpRequest request, BackupService backups, BackupRestorer restorer) =>
+        {
+            var (valid, body) = await ApiResults.ReadJsonAsync<InspectPointRequest>(request);
+            if (!valid || body is null || string.IsNullOrEmpty(body.FileName)) return ApiResults.InvalidJson();
+            try { return ApiResults.Json(new { result = await Task.Run(() => restorer.Inspect(backups.ReadRestorePoint(body.FileName))) }); }
+            catch (BackupException ex) { return ApiResults.BadRequest(ex.Message); }
+            catch (InvalidDataException ex) { return ApiResults.BadRequest(ex.Message); }
+        });
+
         // Applies the ticked items of the backup that was inspected; a restore point is made first.
         api.MapPost("/backup/restore", async (HttpRequest request, BackupRestorer restorer) =>
         {
@@ -63,6 +73,8 @@ internal static class BackupApi
     }
 
     private sealed record RestorePointRequest(string? Reason);
+
+    private sealed record InspectPointRequest(string? FileName);
 
     private sealed record RestoreRequest(string? Id, List<RestoreRequestItem>? Items);
 }

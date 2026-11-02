@@ -3,6 +3,9 @@
 This file follows the [Keep a Changelog](https://keepachangelog.com/) format. For versioning rules, see [versioning.md](guides/versioning.md). The short, public changelog is [CHANGELOG.md](CHANGELOG.md).
 
 ## [Unreleased]
+### Added
+- **Restore point retention and inspect-by-name (host, editor; no SDK or protocol change):** `BackupService.Prune` also deletes restore points older than `MaxAge` (30 days, strictly older), never below the newest `KeepAtLeast` (2); it runs at server start and after each new point. New `POST /api/backup/inspect-point` `{ fileName }` returns the same `{ result }` as `/api/backup/inspect` for a name from `GET /api/restore-points`; a name outside the list is a 400. The restore step is unchanged.
+
 ### Removed
 - **The `web` widget type and the `core.web` action (host, editor, renderer, protocol; breaking for anything that read them):** `WidgetTypes.Web` stays only as a legacy value. A saved profile, an imported package and a restored backup keep a `web` widget and a `core.web` step unchanged (no migration; the editor draws the widget as unavailable and the Error List adds `W213`; the step is an unregistered action, so its button is marked unavailable). A device never gets the type: `LayoutSender` sends `label` with the text "Web widget removed", no `props` and no `actions` in its place, so a phone app that still has the iframe code loads no page and needs no change. `WidgetStateMessage` loses `Url` and `Reload` (unknown fields are ignored both ways). The `@macro/renderer` package drops `WebContent`, `isSafeWebUrl`, `webUrlHost`, `MAX_WEB_URL_LENGTH`, the `web*` props of `WidgetView` (new optional `removedText`) and `WidgetState.url`/`reload`; a client that imports them must stop (the phone app's deck screen does, see the plan). `WebUrlRule`, `WebViewState`, security event 1201 and the import consent in the editor are gone.
 

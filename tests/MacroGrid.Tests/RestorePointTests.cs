@@ -99,4 +99,73 @@ public sealed class RestorePointTests : IDisposable
 
         Assert.False(_world.Service.TryCreateUpdatePoint("1.0.0", "2.0.0"));
     }
+
+    private List<RestorePointInfo> MakePoints(int count)
+    {
+        for (var i = 0; i < count; i++)
+        {
+            _world.AddProfile("Profile " + i);
+            _world.Service.CreateRestorePoint(BackupService.ReasonDelete);
+        }
+        return [.. _world.Service.ListRestorePoints().OrderBy(p => p.CreatedAt)];
+    }
+
+    [Fact]
+    public void A_point_exactly_thirty_days_old_stays_and_one_a_moment_older_goes()
+    {
+        var points = MakePoints(3);
+        var oldest = points[0];
+
+        _world.Service.Prune(oldest.CreatedAt + BackupService.MaxAge);
+        Assert.Equal(3, Files().Length);
+
+        _world.Service.Prune(oldest.CreatedAt + BackupService.MaxAge + TimeSpan.FromMilliseconds(1));
+        var left = _world.Service.ListRestorePoints();
+        Assert.Equal(2, left.Count);
+        Assert.DoesNotContain(left, p => p.FileName == oldest.FileName);
+    }
+
+    [Fact]
+    public void The_newest_two_stay_however_old_they_are()
+    {
+        MakePoints(5);
+
+        _world.Service.Prune(DateTimeOffset.UtcNow.AddDays(400));
+
+        Assert.Equal(BackupService.KeepAtLeast, _world.Service.ListRestorePoints().Count);
+        Assert.Equal(BackupService.KeepAtLeast, Files().Length);
+    }
+
+    [Fact]
+    public void Pruning_leaves_files_that_are_not_restore_points_alone()
+    {
+        MakePoints(3);
+        var stranger = Path.Combine(_world.RestorePointsFolder, "notes.txt");
+        File.WriteAllText(stranger, "mine");
+
+        _world.Service.Prune(DateTimeOffset.UtcNow.AddDays(400));
+
+        Assert.True(File.Exists(stranger));
+    }
+
+    [Fact]
+    public void A_missing_folder_is_not_a_problem_for_pruning()
+    {
+        _world.Service.Prune(DateTimeOffset.UtcNow.AddDays(400));
+
+        Assert.Empty(_world.Service.ListRestorePoints());
+    }
+
+    [Fact]
+    public void A_listed_point_can_be_inspected_like_a_backup_file()
+    {
+        _world.AddProfile("Kept");
+        _world.Service.CreateRestorePoint(BackupService.ReasonDelete);
+        var point = Assert.Single(_world.Service.ListRestorePoints());
+
+        var result = _world.Restorer.Inspect(_world.Service.ReadRestorePoint(point.FileName));
+
+        Assert.Equal("delete", result.Manifest.Reason);
+        Assert.Contains(result.Items, i => i.Kind == RestoreItemKind.Profile && i.Name == "Kept");
+    }
 }
