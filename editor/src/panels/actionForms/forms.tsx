@@ -1,12 +1,11 @@
 import { useEffect, useState, type JSX } from "react";
 import { Variable, X } from "lucide-react";
-import { webUrlHost, type ActionBinding, type Page } from "@macro/renderer";
+import { type ActionBinding, type Page } from "@macro/renderer";
 import { api } from "../../api/client";
 import type { ActionInfo, OptionsResult, ProfileSummary, SettingField, VariableInfo } from "../../api/types";
 import { useT } from "../../i18n/I18nContext";
 import { Field, NumberInput, SelectInput, TextAreaInput, TextInput, useFieldId } from "../fields/controls";
 import { VariablePicker } from "../VariablePicker";
-import { WebWarning } from "../fields/WebFields";
 import { HotkeyCapture } from "./HotkeyCapture";
 import { SchemaForm } from "./SchemaForm";
 
@@ -125,53 +124,6 @@ function ProfileActionForm({ binding, onChange, profiles }: ActionFormProps) {
         ))}
       </SelectInput>
     </Field>
-  );
-}
-
-/** core.web: pick one of the profile's web widgets and what to do with it. The action stores the widget's id, so renaming it never breaks the button. */
-function WebActionForm({ binding, onChange, pages }: ActionFormProps) {
-  const { t } = useT();
-  const widgetId = str(binding.settings.widgetId);
-  const mode = str(binding.settings.mode, "set");
-  const url = str(binding.settings.url);
-  const widgets = pages.flatMap((p) =>
-    p.widgets
-      .filter((w) => w.type === "web")
-      .map((w) => {
-        const own = typeof w.props?.url === "string" ? webUrlHost(w.props.url) : "";
-        return { id: w.id, label: `${w.name || own || t("widget.type.web")} — ${p.name}` };
-      }),
-  );
-  const missing = widgetId !== "" && !widgets.some((w) => w.id === widgetId);
-  const set = (patch: Record<string, unknown>) => onChange({ widgetId, mode, url, ...patch });
-  return (
-    <>
-      <Field label={t("form.web.widget")} error={missing ? t("form.web.missing") : undefined}>
-        <SelectInput value={widgetId} onChange={(v) => set({ widgetId: v })}>
-          <option value="">{t("form.pickPlaceholder")}</option>
-          {missing && <option value={widgetId}>{t("form.web.missing")}</option>}
-          {widgets.map((w) => (
-            <option key={w.id} value={w.id}>{w.label}</option>
-          ))}
-        </SelectInput>
-      </Field>
-      <Field label={t("form.web.mode")}>
-        <SelectInput value={mode} onChange={(v) => set({ mode: v })}>
-          <option value="set">{t("form.web.mode.set")}</option>
-          <option value="reset">{t("form.web.mode.reset")}</option>
-          <option value="reload">{t("form.web.mode.reload")}</option>
-        </SelectInput>
-      </Field>
-      {mode === "set" && (
-        <>
-          <Field label={t("form.web.url")}>
-            <TextInput value={url} onChange={(v) => set({ url: v })} placeholder={t("fields.web.urlPlaceholder")} />
-          </Field>
-          <WebWarning url={url} />
-        </>
-      )}
-      <span className="pf-hint">{t("form.web.thisDevice")}</span>
-    </>
   );
 }
 
@@ -441,7 +393,6 @@ const ACTION_FORMS: Record<string, (props: ActionFormProps) => JSX.Element> = {
   "core.typeText": TypeTextForm,
   "core.page": PageActionForm,
   "core.profile": ProfileActionForm,
-  "core.web": WebActionForm,
   "core.open": OpenApplicationForm,
   "core.openUrl": OpenUrlActionForm,
   "core.delay": DelayActionForm,

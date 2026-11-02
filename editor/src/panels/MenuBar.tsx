@@ -6,11 +6,10 @@ import type { Command } from "../commands/types";
 import { alertAsync, choiceAsync, confirmAsync, confirmRichAsync, promptAsync } from "../dialogs/dialogStore";
 import { BackupContent } from "../dialogs/BackupContent";
 import { LogExportContent } from "../dialogs/LogExportContent";
+import { RestorePointList } from "../dialogs/RestorePointList";
 import { RestoreContent, restoreItemId, restoreWarningText } from "../dialogs/RestoreContent";
 import { showStatusNotice } from "../state/statusNotice";
 import { usePreferences } from "../preferences/PreferencesContext";
-import { clearWebUrls, collectWebSites } from "../state/webUrls";
-import { WebImportConsent } from "../windows/WebImportConsent";
 import { useServerVersion } from "../state/useServerVersion";
 import { useT, type Language } from "../i18n/I18nContext";
 import { usePluginUpdateCount } from "../state/pluginUpdates";
@@ -93,17 +92,6 @@ export function MenuBar({ profile, onImportProfile, confirmDiscardIfDirty, editC
     }
     if (!result.profile) return;
 
-    // A profile from someone else can point a phone at any site the moment it is used: name the sites and ask once.
-    const sites = collectWebSites(result.profile);
-    if (sites.length > 0) {
-      const choice = await choiceAsync("", [
-        { value: "clear", label: t("profile.importWebClear") },
-        { value: "keep", label: t("profile.importWebKeep"), primary: true },
-      ], { title: t("profile.importWebTitle"), content: <WebImportConsent sites={sites} /> });
-      if (choice === null) return;
-      if (choice === "clear") clearWebUrls(result.profile);
-    }
-
     await onImportProfile(result.profile, result.clearedWidgetBindings ?? 0);
 
     const missing = result.missingPlugins?.map((p) => p.name) ?? [];
@@ -132,9 +120,24 @@ export function MenuBar({ profile, onImportProfile, confirmDiscardIfDirty, editC
 
   const restoreBackup = async () => {
     if (!(await confirmDiscardIfDirty())) return;
+    const source = await choiceAsync(t("restore.source.message"), [
+      { value: "file", label: t("restore.source.file"), primary: true },
+      { value: "point", label: t("restore.source.point") },
+    ], { title: t("restore.source.title") });
+    if (!source) return;
     let inspected;
     try {
-      inspected = await api.inspectBackup();
+      if (source === "file") inspected = await api.inspectBackup();
+      else {
+        const points = await api.listRestorePoints();
+        if (points.length === 0) {
+          await alertAsync(t("restore.point.none"), { title: t("restore.source.title") });
+          return;
+        }
+        const chosen = { name: points[0]?.fileName ?? null };
+        if (!(await confirmRichAsync({ title: t("restore.point.title"), content: <RestorePointList points={points} chosen={chosen} />, confirmLabel: t("restore.point.next") })) || !chosen.name) return;
+        inspected = await api.inspectRestorePoint(chosen.name);
+      }
     } catch (err) {
       await alertAsync(err instanceof Error ? err.message : String(err), { title: t("restore.inspectFailedTitle") });
       return;

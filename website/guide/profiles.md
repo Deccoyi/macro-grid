@@ -57,8 +57,8 @@ This is the easiest way to share one deck with someone.
 
 ## Back up and restore
 
-**File → Back Up Everything…** saves your profiles, the profile tree, preferences, global variables, automation rules, the choices for paired devices, plugin settings and language packs in one `.mgbackup` file. **File → Restore…** opens such a file, lists what it holds with a tick box for each item, and brings back the items you tick. A restore deletes nothing.
+**File → Back Up Everything…** saves your profiles, the profile tree, preferences, global variables, automation rules, the choices for paired devices, plugin settings and language packs in one `.mgbackup` file. **File → Restore…** asks whether to restore from a file or from a restore point. For a file it opens such a file; either way it lists what it holds with a tick box for each item, and brings back the items you tick. A restore deletes nothing.
 
 Passwords, device tokens and pairings are not in a backup. Global variables are backed up as definitions only, not their current values. Automation rules that come back with a restore are switched off, so check them before you switch them on.
 
-Macro Grid also keeps restore points: copies of your data made before a restore, before a profile is deleted or overwritten by an import, and once after an update. They are kept in the `restore-points` folder of your data folder (see [Files and ports](/reference/files)). The editor does not list them yet.
+Macro Grid also keeps restore points: copies of your data made before a restore, before a profile is deleted or overwritten by an import, and once after an update. They are kept in the `restore-points` folder of your data folder (see [Files and ports](/reference/files)). **File → Restore… → From a restore point** lists them, newest first, with date, reason and size. Points older than 30 days are deleted; the newest two are always kept.

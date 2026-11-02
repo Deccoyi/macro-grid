@@ -20,11 +20,13 @@ internal static class Program
         // First: a crash anywhere after this line leaves a marker for the next start (see CrashCapture).
         CrashCapture.Install(ProfileStore.DefaultDataDir);
 
-        using var mutex = new Mutex(initiallyOwned: true, @"Local\MacroGrid.Server", out var isFirstInstance);
+        var mutexName = @"Local\MacroGrid.Server";
 #if DEBUG
+        // A development copy next to an installed one takes its own name, so it never makes the installed copy think it is already running.
         if (Environment.GetEnvironmentVariable("MACROGRID_ALLOW_SECOND_INSTANCE") == "1")
-            isFirstInstance = true;
+            mutexName += ".dev." + Environment.ProcessId;
 #endif
+        using var mutex = new Mutex(initiallyOwned: true, mutexName, out var isFirstInstance);
         if (!isFirstInstance)
         {
             MessageBox.Show(HostText.Get("app.alreadyRunning"), "Macro Grid",
@@ -102,7 +104,9 @@ internal static class Program
         var updateState = server.Services.GetRequiredService<UpdateStateStore>();
         var updated = StartupPolicy.WasUpdated(args, updateState.Get().LastRunVersion, ClientHub.ServerVersion);
         // Once per new version: a restore point of the data as the older version left it, before the new one touches anything.
-        server.Services.GetRequiredService<BackupService>().TryCreateUpdatePoint(updateState.Get().LastRunVersion, ClientHub.ServerVersion);
+        var backups = server.Services.GetRequiredService<BackupService>();
+        backups.TryCreateUpdatePoint(updateState.Get().LastRunVersion, ClientHub.ServerVersion);
+        backups.Prune();
         updateState.Update(s => s with { LastRunVersion = ClientHub.ServerVersion });
         // Downloaded installers never pile up: on every start only the newest one that is still newer than this version stays.
         server.Services.GetRequiredService<UpdateInstaller>().CleanUpDownloads();

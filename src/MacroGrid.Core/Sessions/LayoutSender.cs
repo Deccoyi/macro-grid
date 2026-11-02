@@ -89,10 +89,33 @@ public sealed class LayoutSender(AssetStore assets, PluginWidgetCatalog? pluginW
     private JsonObject Snapshot(ClientSession session, Profile profile)
     {
         var node = JsonSerializer.SerializeToNode(profile, ProtocolJson.Options)!.AsObject();
+        ReplaceRemovedWidgets(node);
         AddPluginWidgetRuntime(session, profile, node);
         if (session.Supports(ClientCapabilities.Assets))
             assets.Externalize(node);
         return node;
+    }
+
+    /// <summary>The text (in the app language) a device draws where a removed <c>web</c> widget used to be.</summary>
+    internal static string RemovedWidgetText => AppLanguage.Pick("Web widget removed", "Web widget kaldırıldı");
+
+    /// <summary>The <c>web</c> widget type was removed. An old profile still holds such widgets (the editor shows them as unavailable); a device gets a plain
+    /// label in their place, with no address and no actions, so no client ever loads a page and an older phone app needs no change.</summary>
+    private static void ReplaceRemovedWidgets(JsonObject node)
+    {
+        if (node["pages"] is not JsonArray pages) return;
+        foreach (var page in pages)
+        {
+            if (page?["widgets"] is not JsonArray widgets) continue;
+            foreach (var widget in widgets.OfType<JsonObject>())
+            {
+                if (widget["type"]?.GetValue<string>() != WidgetTypes.Web) continue;
+                widget["type"] = WidgetTypes.Label;
+                widget["text"] = RemovedWidgetText;
+                widget["props"] = null;
+                widget["actions"] = new JsonObject();
+            }
+        }
     }
 
     /// <summary>Gives every plugin widget of the layout its <c>runtime</c>: the script and image references, frame cap and options, or the reason it cannot run

@@ -35,7 +35,6 @@ public sealed class WidgetStateService : IHostedService, IDisposable
     private readonly ProfileStore _profiles;
     private readonly ToggleStateStore _toggles;
     private readonly LayoutSender _layouts;
-    private readonly WebViewState _webViews;
     private readonly ILogger<WidgetStateService> _logger;
     private readonly HashSet<string> _dirtyVariables = [];
     private readonly HashSet<(string? SessionId, string WidgetId)> _dirtyWidgets = [];
@@ -55,7 +54,7 @@ public sealed class WidgetStateService : IHostedService, IDisposable
 
     private readonly UserVariableService? _userVariables;
 
-    public WidgetStateService(VariableStore variables, SessionRegistry sessions, ProfileStore profiles, ToggleStateStore toggles, LayoutSender layouts, WebViewState webViews, ILogger<WidgetStateService> logger,
+    public WidgetStateService(VariableStore variables, SessionRegistry sessions, ProfileStore profiles, ToggleStateStore toggles, LayoutSender layouts, ILogger<WidgetStateService> logger,
         PluginWidgetCatalog? pluginWidgets = null, LastResultStore? results = null, ActionDispatcher? actions = null, UserVariableService? userVariables = null)
     {
         _actions = actions;
@@ -67,7 +66,6 @@ public sealed class WidgetStateService : IHostedService, IDisposable
         _profiles = profiles;
         _toggles = toggles;
         _layouts = layouts;
-        _webViews = webViews;
         _logger = logger;
         _variables.Changed += OnVariableChanged;
         _pluginWidgets = pluginWidgets;
@@ -180,20 +178,8 @@ public sealed class WidgetStateService : IHostedService, IDisposable
                 }
             }
 
-            // A saved profile starts the web widgets from its own addresses again; tell the device to drop what a button had set.
-            if (session.DeviceId is not null)
-                foreach (var widgetId in _webViews.Clear(session.DeviceId))
-                    await session.SendAsync(MessageTypes.WidgetState, new WidgetStateMessage(widgetId, Url: ""), ct);
-
             await SendInitialAsync(session, page, ct);
         }
-    }
-
-    /// <summary>Forgets the addresses a device's buttons set in its web widgets (the device switched profile; its new layout replaces the widgets anyway).</summary>
-    public void ForgetWebViews(ClientSession session)
-    {
-        if (session.DeviceId is not null)
-            _webViews.Clear(session.DeviceId);
     }
 
     /// <summary>Sends the current rendered text and toggle state of every relevant widget on a page, e.g. right after a layout is shown.</summary>
@@ -202,20 +188,14 @@ public sealed class WidgetStateService : IHostedService, IDisposable
         var profile = session.ProfileId is null ? null : _profiles.Get(session.ProfileId);
         foreach (var widget in page.Widgets)
         {
+            // A removed web widget reaches the device as a plain label with fixed text: no live state may overwrite it.
+            if (widget.Type == WidgetTypes.Web) continue;
             var scope = ScopeFor(session, widget);
             var text = DynamicText.Resolve(widget, scope);
             if (text is not null)
             {
                 session.SentTexts[widget.Id] = text;
                 await session.SendAsync(MessageTypes.WidgetState, new WidgetStateMessage(widget.Id, Text: text), ct);
-            }
-
-            if (widget.Type == WidgetTypes.Web && session.DeviceId is not null)
-            {
-                var url = _webViews.GetUrl(session.DeviceId, widget.Id);
-                var reload = _webViews.GetReload(session.DeviceId, widget.Id);
-                if (url is not null || reload > 0)
-                    await session.SendAsync(MessageTypes.WidgetState, new WidgetStateMessage(widget.Id, Url: url, Reload: reload > 0 ? reload : null), ct);
             }
 
             if (widget.Type == WidgetTypes.Toggle)
@@ -413,6 +393,7 @@ public sealed class WidgetStateService : IHostedService, IDisposable
 
         foreach (var widget in page.Widgets)
         {
+            if (widget.Type == WidgetTypes.Web) continue; // see SendInitialAsync
             var forced = marked.Contains(widget.Id);
             var scope = ScopeFor(session, widget);
             string? text = null;

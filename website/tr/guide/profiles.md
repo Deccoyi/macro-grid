@@ -57,8 +57,8 @@ Bir deck'i başkasıyla paylaşmanın en kolay yolu budur.
 
 ## Yedekle ve geri yükle
 
-**Dosya → Her Şeyi Yedekle…** profillerinizi, profil ağacını, tercihlerinizi, genel değişkenlerinizi, otomasyon kurallarınızı, eşleşmiş cihazlardaki seçimlerinizi, eklenti ayarlarınızı ve dil paketlerinizi tek bir `.mgbackup` dosyasında kaydeder. **Dosya → Geri Yükle…** böyle bir dosyayı açar, içeriğini her öğe için bir onay kutusuyla listeler ve işaretlediğiniz öğeleri geri yükler. Geri yükleme hiçbir şeyi silmez.
+**Dosya → Her Şeyi Yedekle…** profillerinizi, profil ağacını, tercihlerinizi, genel değişkenlerinizi, otomasyon kurallarınızı, eşleşmiş cihazlardaki seçimlerinizi, eklenti ayarlarınızı ve dil paketlerinizi tek bir `.mgbackup` dosyasında kaydeder. **Dosya → Geri Yükle…** önce bir dosyadan mı yoksa bir geri yükleme noktasından mı geri yükleneceğini sorar. Dosya için böyle bir dosyayı açar; her iki durumda da içeriğini her öğe için bir onay kutusuyla listeler ve işaretlediğiniz öğeleri geri yükler. Geri yükleme hiçbir şeyi silmez.
 
 Parolalar, cihaz belirteçleri ve eşleşmeler yedeğe dahil değildir. Genel değişkenler yedeğe yalnızca tanımlarıyla girer, geçerli değerleriyle girmez. Geri yükleme sırasında gelen otomasyon kuralları kapalı olarak gelir; açmadan önce kontrol edin.
 
-Macro Grid ayrıca geri yükleme noktaları da tutar: geri yüklemeden, bir profil silinmeden ya da içe aktarma ile üzerine yazılmadan önce ve bir güncellemeden sonra bir kez alınan veri kopyaları. Bunlar veri klasörünüzdeki `restore-points` klasöründe saklanır (bkz. [Dosyalar ve portlar](/tr/reference/files)). Düzenleyici bunları henüz listelemez.
+Macro Grid ayrıca geri yükleme noktaları da tutar: geri yüklemeden, bir profil silinmeden ya da içe aktarma ile üzerine yazılmadan önce ve bir güncellemeden sonra bir kez alınan veri kopyaları. Bunlar veri klasörünüzdeki `restore-points` klasöründe saklanır (bkz. [Dosyalar ve portlar](/tr/reference/files)). **Dosya → Geri Yükle… → Bir geri yükleme noktasından** bunları en yenisi üstte, tarih, neden ve boyutla listeler. 30 günden eski noktalar silinir; en yeni ikisi ve son 10 nokta sınırı korunur.

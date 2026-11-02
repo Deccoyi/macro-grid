@@ -124,4 +124,15 @@ public class ProfilePackageTests
     {
         Assert.Equal(["core.hotkey", "obs.switchScene"], ProfilePackage.ActionTypes(Sample()).Order());
     }
+
+    [Fact]
+    public void A_package_with_a_removed_web_widget_imports_and_keeps_the_widget()
+    {
+        var profile = Sample();
+        profile.Pages[0].Widgets.Add(new Widget { Id = "web1", Type = WidgetTypes.Web, Y = 1, Props = new JsonObject { ["url"] = "https://example.org/chat" } });
+
+        var content = ProfilePackage.Read(ProfilePackage.Write(profile, Manifest()));
+
+        Assert.Equal(WidgetTypes.Web, content.Profile.Pages[0].Widgets.Single(w => w.Id == "web1").Type);
+    }
 }

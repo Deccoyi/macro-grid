@@ -52,7 +52,8 @@ The installer is not code-signed yet. Choose **More info**, then **Run anyway**.
 | `E210` | A button runs an action whose plugin is not available. | Install or switch on the plugin, or choose another action. |
 | `E211` | A plugin widget is not available. | Install or switch on the plugin, or delete the widget. |
 | `E212` | A rule compares a number variable with text, so it can never be true. | Type a number in the rule. The profile can still be saved. |
-| `E220` | An action points to a page, profile or web widget that no longer exists. | Choose a target that exists. |
+| `E220` | An action points to a page or profile that no longer exists. | Choose a target that exists. |
+| `W213` | A web widget, a type that was removed, is still in the profile. | Delete it or replace it with another widget. |
 | `W221` | A setting of an action is not an allowed value. | Choose a valid value. |
 | `W230` | A text or rule uses a variable that no plugin provides right now. | Check that the plugin is on and the name is spelled right. |
 | `W231` | A text, rule or action uses a name that is not in the Global Variable List. | Add it again in Preferences or change the name. |

@@ -29,7 +29,7 @@ A restore point is the same file with `kind: restorePoint` in `restore-points/` 
 - before an import overwrites a profile (the editor calls `POST /api/restore-points` with reason `import`),
 - once after the server starts with a different version than the last run.
 
-If the point cannot be written, the action does not happen. A point with the same content hash as the newest one is not written again. The newest 10 are kept, the folder is capped at 500 MB, and never fewer than 2 are kept.
+If the point cannot be written, the action does not happen. A point with the same content hash as the newest one is not written again. The newest 10 are kept, the folder is capped at 500 MB, points older than 30 days are deleted, and never fewer than 2 are kept. Age is checked at server start and after each new point is written (`BackupService.Prune`); only files the service lists as restore points are ever deleted.
 
 ## Restore
 
@@ -47,4 +47,4 @@ Warnings: a missing plugin, an unknown action type, a file named by an action th
 
 ## Editor
 
-File menu: "Back Up Everything…" and "Restore…". Both are in-page dialogs of the main window. Restore asks to discard unsaved edits first, shows the items with a tick each, and reloads the window afterwards. Importing a shared profile also warns about files that do not exist on this PC.
+File menu: "Back Up Everything…" and "Restore…". Both are in-page dialogs of the main window. Restore asks to discard unsaved edits first, then asks for the source: a file (native Open dialog, `POST /api/backup/inspect`) or a restore point (a list from `GET /api/restore-points`, newest first, with date, reason and size but not the folder path; the pick goes to `POST /api/backup/inspect-point` with its `fileName`, which only accepts a listed name). Both sources then show the items with a tick each, and reloads the window afterwards. Importing a shared profile also warns about files that do not exist on this PC.

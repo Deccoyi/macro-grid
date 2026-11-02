@@ -8,7 +8,6 @@ using MacroGrid.Core.Plugins;
 using MacroGrid.Core.Plugins.Widgets;
 using MacroGrid.Core.Profiles;
 using MacroGrid.Core.Sessions;
-using MacroGrid.Core.Web;
 using MacroGrid.Core.Widgets;
 
 namespace MacroGrid.Host.Api;
@@ -58,7 +57,6 @@ internal static class ProfileApi
             if (!ProfileValidator.Validate(profile, out var error))
                 return ApiResults.BadRequest(error);
 
-            WebUrlRule.Sanitize(profile, loggers.CreateLogger("MacroGrid.Security"));
             PluginWidgetProps.Strip(profile);
             WidgetNames.Ensure(profile);
             profiles.Save(profile);
