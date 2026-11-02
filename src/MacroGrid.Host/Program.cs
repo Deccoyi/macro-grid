@@ -20,11 +20,13 @@ internal static class Program
         // First: a crash anywhere after this line leaves a marker for the next start (see CrashCapture).
         CrashCapture.Install(ProfileStore.DefaultDataDir);
 
-        using var mutex = new Mutex(initiallyOwned: true, @"Local\MacroGrid.Server", out var isFirstInstance);
+        var mutexName = @"Local\MacroGrid.Server";
 #if DEBUG
+        // A development copy next to an installed one takes its own name, so it never makes the installed copy think it is already running.
         if (Environment.GetEnvironmentVariable("MACROGRID_ALLOW_SECOND_INSTANCE") == "1")
-            isFirstInstance = true;
+            mutexName += ".dev." + Environment.ProcessId;
 #endif
+        using var mutex = new Mutex(initiallyOwned: true, mutexName, out var isFirstInstance);
         if (!isFirstInstance)
         {
             MessageBox.Show(HostText.Get("app.alreadyRunning"), "Macro Grid",
