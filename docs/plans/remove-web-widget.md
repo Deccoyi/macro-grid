@@ -15,7 +15,7 @@ A saved profile must still open, nothing is migrated and nothing is deleted behi
 |---|---|
 | Profile file, import (`.mgprofile`, `.json`), restore from a backup | Loaded and saved unchanged (`WidgetTypes.Web` stays as a legacy value). No error. |
 | Editor | Not in the Toolbox. An old widget is drawn as unavailable ("Web widget removed"), the Properties panel explains it, the Error List adds `W213`. Delete works as for any widget. |
-| Device (phone app, browser deck) | `LayoutSender` replaces it with a `label` ("Web widget removed") with no `props` and no `actions`, so no client loads a page. |
+| Device (phone app, browser deck) | `LayoutSender` replaces it with a `label` ("Web widget removed", Turkish by the app language) with no `props` and no `actions`, so no client loads a page. |
 | `core.web` button step | An unregistered action: the button is marked unavailable, the existing "action missing" paths apply. |
 
 ## What was removed

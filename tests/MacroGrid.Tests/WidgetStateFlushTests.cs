@@ -80,6 +80,28 @@ public sealed class WidgetStateFlushTests : IDisposable
     }
 
     [Fact]
+    public async Task A_removed_web_widget_gets_no_live_text_or_style()
+    {
+        var profiles = new ProfileStore(_dir);
+        profiles.Save(new Profile { Id = "p", Name = "P", Pages = [new Page { Id = "a", Widgets = [new Widget { Id = "w", Type = WidgetTypes.Web, Text = "v={test.value}" }] }] });
+        var variables = new VariableStore();
+        var sessions = new SessionRegistry();
+        var socket = new TestSocket(hangs: false);
+        var session = Identified(socket);
+        session.ProfileId = "p";
+        session.PageId = "a";
+        sessions.Add(session);
+        using var service = new WidgetStateService(variables, sessions, profiles, new ToggleStateStore(), new LayoutSender(new AssetStore()),
+            NullLogger<WidgetStateService>.Instance);
+
+        variables.Set("test.value", 7);
+        await service.FlushAsync();
+        await service.SendInitialAsync(session, profiles.Get("p")!.Pages[0], default);
+
+        Assert.Empty(socket.Sent);
+    }
+
+    [Fact]
     public async Task A_dynamic_style_is_cleared_once_when_no_rule_matches_any_more_and_there_is_no_default()
     {
         var profiles = new ProfileStore(_dir);

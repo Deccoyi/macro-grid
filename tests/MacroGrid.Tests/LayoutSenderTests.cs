@@ -187,7 +187,7 @@ public class LayoutSenderTests
 
         var widgets = socket.Sent[0].Data!["profile"]!["pages"]![0]!["widgets"]!.AsArray();
         Assert.Equal(WidgetTypes.Label, widgets[0]!["type"]!.GetValue<string>());
-        Assert.Equal("Web widget removed", widgets[0]!["text"]!.GetValue<string>());
+        Assert.Equal(LayoutSender.RemovedWidgetText, widgets[0]!["text"]!.GetValue<string>());
         Assert.DoesNotContain("example.org", widgets[0]!.ToJsonString());
         Assert.Empty(widgets[0]!["actions"]!.AsObject());
         Assert.Equal("two", widgets[1]!["text"]!.GetValue<string>());

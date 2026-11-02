@@ -21,7 +21,7 @@ export interface WidgetViewProps {
   liveValue?: number;
   /** Resolved dynamic-style overrides (background/foreground/borderColor) from widget.state; merged on top of widget.style. */
   liveStyle?: Partial<Pick<WidgetStyle, "background" | "foreground" | "borderColor" | "icon">> & { animation?: string };
-  /** A removed `web` widget (old profiles still hold them) draws this instead of a page. Default "Unavailable". */
+  /** A removed `web` widget (old profiles still hold them) draws this instead of a page. Default: the widget's own text. */
   removedText?: string;
   /** A `plugin-widget` only: false when its page is not the one shown (its worker is stopped, or paused when it keeps itself loaded). Default true. */
   pluginLive?: boolean;
@@ -103,7 +103,7 @@ export function WidgetView({
       onPointerCancel={interactive && !blocked ? gesture.onPointerCancel : undefined}
     >
       {widget.type === "web" ? (
-        <PlaceholderContent label={removedText ?? "Unavailable"} />
+        <PlaceholderContent label={removedText ?? text} />
       ) : widget.type === "plugin-widget" ? (
         <PluginWidgetContent widget={widget} live={pluginLive} />
       ) : (
