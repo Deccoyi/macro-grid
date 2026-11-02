@@ -3,7 +3,7 @@ import type { Profile } from "@macro/renderer";
 import { api } from "../api/client";
 import { commandItem } from "../commands/commandItem";
 import type { Command } from "../commands/types";
-import { alertAsync, confirmAsync, confirmRichAsync, promptAsync } from "../dialogs/dialogStore";
+import { alertAsync, choiceAsync, confirmAsync, confirmRichAsync, promptAsync } from "../dialogs/dialogStore";
 import { BackupContent } from "../dialogs/BackupContent";
 import { LogExportContent } from "../dialogs/LogExportContent";
 import { RestorePointList } from "../dialogs/RestorePointList";
