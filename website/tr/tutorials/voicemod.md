@@ -1,11 +1,11 @@
 # Voicemod: API anahtarınızı alın ve Macro Grid'i bağlayın
 
-Sesinizi değiştirin, ses efektleri arasında geçin ve sessize alın; hepsi telefonunuzdan. Voicemod eklentisi, PC'nizdeki Voicemod uygulamasıyla Control API üzerinden konuşur. Voicemod bu API'yi yalnızca anahtar isteyenlere verir, bu yüzden **kendi anahtarınıza ihtiyacınız var**. Macro Grid içine anahtar koyamaz.
+Sesinizi değiştirin, ses efektleri arasında geçin ve sessize alın; hepsi telefonunuzdan. **Voice Changer Control** eklentisi, PC'nizdeki Voicemod uygulamasıyla Control API üzerinden konuşur. Voicemod bu API'yi yalnızca anahtar isteyenlere verir, bu yüzden **kendi anahtarınıza ihtiyacınız var**. Macro Grid içine anahtar koyamaz.
 
-**Gerekenler:** Windows, Voicemod uygulaması, Voicemod Control API anahtarı (ücretsiz) ve Macro Grid'de Voicemod eklentisi.
+**Gerekenler:** Windows, Voicemod uygulaması, Voicemod Control API anahtarı (ücretsiz) ve Macro Grid'de Voice Changer Control eklentisi.
 
 ::: info Bağlantı yok
-Macro Grid bağımsız bir projedir. Voicemod ile bağlantılı değildir, onun tarafından onaylanmamış veya desteklenmemiştir. Voicemod, sahibinin ticari markasıdır.
+Voice Changer Control bağımsız bir eklentidir. Voicemod tarafından yapılmamış, onaylanmamış veya desteklenmemiştir ve Voicemod ile bağlantılı değildir. Voicemod, sahibinin ticari markasıdır.
 :::
 
 ## 1. Voicemod'u kurun ve başlatın {#install-voicemod}
@@ -29,14 +29,14 @@ Voicemod anahtarı e-postayla gönderir. Anında gelmez. Birkaç gün sonra hâl
 
 ## 4. Anahtarı Macro Grid'e girin {#enter-key}
 
-1. Henüz kurmadıysanız Voicemod eklentisini kurun (**Eklentiler → Keşfet**).
-2. Editörde **Eklentiler**'i açın ve Voicemod'un yanındaki dişliye tıklayın.
+1. Henüz kurmadıysanız Voice Changer Control eklentisini kurun (**Eklentiler → Keşfet**).
+2. Editörde **Eklentiler**'i açın ve Voice Changer Control'ün yanındaki dişliye tıklayın.
 3. **Etkin**'i açın.
 4. Anahtarı API anahtarı alanına yapıştırın ve **Kaydet**'e basın.
 
 ## 5. Bağlantıyı kontrol edin {#check-connection}
 
-Önce Voicemod'u başlatın. Kaydettikten birkaç saniye sonra eklenti durumu bağlı olduğunu gösterir. Editörün durum çubuğunda görmek için Eklentiler penceresinde Voicemod için **Durum çubuğu**'nu açın. Bağlanmazsa sonraki bölüme bakın.
+Önce Voicemod'u başlatın. Kaydettikten birkaç saniye sonra eklenti durumu bağlı olduğunu gösterir. Editörün durum çubuğunda görmek için Eklentiler penceresinde Voice Changer Control için **Durum çubuğu**'nu açın. Bağlanmazsa sonraki bölüme bakın.
 
 ## Sorun giderme {#troubleshooting}
 

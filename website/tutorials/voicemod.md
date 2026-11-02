@@ -1,11 +1,11 @@
 # Voicemod: get your API key and connect Macro Grid
 
-Change your voice, switch voices and mute from your phone. The Voicemod plugin talks to the Voicemod app on your PC through its Control API. Voicemod gives that API only to people who ask for a key, so **you need your own key**. Macro Grid cannot include one.
+Change your voice, switch voices and mute from your phone. The **Voice Changer Control** plugin talks to the Voicemod app on your PC through its Control API. Voicemod gives that API only to people who ask for a key, so **you need your own key**. Macro Grid cannot include one.
 
-**You need:** Windows, the Voicemod app, a Voicemod Control API key (free), and the Voicemod plugin in Macro Grid.
+**You need:** Windows, the Voicemod app, a Voicemod Control API key (free), and the Voice Changer Control plugin in Macro Grid.
 
 ::: info Not affiliated
-Macro Grid is an independent project. It is not affiliated with, endorsed by or sponsored by Voicemod. Voicemod is a trademark of its owner.
+Voice Changer Control is an independent plugin. It is not made, endorsed or sponsored by Voicemod and is not affiliated with Voicemod. Voicemod is a trademark of its owner.
 :::
 
 ## 1. Install and start Voicemod {#install-voicemod}
@@ -29,14 +29,14 @@ Voicemod sends the key by e-mail. It is not instant. Check your spam folder if n
 
 ## 4. Enter the key in Macro Grid {#enter-key}
 
-1. Install the Voicemod plugin (**Plugins → Discover**) if you have not yet.
-2. In the editor open **Plugins** and click the gear next to Voicemod.
+1. Install the Voice Changer Control plugin (**Plugins → Discover**) if you have not yet.
+2. In the editor open **Plugins** and click the gear next to Voice Changer Control.
 3. Turn **Enabled** on.
 4. Paste your key into the API key field and **Save**.
 
 ## 5. Check the connection {#check-connection}
 
-Start Voicemod first. A few moments after you save, the plugin status shows that it is connected. Switch **Status bar** on for Voicemod in the Plugins window to see it in the editor's status bar. If it does not connect, see the next section.
+Start Voicemod first. A few moments after you save, the plugin status shows that it is connected. Switch **Status bar** on for Voice Changer Control in the Plugins window to see it in the editor's status bar. If it does not connect, see the next section.
 
 ## Troubleshooting {#troubleshooting}
 
