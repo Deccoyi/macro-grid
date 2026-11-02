@@ -411,7 +411,7 @@ public sealed class BackupRestorer(
     {
         var page = plugins.GetSettingsPage(pluginId) ?? throw new InvalidOperationException("The plugin is not running here.");
         var values = (JsonObject)settings.DeepClone();
-        PluginSettingsSecrets.KeepStoredPasswords(page.Fields, values, page.Load());
+        PluginSettingsSecrets.RestoreBlankPasswords(page.Fields, values, page.Load());
         page.Save(values);
     }
 }
