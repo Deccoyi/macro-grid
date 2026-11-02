@@ -9,6 +9,12 @@ export function isTintableIcon(icon: string | undefined): boolean {
   return icon !== undefined && icon.startsWith("data:image/svg+xml") && icon.includes(ICON_TINT_MARKER);
 }
 
+let iconUrlResolver: (icon: string) => string = (icon) => icon;
+/** Lets a host map an icon reference (one that is not a data: URI) to a loadable URL; the editor does this for plugin pictures. */
+export function setIconUrlResolver(resolve: ((icon: string) => string) | null): void {
+  iconUrlResolver = resolve ?? ((icon) => icon);
+}
+
 export interface ButtonContentProps {
   text: string;
   icon?: string;
@@ -53,7 +59,8 @@ function tintStyle(icon: string): CSSProperties {
  * which silently swapped the meaning of justify-content and align-items — vertical align settings
  * moved the block horizontally instead. Keeping the two boxes separate avoids that entirely.
  */
-export function ButtonContent({ text, icon, iconSize = 28, iconPosition = "top" }: ButtonContentProps) {
+export function ButtonContent({ text, icon: rawIcon, iconSize = 28, iconPosition = "top" }: ButtonContentProps) {
+  const icon = rawIcon === undefined ? undefined : iconUrlResolver(rawIcon);
   const row = iconPosition === "left" || iconPosition === "right";
   return (
     <div className="ms-content">

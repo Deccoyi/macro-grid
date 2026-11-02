@@ -3,6 +3,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import dynamicIconImports from "lucide-react/dynamicIconImports";
 import { ICON_TINT_MARKER } from "@macro/renderer";
 import { api } from "../api/client";
+import { iconSrc } from "../api/optionIcon";
 import type { IconPackInfo } from "../api/types";
 import { useT } from "../i18n/I18nContext";
 import { PickerShell, usePickerOpenState } from "./PickerShell";
@@ -152,7 +153,7 @@ export function IconPicker({ value, color, onChange }: IconPickerProps) {
     <div>
       <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
         {value ? (
-          <img src={value} width={22} height={22} alt="" style={{ background: "var(--ms-bg-inset)", borderRadius: 4, padding: 2 }} />
+          <img src={iconSrc(value)} width={22} height={22} alt="" style={{ background: "var(--ms-bg-inset)", borderRadius: 4, padding: 2 }} />
         ) : (
           <span style={{ color: "var(--ms-text-secondary)", fontSize: 12 }}>{t("icon.none")}</span>
         )}

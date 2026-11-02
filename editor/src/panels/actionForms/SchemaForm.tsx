@@ -1,13 +1,24 @@
 import { useEffect, useRef, useState } from "react";
 import { ChevronDown, ChevronRight, Eye, EyeOff, RefreshCw, TriangleAlert, Variable, X } from "lucide-react";
 import { api } from "../../api/client";
-import type { OptionsResult, SettingField, SettingOption, VariableInfo } from "../../api/types";
+import type { OptionsQuery, OptionsResult, SettingField, SettingOption, VariableInfo } from "../../api/types";
 import { useT } from "../../i18n/I18nContext";
 import { VariablePicker } from "../VariablePicker";
 import { HotkeyCapture } from "./HotkeyCapture";
+import { SearchSelect } from "./SearchSelect";
+import { isPluginImage } from "../../api/optionIcon";
 import { clampDuration, joinDuration, splitDuration, type DurationUnit } from "./duration";
 import { ColorField, Field, NumberInput, RangeInput, Seg, SelectInput, Switch, TextInput, useFieldId } from "../fields/controls";
 import { layoutFields, segmentedAsSelect } from "./schemaFormLayout";
+
+/** Read and write access to the widget's icon; `apply(undefined)` removes it. */
+export interface WidgetIconControl {
+  current?: string;
+  apply: (icon: string | undefined) => void;
+}
+
+/** Key suffix of the label the editor saw next to a picked option's value; the server strips these keys before a plugin runs. */
+export const LABEL_SUFFIX = "＠label";
 
 interface SchemaFormProps {
   fields: SettingField[];
@@ -15,7 +26,9 @@ interface SchemaFormProps {
   onChange: (values: Record<string, unknown>) => void;
   /** Resolves a field's `optionsSource` against the current form values — either
    * api.getActionOptions(type, ...) or api.getPluginSettingsOptions(id, ...) bound by the caller. */
-  fetchOptions: (sourceId: string, currentValues: Record<string, unknown>) => Promise<OptionsResult>;
+  fetchOptions: (sourceId: string, currentValues: Record<string, unknown>, query?: OptionsQuery) => Promise<OptionsResult>;
+  /** The widget's button icon, so a searchable field can offer the picked item's picture as that icon (action forms only). */
+  widgetIcon?: WidgetIconControl;
   variableCatalog?: VariableInfo[];
   /** Runs a "Button" field's command against the plugin's ISettingsCommandHandler — only a plugin settings
    * form (PluginSettingsWindow.tsx) provides this; an action settings form has none, so Button renders
@@ -30,8 +43,14 @@ interface SchemaFormProps {
  * Field (docs/ui/ui-guidelines.md, "Properties panel field system"); consecutive fields that can share a row fill
  * a two-column grid, and a field that depends on another is indented (see schemaFormLayout.ts).
  */
-export function SchemaForm({ fields, values, onChange, fetchOptions, variableCatalog = [], runCommand }: SchemaFormProps) {
+export function SchemaForm({ fields, values, onChange, fetchOptions, variableCatalog = [], runCommand, widgetIcon }: SchemaFormProps) {
   const set = (key: string, value: unknown) => onChange({ ...values, [key]: value });
+  /** Several keys at once; an undefined value removes the key. */
+  const patch = (changes: Record<string, unknown>) => {
+    const next = { ...values, ...changes };
+    for (const k of Object.keys(changes)) if (changes[k] === undefined) delete next[k];
+    onChange(next);
+  };
 
   const row = (field: SettingField) => (
     <SchemaFieldRow
@@ -40,7 +59,9 @@ export function SchemaForm({ fields, values, onChange, fetchOptions, variableCat
       value={values[field.key]}
       values={values}
       onChange={(v) => set(field.key, v)}
+      onPatch={patch}
       fetchOptions={fetchOptions}
+      widgetIcon={widgetIcon}
       variableCatalog={variableCatalog}
       runCommand={runCommand}
     />
@@ -80,7 +101,7 @@ function useFieldOptions(field: SettingField, values: Record<string, unknown>, f
   const depsKey = JSON.stringify((field.dependsOn ?? []).map((k) => values[k]));
 
   useEffect(() => {
-    if (!field.optionsSource) return;
+    if (!field.optionsSource || field.searchable) return; // a searchable field asks for its own pages
     let cancelled = false;
     setState((s) => ({ ...s, loading: true }));
     fetchOptions(field.optionsSource, values)
@@ -136,7 +157,9 @@ function SchemaFieldRow({
   value,
   values,
   onChange,
+  onPatch,
   fetchOptions,
+  widgetIcon,
   variableCatalog,
   runCommand,
 }: {
@@ -144,6 +167,8 @@ function SchemaFieldRow({
   value: unknown;
   values: Record<string, unknown>;
   onChange: (v: unknown) => void;
+  onPatch: (changes: Record<string, unknown>) => void;
+  widgetIcon?: WidgetIconControl;
   fetchOptions: SchemaFormProps["fetchOptions"];
   variableCatalog: VariableInfo[];
   runCommand: SchemaFormProps["runCommand"];
@@ -196,6 +221,7 @@ function SchemaFieldRow({
         value={value}
         onChange={onChange}
         fetchOptions={fetchOptions}
+        widgetIcon={widgetIcon}
         variableCatalog={variableCatalog}
         runCommand={runCommand}
       />
@@ -323,6 +349,10 @@ function SchemaFieldRow({
     );
   }
 
+  if (field.kind === "Select" && field.searchable && field.optionsSource) {
+    return <SearchField field={field} value={value} values={values} onPatch={onPatch} fetchOptions={fetchOptions} widgetIcon={widgetIcon} />;
+  }
+
   if (field.kind === "Select" || field.kind === "Segmented") {
     const current = typeof value === "string" ? value : "";
     const knownValues = new Set(opts.options.map((o) => o.value));
@@ -400,6 +430,63 @@ function SchemaFieldRow({
   );
 }
 
+/**
+ * A Select with `searchable`: the options come page by page from the plugin (see SearchSelect). The stored value is the option
+ * value; the label the editor saw is saved beside it so the form can show it while the plugin's app is closed. An option with
+ * a plugin picture can also become the widget's button icon.
+ */
+function SearchField({ field, value, values, onPatch, fetchOptions, widgetIcon }: {
+  field: SettingField;
+  value: unknown;
+  values: Record<string, unknown>;
+  onPatch: (changes: Record<string, unknown>) => void;
+  fetchOptions: SchemaFormProps["fetchOptions"];
+  widgetIcon?: WidgetIconControl;
+}) {
+  const { t } = useT();
+  const current = typeof value === "string" ? value : "";
+  const labelKey = field.key + LABEL_SUFFIX;
+  const storedLabel = typeof values[labelKey] === "string" ? (values[labelKey] as string) : undefined;
+  const [icon, setIcon] = useState<string | null>(null);
+  const valuesRef = useRef(values);
+  valuesRef.current = values;
+  const depsKey = JSON.stringify((field.dependsOn ?? []).map((k) => values[k]));
+  const source = field.optionsSource!;
+
+  const pick = (o: SettingOption | null) => {
+    if (!o) {
+      setIcon(null);
+      onPatch({ [field.key]: "", [labelKey]: undefined });
+      return;
+    }
+    onPatch({ [field.key]: o.value, [labelKey]: o.label });
+    const ref = isPluginImage(o.icon) ? o.icon : null;
+    setIcon(ref);
+    // On by default when the button has no picture yet (or still has one taken from a plugin item).
+    if (ref && widgetIcon && (!widgetIcon.current || isPluginImage(widgetIcon.current))) widgetIcon.apply(ref);
+  };
+
+  return (
+    <Field single label={field.label} hint={field.description ?? undefined}>
+      <SearchSelect
+        value={current}
+        storedLabel={storedLabel}
+        depsKey={depsKey}
+        ariaLabel={field.label}
+        search={(q) => fetchOptions(source, valuesRef.current, { q: q.q, offset: q.offset, limit: q.limit, selected: current || undefined, signal: q.signal })}
+        onPick={pick}
+        onResolved={(o) => setIcon(o && isPluginImage(o.icon) ? o.icon : null)}
+      />
+      {icon && widgetIcon && (
+        <label className="pf-check">
+          <input type="checkbox" checked={widgetIcon.current === icon} onChange={(e) => widgetIcon.apply(e.target.checked ? icon : undefined)} />
+          {t("schemaForm.search.useIcon")}
+        </label>
+      )}
+    </Field>
+  );
+}
+
 /** The stored value is whole milliseconds; the person types it in the unit they choose. The typed text is kept as typed ("1." must not turn into "1"). */
 function DurationInput({ field, value, onChange }: { field: SettingField; value: unknown; onChange: (v: unknown) => void }) {
   const { t } = useT();
@@ -465,12 +552,14 @@ function ListField({
   value,
   onChange,
   fetchOptions,
+  widgetIcon,
   variableCatalog,
   runCommand,
 }: {
   field: SettingField;
   value: unknown;
   onChange: (v: Record<string, unknown>[]) => void;
+  widgetIcon?: WidgetIconControl;
   fetchOptions: SchemaFormProps["fetchOptions"];
   variableCatalog: VariableInfo[];
   runCommand: SchemaFormProps["runCommand"];
@@ -556,6 +645,7 @@ function ListField({
                       values={row}
                       onChange={(nextRow) => setRows(rows.map((r, i) => (i === index ? { ...row, ...nextRow } : r)))}
                       fetchOptions={fetchOptions}
+                      widgetIcon={widgetIcon}
                       variableCatalog={variableCatalog}
                       runCommand={runCommand}
                     />
