@@ -735,6 +735,12 @@ export const en: Record<DictKey, string> = {
   // ---- Schema form (SettingField-driven action/plugin settings) ----
   "schemaForm.refresh": "Refresh",
   "schemaForm.notFound": "(not found)",
+  "schemaForm.search.placeholder": "Search…",
+  "schemaForm.search.loading": "Loading…",
+  "schemaForm.search.empty": "No matches",
+  "schemaForm.search.clear": "Clear selection",
+  "schemaForm.search.unavailable": "Unavailable: {name}",
+  "schemaForm.search.useIcon": "Use its picture as the button icon",
   "schemaForm.browse": "Browse…",
   "schemaForm.addRow": "+ Add",
   "schemaForm.removeRow": "Remove",

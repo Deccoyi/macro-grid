@@ -11,6 +11,7 @@ import type {
   RestorePointInfo,
   LanguagePackFile,
   LanguagePackInfo,
+  OptionsQuery,
   OptionsResult,
   IconPackInfo,
   PairedDeviceInfo,
@@ -67,13 +68,24 @@ function get<T>(url: string): Promise<T> {
 }
 
 /** Send a request with an optional JSON body and read the JSON (or empty) response. */
-function send<T>(method: "POST" | "PUT" | "DELETE", url: string, body?: unknown): Promise<T> {
-  const init: RequestInit = { method };
+function send<T>(method: "POST" | "PUT" | "DELETE", url: string, body?: unknown, signal?: AbortSignal): Promise<T> {
+  const init: RequestInit = { method, signal };
   if (body !== undefined) {
     init.headers = { "Content-Type": "application/json" };
     init.body = JSON.stringify(body);
   }
   return req(url, init).then((res) => json<T>(res));
+}
+
+function optionsQueryString(query?: OptionsQuery): string {
+  if (!query) return "";
+  const p = new URLSearchParams();
+  if (query.q) p.set("q", query.q);
+  if (query.offset) p.set("offset", String(query.offset));
+  if (query.limit) p.set("limit", String(query.limit));
+  if (query.selected) p.set("selected", query.selected);
+  const s = p.toString();
+  return s ? `?${s}` : "";
 }
 
 const pluginPath = (id: string) => `/api/plugins/${encodeURIComponent(id)}`;
@@ -107,8 +119,8 @@ export const api = {
 
   /** Dynamic dropdown options for an action's field (e.g. a scene or audio-input list) — `currentValues`
    * is the current form state for the field's `dependsOn` keys. */
-  getActionOptions: (type: string, sourceId: string, currentValues: Record<string, unknown>): Promise<OptionsResult> =>
-    send("POST", `/api/actions/${encodeURIComponent(type)}/options/${encodeURIComponent(sourceId)}`, currentValues),
+  getActionOptions: (type: string, sourceId: string, currentValues: Record<string, unknown>, query?: OptionsQuery): Promise<OptionsResult> =>
+    send("POST", `/api/actions/${encodeURIComponent(type)}/options/${encodeURIComponent(sourceId)}${optionsQueryString(query)}`, currentValues, query?.signal),
 
   /** The running server's version, the one place it is defined (ClientHub.ServerVersion). */
   getVersion: (): Promise<{ version: string }> => get("/api/version"),

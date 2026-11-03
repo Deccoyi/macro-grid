@@ -7,7 +7,7 @@ import { useT } from "../../i18n/I18nContext";
 import { Field, NumberInput, SelectInput, TextAreaInput, TextInput, useFieldId } from "../fields/controls";
 import { VariablePicker } from "../VariablePicker";
 import { HotkeyCapture } from "./HotkeyCapture";
-import { SchemaForm } from "./SchemaForm";
+import { SchemaForm, type WidgetIconControl } from "./SchemaForm";
 
 interface ActionFormProps {
   binding: ActionBinding;
@@ -16,6 +16,7 @@ interface ActionFormProps {
   profiles: ProfileSummary[];
   actionInfo?: ActionInfo;
   variableCatalog?: VariableInfo[];
+  widgetIcon?: WidgetIconControl;
 }
 
 const str = (v: unknown, fallback = "") => (typeof v === "string" ? v : fallback);
@@ -409,7 +410,7 @@ const ACTION_FORMS: Record<string, (props: ActionFormProps) => JSX.Element> = {
 
 /** A plugin action with a declared schema (`ActionInfo.fields`, from IActionDescriptor) and no
  * hand-written form renders through the generic SchemaForm instead of the raw-JSON fallback. */
-function SchemaActionForm({ binding, onChange, actionInfo, variableCatalog }: ActionFormProps) {
+function SchemaActionForm({ binding, onChange, actionInfo, variableCatalog, widgetIcon }: ActionFormProps) {
   const fields = actionInfo?.fields;
   if (!fields || fields.length === 0) return <GenericJsonForm binding={binding} onChange={onChange} pages={[]} profiles={[]} />;
   return (
@@ -417,7 +418,8 @@ function SchemaActionForm({ binding, onChange, actionInfo, variableCatalog }: Ac
       fields={fields}
       values={binding.settings as Record<string, unknown>}
       onChange={onChange}
-      fetchOptions={(sourceId, values) => api.getActionOptions(binding.type, sourceId, values)}
+      fetchOptions={(sourceId, values, query) => api.getActionOptions(binding.type, sourceId, values, query)}
+      widgetIcon={widgetIcon}
       variableCatalog={variableCatalog}
     />
   );

@@ -750,6 +750,12 @@ export const tr = {
   // ---- Schema form (SettingField-driven action/plugin settings) ----
   "schemaForm.refresh": "Yenile",
   "schemaForm.notFound": "(bulunamadı)",
+  "schemaForm.search.placeholder": "Ara…",
+  "schemaForm.search.loading": "Yükleniyor…",
+  "schemaForm.search.empty": "Eşleşme yok",
+  "schemaForm.search.clear": "Seçimi temizle",
+  "schemaForm.search.unavailable": "Kullanılamıyor: {name}",
+  "schemaForm.search.useIcon": "Resmini düğme ikonu olarak kullan",
   "schemaForm.browse": "Gözat…",
   "schemaForm.addRow": "+ Ekle",
   "schemaForm.removeRow": "Kaldır",

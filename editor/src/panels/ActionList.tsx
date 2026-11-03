@@ -6,6 +6,7 @@ import { useCatalogText } from "../i18n/catalogText";
 import { useT } from "../i18n/I18nContext";
 import { ActionPicker } from "./ActionPicker";
 import { formFor } from "./actionForms/forms";
+import type { WidgetIconControl } from "./actionForms/SchemaForm";
 import { FLOW_ELSE, FLOW_END, FLOW_IF, MAX_DEPTH, addElse, carryCollapsed, insertAt, laneStacks, layout, move as moveRow, moveTo, remove as removeRow, type FlowRow, type Lane } from "./actionFlow";
 import { IfStepEditor, whenOf } from "./IfStepEditor";
 import { summarizeCondition } from "./dynamic/conditionSummary";
@@ -17,6 +18,8 @@ export interface ActionListProps {
   profiles: ProfileSummary[];
   variableCatalog: VariableInfo[];
   onChange: (next: ActionBinding[]) => void;
+  /** The widget's button icon, offered to action forms that can fill it. */
+  widgetIcon?: WidgetIconControl;
   /** A step to scroll to and outline once (the Error List's "Go to widget"); the list opens the blocks that hide it, then calls `onFocusDone`. */
   focusIndex?: number | null;
   onFocusDone?: () => void;
@@ -44,7 +47,7 @@ function withoutSelf(catalog: VariableInfo[]): VariableInfo[] {
 }
 
 /** An ordered list of action steps with If blocks: add (anywhere, also inside a block), replace, move (buttons or drag), remove and collapse. It works on plain bindings, so a widget's event and an automation rule share it. */
-export function ActionList({ bindings, actions, pages, profiles, variableCatalog, onChange, focusIndex = null, onFocusDone }: ActionListProps) {
+export function ActionList({ bindings, actions, pages, profiles, variableCatalog, onChange, widgetIcon, focusIndex = null, onFocusDone }: ActionListProps) {
   const { t } = useT();
   const catalogText = useCatalogText();
 
@@ -249,7 +252,7 @@ export function ActionList({ bindings, actions, pages, profiles, variableCatalog
                 <button className="ghost pf-icon-btn small" onClick={() => removeBinding(index)} title={t("action.remove")} aria-label={t("action.remove")}><X size={14} /></button>
               </div>
               <div className="pf-card-body">
-                <Form binding={binding} pages={pages} profiles={profiles} actionInfo={actionInfo} variableCatalog={withoutSelf(variableCatalog)} onChange={(settings) => updateBinding(index, { settings })} />
+                <Form binding={binding} pages={pages} profiles={profiles} actionInfo={actionInfo} variableCatalog={withoutSelf(variableCatalog)} widgetIcon={widgetIcon} onChange={(settings) => updateBinding(index, { settings })} />
               </div>
             </div>
           );
