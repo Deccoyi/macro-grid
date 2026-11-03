@@ -44,12 +44,12 @@ interface SchemaFormProps {
  * a two-column grid, and a field that depends on another is indented (see schemaFormLayout.ts).
  */
 export function SchemaForm({ fields, values, onChange, fetchOptions, variableCatalog = [], runCommand, widgetIcon }: SchemaFormProps) {
-  const set = (key: string, value: unknown) => onChange({ ...values, [key]: value });
+  const set = (key: string, value: unknown) => onChange(clearDependents({ ...values, [key]: value }, fields, [key]));
   /** Several keys at once; an undefined value removes the key. */
   const patch = (changes: Record<string, unknown>) => {
     const next = { ...values, ...changes };
     for (const k of Object.keys(changes)) if (changes[k] === undefined) delete next[k];
-    onChange(next);
+    onChange(clearDependents(next, fields, Object.keys(changes).filter((k) => !k.endsWith(LABEL_SUFFIX))));
   };
 
   const row = (field: SettingField) => (
@@ -78,6 +78,27 @@ export function SchemaForm({ fields, values, onChange, fetchOptions, variableCat
   );
 }
 
+/**
+ * Removes the saved value (and the picked label) of every field that depends, directly or through another field, on one of the
+ * changed keys: a value picked from a list that belongs to the old parent value means nothing under the new one.
+ */
+export function clearDependents(values: Record<string, unknown>, fields: SettingField[], changed: string[]): Record<string, unknown> {
+  const next = { ...values };
+  const queue = [...changed];
+  const seen = new Set(queue);
+  while (queue.length > 0) {
+    const parent = queue.shift()!;
+    for (const f of fields) {
+      if (!f.dependsOn?.includes(parent) || seen.has(f.key)) continue;
+      seen.add(f.key);
+      delete next[f.key];
+      delete next[f.key + LABEL_SUFFIX];
+      queue.push(f.key);
+    }
+  }
+  return next;
+}
+
 /** A MultiSelect value as a list: a plugin that switched a field from Select to MultiSelect may still have a single text saved. */
 function asChosen(value: unknown): string[] {
   if (Array.isArray(value)) return value.map(String);
@@ -103,7 +124,7 @@ function useFieldOptions(field: SettingField, values: Record<string, unknown>, f
   useEffect(() => {
     if (!field.optionsSource || field.searchable) return; // a searchable field asks for its own pages
     let cancelled = false;
-    setState((s) => ({ ...s, loading: true }));
+    setState({ loading: true, options: field.options ?? [], error: null }); // the old parent's list must not stay on screen
     fetchOptions(field.optionsSource, values)
       .then((res) => {
         if (cancelled) return;

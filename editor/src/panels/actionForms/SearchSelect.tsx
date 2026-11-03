@@ -86,6 +86,9 @@ export function SearchSelect({ value, storedLabel, search, depsKey, ariaLabel, o
 
   // The stored value is checked against the source once, and again when the fields it depends on change.
   useEffect(() => {
+    setText("");
+    textRef.current = "";
+    setOptions([]);
     load("", 0);
     return () => { controller.current?.abort(); generation.current++; if (timer.current) clearTimeout(timer.current); };
   }, [depsKey, load]);
