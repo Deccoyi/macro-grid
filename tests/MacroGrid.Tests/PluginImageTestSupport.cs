@@ -73,10 +73,41 @@ internal sealed class CapturedLog<T> : ILogger<T>
 
 internal static class TestPictures
 {
-    public static byte[] Png(int padding = 16, byte fill = 1) => [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, .. Enumerable.Repeat(fill, padding)];
-    public static byte[] Jpeg(int padding = 16) => [0xFF, 0xD8, 0xFF, 0xE0, .. Enumerable.Repeat((byte)2, padding)];
-    public static byte[] Gif(int padding = 16) => [.. "GIF89a"u8.ToArray(), .. Enumerable.Repeat((byte)3, padding)];
-    public static byte[] Webp(int padding = 16) => [.. "RIFF"u8.ToArray(), 0, 0, 0, 0, .. "WEBP"u8.ToArray(), .. Enumerable.Repeat((byte)4, padding)];
+    private static byte[] Fill(int count, byte fill) => Enumerable.Repeat(fill, count).ToArray();
+    private static byte[] Be32(int v) => [(byte)(v >> 24), (byte)(v >> 16), (byte)(v >> 8), (byte)v];
+
+    public static byte[] Png(int padding = 16, byte fill = 1, int width = 1, int height = 1) =>
+        [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 0, 0, 0, 13, .. "IHDR"u8.ToArray(), .. Be32(width), .. Be32(height), 8, 2, 0, 0, 0, 0, 0, 0, 0, .. Fill(padding, fill)];
+
+    /// <summary>A JPEG whose frame header (SOF0) comes after one other segment, so the marker walk is used.</summary>
+    public static byte[] Jpeg(int padding = 16, int width = 1, int height = 1, bool withFrame = true) =>
+    [
+        0xFF, 0xD8, 0xFF, 0xE0, 0x00, 0x04, 0x4A, 0x46,
+        .. (withFrame ? new byte[] { 0xFF, 0xC0, 0x00, 0x0B, 0x08, (byte)(height >> 8), (byte)height, (byte)(width >> 8), (byte)width, 0x01, 0x01, 0x11, 0x00 } : []),
+        0xFF, 0xDA, .. Fill(padding, 2),
+    ];
+
+    public static byte[] Gif(int padding = 16, int frames = 1, int width = 1, int height = 1, bool trailer = true)
+    {
+        var bytes = new List<byte>("GIF89a"u8.ToArray()) { (byte)width, (byte)(width >> 8), (byte)height, (byte)(height >> 8), 0, 0, 0 };
+        for (var left = padding; left > 0;)
+        {
+            var chunk = Math.Min(left, 255);
+            bytes.AddRange([0x21, 0xFE, (byte)chunk, .. Fill(chunk, 3), 0]);
+            left -= chunk;
+        }
+        for (var i = 0; i < frames; i++) bytes.AddRange([0x2C, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0x02, 0x01, 0x00, 0x00]);
+        if (trailer) bytes.Add(0x3B);
+        return [.. bytes];
+    }
+
+    /// <summary>A WebP with a VP8X header (canvas size) followed by filler.</summary>
+    public static byte[] Webp(int padding = 16, int width = 1, int height = 1) =>
+    [
+        .. "RIFF"u8.ToArray(), 0, 0, 0, 0, .. "WEBP"u8.ToArray(), .. "VP8X"u8.ToArray(), 10, 0, 0, 0, 0, 0, 0, 0,
+        (byte)(width - 1), (byte)((width - 1) >> 8), (byte)((width - 1) >> 16), (byte)(height - 1), (byte)((height - 1) >> 8), (byte)((height - 1) >> 16),
+        .. Fill(padding, 4),
+    ];
 
     public static string Url(byte[] bytes, string type = "png") => $"data:image/{type};base64,{Convert.ToBase64String(bytes)}";
 

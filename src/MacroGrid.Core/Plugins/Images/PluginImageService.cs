@@ -18,7 +18,7 @@ public sealed class PluginImageService(ILogger<PluginImageService>? logger = nul
     public const int MaxOutstanding = 200;
 
     /// <summary>The one line a refused picture puts on the Error List: it never says what was offered.</summary>
-    internal const string RefusedMessage = "A picture offered by this plugin was refused. It must be a PNG, JPEG, WebP or GIF of at most 64 KB that was asked for.";
+    internal const string RefusedMessage = "A picture offered by this plugin was refused. It must be a PNG, JPEG, WebP or GIF of at most 256 KB and 1024 x 1024 pixels that was asked for.";
 
     private sealed class Request(DateTimeOffset at)
     {

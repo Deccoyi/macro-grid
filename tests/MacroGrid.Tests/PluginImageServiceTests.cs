@@ -165,7 +165,7 @@ public sealed class PluginImageServiceTests : IDisposable
         {
             "svg" => "data:image/svg+xml;base64," + Convert.ToBase64String("<svg/>"u8.ToArray()),
             "mismatch" => TestPictures.Url(TestPictures.Png(), "gif"),
-            "big" => TestPictures.PngUrl(70 * 1024),
+            "big" => TestPictures.PngUrl(300 * 1024),
             _ => "data:text/plain;base64,aGk=",
         };
 

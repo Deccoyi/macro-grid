@@ -16,8 +16,8 @@ public interface IPluginImageSource
 public interface IPluginImages
 {
     /// <summary>Offers one picture. <paramref name="imageId"/> is 1 to 128 characters of letters, digits, '.', '_', ':' and '-'.
-    /// <paramref name="dataUrl"/> is <c>data:image/png|jpeg|webp|gif;base64,...</c> and decodes to at most 64 KB whose first bytes match the type
-    /// (SVG is not accepted). Only an id the host asked for in the last 10 minutes is accepted. Returns whether the picture was accepted; a refusal
+    /// <paramref name="dataUrl"/> is <c>data:image/png|jpeg|webp|gif;base64,...</c> and decodes to at most 256 KB whose first bytes match the type and whose header says at most 1024 x 1024 pixels
+    /// (a GIF may have at most 64 frames; SVG is not accepted). The host only reads the header, it never decodes the picture, and metadata passes through unchanged. Only an id the host asked for in the last 10 minutes is accepted. Returns whether the picture was accepted; a refusal
     /// puts one line in the Error List and never throws.</summary>
     bool Put(string imageId, string dataUrl);
 }

@@ -11,7 +11,7 @@ namespace MacroGrid.Core.Plugins.Images;
 public sealed class PluginImageCache(string pluginDir, TimeProvider? time = null, long maxBytes = PluginImageCache.DefaultMaxBytes, int maxFiles = PluginImageCache.DefaultMaxFiles)
 {
     public const string FolderName = ".image-cache";
-    public const long DefaultMaxBytes = 20L * 1024 * 1024;
+    public const long DefaultMaxBytes = 64L * 1024 * 1024;
     public const int DefaultMaxFiles = 2000;
 
     private readonly TimeProvider _time = time ?? TimeProvider.System;
