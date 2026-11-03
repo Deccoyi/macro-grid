@@ -95,6 +95,54 @@ public sealed class PluginImageValidatorAndCacheTests : IDisposable
     }
 
     [Fact]
+    public void A_gif_frame_larger_than_the_screen_counts_and_a_huge_or_empty_frame_is_refused()
+    {
+        var gif = TestPictures.Gif(width: 1, height: 1);
+        int frame = Array.IndexOf(gif, (byte)0x2C, 13);
+        var big = (byte[])gif.Clone();
+        big[frame + 5] = 0xD0; big[frame + 6] = 0x07; big[frame + 7] = 0xD0; big[frame + 8] = 0x07; // 2000 x 2000
+        Assert.Equal(PluginImageValidator.Failure.Unreadable, PluginImageValidator.TryValidate(TestPictures.Url(big, "gif"), out _, out _));
+
+        var huge = (byte[])gif.Clone();
+        huge[frame + 5] = 0xFF; huge[frame + 6] = 0xFF; huge[frame + 7] = 0xFF; huge[frame + 8] = 0xFF; // 65535 x 65535
+        Assert.Equal(PluginImageValidator.Failure.Unreadable, PluginImageValidator.TryValidate(TestPictures.Url(huge, "gif"), out _, out _));
+
+        var empty = (byte[])gif.Clone();
+        empty[frame + 5] = 0; empty[frame + 6] = 0;
+        Assert.Equal(PluginImageValidator.Failure.Unreadable, PluginImageValidator.TryValidate(TestPictures.Url(empty, "gif"), out _, out _));
+
+        var offset = (byte[])gif.Clone();
+        offset[frame + 1] = 0xFF; offset[frame + 2] = 0x03; // left 1023 + width 1 fits; left 1024 + 1 does not
+        Assert.Equal(PluginImageValidator.Failure.None, PluginImageValidator.TryValidate(TestPictures.Url(offset, "gif"), out _, out _));
+        offset[frame + 1] = 0x00; offset[frame + 2] = 0x04;
+        Assert.Equal(PluginImageValidator.Failure.Unreadable, PluginImageValidator.TryValidate(TestPictures.Url(offset, "gif"), out _, out _));
+    }
+
+    [Fact]
+    public void A_jpeg_with_another_kind_of_frame_header_is_refused_even_if_a_normal_one_follows()
+    {
+        var jpeg = TestPictures.Jpeg();
+        byte[] fake = [0xFF, 0xC9, 0x00, 0x0B, 0x08, 0xFF, 0xFF, 0xFF, 0xFF, 0x01, 0x01, 0x11, 0x00];
+        var bytes = jpeg[..8].Concat(fake).Concat(jpeg[8..]).ToArray();
+
+        Assert.Equal(PluginImageValidator.Failure.Unreadable, PluginImageValidator.TryValidate(TestPictures.Url(bytes, "jpeg"), out _, out _));
+    }
+
+    [Fact]
+    public void An_animated_png_or_webp_is_refused()
+    {
+        var png = TestPictures.Png(0);
+        byte[] actl = [0, 0, 0, 8, .. "acTL"u8.ToArray(), 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0];
+        Assert.Equal(PluginImageValidator.Failure.Unreadable, PluginImageValidator.TryValidate(TestPictures.Url([.. png, .. actl]), out _, out _));
+        byte[] idat = [0, 0, 0, 2, .. "IDAT"u8.ToArray(), 1, 2, 0, 0, 0, 0];
+        Assert.Equal(PluginImageValidator.Failure.None, PluginImageValidator.TryValidate(TestPictures.Url([.. png, .. idat, .. actl]), out _, out _)); // after the image data: not read
+
+        var webp = TestPictures.Webp();
+        webp[20] |= 0x02;
+        Assert.Equal(PluginImageValidator.Failure.Unreadable, PluginImageValidator.TryValidate(TestPictures.Url(webp, "webp"), out _, out _));
+    }
+
+    [Fact]
     public void A_jpeg_marker_walk_stops_after_64_markers()
     {
         byte[] segment = [0xFF, 0xE1, 0x00, 0x02];

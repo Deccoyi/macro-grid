@@ -88,7 +88,22 @@ public static class PluginImageValidator
         var height = (long)d[20] << 24 | (long)d[21] << 16 | (long)d[22] << 8 | d[23];
         w = (int)Math.Min(width, int.MaxValue);
         h = (int)Math.Min(height, int.MaxValue);
-        return true;
+        return !HasAnimationChunk(d);
+    }
+
+    /// <summary>True when an animation control chunk (APNG) comes before the image data. Walks at most 64 chunk headers and stops at the end of the buffer.</summary>
+    private static bool HasAnimationChunk(ReadOnlySpan<byte> d)
+    {
+        long pos = 8;
+        for (var chunks = 0; chunks < 64 && pos + 8 <= d.Length; chunks++)
+        {
+            var length = (long)d[(int)pos] << 24 | (long)d[(int)pos + 1] << 16 | (long)d[(int)pos + 2] << 8 | d[(int)pos + 3];
+            var type = d.Slice((int)pos + 4, 4);
+            if (type.SequenceEqual("acTL"u8)) return true;
+            if (type.SequenceEqual("IDAT"u8) || type.SequenceEqual("IEND"u8)) return false;
+            pos += 12 + length;
+        }
+        return false;
     }
 
     private static bool ReadJpeg(ReadOnlySpan<byte> d, out int w, out int h)
@@ -107,6 +122,8 @@ public static class PluginImageValidator
                 w = Be16(d, pos + 7);
                 return true;
             }
+            // Any other frame header (progressive-lossless, arithmetic, hierarchical): refuse rather than read a size a decoder might read differently.
+            if (marker is 0xC3 or (>= 0xC5 and <= 0xC7) or (>= 0xC9 and <= 0xCB) or (>= 0xCD and <= 0xCF)) return false;
             if (marker is 0xD9 or 0xDA) return false; // the image data starts or ends with no frame header before it
             if (marker is 0x01 or 0xD8 or (>= 0xD0 and <= 0xD7)) { pos += 2; continue; } // markers with no length
             if (pos + 4 > d.Length) return false;
@@ -122,6 +139,7 @@ public static class PluginImageValidator
         w = h = 0;
         if (d.Length < 30) return false;
         var chunk = d.Slice(12, 4);
+        if (chunk.SequenceEqual("VP8X"u8) && (d[20] & 0x02) != 0) return false; // animated: no frame limit is kept, buttons do not need it
         if (chunk.SequenceEqual("VP8 "u8))
         {
             if (d[23] != 0x9D || d[24] != 0x01 || d[25] != 0x2A) return false;
@@ -170,6 +188,14 @@ public static class PluginImageValidator
                     break;
                 case 0x2C: // image descriptor
                     if (++frames > MaxGifFrames || pos + 9 > d.Length) return false;
+                    // A frame may be larger than the logical screen and decoders grow the canvas to it, so the frame rectangle counts too.
+                    var left = Le16(d, pos);
+                    var top = Le16(d, pos + 2);
+                    var frameWidth = Le16(d, pos + 4);
+                    var frameHeight = Le16(d, pos + 6);
+                    if (frameWidth == 0 || frameHeight == 0 || left + frameWidth > MaxSide || top + frameHeight > MaxSide) return false;
+                    w = Math.Max(w, left + frameWidth);
+                    h = Math.Max(h, top + frameHeight);
                     var packed = d[pos + 8];
                     pos += 9;
                     if ((packed & 0x80) != 0) pos += 3 << ((packed & 7) + 1);
