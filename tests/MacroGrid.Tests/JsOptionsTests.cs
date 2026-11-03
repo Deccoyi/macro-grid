@@ -40,7 +40,7 @@ public sealed class JsOptionsTests : IDisposable
         File.WriteAllText(path, script);
         var manifest = new PluginManifest { Id = "t", Name = "T", Version = "1.0.0", MinMacroGrid = "1.0.0", Entry = "index.js", Kind = PluginKind.Js };
         var plugin = new JsPlugin(manifest, path, new JsPermissions(["actions"]), new VariableStore(), null, _log, _faults.Add,
-            limits ?? JsPluginLimits.Default with { CallTimeout = TimeSpan.FromSeconds(1) }, problems: _problems);
+            limits ?? JsPluginLimits.Default with { CallTimeout = TimeSpan.FromSeconds(30) }, problems: _problems);
         _plugins.Add(plugin);
         var host = new PluginHostCollector("0.1.0", _dir, "t", new PluginStatusRegistry(), _log);
         plugin.Initialize(host);

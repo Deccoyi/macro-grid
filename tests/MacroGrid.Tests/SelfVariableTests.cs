@@ -233,7 +233,7 @@ public sealed class SelfVariableTests : IDisposable
         var release = new TaskCompletionSource();
 
         var run = service.RunBusyAsync(session, "w", async () => { await release.Task; return 1; });
-        await Task.Delay(150);
+        for (var i = 0; i < 500 && !session.Busy.ContainsKey("w"); i++) await Task.Delay(10); // the busy delay is a timer; a loaded machine may be late
         Assert.True(session.Busy.ContainsKey("w"));
         await service.FlushAsync();
         Assert.Equal("#ff0000", (string?)Assert.Single(socket.Sent).Data!["style"]!["background"]);

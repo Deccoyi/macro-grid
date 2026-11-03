@@ -20,6 +20,7 @@ internal static class ApiResults
     {
         context.Response.Headers.ContentSecurityPolicy = PluginIconResponse.ContentSecurityPolicy;
         context.Response.Headers.XContentTypeOptions = PluginIconResponse.ContentTypeOptions;
+        context.Response.Headers["Cross-Origin-Resource-Policy"] = PluginIconResponse.CrossOriginResourcePolicy;
     }
 
     /// <summary>
