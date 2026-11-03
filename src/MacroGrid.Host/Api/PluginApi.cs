@@ -74,6 +74,8 @@ internal static class PluginApi
         // they were stored. A picture that is not cached is a 404; only with ?request=1 (a caller that really uses it) is the plugin asked for it, so a later load finds it. Like the rest of /api this is loopback only.
         api.MapGet("/plugins/{pluginId}/images/{imageId}", (string pluginId, string imageId, string? request, PluginImageService images, HttpContext context) =>
         {
+            // A miss must never be cached: the plugin answers asynchronously and the same URL is fetched again a moment later.
+            context.Response.Headers.CacheControl = "no-store";
             if (!PluginImageRef.IsValidPluginId(pluginId) || !PluginImageRef.IsValidImageId(imageId) || !images.IsKnown(pluginId)) return Results.NotFound();
             if (images.TryGetBytes(pluginId, imageId) is not { } picture)
             {

@@ -1,4 +1,4 @@
-import type { CSSProperties } from "react";
+import { useSyncExternalStore, type CSSProperties } from "react";
 import type { IconPosition } from "../types";
 
 /** Marks an icon image (inside its SVG) as a plain shape that may be recoloured: the renderer then paints it with the text colour. */
@@ -11,8 +11,12 @@ export function isTintableIcon(icon: string | undefined): boolean {
 
 let iconUrlResolver: (icon: string) => string = (icon) => icon;
 /** Lets a host map an icon reference (one that is not a data: URI) to a loadable URL; the editor does this for plugin pictures. */
-export function setIconUrlResolver(resolve: ((icon: string) => string) | null): void {
+const noSubscribe = () => () => {};
+let iconSubscribe: (listener: () => void) => () => void = noSubscribe;
+/** `subscribe` tells the renderer when a resolved URL may have changed (a plugin picture arrived), so the icon is drawn again. */
+export function setIconUrlResolver(resolve: ((icon: string) => string) | null, subscribe?: (listener: () => void) => () => void): void {
   iconUrlResolver = resolve ?? ((icon) => icon);
+  iconSubscribe = subscribe ?? noSubscribe;
 }
 
 export interface ButtonContentProps {
@@ -60,7 +64,7 @@ function tintStyle(icon: string): CSSProperties {
  * moved the block horizontally instead. Keeping the two boxes separate avoids that entirely.
  */
 export function ButtonContent({ text, icon: rawIcon, iconSize = 28, iconPosition = "top" }: ButtonContentProps) {
-  const icon = rawIcon === undefined ? undefined : iconUrlResolver(rawIcon);
+  const icon = useSyncExternalStore(iconSubscribe, () => (rawIcon === undefined ? undefined : iconUrlResolver(rawIcon)));
   const row = iconPosition === "left" || iconPosition === "right";
   return (
     <div className="ms-content">
