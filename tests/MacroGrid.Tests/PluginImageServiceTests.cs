@@ -285,6 +285,187 @@ public sealed class PluginImageServiceTests : IDisposable
         Assert.DoesNotContain(url[30..], everything);
     }
 
+    // ---- not fetched unless used; refresh; invalidate ----
+
+    private void Cached(string id, int fill = 1, string? version = null)
+    {
+        _service.RequestImage("vm", id);
+        Tick();
+        Assert.True(_service.Put("vm", id, TestPictures.PngUrl(fill: (byte)fill), version));
+        _source.Calls.Clear();
+    }
+
+    [Fact]
+    public void Looking_at_a_cached_or_missing_picture_without_using_it_requests_nothing()
+    {
+        Assert.Null(_service.TryGetBytes("vm", "voice:1"));
+        Assert.Null(_service.TryGetDataUrl("vm", "voice:1"));
+        Tick(TimeSpan.FromSeconds(5));
+
+        Assert.Empty(_source.Calls);
+    }
+
+    [Fact]
+    public void A_picture_younger_than_a_week_is_never_refreshed()
+    {
+        Cached("a");
+        Tick(TimeSpan.FromDays(6));
+
+        Assert.NotNull(_service.Resolve("plugin-image:vm/a"));
+        Tick(TimeSpan.FromSeconds(2));
+
+        Assert.Empty(_source.Calls);
+    }
+
+    [Fact]
+    public void An_old_picture_is_served_at_once_and_asked_for_again_once_per_week()
+    {
+        Cached("a", fill: 1);
+        Tick(TimeSpan.FromDays(8));
+
+        Assert.Equal(TestPictures.PngUrl(fill: 1), _service.Resolve("plugin-image:vm/a"));
+        Tick();
+        Assert.Equal([["a"]], _source.Calls);
+        Assert.Equal(TestPictures.PngUrl(fill: 1), _service.Resolve("plugin-image:vm/a")); // still the old one until the answer comes
+        Tick(TimeSpan.FromSeconds(2));
+        Assert.Single(_source.Calls);
+
+        var announced = new List<string[]?>();
+        _service.ImagesChanged += (_, ids) => announced.Add(ids?.ToArray());
+        Assert.True(_service.Put("vm", "a", TestPictures.PngUrl(fill: 2)));
+
+        Assert.Equal(TestPictures.PngUrl(fill: 2), _service.Resolve("plugin-image:vm/a"));
+        Assert.Equal(["a"], Assert.Single(announced));
+        // the new picture is fresh and the id was refreshed a moment ago: nothing more is asked
+        Tick(TimeSpan.FromDays(6));
+        _service.Resolve("plugin-image:vm/a");
+        Tick(TimeSpan.FromSeconds(2));
+        Assert.Single(_source.Calls);
+    }
+
+    [Fact]
+    public void An_id_that_was_refreshed_is_not_asked_again_within_a_week_even_if_the_answer_never_came()
+    {
+        Cached("a");
+        Tick(TimeSpan.FromDays(8));
+        _service.Resolve("plugin-image:vm/a");
+        Tick();
+        Tick(TimeSpan.FromMinutes(11)); // the open request ran out
+
+        _service.Resolve("plugin-image:vm/a");
+        Tick(TimeSpan.FromSeconds(2));
+
+        Assert.Single(_source.Calls);
+    }
+
+    [Fact]
+    public void At_most_ten_refreshes_per_hour_per_plugin()
+    {
+        for (var i = 0; i < 12; i++) Cached("id" + i);
+        Tick(TimeSpan.FromDays(8));
+
+        for (var i = 0; i < 12; i++) _service.Resolve($"plugin-image:vm/id{i}");
+        for (var round = 0; round < 5; round++) Tick(TimeSpan.FromMilliseconds(500));
+        Assert.Equal(10, _source.AllIds.Distinct().Count());
+
+        Tick(TimeSpan.FromHours(1));
+        _service.Resolve("plugin-image:vm/id10");
+        _service.Resolve("plugin-image:vm/id11");
+        Tick(TimeSpan.FromSeconds(2));
+        Assert.Equal(12, _source.AllIds.Distinct().Count());
+    }
+
+    [Fact]
+    public void Refreshes_share_the_batching()
+    {
+        for (var i = 0; i < 3; i++) Cached("id" + i);
+        Tick(TimeSpan.FromDays(8));
+        for (var i = 0; i < 3; i++) _service.Resolve($"plugin-image:vm/id{i}");
+
+        Tick();
+
+        Assert.Equal([["id0", "id1", "id2"]], _source.Calls);
+    }
+
+    [Fact]
+    public void An_old_picture_of_a_stopped_plugin_is_still_served_and_asked_for_when_it_returns()
+    {
+        Cached("a");
+        _service.Detach("vm");
+        Tick(TimeSpan.FromDays(9));
+
+        Assert.NotNull(_service.Resolve("plugin-image:vm/a"));
+        Tick(TimeSpan.FromSeconds(2));
+        Assert.Empty(_source.Calls);
+
+        var back = new RecordingImageSource();
+        _service.Attach("vm", "Voice plugin", _dir, back);
+        Tick();
+
+        Assert.Equal([["a"]], back.Calls);
+    }
+
+    [Fact]
+    public void The_time_of_a_picture_survives_a_restart()
+    {
+        Cached("a", version: "v7");
+        Tick(TimeSpan.FromDays(3));
+        using var restarted = new PluginImageService(_log, _problems, _time);
+        restarted.Attach("vm", "Voice plugin", _dir, _source);
+        restarted.Resolve("plugin-image:vm/a");
+        Tick(TimeSpan.FromSeconds(2));
+        Assert.Empty(_source.Calls); // 3 days old: fresh
+
+        Tick(TimeSpan.FromDays(5));
+        restarted.Resolve("plugin-image:vm/a");
+        Tick(TimeSpan.FromSeconds(2));
+        Assert.Equal([["a"]], _source.Calls);
+    }
+
+    [Fact]
+    public void Invalidate_asks_again_for_a_cached_picture_unless_the_version_is_the_same()
+    {
+        Cached("a", version: "v1");
+
+        _service.Invalidate("vm", "a", "v1");
+        Tick(TimeSpan.FromSeconds(1));
+        Assert.Empty(_source.Calls);
+
+        _service.Invalidate("vm", "a", "v2");
+        Tick(TimeSpan.FromSeconds(1));
+        Assert.Equal([["a"]], _source.Calls);
+        Assert.True(_service.Put("vm", "a", TestPictures.PngUrl(fill: 5), "v2"));
+
+        _service.Invalidate("vm", "a", "v2");
+        Tick(TimeSpan.FromSeconds(1));
+        Assert.Single(_source.Calls);
+
+        _service.Invalidate("vm", "a"); // no version: always
+        Tick(TimeSpan.FromSeconds(1));
+        Assert.Equal(2, _source.Calls.Count);
+    }
+
+    [Fact]
+    public void Invalidate_of_a_picture_that_is_not_cached_or_not_valid_does_nothing()
+    {
+        _service.Invalidate("vm", "never-cached");
+        _service.Invalidate("vm", "bad id");
+        _service.Invalidate("nobody", "a");
+        Tick(TimeSpan.FromSeconds(2));
+
+        Assert.Empty(_source.Calls);
+    }
+
+    [Fact]
+    public void A_bad_version_is_refused_and_a_64_character_one_is_kept()
+    {
+        _service.RequestImage("vm", "a");
+        Assert.False(_service.Put("vm", "a", TestPictures.PngUrl(), ""));
+        Assert.False(_service.Put("vm", "a", TestPictures.PngUrl(), "line\nbreak"));
+        Assert.False(_service.Put("vm", "a", TestPictures.PngUrl(), new string('v', 65)));
+        Assert.True(_service.Put("vm", "a", TestPictures.PngUrl(), new string('v', 64)));
+    }
+
     private sealed class ThrowingSource : MacroGrid.Plugin.Abstractions.IPluginImageSource
     {
         public int Calls { get; private set; }

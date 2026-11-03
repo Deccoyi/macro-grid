@@ -197,7 +197,7 @@ public sealed class PluginImageValidatorAndCacheTests : IDisposable
         Assert.True(cache.Put("voice:x", bytes));
 
         Assert.Equal(bytes, cache.TryGet("voice:x"));
-        var file = Assert.Single(Directory.GetFiles(cache.Folder));
+        var file = Assert.Single(Directory.GetFiles(cache.Folder, "*.bin"));
         Assert.EndsWith(".bin", file);
         Assert.DoesNotContain("voice", Path.GetFileName(file));
         Assert.Equal(PluginImageCache.FileNameFor("voice:x"), Path.GetFileName(file));

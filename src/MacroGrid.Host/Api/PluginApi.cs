@@ -71,11 +71,16 @@ internal static class PluginApi
         });
 
         // A picture a plugin supplied for a button (profile value plugin-image:<pluginId>/<imageId>), for the editor's own preview. The bytes were checked when
-        // they were stored. A picture that is not cached is a 404 and asks the plugin for it, so a later load finds it. Like the rest of /api this is loopback only.
-        api.MapGet("/plugins/{pluginId}/images/{imageId}", (string pluginId, string imageId, PluginImageService images, HttpContext context) =>
+        // they were stored. A picture that is not cached is a 404; only with ?request=1 (a caller that really uses it) is the plugin asked for it, so a later load finds it. Like the rest of /api this is loopback only.
+        api.MapGet("/plugins/{pluginId}/images/{imageId}", (string pluginId, string imageId, string? request, PluginImageService images, HttpContext context) =>
         {
             if (!PluginImageRef.IsValidPluginId(pluginId) || !PluginImageRef.IsValidImageId(imageId) || !images.IsKnown(pluginId)) return Results.NotFound();
-            if (images.TryGetBytes(pluginId, imageId) is not { } picture) return Results.NotFound();
+            if (images.TryGetBytes(pluginId, imageId) is not { } picture)
+            {
+                // Only a caller that really uses the picture (?request=1) makes the plugin fetch it; browsing a list never does.
+                if (request is "1" or "true") images.RequestImage(pluginId, imageId);
+                return Results.NotFound();
+            }
             context.Response.Headers.CacheControl = "private, max-age=31536000, immutable";
             ApiResults.SandboxIcon(context);
             return Results.File(picture.Bytes, picture.MediaType);

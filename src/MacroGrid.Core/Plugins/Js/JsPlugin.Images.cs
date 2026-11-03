@@ -14,5 +14,8 @@ public sealed partial class JsPlugin : IPluginImageSource
     }
 
     /// <summary><c>host.images.put</c>: one picture for an id the host asked for. Returns whether it was accepted.</summary>
-    private bool ImagesPut(string imageId, string dataUrl) => _host!.Images.Put(imageId, dataUrl);
+    private bool ImagesPut(string imageId, string dataUrl, string? version) => _host!.Images.Put(imageId, dataUrl, version);
+
+    /// <summary><c>host.images.invalidate</c>: the picture of this id changed.</summary>
+    private void ImagesInvalidate(string imageId, string? version) => _host!.Images.Invalidate(imageId, version);
 }

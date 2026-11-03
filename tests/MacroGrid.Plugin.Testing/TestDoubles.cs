@@ -106,10 +106,13 @@ public sealed class FakePluginWidgets : IPluginWidgets
 public sealed class FakePluginImages : IPluginImages
 {
     public List<(string ImageId, string DataUrl)> Puts { get; } = [];
+    public List<(string ImageId, string? Version)> Invalidations { get; } = [];
 
-    public bool Put(string imageId, string dataUrl)
+    public bool Put(string imageId, string dataUrl, string? version = null)
     {
         Puts.Add((imageId, dataUrl));
         return true;
     }
+
+    public void Invalidate(string imageId, string? version = null) => Invalidations.Add((imageId, version));
 }
