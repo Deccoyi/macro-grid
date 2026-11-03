@@ -6,7 +6,7 @@ import { useT } from "../../i18n/I18nContext";
 import { VariablePicker } from "../VariablePicker";
 import { HotkeyCapture } from "./HotkeyCapture";
 import { SearchSelect } from "./SearchSelect";
-import { isPluginImage } from "../../api/optionIcon";
+import { isPluginImage, requestPluginImage } from "../../api/optionIcon";
 import { clampDuration, joinDuration, splitDuration, type DurationUnit } from "./duration";
 import { ColorField, Field, NumberInput, RangeInput, Seg, SelectInput, Switch, TextInput, useFieldId } from "../fields/controls";
 import { layoutFields, segmentedAsSelect } from "./schemaFormLayout";
@@ -463,7 +463,10 @@ function SearchField({ field, value, values, onPatch, fetchOptions, widgetIcon }
     const ref = isPluginImage(o.icon) ? o.icon : null;
     setIcon(ref);
     // On by default when the button has no picture yet (or still has one taken from a plugin item).
-    if (ref && widgetIcon && (!widgetIcon.current || isPluginImage(widgetIcon.current))) widgetIcon.apply(ref);
+    if (ref && widgetIcon && (!widgetIcon.current || isPluginImage(widgetIcon.current))) {
+      requestPluginImage(ref);
+      widgetIcon.apply(ref);
+    }
   };
 
   return (
@@ -479,7 +482,10 @@ function SearchField({ field, value, values, onPatch, fetchOptions, widgetIcon }
       />
       {icon && widgetIcon && (
         <label className="pf-check">
-          <input type="checkbox" checked={widgetIcon.current === icon} onChange={(e) => widgetIcon.apply(e.target.checked ? icon : undefined)} />
+          <input type="checkbox" checked={widgetIcon.current === icon} onChange={(e) => {
+            if (e.target.checked) requestPluginImage(icon);
+            widgetIcon.apply(e.target.checked ? icon : undefined);
+          }} />
           {t("schemaForm.search.useIcon")}
         </label>
       )}
