@@ -206,4 +206,32 @@ public sealed class PluginImageValidatorAndCacheTests : IDisposable
         Assert.False(Directory.Exists(cache.Folder));
         Assert.Null(cache.TryGet("a"));
     }
+
+    [Fact]
+    public void A_repeated_read_does_not_touch_the_disk_again_and_a_put_replaces_what_is_served()
+    {
+        var cache = new PluginImageCache(_dir);
+        cache.Put("a", TestPictures.Png(16, 1));
+        var path = Path.Combine(cache.Folder, PluginImageCache.FileNameFor("a"));
+        Assert.NotNull(cache.TryGet("a"));
+        var stamp = File.GetLastWriteTimeUtc(path);
+        File.SetLastWriteTimeUtc(path, stamp.AddHours(-1));
+
+        Assert.NotNull(cache.TryGet("a"));
+        Assert.Equal(stamp.AddHours(-1), File.GetLastWriteTimeUtc(path)); // not touched again within a minute
+
+        cache.Put("a", TestPictures.Png(16, 2));
+        Assert.Equal(TestPictures.Png(16, 2), cache.TryGet("a"));
+    }
+
+    [Fact]
+    public void A_leftover_temp_file_is_removed_when_the_folder_is_read()
+    {
+        Directory.CreateDirectory(Path.Combine(_dir, PluginImageCache.FolderName));
+        var temp = Path.Combine(_dir, PluginImageCache.FolderName, "x.bin.tmp");
+        File.WriteAllBytes(temp, [1]);
+
+        Assert.Equal(0, new PluginImageCache(_dir).Count);
+        Assert.False(File.Exists(temp));
+    }
 }

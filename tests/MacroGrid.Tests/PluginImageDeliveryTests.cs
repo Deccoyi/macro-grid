@@ -363,8 +363,7 @@ public sealed class PluginImageDeliveryTests : IDisposable
         var session = Connect(socket, "p", "a", ClientCapabilities.Assets);
         await _service.SendInitialAsync(session, profile.Pages[0], default);
         Assert.StartsWith(AssetStore.RefPrefix, Assert.Single(socket.States("w1")).Style!["icon"]);
-        Directory.Delete(Path.Combine(_pluginDir, PluginImageCache.FolderName), recursive: true);
-        // the in-memory index still lists the file; a read finds it gone and forgets it
+        _images.Forget("vm"); // the picture is gone from the cache (eviction or uninstall)
 
         _service.Refresh("w1", session);
 

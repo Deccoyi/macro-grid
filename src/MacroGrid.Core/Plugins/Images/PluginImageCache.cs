@@ -21,6 +21,13 @@ public sealed class PluginImageCache(string pluginDir, TimeProvider? time = null
     private long _total;
     private long _lastStamp;
 
+    // Recently read pictures, so a layout or a fast dynamic rule does not read the disk on every look. Emptied whenever a file changes or goes.
+    private const long MemoryBudgetBytes = 4L * 1024 * 1024;
+    private static readonly TimeSpan TouchInterval = TimeSpan.FromMinutes(1);
+    private readonly Dictionary<string, byte[]> _memory = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, DateTimeOffset> _touched = new(StringComparer.Ordinal);
+    private long _memoryBytes;
+
     public string Folder { get; } = Path.Combine(pluginDir, FolderName);
 
     public int Count
@@ -55,15 +62,27 @@ public sealed class PluginImageCache(string pluginDir, TimeProvider? time = null
             var path = Path.Combine(Folder, name);
             try
             {
-                var bytes = File.ReadAllBytes(path);
+                var now = _time.GetUtcNow();
                 _index[name] = (entry.Size, NextStamp());
-                try { File.SetLastWriteTimeUtc(path, _time.GetUtcNow().UtcDateTime); } catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { }
+                if (!_memory.TryGetValue(name, out var bytes))
+                {
+                    bytes = File.ReadAllBytes(path);
+                    if (_memoryBytes + bytes.Length > MemoryBudgetBytes) ForgetMemory();
+                    _memory[name] = bytes;
+                    _memoryBytes += bytes.Length;
+                }
+                if (!_touched.TryGetValue(name, out var last) || now - last >= TouchInterval)
+                {
+                    _touched[name] = now;
+                    try { File.SetLastWriteTimeUtc(path, now.UtcDateTime); } catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { }
+                }
                 return bytes;
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {
                 _total -= entry.Size;
                 _index.Remove(name);
+                ForgetMemory();
                 return null;
             }
         }
@@ -89,6 +108,7 @@ public sealed class PluginImageCache(string pluginDir, TimeProvider? time = null
                 return false;
             }
 
+            ForgetMemory();
             if (_index.TryGetValue(name, out var old)) _total -= old.Size;
             _index[name] = (bytes.Length, NextStamp());
             _total += bytes.Length;
@@ -107,6 +127,7 @@ public sealed class PluginImageCache(string pluginDir, TimeProvider? time = null
             _index.Clear();
             _total = 0;
             _loaded = true;
+            ForgetMemory();
         }
     }
 
@@ -117,8 +138,16 @@ public sealed class PluginImageCache(string pluginDir, TimeProvider? time = null
             var oldest = _index.Where(kv => kv.Key != keep).MinBy(kv => kv.Value.Stamp).Key;
             _total -= _index[oldest].Size;
             _index.Remove(oldest);
+            ForgetMemory();
             try { File.Delete(Path.Combine(Folder, oldest)); } catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { }
         }
+    }
+
+    private void ForgetMemory()
+    {
+        _memory.Clear();
+        _touched.Clear();
+        _memoryBytes = 0;
     }
 
     private long NextStamp() => _lastStamp = Math.Max(_lastStamp + 1, _time.GetUtcNow().UtcTicks);
@@ -130,6 +159,8 @@ public sealed class PluginImageCache(string pluginDir, TimeProvider? time = null
         try
         {
             if (!Directory.Exists(Folder)) return;
+            // A crash between write and move leaves a temp file that nothing would read again.
+            foreach (var temp in Directory.EnumerateFiles(Folder, "*.tmp")) { try { File.Delete(temp); } catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { } }
             foreach (var file in new DirectoryInfo(Folder).EnumerateFiles("*.bin").OrderBy(f => f.LastWriteTimeUtc))
             {
                 _index[file.Name] = (file.Length, NextStamp());
