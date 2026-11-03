@@ -22,14 +22,14 @@ public sealed record OptionsQuery
     /// <summary>What the person typed, trimmed; empty when nothing was typed.</summary>
     public string Text { get; }
 
-    /// <summary>How many matches to skip.</summary>
+    /// <summary>How many options the caller already has (the selected one included), so the next page starts here.</summary>
     public int Offset { get; }
 
     /// <summary>The most options to return (1-50).</summary>
     public int Limit { get; }
 
-    /// <summary>The value stored in the field right now. On the first page (offset 0) put this option first so the editor can show its
-    /// label, and set <see cref="OptionsResult.SelectedMissing"/> when it is gone. Null when nothing is stored.</summary>
+    /// <summary>The value stored in the field right now. On the first page (offset 0) put this option first, counted in <see cref="Limit"/> and in
+    /// <see cref="Offset"/> of the next page, so the editor can show its label, and set <see cref="OptionsResult.SelectedMissing"/> when it is gone. Null when nothing is stored.</summary>
     public string? Selected { get; }
 }
 

@@ -77,12 +77,32 @@ public sealed class OptionsPagingTests
 
         var first = await Run(source, new OptionsQuery("", 0, 10, "v25"));
         Assert.Equal("v25", first.Options[0].Value);
-        Assert.Equal(11, first.Options.Count);
+        Assert.Equal(10, first.Options.Count);
         Assert.False(first.SelectedMissing);
 
-        var second = await Run(source, new OptionsQuery("", 10, 10, "v25"));
+        // The next page starts at the number of options already held, selected included: nothing is skipped or repeated.
+        var second = await Run(source, new OptionsQuery("", first.Options.Count, 10, "v25"));
         Assert.DoesNotContain(second.Options, o => o.Value == "v25");
+        Assert.Equal("v9", second.Options[0].Value);
         Assert.Null(second.SelectedMissing);
+
+        var all = new List<string>(first.Options.Select(o => o.Value));
+        for (var page = first; page.HasMore;)
+        {
+            page = await Run(source, new OptionsQuery("", all.Count, 10, "v25"));
+            all.AddRange(page.Options.Select(o => o.Value));
+        }
+        Assert.Equal(30, all.Count);
+        Assert.Equal(30, all.Distinct().Count());
+    }
+
+    [Fact]
+    public void The_editors_label_keys_are_removed_before_a_plugin_sees_the_values()
+    {
+        var values = new JsonObject { ["voice"] = "a", ["voice" + OptionsPaging.LabelSuffix] = "Alpha" };
+        var clean = OptionsPaging.WithoutLabelKeys(values);
+        Assert.Equal(["voice"], clean.Select(p => p.Key));
+        Assert.Same(clean, OptionsPaging.WithoutLabelKeys(clean));
     }
 
     [Fact]
@@ -108,7 +128,7 @@ public sealed class OptionsPagingTests
     [Fact]
     public async Task A_search_source_over_fifty_options_is_an_error()
     {
-        var result = await Run(new SearchSource(_ => new OptionsResult(Many(60))), new OptionsQuery("", 0, 50, null));
+        var result = await Run(new SearchSource(_ => new OptionsResult(Many(51))), new OptionsQuery("", 0, 50, null));
         Assert.Empty(result.Options);
         Assert.NotNull(result.Error);
     }

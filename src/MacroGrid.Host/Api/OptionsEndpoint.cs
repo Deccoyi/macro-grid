@@ -23,7 +23,7 @@ internal static class OptionsEndpoint
 
         try
         {
-            var result = await OptionsPaging.RunAsync(source, sourceId, currentValues ?? [], ReadQuery(request.Query), request.HttpContext.RequestAborted);
+            var result = await OptionsPaging.RunAsync(source, sourceId, OptionsPaging.WithoutLabelKeys(currentValues ?? []), ReadQuery(request.Query), request.HttpContext.RequestAborted);
             return ApiResults.Json(result with { Error = localizer.Translate(ownerPluginId(), result.Error) });
         }
         catch (Exception ex) when (ex is not OperationCanceledException)

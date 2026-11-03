@@ -48,7 +48,7 @@ internal static partial class JsOptions
         var options = new List<SettingOption>();
         if (root["options"] is JsonArray array)
         {
-            if (array.Count > OptionsPaging.MaxOptions + 1) return Fail($"The options source returned more than {OptionsPaging.MaxOptions} options for one page.");
+            if (array.Count > OptionsPaging.MaxOptions) return Fail($"The options source returned more than {OptionsPaging.MaxOptions} options for one page.");
             foreach (var item in array)
             {
                 if (item is not JsonObject o || Text(o["value"]) is not { Length: > 0 } value || value.Length > MaxValueChars) continue;

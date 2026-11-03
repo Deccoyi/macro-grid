@@ -12,7 +12,10 @@ namespace MacroGrid.Core.Plugins;
 /// names, so they stay out of the log (the errors it returns carry no label either).</summary>
 public static class OptionsPaging
 {
-    /// <summary>The most options one answer may hold (not counting the selected one a first page puts in front).</summary>
+    /// <summary>The key suffix the editor adds to a form value to remember the label of a picked option; a plugin never sees it.</summary>
+    public const string LabelSuffix = "\uFF20label";
+
+    /// <summary>The most options one answer may hold (the selected one included).</summary>
     public const int MaxOptions = 50;
 
     /// <summary>The largest answer, as serialized JSON.</summary>
@@ -28,7 +31,7 @@ public static class OptionsPaging
         if (source is IOptionsSearch search)
         {
             var answer = await search.SearchOptionsAsync(sourceId, currentValues, query, ct);
-            if (answer.Options.Count > MaxOptions + 1)
+            if (answer.Options.Count > MaxOptions)
                 return Failed($"The options source returned more than {MaxOptions} options for one page.");
             return Ceiling(answer);
         }
@@ -38,19 +41,28 @@ public static class OptionsPaging
         return Ceiling(Page(all.Options, query));
     }
 
-    /// <summary>Case- and diacritic-insensitive "contains" on the label, then one page. The stored value goes first on page 0 and is left
-    /// out of later pages; <c>offset</c> counts the matches without it.</summary>
+    /// <summary>The values without the editor's label keys (the object itself when there are none).</summary>
+    public static JsonObject WithoutLabelKeys(JsonObject values)
+    {
+        if (!values.Any(p => p.Key.EndsWith(LabelSuffix, StringComparison.Ordinal))) return values;
+        var copy = new JsonObject();
+        foreach (var (key, value) in values)
+            if (!key.EndsWith(LabelSuffix, StringComparison.Ordinal)) copy[key] = value?.DeepClone();
+        return copy;
+    }
+
+    /// <summary>Case- and diacritic-insensitive "contains" on the label, then one page. The list is the stored value (always first, matching
+    /// or not) followed by the matches, so <c>offset</c> is simply how many options the caller already has.</summary>
     internal static OptionsResult Page(IReadOnlyList<SettingOption> all, OptionsQuery query)
     {
         var needle = Fold(query.Text);
         var selected = query.Selected is null ? null : all.FirstOrDefault(o => o.Value == query.Selected);
         var matches = all.Where(o => !ReferenceEquals(o, selected) && (needle.Length == 0 || Fold(o.Label).Contains(needle, StringComparison.Ordinal))).ToList();
 
-        var page = matches.Skip(query.Offset).Take(query.Limit).ToList();
-        if (query.Offset == 0 && selected is not null) page.Insert(0, selected);
-        return new OptionsResult(page)
+        var list = selected is null ? matches : [selected, .. matches];
+        return new OptionsResult(list.Skip(query.Offset).Take(query.Limit).ToList())
         {
-            HasMore = matches.Count > query.Offset + query.Limit,
+            HasMore = list.Count > query.Offset + query.Limit,
             SelectedMissing = query.Offset == 0 && query.Selected is not null ? selected is null : null,
         };
     }
