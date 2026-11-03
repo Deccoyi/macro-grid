@@ -75,6 +75,24 @@ public sealed class JsPluginImageTests : IDisposable
     }
 
     [Fact]
+    public async Task Put_takes_a_version_and_invalidate_asks_again_unless_the_version_is_the_same()
+    {
+        Start("let n = 0; let done = false;"
+            + $"host.images.onRequest(ids => {{ n++; host.variables.set('t.n', n); host.images.put(ids[0], '{TestPictures.PngUrl()}', 'v1'); }});"
+            + "host.every(100, () => { if (n === 1 && !done) { done = true; host.images.invalidate('v1', 'v1'); host.images.invalidate('v1', 'v2'); } });");
+
+        _images.Resolve("plugin-image:t/v1");
+        _time.Advance(TimeSpan.Zero);
+        await WaitFor(() => _variables.Get("t.n") is 1d);
+        await Task.Delay(500); // the script now invalidates with the same version (nothing) and with another one (asks again)
+        _time.Advance(TimeSpan.FromSeconds(1));
+
+        await WaitFor(() => _variables.Get("t.n") is 2d);
+        await Task.Delay(300);
+        Assert.Equal(2d, _variables.Get("t.n"));
+    }
+
+    [Fact]
     public async Task A_script_without_a_handler_ignores_requests_and_a_throwing_handler_does_not_break_the_host()
     {
         Start("host.variables.set('t.up', true);");

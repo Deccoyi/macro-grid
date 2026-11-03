@@ -448,7 +448,7 @@ export const en: Record<DictKey, string> = {
   "errorHelp.P142": "A plugin sent its widgets more updates than they can take, so some were dropped. The widget may show old data until the next update.",
   "errorHelp.P143": "The code of a custom widget reported an error. Update the plugin or tell its author.",
   "errorHelp.P150": "The plugin reported this problem itself. Its text says what to do.",
-  "errorHelp.P151": "The plugin offered a button picture that was refused: it must be a PNG, JPEG, WebP or GIF of at most 64 KB that Macro Grid asked for. Tell the plugin's author.",
+  "errorHelp.P151": "The plugin offered a button picture that was refused: it must be a PNG, JPEG, WebP or GIF of at most 256 KB and 1024 x 1024 pixels that Macro Grid asked for. Tell the plugin's author.",
   "errorHelp.P160": "A step of an automation rule did not work. Open Preferences, Automation, and check that step. The rule runs again the next time its trigger happens.",
   "errorHelp.P161": "An automation rule started too often, so some starts were dropped. Check what triggers it, or give it a longer pause between runs.",
   "errorHelp.P162": "An automation rule kept starting and was switched off to protect your computer. Fix what triggers it, then switch it on again in Preferences, Automation.",

@@ -14,7 +14,7 @@ public sealed partial class JsPlugin
             'settingsPage', 'settingsGet', 'status', 'hotkey', 'type', 'pressEnd', 'http', 'httpAsync', 'storageGet', 'storageSet', 'storageRemove', 'storageKeys', 'notify', 'wsConnect', 'wsSend', 'wsClose', 'widgetPost', 'widgetReply', 'diagnosticsReport', 'diagnosticsResolve', 'diagnosticsClear', 'timer', 'cancel', 'actionDone'];
           const n = {};
           for (const name of names) { n[name] = g['__' + name]; delete g['__' + name]; }
-          for (const name of ['imagesPut']) { n[name] = g['__' + name]; delete g['__' + name]; }
+          for (const name of ['imagesPut', 'imagesInvalidate']) { n[name] = g['__' + name]; delete g['__' + name]; }
 
           const actions = Object.create(null);
           const outcomeActions = Object.create(null);
@@ -131,7 +131,8 @@ public sealed partial class JsPlugin
                 if (typeof fn !== 'function') throw new Error('images.onRequest needs a function.');
                 imagesHandler = fn;
               },
-              put: (id, dataUrl) => n.imagesPut(String(id), String(dataUrl)),
+              put: (id, dataUrl, version) => n.imagesPut(String(id), String(dataUrl), version === undefined || version === null ? null : String(version)),
+              invalidate: (id, version) => n.imagesInvalidate(String(id), version === undefined || version === null ? null : String(version)),
             }),
             every: (ms, fn) => start(fn, ms, true),
             after: (ms, fn) => start(fn, ms, false),

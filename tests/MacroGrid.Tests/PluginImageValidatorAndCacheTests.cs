@@ -43,14 +43,89 @@ public sealed class PluginImageValidatorAndCacheTests : IDisposable
     }
 
     [Fact]
-    public void Exactly_64_KB_passes_and_one_byte_more_does_not()
+    public void Exactly_256_KB_passes_and_one_byte_more_does_not()
     {
-        var ok = TestPictures.Png(PluginImageValidator.MaxDecodedBytes - 8);
-        var big = TestPictures.Png(PluginImageValidator.MaxDecodedBytes - 7);
-        Assert.Equal(PluginImageValidator.MaxDecodedBytes, ok.Length);
+        var room = PluginImageValidator.MaxDecodedBytes - TestPictures.Png(0).Length;
+        Assert.Equal(256 * 1024, TestPictures.Png(room).Length);
 
-        Assert.Equal(PluginImageValidator.Failure.None, PluginImageValidator.TryValidate(TestPictures.Url(ok), out _, out _));
-        Assert.Equal(PluginImageValidator.Failure.TooLarge, PluginImageValidator.TryValidate(TestPictures.Url(big), out _, out _));
+        Assert.Equal(PluginImageValidator.Failure.None, PluginImageValidator.TryValidate(TestPictures.Url(TestPictures.Png(room)), out _, out _));
+        Assert.Equal(PluginImageValidator.Failure.TooLarge, PluginImageValidator.TryValidate(TestPictures.Url(TestPictures.Png(room + 1)), out _, out _));
+        Assert.Equal(PluginImageValidator.Failure.None, PluginImageValidator.TryValidate(TestPictures.Url(TestPictures.Png(200 * 1024)), out _, out _));
+        Assert.Equal(PluginImageValidator.Failure.TooLarge, PluginImageValidator.TryValidate(TestPictures.Url(TestPictures.Png(257 * 1024)), out _, out _));
+    }
+
+    [Fact]
+    public void A_picture_of_each_type_at_1024_x_1024_passes_and_a_larger_side_does_not()
+    {
+        (byte[] Ok, byte[] Wide, string Type)[] cases =
+        [
+            (TestPictures.Png(width: 1024, height: 1024), TestPictures.Png(width: 1025, height: 1), "png"),
+            (TestPictures.Jpeg(width: 1024, height: 1024), TestPictures.Jpeg(width: 1025, height: 1), "jpeg"),
+            (TestPictures.Gif(width: 1024, height: 1024), TestPictures.Gif(width: 1025, height: 1), "gif"),
+            (TestPictures.Webp(width: 1024, height: 1024), TestPictures.Webp(width: 1025, height: 1), "webp"),
+        ];
+        foreach (var (ok, wide, type) in cases)
+        {
+            Assert.Equal(PluginImageValidator.Failure.None, PluginImageValidator.TryValidate(TestPictures.Url(ok, type), out _, out _));
+            Assert.Equal(PluginImageValidator.Failure.TooManyPixels, PluginImageValidator.TryValidate(TestPictures.Url(wide, type), out _, out _));
+        }
+    }
+
+    [Fact]
+    public void A_decode_bomb_header_is_refused_without_reading_further()
+    {
+        Assert.Equal(PluginImageValidator.Failure.TooManyPixels, PluginImageValidator.TryValidate(TestPictures.Url(TestPictures.Png(width: 30000, height: 30000)), out _, out _));
+        Assert.Equal(PluginImageValidator.Failure.TooManyPixels, PluginImageValidator.TryValidate(TestPictures.Url(TestPictures.Png(width: int.MaxValue, height: int.MaxValue)), out _, out _));
+        Assert.Equal(PluginImageValidator.Failure.TooManyPixels, PluginImageValidator.TryValidate(TestPictures.Url(TestPictures.Png(width: 0, height: 5)), out _, out _));
+        Assert.Equal(PluginImageValidator.Failure.TooManyPixels, PluginImageValidator.TryValidate(TestPictures.Url(TestPictures.Webp(width: 20000, height: 20000), "webp"), out _, out _));
+    }
+
+    [Fact]
+    public void A_header_that_cannot_be_read_is_refused()
+    {
+        var png = TestPictures.Png();
+        Assert.Equal(PluginImageValidator.Failure.Unreadable, PluginImageValidator.TryValidate(TestPictures.Url(png[..20]), out _, out _));
+        var notFirst = (byte[])png.Clone();
+        notFirst[12] = (byte)'X';
+        Assert.Equal(PluginImageValidator.Failure.Unreadable, PluginImageValidator.TryValidate(TestPictures.Url(notFirst), out _, out _));
+        Assert.Equal(PluginImageValidator.Failure.Unreadable, PluginImageValidator.TryValidate(TestPictures.Url(TestPictures.Jpeg(withFrame: false), "jpeg"), out _, out _));
+        Assert.Equal(PluginImageValidator.Failure.Unreadable, PluginImageValidator.TryValidate(TestPictures.Url([0xFF, 0xD8, 0xFF, 0xC0, 0x00], "jpeg"), out _, out _));
+        Assert.Equal(PluginImageValidator.Failure.Unreadable, PluginImageValidator.TryValidate(TestPictures.Url(TestPictures.Webp()[..24], "webp"), out _, out _));
+        Assert.Equal(PluginImageValidator.Failure.Unreadable, PluginImageValidator.TryValidate(TestPictures.Url(TestPictures.Gif()[..10], "gif"), out _, out _));
+    }
+
+    [Fact]
+    public void A_jpeg_marker_walk_stops_after_64_markers()
+    {
+        byte[] segment = [0xFF, 0xE1, 0x00, 0x02];
+        var bytes = new List<byte> { 0xFF, 0xD8 };
+        for (var i = 0; i < 70; i++) bytes.AddRange(segment);
+        bytes.AddRange(TestPictures.Jpeg()[8..]);
+
+        Assert.Equal(PluginImageValidator.Failure.Unreadable, PluginImageValidator.TryValidate(TestPictures.Url([.. bytes], "jpeg"), out _, out _));
+    }
+
+    [Fact]
+    public void A_gif_is_limited_to_64_frames_and_must_have_sound_blocks()
+    {
+        Assert.Equal(PluginImageValidator.Failure.None, PluginImageValidator.TryValidate(TestPictures.Url(TestPictures.Gif(frames: 64), "gif"), out _, out _));
+        Assert.Equal(PluginImageValidator.Failure.Unreadable, PluginImageValidator.TryValidate(TestPictures.Url(TestPictures.Gif(frames: 65), "gif"), out _, out _));
+        Assert.Equal(PluginImageValidator.Failure.Unreadable, PluginImageValidator.TryValidate(TestPictures.Url(TestPictures.Gif(trailer: false), "gif"), out _, out _));
+        Assert.Equal(PluginImageValidator.Failure.Unreadable, PluginImageValidator.TryValidate(TestPictures.Url(TestPictures.Gif(frames: 0), "gif"), out _, out _));
+        var unknownBlock = TestPictures.Gif()[..^1].Concat(new byte[] { 0x99, 0x3B }).ToArray();
+        Assert.Equal(PluginImageValidator.Failure.Unreadable, PluginImageValidator.TryValidate(TestPictures.Url(unknownBlock, "gif"), out _, out _));
+    }
+
+    [Fact]
+    public void The_webp_lossy_and_lossless_headers_are_read()
+    {
+        byte[] lossy = [.. "RIFF"u8.ToArray(), 0, 0, 0, 0, .. "WEBP"u8.ToArray(), .. "VP8 "u8.ToArray(), 10, 0, 0, 0, 0, 0, 0, 0x9D, 0x01, 0x2A, 0x00, 0x04, 0x00, 0x02];
+        byte[] lossless = [.. "RIFF"u8.ToArray(), 0, 0, 0, 0, .. "WEBP"u8.ToArray(), .. "VP8L"u8.ToArray(), 10, 0, 0, 0, 0x2F, 0xFF, 0x03, 0x00, 0x00, 0, 0, 0, 0, 0];
+
+        Assert.True(PluginImageValidator.TryReadSize(lossy, "webp", out var w, out var h));
+        Assert.Equal((1024, 512), (w, h));
+        Assert.True(PluginImageValidator.TryReadSize(lossless, "webp", out w, out h));
+        Assert.Equal((1024, 1), (w, h));
     }
 
     [Fact]
@@ -122,7 +197,7 @@ public sealed class PluginImageValidatorAndCacheTests : IDisposable
         Assert.True(cache.Put("voice:x", bytes));
 
         Assert.Equal(bytes, cache.TryGet("voice:x"));
-        var file = Assert.Single(Directory.GetFiles(cache.Folder));
+        var file = Assert.Single(Directory.GetFiles(cache.Folder, "*.bin"));
         Assert.EndsWith(".bin", file);
         Assert.DoesNotContain("voice", Path.GetFileName(file));
         Assert.Equal(PluginImageCache.FileNameFor("voice:x"), Path.GetFileName(file));
@@ -150,22 +225,22 @@ public sealed class PluginImageValidatorAndCacheTests : IDisposable
     [Fact]
     public void The_byte_limit_evicts_the_oldest_and_keeps_the_newest()
     {
-        var cache = new PluginImageCache(_dir, maxBytes: 100);
-        cache.Put("a", TestPictures.Png(42));
-        cache.Put("b", TestPictures.Png(42));
+        var cache = new PluginImageCache(_dir, maxBytes: 80);
+        cache.Put("a", TestPictures.Png(0));
+        cache.Put("b", TestPictures.Png(0));
 
-        cache.Put("c", TestPictures.Png(42)); // 3 x 50 bytes > 100
+        cache.Put("c", TestPictures.Png(0)); // 3 x 33 bytes > 80
 
         Assert.Null(cache.TryGet("a"));
         Assert.NotNull(cache.TryGet("b"));
         Assert.NotNull(cache.TryGet("c"));
-        Assert.True(cache.TotalBytes <= 100);
+        Assert.True(cache.TotalBytes <= 80);
     }
 
     [Fact]
-    public void The_default_limits_are_20_MB_and_2000_files()
+    public void The_default_limits_are_64_MB_and_2000_files()
     {
-        Assert.Equal(20L * 1024 * 1024, PluginImageCache.DefaultMaxBytes);
+        Assert.Equal(64L * 1024 * 1024, PluginImageCache.DefaultMaxBytes);
         Assert.Equal(2000, PluginImageCache.DefaultMaxFiles);
     }
 

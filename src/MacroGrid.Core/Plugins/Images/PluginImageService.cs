@@ -17,8 +17,13 @@ public sealed class PluginImageService(ILogger<PluginImageService>? logger = nul
     public const int MaxIdsPerCall = 20;
     public const int MaxOutstanding = 200;
 
+    /// <summary>A cached picture older than this is still served at once, and asked for again.</summary>
+    public static readonly TimeSpan RefreshAfter = TimeSpan.FromDays(7);
+    public const int MaxRefreshesPerHour = 10;
+    private const int MaxVersionLength = 64;
+
     /// <summary>The one line a refused picture puts on the Error List: it never says what was offered.</summary>
-    internal const string RefusedMessage = "A picture offered by this plugin was refused. It must be a PNG, JPEG, WebP or GIF of at most 64 KB that was asked for.";
+    internal const string RefusedMessage = "A picture offered by this plugin was refused. It must be a PNG, JPEG, WebP or GIF of at most 256 KB and 1024 x 1024 pixels that was asked for.";
 
     private sealed class Request(DateTimeOffset at)
     {
@@ -38,6 +43,8 @@ public sealed class PluginImageService(ILogger<PluginImageService>? logger = nul
         public ITimer? Timer;
         public bool TimerArmed;
         public DateTimeOffset LastCall = DateTimeOffset.MinValue;
+        public readonly Dictionary<string, DateTimeOffset> Refreshed = new(StringComparer.Ordinal);
+        public readonly Queue<DateTimeOffset> RefreshTimes = new();
     }
 
     private readonly TimeProvider _time = time ?? TimeProvider.System;
@@ -99,47 +106,77 @@ public sealed class PluginImageService(ILogger<PluginImageService>? logger = nul
     public string? TryGetDataUrl(string pluginId, string imageId) =>
         _channels.TryGetValue(pluginId, out var channel) && channel.Cache.TryGet(imageId) is { } bytes ? PluginImageValidator.ToDataUrl(bytes) : null;
 
-    /// <summary>The picture's bytes and media type when cached; otherwise null, and the plugin is asked for it.</summary>
+    /// <summary>The picture's bytes and media type when cached; otherwise null. Nothing is requested: browsing must not make a plugin fetch pictures (see <see cref="RequestImage"/>).</summary>
     public (byte[] Bytes, string MediaType)? TryGetBytes(string pluginId, string imageId)
     {
         if (!_channels.TryGetValue(pluginId, out var channel)) return null;
-        if (channel.Cache.TryGet(imageId) is { } bytes && PluginImageValidator.Sniff(bytes) is { } type) return (bytes, "image/" + type);
-        RequestImage(pluginId, imageId);
-        return null;
+        return channel.Cache.TryGet(imageId) is { } bytes && PluginImageValidator.Sniff(bytes) is { } type ? (bytes, "image/" + type) : null;
     }
 
-    /// <summary>For a reference in a profile: the data URL when cached, else null and the plugin is asked for the picture.</summary>
+    /// <summary>For a reference a button uses: the data URL when cached (and, when it is older than a week, one refresh is asked for), else null and the plugin is asked for the picture.</summary>
     public string? Resolve(string reference)
     {
         if (!PluginImageRef.TryParse(reference, out var pluginId, out var imageId)) return null;
         var url = TryGetDataUrl(pluginId, imageId);
         if (url is null) RequestImage(pluginId, imageId);
+        else RefreshIfOld(pluginId, imageId);
         return url;
     }
 
     /// <summary>Asks the plugin for a picture unless it is already asked for (and the question is younger than <see cref="RequestWindow"/>) or 200 are open.</summary>
     public void RequestImage(string pluginId, string imageId)
     {
-        if (!_channels.TryGetValue(pluginId, out var channel) || !PluginImageRef.IsValidImageId(imageId)) return;
-        lock (channel.Lock)
+        if (_channels.TryGetValue(pluginId, out var channel) && PluginImageRef.IsValidImageId(imageId)) lock (channel.Lock) Enqueue(channel, imageId);
+    }
+
+    // Called with the channel lock held. True when the id was queued.
+    private bool Enqueue(Channel channel, string imageId)
+    {
         {
             var now = _time.GetUtcNow();
             foreach (var stale in channel.Requested.Where(r => now - r.Value.At >= RequestWindow).Select(r => r.Key).ToList())
                 channel.Requested.Remove(stale);
-            if (channel.Requested.TryGetValue(imageId, out var open) && !open.Fulfilled) return;
-            if (channel.Requested.Values.Count(r => !r.Fulfilled) >= MaxOutstanding) return;
+            if (channel.Requested.TryGetValue(imageId, out var open) && !open.Fulfilled) return false;
+            if (channel.Requested.Values.Count(r => !r.Fulfilled) >= MaxOutstanding) return false;
             channel.Requested[imageId] = new Request(now);
             if (!channel.Queue.Contains(imageId)) channel.Queue.Add(imageId);
             Schedule(channel);
+            return true;
         }
     }
 
+    /// <summary>A cached picture older than <see cref="RefreshAfter"/> is asked for once more: at most once per id per week and 10 a hour per plugin. It keeps being served meanwhile.</summary>
+    private void RefreshIfOld(string pluginId, string imageId)
+    {
+        if (!_channels.TryGetValue(pluginId, out var channel) || channel.Cache.TryGetMeta(imageId) is not { } meta) return;
+        lock (channel.Lock)
+        {
+            var now = _time.GetUtcNow();
+            if (now - meta.StoredAt < RefreshAfter) return;
+            if (channel.Refreshed.TryGetValue(imageId, out var last) && now - last < RefreshAfter) return;
+            while (channel.RefreshTimes.Count > 0 && now - channel.RefreshTimes.Peek() >= TimeSpan.FromHours(1)) channel.RefreshTimes.Dequeue();
+            if (channel.RefreshTimes.Count >= MaxRefreshesPerHour) return;
+            if (!Enqueue(channel, imageId)) return;
+            channel.Refreshed[imageId] = now;
+            channel.RefreshTimes.Enqueue(now);
+        }
+    }
+
+    /// <summary>The plugin says a picture changed: if it is cached (and the version differs from the stored one, when one is given) it is asked for again.</summary>
+    public void Invalidate(string pluginId, string imageId, string? version = null)
+    {
+        if (!_channels.TryGetValue(pluginId, out var channel) || !PluginImageRef.IsValidImageId(imageId) || channel.Cache.TryGetMeta(imageId) is not { } meta) return;
+        if (version is not null && version == meta.Version) return;
+        lock (channel.Lock) Enqueue(channel, imageId);
+    }
+
     /// <summary>A plugin hands over a picture. Accepted only when it is valid and was asked for within <see cref="RequestWindow"/>; a refusal is one problem line per plugin.</summary>
-    public bool Put(string pluginId, string imageId, string dataUrl)
+    public bool Put(string pluginId, string imageId, string dataUrl, string? version = null)
     {
         if (!_channels.TryGetValue(pluginId, out var channel)) return false;
         var bytes = Array.Empty<byte>();
         var valid = PluginImageRef.IsValidImageId(imageId)
+            && (version is null || (version.Length is > 0 and <= MaxVersionLength && version.All(c => c >= ' ' && c != '\u007f' && !char.IsSurrogate(c))))
             && PluginImageValidator.TryValidate(dataUrl, out bytes, out _) == PluginImageValidator.Failure.None;
         if (valid)
             lock (channel.Lock)
@@ -151,7 +188,7 @@ public sealed class PluginImageService(ILogger<PluginImageService>? logger = nul
             return false;
         }
 
-        if (!channel.Cache.Put(imageId, bytes))
+        if (!channel.Cache.Put(imageId, bytes, version))
         {
             logger?.LogWarning("A picture of plugin {PluginId} could not be written to the cache", pluginId);
             return false;

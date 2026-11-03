@@ -451,7 +451,7 @@ export const tr = {
   "errorHelp.P142": "Bir plugin widget'larına alabileceklerinden fazla güncelleme gönderdi, bazıları atıldı. Widget bir sonraki güncellemeye kadar eski veriyi gösterebilir.",
   "errorHelp.P143": "Özel bir widget'ın kodu hata bildirdi. Plugin'i güncelleyin veya yapımcısına bildirin.",
   "errorHelp.P150": "Plugin bu sorunu kendisi bildirdi. Metni ne yapılacağını söyler.",
-  "errorHelp.P151": "Plugin reddedilen bir düğme resmi sundu: Macro Grid'in istediği, en fazla 64 KB bir PNG, JPEG, WebP veya GIF olmalı. Eklentinin yazarına bildirin.",
+  "errorHelp.P151": "Plugin reddedilen bir düğme resmi sundu: Macro Grid'in istediği, en fazla 256 KB ve 1024 x 1024 piksellik bir PNG, JPEG, WebP veya GIF olmalı. Eklentinin yazarına bildirin.",
   "errorHelp.P160": "Bir otomasyon kuralının adımı çalışmadı. Tercihler > Otomasyon bölümünde o adımı kontrol edin. Kural, tetikleyicisi bir sonraki gerçekleştiğinde yeniden çalışır.",
   "errorHelp.P161": "Bir otomasyon kuralı çok sık başladı, bu yüzden bazı başlatmalar atlandı. Kuralı neyin tetiklediğine bakın ya da çalışmalar arasına daha uzun bir bekleme koyun.",
   "errorHelp.P162": "Bir otomasyon kuralı sürekli başladığı için bilgisayarınızı korumak adına kapatıldı. Kuralı tetikleyen şeyi düzeltin, sonra Tercihler > Otomasyon bölümünden yeniden açın.",

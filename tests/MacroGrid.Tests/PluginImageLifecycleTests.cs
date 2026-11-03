@@ -75,7 +75,7 @@ public sealed class PluginImageLifecycleTests : IAsyncLifetime
         await _manager.InstallFromFolderAsync(Source(withCache: "foreign"));
 
         Assert.Equal(TestPictures.PngUrl(), _images.TryGetDataUrl("vm", "a"));
-        Assert.Single(Directory.GetFiles(Path.Combine(_pluginsDir, "vm", PluginImageCache.FolderName)));
+        Assert.Single(Directory.GetFiles(Path.Combine(_pluginsDir, "vm", PluginImageCache.FolderName), "*.bin"));
     }
 
     [Fact]

@@ -38,7 +38,9 @@ internal sealed class PluginHostCollector(string serverVersion, string dataDirec
     /// <summary>Hands a plugin's pictures to the image service under the plugin's own id; a host without a service (some tests) accepts none.</summary>
     private sealed class ImagesAdapter(PluginImageService? service, string pluginId) : IPluginImages
     {
-        public bool Put(string imageId, string dataUrl) => service?.Put(pluginId, imageId, dataUrl) ?? false;
+        public bool Put(string imageId, string dataUrl, string? version = null) => service?.Put(pluginId, imageId, dataUrl, version) ?? false;
+
+        public void Invalidate(string imageId, string? version = null) => service?.Invalidate(pluginId, imageId, version);
     }
 
     /// <summary>Turns a plugin's reports into Error List lines under the plugin's name. The source and code are set here, never by the plugin. A plugin

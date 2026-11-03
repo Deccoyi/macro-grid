@@ -11,7 +11,7 @@ namespace MacroGrid.Core.Plugins.Images;
 public sealed class PluginImageCache(string pluginDir, TimeProvider? time = null, long maxBytes = PluginImageCache.DefaultMaxBytes, int maxFiles = PluginImageCache.DefaultMaxFiles)
 {
     public const string FolderName = ".image-cache";
-    public const long DefaultMaxBytes = 20L * 1024 * 1024;
+    public const long DefaultMaxBytes = 64L * 1024 * 1024;
     public const int DefaultMaxFiles = 2000;
 
     private readonly TimeProvider _time = time ?? TimeProvider.System;
@@ -24,6 +24,7 @@ public sealed class PluginImageCache(string pluginDir, TimeProvider? time = null
     // Recently read pictures, so a layout or a fast dynamic rule does not read the disk on every look. Emptied whenever a file changes or goes.
     private const long MemoryBudgetBytes = 4L * 1024 * 1024;
     private static readonly TimeSpan TouchInterval = TimeSpan.FromMinutes(1);
+    private readonly Dictionary<string, (DateTimeOffset At, string? Version)> _meta = new(StringComparer.Ordinal);
     private readonly Dictionary<string, byte[]> _memory = new(StringComparer.Ordinal);
     private readonly Dictionary<string, DateTimeOffset> _touched = new(StringComparer.Ordinal);
     private long _memoryBytes;
@@ -82,6 +83,7 @@ public sealed class PluginImageCache(string pluginDir, TimeProvider? time = null
             {
                 _total -= entry.Size;
                 _index.Remove(name);
+                _meta.Remove(name);
                 ForgetMemory();
                 return null;
             }
@@ -89,7 +91,7 @@ public sealed class PluginImageCache(string pluginDir, TimeProvider? time = null
     }
 
     /// <summary>Stores a picture (replacing one of the same id) and evicts the least recently used until the limits hold again. False when the disk refused.</summary>
-    public bool Put(string imageId, byte[] bytes)
+    public bool Put(string imageId, byte[] bytes, string? version = null)
     {
         var name = FileNameFor(imageId);
         lock (_lock)
@@ -102,6 +104,7 @@ public sealed class PluginImageCache(string pluginDir, TimeProvider? time = null
                 var temp = path + ".tmp";
                 File.WriteAllBytes(temp, bytes);
                 File.Move(temp, path, overwrite: true);
+                File.WriteAllText(MetaPath(name), $"{_time.GetUtcNow().UtcTicks}\n{version}");
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {
@@ -111,6 +114,7 @@ public sealed class PluginImageCache(string pluginDir, TimeProvider? time = null
             ForgetMemory();
             if (_index.TryGetValue(name, out var old)) _total -= old.Size;
             _index[name] = (bytes.Length, NextStamp());
+            _meta[name] = (_time.GetUtcNow(), version);
             _total += bytes.Length;
             Trim(keep: name);
             return true;
@@ -125,6 +129,7 @@ public sealed class PluginImageCache(string pluginDir, TimeProvider? time = null
             try { if (Directory.Exists(Folder)) Directory.Delete(Folder, recursive: true); }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { }
             _index.Clear();
+            _meta.Clear();
             _total = 0;
             _loaded = true;
             ForgetMemory();
@@ -138,8 +143,35 @@ public sealed class PluginImageCache(string pluginDir, TimeProvider? time = null
             var oldest = _index.Where(kv => kv.Key != keep).MinBy(kv => kv.Value.Stamp).Key;
             _total -= _index[oldest].Size;
             _index.Remove(oldest);
+            _meta.Remove(oldest);
             ForgetMemory();
+            try { File.Delete(MetaPath(oldest)); } catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { }
             try { File.Delete(Path.Combine(Folder, oldest)); } catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { }
+        }
+    }
+
+    private string MetaPath(string name) => Path.Combine(Folder, name[..^4] + ".meta");
+
+    /// <summary>When the picture was stored and the version the plugin gave with it. A picture with no readable record counts as stored long ago, so it is refreshed once.</summary>
+    private (DateTimeOffset At, string? Version) ReadMeta(string name)
+    {
+        try
+        {
+            var lines = File.ReadAllText(MetaPath(name)).Split('\n', 2);
+            if (long.TryParse(lines[0], out var ticks) && ticks > 0 && ticks <= DateTimeOffset.MaxValue.UtcTicks)
+                return (new DateTimeOffset(ticks, TimeSpan.Zero), lines.Length > 1 && lines[1].Length > 0 ? lines[1] : null);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { }
+        return (DateTimeOffset.MinValue, null);
+    }
+
+    /// <summary>When the picture was stored and its version; null when it is not cached.</summary>
+    public (DateTimeOffset StoredAt, string? Version)? TryGetMeta(string imageId)
+    {
+        lock (_lock)
+        {
+            EnsureLoaded();
+            return _meta.TryGetValue(FileNameFor(imageId), out var meta) ? (meta.At, meta.Version) : null;
         }
     }
 
@@ -164,6 +196,7 @@ public sealed class PluginImageCache(string pluginDir, TimeProvider? time = null
             foreach (var file in new DirectoryInfo(Folder).EnumerateFiles("*.bin").OrderBy(f => f.LastWriteTimeUtc))
             {
                 _index[file.Name] = (file.Length, NextStamp());
+                _meta[file.Name] = ReadMeta(file.Name);
                 _total += file.Length;
             }
             Trim(keep: "");
