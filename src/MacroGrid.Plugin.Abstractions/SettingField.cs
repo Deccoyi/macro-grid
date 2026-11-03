@@ -58,7 +58,16 @@ public sealed record SettingOption(string Value, string Label, string? Group = n
 /// <summary>The result of an <see cref="IOptionsSource"/> query. <paramref name="Error"/> carries a
 /// user-facing message (e.g. "Not connected to the app") when options could not be produced; in that case
 /// <paramref name="Options"/> is empty, not null.</summary>
-public sealed record OptionsResult(IReadOnlyList<SettingOption> Options, string? Error = null);
+public sealed record OptionsResult(IReadOnlyList<SettingOption> Options, string? Error = null)
+{
+    /// <summary>True when more options match than this page holds (the editor offers "load more"). An init property, not a constructor
+    /// parameter, so a plugin built against an earlier SDK keeps working.</summary>
+    public bool HasMore { get; init; }
+
+    /// <summary>Set on the first page of a search that named a stored value (<see cref="OptionsQuery.Selected"/>): true when that value is
+    /// no longer offered, so the editor can say so instead of showing a raw value. Null when the question did not arise.</summary>
+    public bool? SelectedMissing { get; init; }
+}
 
 /// <summary>Declares one field of a schema-driven form. The host renders the form (action settings or
 /// plugin settings) from a list of these; the plugin never draws UI itself.</summary>
@@ -77,6 +86,10 @@ public sealed record SettingField(string Key, string Label, SettingFieldKind Kin
 
     /// <summary>Id passed to <see cref="IOptionsSource.GetOptionsAsync"/> to fetch options dynamically.</summary>
     public string? OptionsSource { get; init; }
+
+    /// <summary>Select only: the editor shows a search box and asks the options source for one page at a time (see
+    /// <see cref="IOptionsSearch"/>) instead of loading the whole list. Needs <see cref="OptionsSource"/>.</summary>
+    public bool Searchable { get; init; }
 
     /// <summary>Keys whose current form values are passed to the options query, and which trigger a
     /// refetch when they change (e.g. a scene-item field depends on the selected scene).</summary>

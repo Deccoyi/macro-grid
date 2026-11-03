@@ -56,6 +56,20 @@ A plugin can supply raster pictures for buttons. The profile never holds the pic
 
 The host asks for at most 20 ids per call and one call per 500 ms, with at most 200 open requests; an id that stays unanswered is asked for again after 10 minutes. A picture is accepted only for an id asked for in the last 10 minutes, as `data:image/png`, `jpeg`, `webp` or `gif` in base64, at most 64 KB decoded, and its first bytes must match the type. SVG is not accepted. A refused picture adds one Error List line (code `P151`) and nothing else. The host keeps accepted pictures in the plugin's folder (`.image-cache`, up to 20 MB and 2000 files, least recently used first; not part of backups, diagnostics or the signature check) and shows them while the plugin is not running. A picture that is not cached yet leaves the button's icon out until it arrives. The editor reads a cached picture from `GET /api/plugins/{pluginId}/images/{imageId}`.
 
+### Searchable option lists
+
+A `Select` field with an options source can be marked `searchable` (JSON name `searchable`, C# `SettingField.Searchable`). The editor then shows a search box and asks for one page at a time. The field keeps `optionsSource` and `dependsOn` as before.
+
+- **C#:** implement `IOptionsSearch` (it extends `IOptionsSource`): `SearchOptionsAsync(sourceId, currentValues, OptionsQuery query, ct)`. `OptionsQuery` has `Text` (trimmed, at most 100 characters), `Offset` (0 or more), `Limit` (1 to 50) and `Selected` (the stored value, or null). `Offset` is how many options the editor already has. Return the page in `OptionsResult.Options`, set `HasMore` when more match, and on the first page (offset 0) put the `Selected` option first (it counts in the page size and in the offset) and set `SelectedMissing` to true when it is no longer offered. A source that only implements `IOptionsSource` still works: the host filters (case, accents and the Turkish dotted and dotless i are ignored) and pages its whole list.
+- **JavaScript:** `host.options.source(id, (query, values) => ({ options: [{ value, label, group?, icon? }], more?: boolean, selectedMissing?: boolean, error?: string }))`. `query` is `{ text, offset, limit, selected }`, `values` the form values named in `dependsOn`. The function answers at once from the plugin's memory (no promise) inside the normal 2 second call budget. A throw, a timeout or an unknown id reaches the editor as the `error` text and does not count towards switching the plugin off. Fields of `registerAction` and `settings.page` take `optionsSource`, `searchable` and `dependsOn`.
+- **Endpoint:** `POST /api/actions/{type}/options/{sourceId}` (and the settings and tree variants) take `?q=&offset=&limit=&selected=` next to the unchanged body. Without those parameters the call is the old one and returns the source's whole list.
+- **Limits:** at most 50 options per page (the selected one included) and 256 KB per answer; a larger answer is an error, never the options. Option labels and answers are not written to the log.
+- **Pictures:** an option `icon` is a built-in icon name or `plugin-image:<pluginId>/<imageId>` (your own plugin id; image id 1 to 128 characters of letters, digits, `.`, `_`, `:` and `-`). Anything else, a `data:` URL included, is dropped.
+
+### Larger web socket messages
+
+A JavaScript plugin that talks to an app on the same PC can ask for bigger incoming messages in `plugin.json`: `"limits": { "wsMessageKB": 256 }` (64 to 1024, default 64). It only applies to a `ws:` permission for `localhost` or `127.0.0.1`; any other address keeps 64 KB. The person approves it ("Receives large messages from a local app") and can switch it off. Messages over 64 KB also share a budget of 2 MB a second per socket; when it is used up the extra messages are dropped and one line goes to the Error List. Outgoing messages stay at 64 KB.
+
 ## Network
 
 | What | Where |

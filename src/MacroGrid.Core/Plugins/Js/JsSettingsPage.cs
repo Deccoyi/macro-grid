@@ -12,7 +12,8 @@ namespace MacroGrid.Core.Plugins.Js;
 /// and the API see it as before; the API blanks it for the editor. A plain value from an older save still loads and is protected
 /// by the next save. A value that cannot be unprotected here (another Windows user or PC) loads as an empty string and
 /// <paramref name="onUnreadable"/> gets the field key; <paramref name="onSaved"/> runs after a save.</summary>
-internal sealed class JsSettingsPage(string dataDirectory, IReadOnlyList<SettingField> fields, IPluginSecrets? secrets = null, Action<string>? onUnreadable = null, Action? onSaved = null) : IPluginSettingsPage
+internal sealed class JsSettingsPage(string dataDirectory, IReadOnlyList<SettingField> fields, IPluginSecrets? secrets = null, Action<string>? onUnreadable = null, Action? onSaved = null,
+    Func<string, JsonObject, OptionsQuery, CancellationToken, Task<OptionsResult>>? options = null) : IPluginSettingsPage, IOptionsSearch
 {
     /// <summary>Marks a stored password value as protected.</summary>
     public const string ProtectedPrefix = "mgp1:";
@@ -24,6 +25,12 @@ internal sealed class JsSettingsPage(string dataDirectory, IReadOnlyList<Setting
     private readonly Lock _lock = new();
 
     public IReadOnlyList<SettingField> Fields => fields;
+
+    public Task<OptionsResult> GetOptionsAsync(string sourceId, JsonObject currentValues, CancellationToken cancellationToken) =>
+        SearchOptionsAsync(sourceId, currentValues, new OptionsQuery("", 0, OptionsQuery.MaxLimit, null), cancellationToken);
+
+    public Task<OptionsResult> SearchOptionsAsync(string sourceId, JsonObject currentValues, OptionsQuery query, CancellationToken cancellationToken) =>
+        options is null ? Task.FromResult(JsOptions.Fail("This plugin does not provide dynamic options.")) : options(sourceId, currentValues, query, cancellationToken);
 
     public JsonObject Load()
     {

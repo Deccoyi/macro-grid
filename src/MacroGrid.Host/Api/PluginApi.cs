@@ -3,6 +3,7 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using MacroGrid.Core.Backup;
 using MacroGrid.Core.Plugins;
+using MacroGrid.Core.Plugins.Js;
 using MacroGrid.Core.Plugins.Distribution;
 using MacroGrid.Core.Plugins.Images;
 using MacroGrid.Plugin.Abstractions;
@@ -100,7 +101,7 @@ internal static class PluginApi
                 selection.Set(sourceDir);
                 return ApiResults.Json(new {
                     canceled = false, path = sourceDir, id = manifest.Id, name = manifest.Name,
-                    kind = manifest.Kind.ToString().ToLowerInvariant(), permissions = manifest.Permissions ?? [],
+                    kind = manifest.Kind.ToString().ToLowerInvariant(), permissions = JsWsLimits.ListedPermissions(manifest),
                 });
             }
             catch (Exception ex) when (ex is JsonException or InvalidOperationException)

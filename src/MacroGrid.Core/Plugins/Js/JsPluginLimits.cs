@@ -20,6 +20,7 @@ public sealed record JsPluginLimits(
     int MaxWsConnectsPerMinute,
     TimeSpan WsConnectTimeout,
     int MaxWsMessageBytes,
+    int MaxWsLargeBytesPerSecond,
     int MaxWsIncomingPerSecond,
     int MaxWsOutgoingPerSecond,
     int MaxWsOutgoingWaiting,
@@ -45,6 +46,8 @@ public sealed record JsPluginLimits(
         MaxWsConnectsPerMinute: 10,
         WsConnectTimeout: TimeSpan.FromSeconds(10),
         MaxWsMessageBytes: 64 * 1024,
+        // A message over MaxWsMessageBytes (only possible with the manifest opt-in) also costs from this budget per socket.
+        MaxWsLargeBytesPerSecond: 2 * 1024 * 1024,
         MaxWsIncomingPerSecond: 50,
         MaxWsOutgoingPerSecond: 20,
         MaxWsOutgoingWaiting: 32,

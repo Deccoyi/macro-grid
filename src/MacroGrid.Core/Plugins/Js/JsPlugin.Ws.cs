@@ -19,9 +19,10 @@ public sealed partial class JsPlugin
     private readonly Queue<long> _wsConnects = new(); // timestamps; plugin thread only
     private HttpMessageInvoker? _wsInvoker;
 
-    private sealed class WsConnection(ClientWebSocket socket, CancellationTokenSource cts, int outgoingWaiting)
+    private sealed class WsConnection(ClientWebSocket socket, CancellationTokenSource cts, int outgoingWaiting, int maxIncomingBytes)
     {
         public ClientWebSocket Socket { get; } = socket;
+        public int MaxIncomingBytes { get; } = maxIncomingBytes;
         public CancellationTokenSource Cts { get; } = cts;
         public Channel<string> Outgoing { get; } = Channel.CreateBounded<string>(new BoundedChannelOptions(outgoingWaiting) { SingleReader = true, FullMode = BoundedChannelFullMode.Wait });
         public volatile bool ClosedByScript;
@@ -74,7 +75,8 @@ public sealed partial class JsPlugin
         catch { socket.Dispose(); throw; }
 
         _wsConnects.Enqueue(now);
-        var connection = new WsConnection(socket, CancellationTokenSource.CreateLinkedTokenSource(_disposeCts.Token), _limits.MaxWsOutgoingWaiting);
+        var connection = new WsConnection(socket, CancellationTokenSource.CreateLinkedTokenSource(_disposeCts.Token), _limits.MaxWsOutgoingWaiting,
+            JsWsLimits.MessageBytes(_manifest, _permissions.Has(JsWsLimits.ApprovalKey), uri.Host, _limits.MaxWsMessageBytes));
         _sockets[id] = connection;
         _wsInvoker ??= new HttpMessageInvoker(JsNetworkGuard.CreateHandler(_network, ReportNetworkRefused));
         _ = Task.Run(() => RunSocketAsync(id, uri, connection));
@@ -128,6 +130,9 @@ public sealed partial class JsPlugin
         using var message = new MemoryStream();
         var second = Stopwatch.GetTimestamp();
         var inSecond = 0;
+        // The byte budget for messages over the default size: the start of the current second and what was taken in it.
+        var budgetSecond = Stopwatch.GetTimestamp();
+        long budgetUsed = 0;
 
         while (!token.IsCancellationRequested)
         {
@@ -144,14 +149,26 @@ public sealed partial class JsPlugin
                 return (null, "", "Only text messages are supported.");
             }
 
-            if (message.Length + result.Count > _limits.MaxWsMessageBytes)
+            if (message.Length + result.Count > connection.MaxIncomingBytes)
             {
-                ReportLimit($"A web socket received a message of more than {_limits.MaxWsMessageBytes / 1024} KB and was closed.");
+                ReportLimit($"A web socket received a message of more than {connection.MaxIncomingBytes / 1024} KB and was closed.");
                 await AbortSocketAsync(connection, WebSocketCloseStatus.MessageTooBig);
                 return (null, "", "The message is too large.");
             }
             message.Write(buffer, 0, result.Count);
             if (!result.EndOfMessage) continue;
+
+            if (message.Length > _limits.MaxWsMessageBytes)
+            {
+                if (Stopwatch.GetElapsedTime(budgetSecond) >= TimeSpan.FromSeconds(1)) { budgetSecond = Stopwatch.GetTimestamp(); budgetUsed = 0; }
+                budgetUsed += message.Length;
+                if (budgetUsed > _limits.MaxWsLargeBytesPerSecond)
+                {
+                    message.SetLength(0);
+                    ReportLimit($"A web socket received large messages faster than {_limits.MaxWsLargeBytesPerSecond / (1024 * 1024)} MB a second, so some were dropped.");
+                    continue;
+                }
+            }
 
             var text = Encoding.UTF8.GetString(message.GetBuffer(), 0, (int)message.Length);
             message.SetLength(0);

@@ -169,6 +169,8 @@ public sealed partial class PluginManager
             var unknown = declared.FirstOrDefault(p => !JsPermissions.IsKnown(p));
             if (unknown is not null)
                 return Fail(PluginLoadStatus.Error, $"Unknown permission '{unknown}'");
+            if (manifest.Limits?.WsMessageKB is { } kb && !JsWsLimits.InRange(kb))
+                return Fail(PluginLoadStatus.Error, $"limits.wsMessageKB must be {JsWsLimits.MinKB} to {JsWsLimits.MaxKB}");
         }
 
         // A C# plugin is verified when it is officially signed; a JavaScript plugin never is (its widgets get the stricter limits).
@@ -184,7 +186,9 @@ public sealed partial class PluginManager
         // What the person approves: a JavaScript plugin's permissions plus every option a widget declares (keep loaded, storage).
         // Both kinds of plugin wait for approval; the C# ones only when they have widgets that declare options.
         string[] widgetKeys = [.. widgetCheck.Widgets.SelectMany(w => w.Options.Select(o => PluginWidgetOptions.ApprovalKey(w.Manifest.Id, o)))];
-        string[] required = [.. declared, .. widgetKeys];
+        // The opt-in to larger web socket messages is approved (and can be switched off) like a permission.
+        string[] limitKeys = JsWsLimits.ApprovalKeyFor(manifest) is { } limitKey ? [limitKey] : [];
+        string[] required = [.. declared, .. limitKeys, .. widgetKeys];
         if (required.Length > 0 && !permissionStore.IsGranted(manifest.Id, required))
             return Fail(PluginLoadStatus.NeedsApproval, "Needs your approval before it can run", required);
 
@@ -202,7 +206,7 @@ public sealed partial class PluginManager
         {
             if (manifest.Kind == PluginKind.Js)
             {
-                instance = new JsPlugin(manifest, entryPath, new JsPermissions(declared.Except(permissionStore.SwitchedOff(manifest.Id), StringComparer.OrdinalIgnoreCase)), variableStore, input, logger,
+                instance = new JsPlugin(manifest, entryPath, new JsPermissions(declared.Concat(limitKeys).Except(permissionStore.SwitchedOff(manifest.Id), StringComparer.OrdinalIgnoreCase)), variableStore, input, logger,
                     reason => _ = Task.Run(() => DisableAsync(manifest.Id, reason)), windows: windowSource, problems: problems, network: new JsNetworkPolicy(ownPorts ?? []), notifications: notifications);
             }
             else

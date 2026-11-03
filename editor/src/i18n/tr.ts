@@ -325,6 +325,7 @@ export const tr = {
   "plugins.permission.http.internet": "İnternetteki {target} adresine web istekleri göndermek (ağınızın dışına veri gönderebilir)",
   "plugins.permission.ws.local": "Bu bilgisayarda {target} adresine canlı bir bağlantı açık tutar",
   "plugins.permission.ws.lan": "Yerel ağında {target} adresine canlı bir bağlantı açık tutar",
+  "plugins.permission.wsLarge": "Bu bilgisayardaki bir uygulamadan büyük mesajlar alır",
   "plugins.permission.ws.internet": "İnternette {target} adresine canlı bir bağlantı açık tutar (verini ağının dışına gönderebilir)",
   "plugins.permission.widget.keepLoaded": "Widget'larından biri sayfasından çıktığınızda arka planda çalışmaya devam eder",
   "plugins.permission.widget.storage": "Widget'larından biri cihazlarınızda kendi küçük verisini saklar",
