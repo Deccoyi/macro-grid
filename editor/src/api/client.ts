@@ -84,6 +84,7 @@ function optionsQueryString(query?: OptionsQuery): string {
   if (query.offset) p.set("offset", String(query.offset));
   if (query.limit) p.set("limit", String(query.limit));
   if (query.selected) p.set("selected", query.selected);
+  if (query.refresh) p.set("refresh", "1");
   const s = p.toString();
   return s ? `?${s}` : "";
 }

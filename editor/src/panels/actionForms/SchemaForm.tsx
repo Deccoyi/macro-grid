@@ -393,7 +393,6 @@ function SchemaFieldRow({
 
     return (
       <Field
-        single
         label={field.label}
         hint={hint}
         error={opts.error ?? undefined}
@@ -491,13 +490,13 @@ function SearchField({ field, value, values, onPatch, fetchOptions, widgetIcon }
   };
 
   return (
-    <Field single label={field.label} hint={field.description ?? undefined}>
+    <Field label={field.label} hint={field.description ?? undefined}>
       <SearchSelect
         value={current}
         storedLabel={storedLabel}
         depsKey={depsKey}
         ariaLabel={field.label}
-        search={(q) => fetchOptions(source, valuesRef.current, { q: q.q, offset: q.offset, limit: q.limit, selected: current || undefined, signal: q.signal })}
+        search={(q) => fetchOptions(source, valuesRef.current, { q: q.q, offset: q.offset, limit: q.limit, selected: current || undefined, refresh: q.refresh || undefined, signal: q.signal })}
         onPick={pick}
         onResolved={(o) => setIcon(o && isPluginImage(o.icon) ? o.icon : null)}
       />

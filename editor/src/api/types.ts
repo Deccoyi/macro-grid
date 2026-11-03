@@ -42,6 +42,8 @@ export interface OptionsResult {
   error?: string | null;
   /** More options exist after these (the next page starts at offset + options.length). */
   hasMore?: boolean;
+  /** The source answered from what it has and is re-reading its data; ask again shortly. */
+  refreshing?: boolean;
 }
 
 /** The query of a searchable options source: sent as the query string of the options endpoint. */
@@ -51,6 +53,8 @@ export interface OptionsQuery {
   limit?: number;
   /** The stored value; the server includes its option so the form can tell a removed item from an unloaded one. */
   selected?: string;
+  /** The person pressed refresh: the source re-reads the data behind the list. */
+  refresh?: boolean;
   signal?: AbortSignal;
 }
 

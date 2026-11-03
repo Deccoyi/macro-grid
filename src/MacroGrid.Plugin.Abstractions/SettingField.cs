@@ -67,6 +67,10 @@ public sealed record OptionsResult(IReadOnlyList<SettingOption> Options, string?
     /// <summary>Set on the first page of a search that named a stored value (<see cref="OptionsQuery.Selected"/>): true when that value is
     /// no longer offered, so the editor can say so instead of showing a raw value. Null when the question did not arise.</summary>
     public bool? SelectedMissing { get; init; }
+
+    /// <summary>True when the source answered at once from what it has but is re-reading its data in the background (after
+    /// <see cref="OptionsQuery.Refresh"/>); the editor shows a spinner and asks again a moment later. JSON name <c>refreshing</c>.</summary>
+    public bool Refreshing { get; init; }
 }
 
 /// <summary>Declares one field of a schema-driven form. The host renders the form (action settings or

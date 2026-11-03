@@ -1,11 +1,14 @@
 import { useCallback, useEffect, useId, useRef, useState, useSyncExternalStore } from "react";
-import { ChevronDown, X } from "lucide-react";
+import { ChevronDown, RefreshCw, X } from "lucide-react";
 import { markImageMissing, subscribeImages, thumbSrc } from "../../api/optionIcon";
 import type { OptionsResult, SettingOption } from "../../api/types";
 import { useT } from "../../i18n/I18nContext";
 
 export const SEARCH_DEBOUNCE_MS = 250;
 const PAGE_SIZE = 50;
+/** After a refresh the source may still be re-reading its data: the same query is asked again this often, this many times. */
+export const REFRESH_POLL_MS = 1500;
+export const REFRESH_POLL_MAX = 8;
 
 export interface SearchSelectProps {
   /** The stored option value. */
@@ -13,7 +16,7 @@ export interface SearchSelectProps {
   /** The label the editor saw when the value was picked; shown while the source cannot answer. */
   storedLabel?: string;
   /** Asks the options source for one page; `signal` aborts it when a newer request replaces it. */
-  search: (query: { q: string; offset: number; limit: number; signal: AbortSignal }) => Promise<OptionsResult>;
+  search: (query: { q: string; offset: number; limit: number; refresh: boolean; signal: AbortSignal }) => Promise<OptionsResult>;
   /** Re-run the first page when this changes (the fields the options depend on). */
   depsKey?: string;
   ariaLabel: string;
@@ -44,6 +47,9 @@ export function SearchSelect({ value, storedLabel, search, depsKey, ariaLabel, o
   const [error, setError] = useState<string | null>(null);
   const [missing, setMissing] = useState(false);
   const [active, setActive] = useState(0);
+  const [refreshing, setRefreshing] = useState(false);
+  const pollTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const polls = useRef(0);
   const controller = useRef<AbortController | null>(null);
   const generation = useRef(0);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -56,13 +62,15 @@ export function SearchSelect({ value, storedLabel, search, depsKey, ariaLabel, o
   resolvedRef.current = onResolved;
   const listRef = useRef<HTMLUListElement | null>(null);
 
-  const load = useCallback((q: string, offset: number) => {
+  const load = useCallback((q: string, offset: number, refresh = false, poll = false) => {
+    if (pollTimer.current) clearTimeout(pollTimer.current);
+    if (!poll) { polls.current = 0; if (!refresh) setRefreshing(false); }
     controller.current?.abort();
     const ctl = new AbortController();
     controller.current = ctl;
     const id = ++generation.current;
     setLoading(true);
-    searchRef.current({ q, offset, limit: PAGE_SIZE, signal: ctl.signal })
+    searchRef.current({ q, offset, limit: PAGE_SIZE, refresh, signal: ctl.signal })
       .then((res) => {
         if (id !== generation.current) return; // a newer request replaced this one
         setLoading(false);
@@ -70,6 +78,11 @@ export function SearchSelect({ value, storedLabel, search, depsKey, ariaLabel, o
         setHasMore(Boolean(res.hasMore) && !res.error);
         setOptions((prev) => (offset === 0 ? res.options : [...prev, ...res.options]));
         if (offset === 0) setActive(0);
+        if (res.refreshing && !res.error && polls.current < REFRESH_POLL_MAX) {
+          polls.current++;
+          setRefreshing(true);
+          pollTimer.current = setTimeout(() => load(q, 0, false, true), REFRESH_POLL_MS);
+        } else setRefreshing(false);
         if (q === "" && offset === 0 && !res.error) {
           const found = res.options.find((o) => o.value === valueRef.current) ?? null;
           setMissing(valueRef.current !== "" && found === null);
@@ -78,6 +91,7 @@ export function SearchSelect({ value, storedLabel, search, depsKey, ariaLabel, o
       })
       .catch((err) => {
         if (id !== generation.current || isAbort(err)) return;
+        setRefreshing(false);
         setLoading(false);
         setHasMore(false);
         setError(err instanceof Error ? err.message : String(err));
@@ -90,7 +104,12 @@ export function SearchSelect({ value, storedLabel, search, depsKey, ariaLabel, o
     textRef.current = "";
     setOptions([]);
     load("", 0);
-    return () => { controller.current?.abort(); generation.current++; if (timer.current) clearTimeout(timer.current); };
+    return () => {
+      controller.current?.abort();
+      generation.current++;
+      if (timer.current) clearTimeout(timer.current);
+      if (pollTimer.current) clearTimeout(pollTimer.current);
+    };
   }, [depsKey, load]);
 
   const openList = () => {
@@ -99,6 +118,10 @@ export function SearchSelect({ value, storedLabel, search, depsKey, ariaLabel, o
     setText("");
     textRef.current = "";
     load("", 0);
+  };
+  const refresh = () => {
+    setRefreshing(true);
+    load(textRef.current, 0, true);
   };
   const close = () => {
     setOpen(false);
@@ -165,7 +188,8 @@ export function SearchSelect({ value, storedLabel, search, depsKey, ariaLabel, o
 
   return (
     <div className="pf-search" onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget)) close(); }}>
-      <div className="pf-sel">
+      <div className="pf-row">
+      <div className="pf-sel grow">
         <input
           type="text"
           role="combobox"
@@ -189,6 +213,10 @@ export function SearchSelect({ value, storedLabel, search, depsKey, ariaLabel, o
           </button>
         )}
         <span className="chev" aria-hidden="true"><ChevronDown size={14} /></span>
+      </div>
+      <button type="button" className="ghost pf-icon-btn" title={t("schemaForm.search.refresh")} aria-label={t("schemaForm.search.refresh")} aria-busy={refreshing} onClick={refresh}>
+        <RefreshCw size={12} className={refreshing ? "spin" : undefined} />
+      </button>
       </div>
       {open && (
         <ul

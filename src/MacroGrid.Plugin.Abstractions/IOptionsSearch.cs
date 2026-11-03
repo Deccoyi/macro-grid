@@ -19,6 +19,11 @@ public sealed record OptionsQuery
         Selected = string.IsNullOrEmpty(selected) || selected.Length > MaxSelectedLength ? null : selected;
     }
 
+    /// <summary>True when the person pressed the refresh button: re-read the data behind the list instead of answering from a cache. A source that
+    /// has to do this asynchronously answers at once with its current options and <see cref="OptionsResult.Refreshing"/> set. An init property,
+    /// so a plugin built against an earlier SDK keeps working.</summary>
+    public bool Refresh { get; init; }
+
     /// <summary>What the person typed, trimmed; empty when nothing was typed.</summary>
     public string Text { get; }
 

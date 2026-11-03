@@ -754,6 +754,7 @@ export const tr = {
   "schemaForm.search.placeholder": "Ara…",
   "schemaForm.search.loading": "Yükleniyor…",
   "schemaForm.search.empty": "Eşleşme yok",
+  "schemaForm.search.refresh": "Listeyi yenile",
   "schemaForm.search.clear": "Seçimi temizle",
   "schemaForm.search.unavailable": "Kullanılamıyor: {name}",
   "schemaForm.search.useIcon": "Resmini düğme ikonu olarak kullan",

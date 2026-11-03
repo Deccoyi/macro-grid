@@ -4,7 +4,7 @@ using MacroGrid.Plugin.Abstractions;
 namespace MacroGrid.Host.Api;
 
 /// <summary>Shared handler for the "dynamic options" endpoints of actions and plugin settings pages. The body is the current form values;
-/// <c>?q=&amp;offset=&amp;limit=&amp;selected=</c> ask for one searched page (any of them present makes it a search). Neither the body nor the
+/// <c>?q=&amp;offset=&amp;limit=&amp;selected=&amp;refresh=1</c> ask for one searched page (any of them present makes it a search). Neither the body nor the
 /// answer is logged.</summary>
 internal static class OptionsEndpoint
 {
@@ -35,9 +35,9 @@ internal static class OptionsEndpoint
     /// <summary>Null when the caller sent no search parameter (the old call: the whole list).</summary>
     private static OptionsQuery? ReadQuery(IQueryCollection query)
     {
-        if (!(query.ContainsKey("q") || query.ContainsKey("offset") || query.ContainsKey("limit") || query.ContainsKey("selected"))) return null;
+        if (!(query.ContainsKey("q") || query.ContainsKey("offset") || query.ContainsKey("limit") || query.ContainsKey("selected") || query.ContainsKey("refresh"))) return null;
         _ = int.TryParse(query["offset"], out var offset);
         var limit = int.TryParse(query["limit"], out var parsed) ? parsed : OptionsPaging.MaxOptions;
-        return new OptionsQuery(query["q"], offset, limit, query["selected"]);
+        return new OptionsQuery(query["q"], offset, limit, query["selected"]) { Refresh = query["refresh"] == "1" };
     }
 }

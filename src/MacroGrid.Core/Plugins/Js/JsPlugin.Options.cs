@@ -18,7 +18,7 @@ public sealed partial class JsPlugin
 
     internal async Task<OptionsResult> SearchOptionsAsync(string sourceId, JsonObject currentValues, OptionsQuery query, CancellationToken ct)
     {
-        var queryJson = JsonSerializer.Serialize(new { text = query.Text, offset = query.Offset, limit = query.Limit, selected = query.Selected });
+        var queryJson = JsonSerializer.Serialize(new { text = query.Text, offset = query.Offset, limit = query.Limit, selected = query.Selected, refresh = query.Refresh });
         var valuesJson = currentValues.ToJsonString();
         try
         {

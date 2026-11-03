@@ -739,6 +739,7 @@ export const en: Record<DictKey, string> = {
   "schemaForm.search.placeholder": "Search…",
   "schemaForm.search.loading": "Loading…",
   "schemaForm.search.empty": "No matches",
+  "schemaForm.search.refresh": "Refresh list",
   "schemaForm.search.clear": "Clear selection",
   "schemaForm.search.unavailable": "Unavailable: {name}",
   "schemaForm.search.useIcon": "Use its picture as the button icon",

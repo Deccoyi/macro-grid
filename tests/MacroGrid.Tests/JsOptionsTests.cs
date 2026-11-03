@@ -51,8 +51,20 @@ public sealed class JsOptionsTests : IDisposable
 
     private const string Action = "host.registerAction({ type: 't.go', name: 'Go', run: () => {}, fields: [{ key: 'v', label: 'V', kind: 'Select', optionsSource: 'items', searchable: true, dependsOn: ['mode'] }] });\n";
 
-    private static Task<OptionsResult> Ask(PluginHostCollector host, string text = "", int offset = 0, int limit = 20, string? selected = null, string id = "items") =>
-        OptionsPaging.RunAsync(Source(host), id, new JsonObject { ["mode"] = "m" }, new OptionsQuery(text, offset, limit, selected), CancellationToken.None);
+    private static Task<OptionsResult> Ask(PluginHostCollector host, string text = "", int offset = 0, int limit = 20, string? selected = null, string id = "items", bool refresh = false) =>
+        OptionsPaging.RunAsync(Source(host), id, new JsonObject { ["mode"] = "m" }, new OptionsQuery(text, offset, limit, selected) { Refresh = refresh }, CancellationToken.None);
+
+    [Fact]
+    public async Task The_refresh_flag_reaches_the_script_and_the_refreshing_flag_comes_back()
+    {
+        var host = Start(Action + """
+            host.options.source('items', (q) => ({ options: [{ value: 'a', label: 'Alpha' }], refreshing: q.refresh === true }));
+            """);
+        Assert.False((await Ask(host)).Refreshing);
+        var refreshed = await Ask(host, refresh: true);
+        Assert.True(refreshed.Refreshing);
+        Assert.Single(refreshed.Options);
+    }
 
     [Fact]
     public async Task A_source_answers_with_options_paging_and_groups()

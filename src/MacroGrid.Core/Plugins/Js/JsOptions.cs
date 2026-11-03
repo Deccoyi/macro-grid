@@ -59,6 +59,7 @@ internal static partial class JsOptions
         return new OptionsResult(options)
         {
             HasMore = Flag(root["more"]) == true,
+            Refreshing = Flag(root["refreshing"]) == true,
             SelectedMissing = Flag(root["selectedMissing"]),
         };
     }

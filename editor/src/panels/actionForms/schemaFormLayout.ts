@@ -17,10 +17,11 @@ export function segmentedAsSelect(field: SettingField): boolean {
 /** Most segments that still fit in half a row; a Segmented field with three segments takes a row of its own. */
 const MAX_SHARED_SEGMENTS = 2;
 
-/** Kinds that can sit two to a row: Number, Color, Select, a Segmented field drawn as a Select, and one with at most two segments. */
+/** Kinds that can sit two to a row: Number, Color and a Segmented field with at most two segments. A Select (plain, dynamic or searchable) never does:
+ * its labels are as long as a plugin makes them and do not fit in half of a narrow panel. */
 export function canShareRow(field: SettingField): boolean {
-  if (field.kind === "Segmented") return segmentedAsSelect(field) || (field.options?.length ?? 0) <= MAX_SHARED_SEGMENTS;
-  return field.kind === "Number" || field.kind === "Color" || field.kind === "Select";
+  if (field.kind === "Segmented") return !segmentedAsSelect(field) && (field.options?.length ?? 0) <= MAX_SHARED_SEGMENTS;
+  return field.kind === "Number" || field.kind === "Color";
 }
 
 /**
