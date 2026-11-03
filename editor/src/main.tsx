@@ -1,6 +1,6 @@
 import { createRoot } from "react-dom/client";
 import { setIconUrlResolver } from "@macro/renderer";
-import { iconSrc } from "./api/optionIcon";
+import { iconSrc, subscribeImages } from "./api/optionIcon";
 import { App } from "./App";
 import { PreferencesProvider } from "./preferences/PreferencesContext";
 import { TextFieldMenu } from "./panels/TextFieldMenu";
@@ -8,7 +8,7 @@ import { suppressBrowserMenu } from "./suppressBrowserMenu";
 import "./theme.css";
 
 // A picture a plugin supplies is stored as a reference; the preview loads it through the editor image endpoint.
-setIconUrlResolver(iconSrc);
+setIconUrlResolver(iconSrc, subscribeImages);
 import { HelpWindow } from "./windows/HelpWindow";
 import { PairingWindow } from "./windows/PairingWindow";
 import { PluginSettingsWindow } from "./windows/PluginSettingsWindow";

@@ -1,6 +1,6 @@
-import { useCallback, useEffect, useId, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useRef, useState, useSyncExternalStore } from "react";
 import { ChevronDown, X } from "lucide-react";
-import { isImageMissing, markImageMissing, resolveOptionIcon } from "../../api/optionIcon";
+import { markImageMissing, subscribeImages, thumbSrc } from "../../api/optionIcon";
 import type { OptionsResult, SettingOption } from "../../api/types";
 import { useT } from "../../i18n/I18nContext";
 
@@ -24,11 +24,9 @@ export interface SearchSelectProps {
 
 /** A thumbnail for an option icon; hidden when the picture cannot be loaded. */
 export function OptionIcon({ icon }: { icon?: string | null }) {
-  const src = resolveOptionIcon(icon);
-  const [failed, setFailed] = useState(() => isImageMissing(icon));
-  useEffect(() => setFailed(isImageMissing(icon)), [icon]);
-  if (!src || failed) return null;
-  return <img className="pf-opt-icon" src={src} alt="" width={20} height={20} onError={() => { markImageMissing(icon); setFailed(true); }} />;
+  const src = useSyncExternalStore(subscribeImages, () => thumbSrc(icon));
+  if (!src) return null;
+  return <img className="pf-opt-icon" src={src} alt="" width={20} height={20} onError={() => markImageMissing(icon)} />;
 }
 
 const isAbort = (err: unknown) => err instanceof DOMException && err.name === "AbortError";
