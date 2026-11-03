@@ -304,7 +304,7 @@ public sealed class JsPluginTests : IDisposable
     [Fact]
     public async Task A_slow_async_request_does_not_block_the_plugin()
     {
-        var (listener, port) = SlowServer(5000);
+        var (listener, port) = SlowServer(3500);
         using var _ = listener;
         var (_, host) = Start(
             $"host.http.getAsync('http://localhost:{port}/x').then(r => host.variables.set('t.done', r.body));\n"
@@ -312,10 +312,10 @@ public sealed class JsPluginTests : IDisposable
             ["variables", "actions", $"http:localhost:{port}"]);
 
         var watch = System.Diagnostics.Stopwatch.StartNew();
-        await Run(host, "t.ping"); // queued behind a blocking call it would wait the full 5 s
+        await Run(host, "t.ping"); // queued behind a blocking call it would wait the full 3.5 s
         watch.Stop();
 
-        Assert.True(watch.ElapsedMilliseconds < 4000, $"The action waited {watch.ElapsedMilliseconds} ms behind the request.");
+        Assert.True(watch.ElapsedMilliseconds < 3000, $"The action waited {watch.ElapsedMilliseconds} ms behind the request.");
         Assert.Equal(1.0, _variables.Get("t.ping"));
         Assert.Null(_variables.Get("t.done"));
         await WaitAsync(() => _variables.Get("t.done") is "hello");
