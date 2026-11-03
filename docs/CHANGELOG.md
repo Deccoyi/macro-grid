@@ -16,6 +16,9 @@ New features and fixes in Macro Grid. For technical details, see [CHANGELOG-deve
 ### Changed
 - **Passwords in plugin settings are now stored protected:** a password or key typed into the settings of a script plugin is no longer saved as plain text. If you open the settings on another PC or Windows account, enter it again.
 
+### Fixed
+- **Plugin variables in texts:** adding a plugin's variable to a button text now inserts the variable itself, not its current value (for example `true`).
+
 ## 1.5.0 - 2026-11-02
 ### New
 - **Restore from a restore point:** File > Restore now asks whether to restore from a file or from one of the automatic restore points, listed with date, reason and size.
