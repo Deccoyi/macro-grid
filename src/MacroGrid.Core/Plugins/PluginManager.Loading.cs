@@ -108,6 +108,9 @@ public sealed partial class PluginManager
             return Fail(PluginLoadStatus.Error, "This id is already used by another installed plugin");
         }
 
+        // Pictures the plugin supplied earlier keep showing while it is switched off or not running; only requests wait for it to run.
+        images?.Attach(manifest.Id, manifest.Name, dir, null);
+
         // Switched off by the person: nothing of the plugin runs, and its variables, actions and widgets disappear.
         if (permissionStore.IsDisabled(manifest.Id))
             return Fail(PluginLoadStatus.Disabled, "Switched off in the Plugins window");
@@ -211,7 +214,7 @@ public sealed partial class PluginManager
                 instance = (IPlugin)(Activator.CreateInstance(pluginType) ?? throw new InvalidOperationException("The plugin instance could not be created"));
             }
 
-            host = new PluginHostCollector(serverVersion, dir, manifest.Id, statusRegistry, logger, secretProtector, widgetEvents, manifest.Name, problems);
+            host = new PluginHostCollector(serverVersion, dir, manifest.Id, statusRegistry, logger, secretProtector, widgetEvents, manifest.Name, problems, images: images);
             instance.Initialize(host);
 
             // All-or-nothing: a clash on any action type fails the whole plugin instead of half-registering it.
@@ -250,6 +253,7 @@ public sealed partial class PluginManager
             }
             var entry = new Entry(dir, info) { Running = running, ListedAsRevoked = listedAsRevoked is not null };
             lock (_stateLock) _entries[manifest.Id] = entry;
+            images?.Attach(manifest.Id, manifest.Name, dir, instance as IPluginImageSource);
             if (treeProvider is not null) TreeChanges.Record(manifest.Id, null, wholePlugin: true);
             RefreshUnsignedNotice();
             logger.LogInformation("Plugin loaded: {Id} {Version}", manifest.Id, manifest.Version);

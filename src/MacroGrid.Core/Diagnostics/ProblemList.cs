@@ -61,6 +61,8 @@ public static class ProblemCodes
     public const string ActionFailed = "P132";
     /// <summary>A plugin reported a problem itself (<c>IPluginDiagnostics</c>).</summary>
     public const string PluginReported = "P150";
+    /// <summary>A plugin offered a button picture the host refused (wrong type, too large, not asked for). One line per plugin, counted when it repeats.</summary>
+    public const string ImageRefused = "P151";
     /// <summary>A step of an automation rule failed. Cleared when the rule next runs without a failure.</summary>
     public const string AutomationStepFailed = "P160";
     /// <summary>An automation rule was started too often and some starts were dropped.</summary>

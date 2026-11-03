@@ -330,6 +330,7 @@ public sealed partial class JsPlugin : IPlugin, IPluginWidgetHandler, IDisposabl
         engine.SetValue("__timer", new Action<int, int, bool>(StartTimer));
         engine.SetValue("__cancel", new Action<int>(CancelTimer));
         engine.SetValue("__actionDone", new Action<int, string>(ActionDone));
+        engine.SetValue("__imagesPut", new Func<string, string, bool>(ImagesPut));
         return engine;
     }
 

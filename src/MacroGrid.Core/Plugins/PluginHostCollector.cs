@@ -1,5 +1,6 @@
 using System.Text.Json.Nodes;
 using MacroGrid.Core.Diagnostics;
+using MacroGrid.Core.Plugins.Images;
 using MacroGrid.Core.Plugins.Widgets;
 using MacroGrid.Core.Security;
 using MacroGrid.Plugin.Abstractions;
@@ -12,7 +13,7 @@ namespace MacroGrid.Core.Plugins;
 /// here — PluginLoader adds the collected instances to the app's own DI container afterwards, the same
 /// way built-in actions/providers are registered in ServiceRegistration.cs.
 /// </summary>
-internal sealed class PluginHostCollector(string serverVersion, string dataDirectory, string pluginId, PluginStatusRegistry statusRegistry, ILogger logger, ISecretProtector? secretProtector = null, PluginWidgetEventHub? widgetEvents = null, string pluginName = "", ProblemList? problems = null, double diagnosticsCallsPerSecond = 10) : IPluginHost
+internal sealed class PluginHostCollector(string serverVersion, string dataDirectory, string pluginId, PluginStatusRegistry statusRegistry, ILogger logger, ISecretProtector? secretProtector = null, PluginWidgetEventHub? widgetEvents = null, string pluginName = "", ProblemList? problems = null, double diagnosticsCallsPerSecond = 10, PluginImageService? images = null) : IPluginHost
 {
     /// <summary>Adapts the host's own <see cref="ISecretProtector"/> to the SDK-facing <see cref="IPluginSecrets"/>.
     /// <paramref name="protector"/> is only ever null in a test host that never registered one; a plugin that
@@ -32,6 +33,12 @@ internal sealed class PluginHostCollector(string serverVersion, string dataDirec
     {
         public void Post(string widget, string name, JsonNode? data, string? widgetId = null, string? deviceId = null, bool retain = false) =>
             hub?.Post(pluginName, new PluginWidgetEvent(pluginId, widget, name, data?.DeepClone(), widgetId, deviceId, retain));
+    }
+
+    /// <summary>Hands a plugin's pictures to the image service under the plugin's own id; a host without a service (some tests) accepts none.</summary>
+    private sealed class ImagesAdapter(PluginImageService? service, string pluginId) : IPluginImages
+    {
+        public bool Put(string imageId, string dataUrl) => service?.Put(pluginId, imageId, dataUrl) ?? false;
     }
 
     /// <summary>Turns a plugin's reports into Error List lines under the plugin's name. The source and code are set here, never by the plugin. A plugin
@@ -128,6 +135,7 @@ internal sealed class PluginHostCollector(string serverVersion, string dataDirec
     public string DataDirectory { get; } = dataDirectory;
     public IPluginSecrets Secrets { get; } = new SecretsAdapter(secretProtector, pluginId);
     public IPluginWidgets Widgets { get; } = new WidgetsAdapter(widgetEvents, pluginId, pluginName);
+    public IPluginImages Images { get; } = new ImagesAdapter(images, pluginId);
     private readonly DiagnosticsAdapter _diagnostics = new(problems, pluginId, pluginName, logger, diagnosticsCallsPerSecond);
     public IPluginDiagnostics Diagnostics => _diagnostics;
 

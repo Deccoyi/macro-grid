@@ -165,6 +165,8 @@ public static class PluginFolderValidator
         var total = 0L;
         foreach (var file in Directory.EnumerateFiles(dir, "*", SearchOption.AllDirectories))
         {
+            // The host's own picture cache is never part of a package.
+            if (Path.GetRelativePath(dir, file).StartsWith(Images.PluginImageCache.FolderName + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase)) continue;
             var length = new FileInfo(file).Length;
             if (length > PluginZip.MaxEntryBytes)
                 error($"{Path.GetRelativePath(dir, file)} is larger than {PluginZip.MaxEntryBytes / 1024 / 1024} MB");

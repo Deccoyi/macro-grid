@@ -9,6 +9,7 @@ New features and fixes in Macro Grid. For technical details, see [CHANGELOG-deve
 - **Voicemod tutorial:** a new guide explains how to request your own Voicemod API key and connect it to Macro Grid.
 - **Searchable pickers in plugin actions:** a plugin can now offer a long list (for example voices or sounds) as a search box. Type to filter, scroll for more, and use the keyboard. The name you picked is still shown when the plugin's app is closed.
 - **Plugin pictures as button icons:** when a picked item has a picture, one tick box uses it as the button icon.
+- **Plugins can supply button pictures:** a plugin can now give its own pictures to buttons (for example one per voice). Shared profiles carry only the names you chose, never the pictures.
 
 ### Changed
 - **Passwords in plugin settings are now stored protected:** a password or key typed into the settings of a script plugin is no longer saved as plain text. If you open the settings on another PC or Windows account, enter it again.

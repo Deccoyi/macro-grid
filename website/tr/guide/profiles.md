@@ -49,6 +49,7 @@ Klasörler yalnızca düzenleyici içindir. Bir cihaz, sayfalar ve profiller kla
 ## Dışa ve içe aktarma
 
 - **Dosya → Profili Paylaş… (.mgprofile)** geçerli profili tek bir dosyaya kaydeder.
+  Paylaşılan profil, ses, ses efekti ve diğer eklenti öğeleri için seçtiğiniz adları ve eklentinin düğme resmine bir başvuruyu taşır. Resmin kendisini asla taşımaz; karşı tarafın eklentisi kendi resmini getirir.
 - **Dosya → Paylaşılan Profili İçe Aktar (.mgprofile / .json)…** bir profil yükler. Aynı adlı bir profil varsa **Üzerine yaz** ya da **Adı değiştir** seçeneğini seçersiniz. Eski `.msprofile` dosyaları da içe aktarılır.
 - İçe aktarılan profil sahip olmadığınız bir eklenti kullanıyorsa Düzenleyici hangisi olduğunu listeler; eklentiyi kurunca düğmeler çalışır.
 - Bu bilgisayarda bulunmayan bir dosyayı kullanan eylemler de listelenir.

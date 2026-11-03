@@ -4,6 +4,7 @@ using System.Text.Json.Nodes;
 using MacroGrid.Core.Backup;
 using MacroGrid.Core.Plugins;
 using MacroGrid.Core.Plugins.Distribution;
+using MacroGrid.Core.Plugins.Images;
 using MacroGrid.Plugin.Abstractions;
 using Microsoft.AspNetCore.Routing;
 
@@ -66,6 +67,17 @@ internal static class PluginApi
             var contentType = Path.GetExtension(path).Equals(".svg", StringComparison.OrdinalIgnoreCase) ? "image/svg+xml" : "image/png";
             ApiResults.SandboxIcon(context);
             return Results.File(path, contentType);
+        });
+
+        // A picture a plugin supplied for a button (profile value plugin-image:<pluginId>/<imageId>), for the editor's own preview. The bytes were checked when
+        // they were stored. A picture that is not cached is a 404 and asks the plugin for it, so a later load finds it. Like the rest of /api this is loopback only.
+        api.MapGet("/plugins/{pluginId}/images/{imageId}", (string pluginId, string imageId, PluginImageService images, HttpContext context) =>
+        {
+            if (!PluginImageRef.IsValidPluginId(pluginId) || !PluginImageRef.IsValidImageId(imageId) || !images.IsKnown(pluginId)) return Results.NotFound();
+            if (images.TryGetBytes(pluginId, imageId) is not { } picture) return Results.NotFound();
+            context.Response.Headers.CacheControl = "private, max-age=31536000, immutable";
+            ApiResults.SandboxIcon(context);
+            return Results.File(picture.Bytes, picture.MediaType);
         });
 
         // Browses for a folder and reads its plugin.json without installing anything yet, so the editor can

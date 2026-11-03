@@ -41,6 +41,17 @@ Bir eklentinin ayar sayfası alanlardan oluşur. Türler şunlardır: `Text`, `P
 | `Duration` | Milisaniye, saniye ya da dakika olarak gösterilebilen bir süre. |
 | `MultiSelect` | Seçeneklerden birkaçı, her biri ayrı ayrı işaretlenir. |
 
+## Eklentiden düğme resimleri
+
+Bir eklenti düğmeler için raster resim verebilir. Profil resmin kendisini tutmaz, yalnızca `plugin-image:<eklentiId>/<resimId>` başvurusunu tutar (resim kimliği 1 ile 128 karakter; harf, rakam, `.`, `_`, `:` ve `-`). Sunucu başvuruyu yerleşimi gönderirken resme çevirir; cihaz başvuruyu hiç görmez.
+
+| | JavaScript | C# |
+|---|---|---|
+| Resim istenir | `host.images.onRequest(ids => { ... })` | eklenti sınıfı `IPluginImageSource.RequestImages(IReadOnlyList<string> imageIds)` uygular |
+| Resim verilir | `host.images.put(imageId, dataUrl)` (kabul edilirse `true`) | `IPluginHost.Images.Put(imageId, dataUrl)` (`bool` döner) |
+
+Sunucu çağrı başına en fazla 20 kimlik ister, 500 ms'de en fazla bir çağrı yapar ve en fazla 200 açık istek tutar; yanıtlanmayan kimlik 10 dakika sonra yeniden istenir. Resim yalnızca son 10 dakikada istenen bir kimlik için, base64 `data:image/png`, `jpeg`, `webp` veya `gif` olarak, çözüldüğünde en fazla 64 KB ve ilk baytları türe uyuyorsa kabul edilir. SVG kabul edilmez. Reddedilen resim Hata Listesi'ne tek satır ekler (kod `P151`). Kabul edilen resimler eklentinin klasöründe (`.image-cache`, en fazla 20 MB ve 2000 dosya, en az kullanılan önce silinir; yedeklere, tanılamaya ve imza denetimine girmez) saklanır ve eklenti çalışmıyorken de gösterilir. Henüz önbellekte olmayan resim gelene kadar düğmenin simgesi gösterilmez. Düzenleyici önbellekteki resmi `GET /api/plugins/{pluginId}/images/{imageId}` adresinden okur.
+
 ## Ağ
 
 | Ne | Nerede |

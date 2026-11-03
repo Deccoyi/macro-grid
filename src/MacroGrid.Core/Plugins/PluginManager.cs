@@ -2,6 +2,7 @@ using System.Text.Json;
 using MacroGrid.Core.Actions;
 using MacroGrid.Core.Diagnostics;
 using MacroGrid.Core.Plugins.Distribution;
+using MacroGrid.Core.Plugins.Images;
 using MacroGrid.Core.Plugins.Js;
 using MacroGrid.Core.Plugins.Widgets;
 using MacroGrid.Core.Profiles;
@@ -49,7 +50,8 @@ public sealed partial class PluginManager(
     OfficialCatalog? officialCatalog = null,
     PluginInstallOriginStore? origins = null,
     IReadOnlyCollection<int>? ownPorts = null,
-    PluginNotifications? notifications = null) : IHostedService, IPluginWidgetHost
+    PluginNotifications? notifications = null,
+    PluginImageService? images = null) : IHostedService, IPluginWidgetHost
 {
     private static readonly JsonSerializerOptions ManifestJson = new(JsonSerializerDefaults.Web);
     private readonly PluginTrustVerifier _trust = trustVerifier ?? PluginTrustVerifier.Official;
@@ -391,6 +393,7 @@ public sealed partial class PluginManager(
             lock (_stateLock) _entries.Remove(pluginId);
             widgetCatalog?.Remove(pluginId);
             widgetEvents?.Forget(pluginId);
+            images?.Forget(pluginId);
             permissionStore.Revoke(pluginId);
             origins?.Remove(pluginId);
             logger.LogInformation(SecurityEvents.PluginUninstalled, "Security: plugin {Id} uninstalled", SecurityEvents.ForLog(pluginId));
@@ -491,6 +494,7 @@ public sealed partial class PluginManager(
         foreach (var file in Directory.GetFiles(sourceDir))
             File.Copy(file, Path.Combine(destDir, Path.GetFileName(file)), overwrite: true);
         foreach (var dir in Directory.GetDirectories(sourceDir))
-            CopyDirectory(dir, Path.Combine(destDir, Path.GetFileName(dir)));
+            if (!Path.GetFileName(dir).Equals(PluginImageCache.FolderName, StringComparison.OrdinalIgnoreCase))
+                CopyDirectory(dir, Path.Combine(destDir, Path.GetFileName(dir)));
     }
 }

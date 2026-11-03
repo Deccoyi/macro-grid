@@ -45,6 +45,17 @@ A `Password` field is stored protected for the current Windows user, in a JavaSc
 
 **Rule:** a plugin that holds a secret must use a `Password` field (a JavaScript plugin's settings page is protected by the host) or `IPluginSecrets` (a C# plugin writes its own settings file, so the host cannot enforce it).
 
+## Button pictures from a plugin
+
+A plugin can supply raster pictures for buttons. The profile never holds the picture, only the reference `plugin-image:<pluginId>/<imageId>` (the image id is 1 to 128 characters of letters, digits, `.`, `_`, `:` and `-`). The host turns the reference into the picture when it sends the layout; a device never sees the reference.
+
+| | JavaScript | C# |
+|---|---|---|
+| Asked for pictures | `host.images.onRequest(ids => { ... })` | the plugin class implements `IPluginImageSource.RequestImages(IReadOnlyList<string> imageIds)` |
+| Hand one over | `host.images.put(imageId, dataUrl)` (returns `true` when accepted) | `IPluginHost.Images.Put(imageId, dataUrl)` (returns `bool`) |
+
+The host asks for at most 20 ids per call and one call per 500 ms, with at most 200 open requests; an id that stays unanswered is asked for again after 10 minutes. A picture is accepted only for an id asked for in the last 10 minutes, as `data:image/png`, `jpeg`, `webp` or `gif` in base64, at most 64 KB decoded, and its first bytes must match the type. SVG is not accepted. A refused picture adds one Error List line (code `P151`) and nothing else. The host keeps accepted pictures in the plugin's folder (`.image-cache`, up to 20 MB and 2000 files, least recently used first; not part of backups, diagnostics or the signature check) and shows them while the plugin is not running. A picture that is not cached yet leaves the button's icon out until it arrives. The editor reads a cached picture from `GET /api/plugins/{pluginId}/images/{imageId}`.
+
 ## Network
 
 | What | Where |

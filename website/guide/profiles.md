@@ -49,6 +49,7 @@ Folders are only for the editor. A device sees the same pages and profiles in th
 ## Export and import
 
 - **File → Share Profile… (.mgprofile)** saves the current profile to a single file.
+  A shared profile carries the names you chose for sounds, voices and other plugin items, and a reference to a plugin's button picture. It never carries the picture itself, and the other person's plugin supplies its own.
 - **File → Import Shared Profile… (.mgprofile / .json)…** loads one. If a profile with the same name exists you choose **Overwrite** or **Rename**. Older `.msprofile` files still import.
 - If the imported profile uses a plugin you do not have, the editor lists which one, so you can install it and the buttons will work.
 - Actions that use a file which is not on this PC are listed too.

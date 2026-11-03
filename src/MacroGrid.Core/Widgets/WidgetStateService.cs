@@ -1,5 +1,6 @@
 using MacroGrid.Core.Actions;
 using MacroGrid.Core.Model;
+using MacroGrid.Core.Plugins.Images;
 using MacroGrid.Core.Plugins.Widgets;
 using MacroGrid.Core.Profiles;
 using MacroGrid.Core.Variables;
@@ -55,8 +56,11 @@ public sealed class WidgetStateService : IHostedService, IDisposable
     private readonly UserVariableService? _userVariables;
 
     public WidgetStateService(VariableStore variables, SessionRegistry sessions, ProfileStore profiles, ToggleStateStore toggles, LayoutSender layouts, ILogger<WidgetStateService> logger,
-        PluginWidgetCatalog? pluginWidgets = null, LastResultStore? results = null, ActionDispatcher? actions = null, UserVariableService? userVariables = null)
+        PluginWidgetCatalog? pluginWidgets = null, LastResultStore? results = null, ActionDispatcher? actions = null, UserVariableService? userVariables = null,
+        PluginImageService? images = null)
     {
+        _images = images;
+        if (images is not null) images.ImagesChanged += OnImagesChanged;
         _actions = actions;
         _userVariables = userVariables;
         if (actions is not null) actions.HandlersChanged += OnActionTypesChanged;
@@ -73,6 +77,7 @@ public sealed class WidgetStateService : IHostedService, IDisposable
     }
 
     private readonly PluginWidgetCatalog? _pluginWidgets;
+    private readonly PluginImageService? _images;
     private readonly ActionDispatcher? _actions;
 
     /// <summary>An action type appeared or went away (a plugin switched on or off): every widget with actions on a shown page is looked at again for its unavailable mark.</summary>
@@ -129,6 +134,22 @@ public sealed class WidgetStateService : IHostedService, IDisposable
     {
         _variables.Changed -= OnVariableChanged;
         if (_pluginWidgets is not null) _pluginWidgets.PluginChanged -= OnPluginWidgetsChanged;
+        if (_images is not null) _images.ImagesChanged -= OnImagesChanged;
+    }
+
+    /// <summary>Pictures of a plugin arrived (or its folder became known): every widget on a page a device is showing whose icon is, or can become, one of them is evaluated again
+    /// for that device. Nothing is remembered between the layout and now: the profile is read as it is at this moment, so an edit or a page change cannot leave a stale entry.
+    /// A page that is not shown gets its pictures when it is shown (<see cref="SendInitialAsync"/>).</summary>
+    private void OnImagesChanged(string pluginId, IReadOnlyCollection<string>? imageIds)
+    {
+        foreach (var session in _sessions.All)
+        {
+            if (session.ProfileId is null || session.PageId is null) continue;
+            var page = _profiles.Get(session.ProfileId)?.FindPage(session.PageId);
+            if (page is null) continue;
+            foreach (var widget in page.Widgets.Where(w => PluginImageRef.Of(w).Any(r => r.PluginId == pluginId && (imageIds is null || imageIds.Contains(r.ImageId)))))
+                Refresh(widget.Id, session);
+        }
     }
 
     /// <summary>Sends a profile's full layout to one client (see <see cref="LayoutSender"/>).</summary>
@@ -251,10 +272,14 @@ public sealed class WidgetStateService : IHostedService, IDisposable
         };
     }
 
-    /// <returns>Only the properties whose binding currently produced a value (matched a case, or hit the binding's default); null if the widget has no dynamized properties at all.</returns>
+    /// <returns>Only the properties whose binding currently produced a value (matched a case, or hit the binding's default); null if the widget has no dynamized properties at all.
+    /// An icon that is a plugin picture reference is replaced by the cached picture, or left out while it is missing (the widget then shows its own icon, or its text). A widget
+    /// whose own icon is such a reference gets that picture here too, since the layout carried it only if it was cached when the layout was sent.</returns>
     private Dictionary<string, string>? ResolveDynamicStyle(Widget widget, IVariableStore variables)
     {
-        if (widget.Dynamic.Count == 0) return null;
+        var ownIcon = widget.Style?.Icon;
+        var ownReference = PluginImageRef.LooksLikeRef(ownIcon);
+        if (widget.Dynamic.Count == 0 && !ownReference) return null;
 
         Dictionary<string, string>? resolved = null;
         foreach (var (propertyPath, binding) in widget.Dynamic)
@@ -263,7 +288,17 @@ public sealed class WidgetStateService : IHostedService, IDisposable
             var value = DynamicRuleEvaluator.Evaluate(binding, variables);
             if (value is null) continue; // no case matched and no default: leave the widget's own static value alone
             resolved ??= [];
+            if (styleKey == "icon" && PluginImageRef.LooksLikeRef(value))
+            {
+                if (_images?.Resolve(value) is not { } picture) continue;
+                value = picture;
+            }
             resolved[styleKey] = value;
+        }
+        if (ownReference && (resolved is null || !resolved.ContainsKey("icon")) && _images?.Resolve(ownIcon!) is { } own)
+        {
+            resolved ??= [];
+            resolved["icon"] = own;
         }
         return resolved;
     }
@@ -402,7 +437,7 @@ public sealed class WidgetStateService : IHostedService, IDisposable
                 text = rendered;
 
             Dictionary<string, string>? style = null;
-            if (widget.Dynamic.Count > 0 && (forced || BindingsDependOn(widget.Dynamic.Values, dirty)))
+            if ((widget.Dynamic.Count > 0 || PluginImageRef.LooksLikeRef(widget.Style?.Icon)) && (forced || BindingsDependOn(widget.Dynamic.Values, dirty)))
             {
                 var resolved = ResolveDynamicStyle(widget, scope);
                 var previous = session.SentStyles.GetValueOrDefault(widget.Id);

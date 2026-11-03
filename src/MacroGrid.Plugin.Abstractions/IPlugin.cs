@@ -58,6 +58,9 @@ public interface IPluginHost
     /// <summary>Reports problems the person can fix to the editor's Error List. Has a default (nothing is reported), so a test double that does
     /// not care keeps compiling; the real host always overrides it. Error lines are display only and never stop anything.</summary>
     IPluginDiagnostics Diagnostics => NullPluginDiagnostics.Instance;
+
+    /// <summary>Hands over pictures for buttons when the host asks (<see cref="IPluginImageSource"/>). Has a default (accepts nothing), like <see cref="Diagnostics"/>.</summary>
+    IPluginImages Images => NullPluginImages.Instance;
 }
 
 /// <summary>Encrypts one plugin's own secret before it is written to disk and decrypts it when read back. Backed

@@ -14,10 +14,12 @@ public sealed partial class JsPlugin
             'settingsPage', 'settingsGet', 'status', 'hotkey', 'type', 'pressEnd', 'http', 'httpAsync', 'storageGet', 'storageSet', 'storageRemove', 'storageKeys', 'notify', 'wsConnect', 'wsSend', 'wsClose', 'widgetPost', 'widgetReply', 'diagnosticsReport', 'diagnosticsResolve', 'diagnosticsClear', 'timer', 'cancel', 'actionDone'];
           const n = {};
           for (const name of names) { n[name] = g['__' + name]; delete g['__' + name]; }
+          for (const name of ['imagesPut']) { n[name] = g['__' + name]; delete g['__' + name]; }
 
           const actions = Object.create(null);
           const outcomeActions = Object.create(null);
           let widgetHandler = null;
+          let imagesHandler = null;
           const timers = Object.create(null);
           let nextTimer = 1;
           const start = (fn, ms, repeat) => {
@@ -116,6 +118,13 @@ public sealed partial class JsPlugin
               resolve: (key) => n.diagnosticsResolve(String(key)),
               clear: () => n.diagnosticsClear(),
             }),
+            images: Object.freeze({
+              onRequest: (fn) => {
+                if (typeof fn !== 'function') throw new Error('images.onRequest needs a function.');
+                imagesHandler = fn;
+              },
+              put: (id, dataUrl) => n.imagesPut(String(id), String(dataUrl)),
+            }),
             every: (ms, fn) => start(fn, ms, true),
             after: (ms, fn) => start(fn, ms, false),
             cancel: (id) => { delete timers[id]; n.cancel(id); },
@@ -160,6 +169,9 @@ public sealed partial class JsPlugin
               result.then((v) => n.widgetReply(id, true, JSON.stringify(v === undefined ? null : v)),
                           (e) => n.widgetReply(id, false, String(e && e.message ? e.message : e)));
             else n.widgetReply(id, true, JSON.stringify(result === undefined ? null : result));
+          };
+          g.__imagesRequest = function (idsJson) {
+            if (imagesHandler) imagesHandler(JSON.parse(idsJson));
           };
           g.__wsEvent = function (id, kind, payload) {
             const s = sockets[id];
