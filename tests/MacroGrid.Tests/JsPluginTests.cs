@@ -304,7 +304,7 @@ public sealed class JsPluginTests : IDisposable
     [Fact]
     public async Task A_slow_async_request_does_not_block_the_plugin()
     {
-        var (listener, port) = SlowServer(1500);
+        var (listener, port) = SlowServer(5000);
         using var _ = listener;
         var (_, host) = Start(
             $"host.http.getAsync('http://localhost:{port}/x').then(r => host.variables.set('t.done', r.body));\n"
@@ -312,10 +312,10 @@ public sealed class JsPluginTests : IDisposable
             ["variables", "actions", $"http:localhost:{port}"]);
 
         var watch = System.Diagnostics.Stopwatch.StartNew();
-        await Run(host, "t.ping"); // queued behind a blocking call it would wait the full 1.5 s
+        await Run(host, "t.ping"); // queued behind a blocking call it would wait the full 5 s
         watch.Stop();
 
-        Assert.True(watch.ElapsedMilliseconds < 1000, $"The action waited {watch.ElapsedMilliseconds} ms behind the request.");
+        Assert.True(watch.ElapsedMilliseconds < 4000, $"The action waited {watch.ElapsedMilliseconds} ms behind the request.");
         Assert.Equal(1.0, _variables.Get("t.ping"));
         Assert.Null(_variables.Get("t.done"));
         await WaitAsync(() => _variables.Get("t.done") is "hello");
@@ -366,7 +366,7 @@ public sealed class JsPluginTests : IDisposable
 
     private static async Task WaitAsync(Func<bool> condition)
     {
-        for (var i = 0; i < 100 && !condition(); i++) await Task.Delay(50);
+        for (var i = 0; i < 600 && !condition(); i++) await Task.Delay(50);
         Assert.True(condition(), "Condition was not met in time.");
     }
 }

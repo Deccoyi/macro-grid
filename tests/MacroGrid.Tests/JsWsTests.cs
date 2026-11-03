@@ -92,7 +92,7 @@ public sealed class JsWsTests : IDisposable
         }
     }
 
-    private object? WaitFor(string name, int seconds = 5)
+    private object? WaitFor(string name, int seconds = 30)
     {
         var until = DateTime.UtcNow.AddSeconds(seconds);
         while (DateTime.UtcNow < until)

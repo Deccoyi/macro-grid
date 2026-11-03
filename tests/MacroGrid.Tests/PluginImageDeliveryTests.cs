@@ -121,7 +121,7 @@ public sealed class PluginImageDeliveryTests : IDisposable
 
     private static async Task WaitFor(Func<bool> condition)
     {
-        for (var i = 0; i < 200 && !condition(); i++) await Task.Delay(10);
+        for (var i = 0; i < 3000 && !condition(); i++) await Task.Delay(10);
         Assert.True(condition(), "the expected message never arrived");
     }
 

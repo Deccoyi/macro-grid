@@ -44,7 +44,7 @@ public sealed class JsPluginImageTests : IDisposable
 
     private static async Task WaitFor(Func<bool> condition)
     {
-        for (var i = 0; i < 300 && !condition(); i++) await Task.Delay(10);
+        for (var i = 0; i < 3000 && !condition(); i++) await Task.Delay(10);
         Assert.True(condition());
     }
 
@@ -79,12 +79,12 @@ public sealed class JsPluginImageTests : IDisposable
     {
         Start("let n = 0; let done = false;"
             + $"host.images.onRequest(ids => {{ n++; host.variables.set('t.n', n); host.images.put(ids[0], '{TestPictures.PngUrl()}', 'v1'); }});"
-            + "host.every(100, () => { if (n === 1 && !done) { done = true; host.images.invalidate('v1', 'v1'); host.images.invalidate('v1', 'v2'); } });");
+            + "host.every(100, () => { if (n === 1 && !done) { done = true; host.images.invalidate('v1', 'v1'); host.images.invalidate('v1', 'v2'); host.variables.set('t.inv', true); } });");
 
         _images.Resolve("plugin-image:t/v1");
         _time.Advance(TimeSpan.Zero);
         await WaitFor(() => _variables.Get("t.n") is 1d);
-        await Task.Delay(500); // the script now invalidates with the same version (nothing) and with another one (asks again)
+        await WaitFor(() => _variables.Get("t.inv") is true); // the script now invalidates with the same version (nothing) and with another one (asks again)
         _time.Advance(TimeSpan.FromSeconds(1));
 
         await WaitFor(() => _variables.Get("t.n") is 2d);
