@@ -16,7 +16,7 @@ New features and fixes in Macro Grid. For technical details, see [CHANGELOG-deve
 - **Plugins can supply button pictures:** a plugin can now give its own pictures to buttons (for example one per voice). Shared profiles carry only the names you chose, never the pictures.
 
 ### Changed
-- **Passwords in plugin settings are now stored protected:** a password or key typed into the settings of a script plugin is no longer saved as plain text. If you open the settings on another PC or Windows account, enter it again.
+- **Passwords in plugin settings are now stored protected:** a password or key typed into the settings of a script plugin is no longer saved as plain text. If you open the settings on another PC or Windows account, enter it again. A saved password also cannot be read by another plugin.
 
 ### Fixed
 - **Plugin variables in texts:** adding a plugin's variable to a button text now inserts the variable itself, not its current value (for example `true`).

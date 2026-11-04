@@ -147,6 +147,70 @@ public sealed class JsSettingsPasswordTests : IDisposable
         Assert.Empty(problems.Snapshot());
     }
 
+    private static IPluginSecrets RealSecrets(string pluginId) =>
+        new MacroGrid.Core.Plugins.PluginHostCollector("1.0.0", Path.GetTempPath(), pluginId, new MacroGrid.Core.Plugins.PluginStatusRegistry(),
+            Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance, new MacroGrid.Windows.Security.DpapiSecretProtector()).Secrets;
+
+    private JsSettingsPage RealPage(string pluginId) => new(_dir, Fields, RealSecrets(pluginId), _unreadable.Add);
+
+    [Fact]
+    public void A_real_dpapi_password_round_trips_with_the_v2_prefix()
+    {
+        RealPage("plugin.a").Save(new JsonObject { ["apiKey"] = Secret });
+
+        Assert.Contains("\"mgp2:", Raw());
+        Assert.DoesNotContain("mgp1:", Raw());
+        Assert.Equal(Secret, RealPage("plugin.a").Load()["apiKey"]!.GetValue<string>());
+        Assert.Empty(_unreadable);
+    }
+
+    [Fact]
+    public void A_v2_password_of_one_plugin_is_unreadable_under_another_plugin()
+    {
+        RealPage("plugin.a").Save(new JsonObject { ["apiKey"] = Secret });
+
+        var loaded = RealPage("plugin.b").Load();
+
+        Assert.Equal("", loaded["apiKey"]!.GetValue<string>());
+        Assert.Equal(["apiKey"], _unreadable);
+    }
+
+    [Fact]
+    public void A_v1_password_still_loads_and_the_next_save_writes_v2()
+    {
+        // mgp1: = DPAPI without per-plugin entropy, as written by earlier dev builds.
+        var legacy = new MacroGrid.Windows.Security.DpapiSecretProtector().Protect(Secret);
+        Directory.CreateDirectory(_dir);
+        File.WriteAllText(Path.Combine(_dir, "settings.json"), $$"""{ "apiKey": "mgp1:{{legacy}}" }""");
+        var page = RealPage("plugin.a");
+
+        var loaded = page.Load();
+        Assert.Equal(Secret, loaded["apiKey"]!.GetValue<string>());
+        Assert.Contains("mgp1:", Raw());
+
+        page.Save(loaded);
+        Assert.DoesNotContain("mgp1:", Raw());
+        Assert.Contains("\"mgp2:", Raw());
+        Assert.Equal(Secret, page.Load()["apiKey"]!.GetValue<string>());
+        Assert.Empty(_unreadable);
+    }
+
+    [Theory]
+    [InlineData("mgp2:not-base64!!")]
+    [InlineData("mgp2:AAAA")]
+    [InlineData("mgp1:AAAA")]
+    [InlineData("mgp2:")]
+    public void Garbage_after_a_protected_prefix_is_unreadable_not_an_exception(string stored)
+    {
+        Directory.CreateDirectory(_dir);
+        File.WriteAllText(Path.Combine(_dir, "settings.json"), $$"""{ "apiKey": "{{stored}}" }""");
+
+        var loaded = RealPage("plugin.a").Load();
+
+        Assert.Equal("", loaded["apiKey"]!.GetValue<string>());
+        Assert.Equal(["apiKey"], _unreadable);
+    }
+
     [Fact]
     public void A_host_without_a_protector_refuses_to_save_a_password()
     {

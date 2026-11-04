@@ -21,8 +21,11 @@ internal sealed class PluginHostCollector(string serverVersion, string dataDirec
     /// looks protected but is not.</summary>
     private sealed class SecretsAdapter(ISecretProtector? protector, string pluginId) : IPluginSecrets
     {
-        public string Protect(string secret) => Require().Protect(secret);
-        public string? Unprotect(string protectedSecret) => Require().Unprotect(protectedSecret);
+        public string Protect(string secret) => Require().Protect(secret, pluginId);
+
+        // Unscoped fallback only reads values written before secrets were bound to the plugin id (dev builds).
+        public string? Unprotect(string protectedSecret) =>
+            Require().Unprotect(protectedSecret, pluginId) ?? Require().Unprotect(protectedSecret);
 
         private ISecretProtector Require() => protector
             ?? throw new InvalidOperationException($"Plugin '{pluginId}' called IPluginSecrets, but this host has no secret protector configured.");

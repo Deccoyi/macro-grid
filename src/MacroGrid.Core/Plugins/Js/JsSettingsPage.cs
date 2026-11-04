@@ -16,7 +16,10 @@ internal sealed class JsSettingsPage(string dataDirectory, IReadOnlyList<Setting
     Func<string, JsonObject, OptionsQuery, CancellationToken, Task<OptionsResult>>? options = null) : IPluginSettingsPage, IOptionsSearch
 {
     /// <summary>Marks a stored password value as protected.</summary>
-    public const string ProtectedPrefix = "mgp1:";
+    public const string ProtectedPrefix = "mgp2:";
+
+    /// <summary>Written by earlier dev builds (no per-plugin entropy). Still read; the next save writes <see cref="ProtectedPrefix"/>.</summary>
+    public const string LegacyProtectedPrefix = "mgp1:";
 
     /// <summary>A JavaScript plugin has no other way to write a file, so what it can keep is capped.</summary>
     public const int MaxBytes = 64 * 1024;
@@ -83,7 +86,7 @@ internal sealed class JsSettingsPage(string dataDirectory, IReadOnlyList<Setting
                 if (!onlyPlain) throw new InvalidOperationException($"The setting '{field.Key}' is a password and must be text, so it was not saved.");
                 return;
             }
-            if (text.Length == 0 || (onlyPlain && text.StartsWith(ProtectedPrefix, StringComparison.Ordinal))) return;
+            if (text.Length == 0 || (onlyPlain && IsProtected(text))) return;
             holder[field.Key] = ProtectedPrefix + (secrets?.Protect(text)
                 ?? throw new InvalidOperationException("This host cannot protect a password field, so it was not saved."));
             changed = true;
@@ -91,12 +94,15 @@ internal sealed class JsSettingsPage(string dataDirectory, IReadOnlyList<Setting
         return changed;
     }
 
+    private static bool IsProtected(string text) =>
+        text.StartsWith(ProtectedPrefix, StringComparison.Ordinal) || text.StartsWith(LegacyProtectedPrefix, StringComparison.Ordinal);
+
     private string Unprotect(string key, string stored)
     {
-        if (!stored.StartsWith(ProtectedPrefix, StringComparison.Ordinal)) return stored;
+        if (!IsProtected(stored)) return stored;
         string? plain = null;
         try { plain = secrets?.Unprotect(stored[ProtectedPrefix.Length..]); }
-        catch (InvalidOperationException) { /* no protector here: unreadable */ }
+        catch (Exception ex) when (ex is InvalidOperationException or CryptographicException) { /* no protector here: unreadable */ }
         if (plain is null) onUnreadable?.Invoke(key);
         return plain ?? "";
     }
