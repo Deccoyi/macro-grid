@@ -6,6 +6,7 @@ import { useT } from "../i18n/I18nContext";
 import type { DictKey } from "../i18n/tr";
 import { useWorkspaceUi } from "../workspace/WorkspaceUiContext";
 import { ActionList } from "./ActionList";
+import type { WidgetIconControl } from "./actionForms/SchemaForm";
 
 interface ActionEditorProps {
   widget: Widget;
@@ -14,6 +15,7 @@ interface ActionEditorProps {
   profiles: ProfileSummary[];
   variableCatalog: VariableInfo[];
   onChange: (event: WidgetEventName, bindings: ActionBinding[]) => void;
+  widgetIcon?: WidgetIconControl;
 }
 
 /** Two filled dots — lucide has no "double tap" glyph, so this stays a small hand-drawn icon in the
@@ -43,7 +45,7 @@ const VALUE_EVENTS: { event: WidgetEventName; key: DictKey; icon: ElementType }[
   { event: "valueChange", key: "action.event.valueChange", icon: SlidersHorizontal },
 ];
 
-export function ActionEditor({ widget, actions, pages, profiles, variableCatalog, onChange }: ActionEditorProps) {
+export function ActionEditor({ widget, actions, pages, profiles, variableCatalog, onChange, widgetIcon }: ActionEditorProps) {
   const { t } = useT();
   const events =
     widget.type === "toggle" ? TOGGLE_EVENTS
@@ -108,6 +110,7 @@ export function ActionEditor({ widget, actions, pages, profiles, variableCatalog
         profiles={profiles}
         variableCatalog={variableCatalog}
         onChange={(next) => onChange(activeEvent, next)}
+        widgetIcon={widgetIcon}
         focusIndex={focusIndex}
         onFocusDone={() => setFocusIndex(null)}
       />

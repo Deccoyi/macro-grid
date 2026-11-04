@@ -82,4 +82,16 @@ public sealed record PluginManifest
     /// <summary>Custom widgets the plugin adds to the toolbox. Additive: an older host ignores it. A plugin with widgets sets
     /// <see cref="MinMacroGrid"/> to the version that introduced them.</summary>
     public PluginWidgetManifest[]? Widgets { get; init; }
+
+    /// <summary>JS plugins only — resource limits a plugin asks to raise. Additive: an older host ignores it and keeps its defaults.</summary>
+    public PluginLimits? Limits { get; init; }
+}
+
+/// <summary>The <c>limits</c> object of a <c>plugin.json</c>.</summary>
+public sealed record PluginLimits
+{
+    /// <summary>The largest text message (in KB) a web socket may receive, 64 to 1024; the default is 64. Only a <c>ws:</c> permission
+    /// whose host is <c>localhost</c> or <c>127.0.0.1</c> gets it, the person approves it, and big messages share a byte budget per second.</summary>
+    [JsonPropertyName("wsMessageKB")]
+    public int? WsMessageKB { get; init; }
 }

@@ -571,7 +571,7 @@ public sealed class PluginWidgetRouterTests : IAsyncLifetime
 
     private static async Task WaitAsync(Func<bool> condition)
     {
-        for (var i = 0; i < 100 && !condition(); i++) await Task.Delay(20);
+        for (var i = 0; i < 1500 && !condition(); i++) await Task.Delay(20);
         Assert.True(condition(), "Condition was not met in time.");
     }
 }

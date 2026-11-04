@@ -41,6 +41,7 @@ public sealed class FakePluginHost(string dataDirectory) : IPluginHost
     public string DataDirectory { get; } = dataDirectory;
     public IPluginSecrets Secrets { get; } = new FakePluginSecrets();
     public IPluginWidgets Widgets { get; } = new FakePluginWidgets();
+    public IPluginImages Images { get; } = new FakePluginImages();
 
     public List<string> Logs { get; } = [];
     public List<IActionHandler> Actions { get; } = [];
@@ -50,6 +51,7 @@ public sealed class FakePluginHost(string dataDirectory) : IPluginHost
     public IPluginSettingsPage? SettingsPage { get; private set; }
 
     public FakePluginWidgets WidgetPosts => (FakePluginWidgets)Widgets;
+    public FakePluginImages ImagePuts => (FakePluginImages)Images;
 
     public void Log(string message) => Logs.Add(message);
     public void RegisterAction(IActionHandler handler) => Actions.Add(handler);
@@ -98,4 +100,19 @@ public sealed class FakePluginWidgets : IPluginWidgets
 
     void IPluginWidgets.Post(string widget, string name, JsonNode? data, string? widgetId, string? deviceId, bool retain) =>
         Posts.Add(new Post(widget, name, data, widgetId, deviceId, retain));
+}
+
+/// <summary>Records each picture a plugin hands over and accepts all of them (the real host validates; see <see cref="IPluginImages"/>).</summary>
+public sealed class FakePluginImages : IPluginImages
+{
+    public List<(string ImageId, string DataUrl)> Puts { get; } = [];
+    public List<(string ImageId, string? Version)> Invalidations { get; } = [];
+
+    public bool Put(string imageId, string dataUrl, string? version = null)
+    {
+        Puts.Add((imageId, dataUrl));
+        return true;
+    }
+
+    public void Invalidate(string imageId, string? version = null) => Invalidations.Add((imageId, version));
 }

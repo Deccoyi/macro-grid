@@ -3,6 +3,7 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using MacroGrid.Core.Diagnostics;
 using MacroGrid.Core.Model;
+using MacroGrid.Core.Plugins;
 using MacroGrid.Core.Variables;
 using MacroGrid.Plugin.Abstractions;
 using Microsoft.Extensions.Logging;
@@ -201,6 +202,7 @@ public sealed class ActionDispatcher(IEnumerable<IActionHandler> handlers, ILogg
     /// <c>ExecuteAsync</c>); an older handler succeeds unless it throws. A reported failure is a warning in the log, not an error with a stack.</summary>
     private async Task<ActionFailure?> RunOneAsync(IActionHandler handler, JsonObject settings, ActionContext context, string? widgetId, CancellationToken cancellationToken)
     {
+        settings = OptionsPaging.WithoutLabelKeys(settings);
         try
         {
             if (handler is not IActionOutcomeHandler withOutcome)

@@ -233,9 +233,14 @@ public sealed class SelfVariableTests : IDisposable
         var release = new TaskCompletionSource();
 
         var run = service.RunBusyAsync(session, "w", async () => { await release.Task; return 1; });
-        await Task.Delay(150);
+        // The busy delay is a timer (a loaded machine may be late), and the service sets Busy before it marks the widget dirty, so a flush right after
+        // seeing Busy can still find nothing to send. Wait on the condition that matters: the message went out.
+        for (var i = 0; i < 1000 && socket.Sent.Count == 0; i++)
+        {
+            await Task.Delay(10);
+            await service.FlushAsync();
+        }
         Assert.True(session.Busy.ContainsKey("w"));
-        await service.FlushAsync();
         Assert.Equal("#ff0000", (string?)Assert.Single(socket.Sent).Data!["style"]!["background"]);
 
         release.SetResult();
@@ -300,7 +305,7 @@ public sealed class SelfVariableTests : IDisposable
     {
         var (service, _, _, _, sessions) = Make();
         using var _ = service;
-        service.PressedMinimum = TimeSpan.FromMilliseconds(150);
+        service.PressedMinimum = TimeSpan.FromSeconds(1); // far above any scheduling stall between press and release, or the release would clear at once
         var session = Identified(new TestSocket());
         sessions.Add(session);
 
@@ -308,7 +313,7 @@ public sealed class SelfVariableTests : IDisposable
         service.PressEnded(session, "w");
         Assert.True(session.Pressed.ContainsKey("w"));
 
-        await Task.Delay(400);
+        for (var i = 0; i < 1000 && session.Pressed.ContainsKey("w"); i++) await Task.Delay(10);
         Assert.False(session.Pressed.ContainsKey("w"));
     }
 

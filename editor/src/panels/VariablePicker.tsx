@@ -5,6 +5,7 @@ import { useCatalogText } from "../i18n/catalogText";
 import { useT } from "../i18n/I18nContext";
 import { PickerShell, usePickerFilter, usePickerOpenState } from "./PickerShell";
 import { VARIABLE_TYPE_KEYS } from "./dynamic/variableTypes";
+import { variableToken } from "./dynamic/variableToken";
 
 interface VariablePickerProps {
   catalog: VariableInfo[];
@@ -62,8 +63,8 @@ export function VariablePicker({ catalog, onInsert, buttonLabel, mode = "templat
               key={v.name}
               type="button"
               className="picker-row"
-              onClick={() => { onInsert(mode === "bare" ? v.name : v.example); picker.closePicker(); }}
-              title={v.example}
+              onClick={() => { onInsert(mode === "bare" ? v.name : variableToken(v)); picker.closePicker(); }}
+              title={variableToken(v)}
             >
               <span className="picker-row-main">
                 <span className="picker-row-line">

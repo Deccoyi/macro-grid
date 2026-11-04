@@ -23,6 +23,10 @@ export function renderPreviewText(text: string | undefined, variables: Record<st
 }
 
 function formatPreviewValue(value: unknown, format: string | undefined): string {
+  if (typeof value === "boolean" && format?.includes("/")) {
+    const [on, off] = [format.slice(0, format.indexOf("/")), format.slice(format.indexOf("/") + 1)];
+    return value ? on : off;
+  }
   if (typeof value === "number") return formatNumber(value, format);
   if (typeof value === "string" && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/.test(value)) {
     const date = new Date(value);

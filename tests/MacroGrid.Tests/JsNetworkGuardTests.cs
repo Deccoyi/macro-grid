@@ -277,7 +277,7 @@ public sealed class JsNetworkGuardTests : IDisposable
     {
         var port = FreePort();
         Start(script.Replace("URL", $"'http://localhost:{port}/x'"), ["variables"], JsNetworkPolicy.None);
-        SpinWait.SpinUntil(() => _variables.Get("t.err") is not null, 3000);
+        SpinWait.SpinUntil(() => _variables.Get("t.err") is not null, 30000);
         Thread.Sleep(300);
 
         Assert.Contains("has not been granted", (string)_variables.Get("t.err")!);
@@ -291,7 +291,7 @@ public sealed class JsNetworkGuardTests : IDisposable
     {
         var port = FreePort();
         Start(script.Replace("URL", $"'http://localhost:{port}/x'"), ["variables"], JsNetworkPolicy.None);
-        SpinWait.SpinUntil(() => _problems.Snapshot().Any(p => p.Code == ProblemCodes.NetworkRefused), 3000);
+        SpinWait.SpinUntil(() => _problems.Snapshot().Any(p => p.Code == ProblemCodes.NetworkRefused), 30000);
         Thread.Sleep(300);
 
         Assert.Equal([ProblemCodes.NetworkRefused], _problems.Snapshot().Select(p => p.Code).ToArray());

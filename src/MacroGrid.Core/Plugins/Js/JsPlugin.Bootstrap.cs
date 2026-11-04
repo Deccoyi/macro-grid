@@ -14,10 +14,13 @@ public sealed partial class JsPlugin
             'settingsPage', 'settingsGet', 'status', 'hotkey', 'type', 'pressEnd', 'http', 'httpAsync', 'storageGet', 'storageSet', 'storageRemove', 'storageKeys', 'notify', 'wsConnect', 'wsSend', 'wsClose', 'widgetPost', 'widgetReply', 'diagnosticsReport', 'diagnosticsResolve', 'diagnosticsClear', 'timer', 'cancel', 'actionDone'];
           const n = {};
           for (const name of names) { n[name] = g['__' + name]; delete g['__' + name]; }
+          for (const name of ['imagesPut', 'imagesInvalidate']) { n[name] = g['__' + name]; delete g['__' + name]; }
 
           const actions = Object.create(null);
           const outcomeActions = Object.create(null);
+          const optionSources = Object.create(null);
           let widgetHandler = null;
+          let imagesHandler = null;
           const timers = Object.create(null);
           let nextTimer = 1;
           const start = (fn, ms, repeat) => {
@@ -92,6 +95,13 @@ public sealed partial class JsPlugin
               postAsync: (url, body, options) => requestAsync('POST', url, body, options),
             }),
             ws: Object.freeze({ connect: connectSocket }),
+            options: Object.freeze({
+              source: (id, fn) => {
+                if (typeof id !== 'string' || id.length === 0 || id.length > 64) throw new Error('An options source needs an id of 1-64 characters.');
+                if (typeof fn !== 'function') throw new Error('An options source needs a function.');
+                optionSources[id] = fn;
+              },
+            }),
             notify: (text) => n.notify(String(text)),
             storage: Object.freeze({
               get: (key) => { const v = n.storageGet(String(key)); return v === null ? null : JSON.parse(v); },
@@ -115,6 +125,14 @@ public sealed partial class JsPlugin
               report: (level, message, key) => n.diagnosticsReport(String(level), String(message), key === undefined || key === null ? null : String(key)),
               resolve: (key) => n.diagnosticsResolve(String(key)),
               clear: () => n.diagnosticsClear(),
+            }),
+            images: Object.freeze({
+              onRequest: (fn) => {
+                if (typeof fn !== 'function') throw new Error('images.onRequest needs a function.');
+                imagesHandler = fn;
+              },
+              put: (id, dataUrl, version) => n.imagesPut(String(id), String(dataUrl), version === undefined || version === null ? null : String(version)),
+              invalidate: (id, version) => n.imagesInvalidate(String(id), version === undefined || version === null ? null : String(version)),
             }),
             every: (ms, fn) => start(fn, ms, true),
             after: (ms, fn) => start(fn, ms, false),
@@ -161,6 +179,9 @@ public sealed partial class JsPlugin
                           (e) => n.widgetReply(id, false, String(e && e.message ? e.message : e)));
             else n.widgetReply(id, true, JSON.stringify(result === undefined ? null : result));
           };
+          g.__imagesRequest = function (idsJson) {
+            if (imagesHandler) imagesHandler(JSON.parse(idsJson));
+          };
           g.__wsEvent = function (id, kind, payload) {
             const s = sockets[id];
             if (!s) return;
@@ -173,6 +194,18 @@ public sealed partial class JsPlugin
             if (!p) return;
             delete pending[id];
             if (ok) p.resolve(JSON.parse(payload)); else p.reject(new Error(payload));
+          };
+          // The answer of an options source as JSON text; a throw, a promise or an unknown id becomes { error } instead of an exception.
+          g.__optionsSource = function (id, queryJson, valuesJson) {
+            const fn = optionSources[id];
+            if (!fn) return JSON.stringify({ error: 'This plugin has no options source named ' + id + '.' });
+            try {
+              const answer = fn(JSON.parse(queryJson), JSON.parse(valuesJson));
+              if (answer && typeof answer.then === 'function') return JSON.stringify({ error: 'An options source must answer at once, not with a promise.' });
+              return JSON.stringify(answer === undefined || answer === null ? { options: [] } : answer);
+            } catch (e) {
+              return JSON.stringify({ error: String(e && e.message ? e.message : e) });
+            }
           };
           g.__fire = function (id) {
             const timer = timers[id];

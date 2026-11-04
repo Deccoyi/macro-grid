@@ -1,8 +1,9 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import dynamicIconImports from "lucide-react/dynamicIconImports";
 import { ICON_TINT_MARKER } from "@macro/renderer";
 import { api } from "../api/client";
+import { iconSrc, subscribeImages } from "../api/optionIcon";
 import type { IconPackInfo } from "../api/types";
 import { useT } from "../i18n/I18nContext";
 import { PickerShell, usePickerOpenState } from "./PickerShell";
@@ -126,6 +127,8 @@ export function IconPicker({ value, color, onChange }: IconPickerProps) {
     return () => { cancelled = true; };
   }, []);
 
+  // Re-renders when a plugin picture arrives, so the current value's preview loads it.
+  const shownSrc = useSyncExternalStore(subscribeImages, () => (value ? iconSrc(value) : ""));
   const categories = useMemo(
     () => [
       { id: LUCIDE_PACK_ID, label: "Lucide", badge: ALL_NAMES.length },
@@ -152,7 +155,7 @@ export function IconPicker({ value, color, onChange }: IconPickerProps) {
     <div>
       <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
         {value ? (
-          <img src={value} width={22} height={22} alt="" style={{ background: "var(--ms-bg-inset)", borderRadius: 4, padding: 2 }} />
+          <img src={shownSrc} width={22} height={22} alt="" style={{ background: "var(--ms-bg-inset)", borderRadius: 4, padding: 2 }} />
         ) : (
           <span style={{ color: "var(--ms-text-secondary)", fontSize: 12 }}>{t("icon.none")}</span>
         )}

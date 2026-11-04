@@ -33,6 +33,7 @@ public sealed partial class PluginManager
         problems?.Resolve(id, ProblemCodes.PluginReported);
         statusRegistry.RemovePlugin(id);
         widgetEvents?.Forget(id);
+        images?.Detach(id);
         localizer?.Unregister(id);
         entry.Running = null;
         RefreshUnsignedNotice();

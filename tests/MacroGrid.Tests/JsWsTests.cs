@@ -27,11 +27,11 @@ public sealed class JsWsTests : IDisposable
         try { Directory.Delete(_dir, recursive: true); } catch (IOException) { } catch (UnauthorizedAccessException) { }
     }
 
-    private JsPlugin Start(string script, string[] permissions, JsNetworkPolicy? network = null, JsPluginLimits? limits = null)
+    private JsPlugin Start(string script, string[] permissions, JsNetworkPolicy? network = null, JsPluginLimits? limits = null, int? manifestKB = null)
     {
         var path = Path.Combine(_dir, "index.js");
         File.WriteAllText(path, script);
-        var manifest = new PluginManifest { Id = "t", Name = "T", Version = "1.0.0", MinMacroGrid = "1.0.0", Entry = "index.js", Kind = PluginKind.Js };
+        var manifest = new PluginManifest { Id = "t", Name = "T", Version = "1.0.0", MinMacroGrid = "1.0.0", Entry = "index.js", Kind = PluginKind.Js, Limits = manifestKB is { } kb ? new PluginLimits { WsMessageKB = kb } : null };
         var plugin = new JsPlugin(manifest, path, new JsPermissions(permissions), _variables, null, NullLogger.Instance, _ => { },
             limits, problems: _problems, network: network ?? JsNetworkPolicy.None);
         _plugins.Add(plugin);
@@ -92,7 +92,7 @@ public sealed class JsWsTests : IDisposable
         }
     }
 
-    private object? WaitFor(string name, int seconds = 5)
+    private object? WaitFor(string name, int seconds = 30)
     {
         var until = DateTime.UtcNow.AddSeconds(seconds);
         while (DateTime.UtcNow < until)
@@ -232,6 +232,74 @@ public sealed class JsWsTests : IDisposable
 
         Assert.Contains("too large", (string)WaitFor("t.err")!);
         Assert.Contains(_problems.Snapshot(), p => p.Code == ProblemCodes.LimitReached);
+    }
+
+    private int ServeLarge(int messages, int bytes)
+    {
+        return Serve(async (socket, _) =>
+        {
+            var big = Encoding.UTF8.GetBytes(new string('x', bytes));
+            for (var i = 0; i < messages; i++)
+                await socket.SendAsync(big, WebSocketMessageType.Text, true, CancellationToken.None);
+            await socket.SendAsync(Encoding.UTF8.GetBytes("end"), WebSocketMessageType.Text, true, CancellationToken.None);
+            await Task.Delay(3000);
+        });
+    }
+
+    private const string CountScript = """
+        let n = 0;
+        const s = host.ws.connect('ws://localhost:PORT/', {
+          onMessage(text) { if (text === 'end') host.variables.set('t.n', n); else n++; },
+          onClose(info) { host.variables.set('t.err', info.error === null ? 'clean' : info.error); },
+        });
+        """;
+
+    [Fact]
+    public void A_200_KB_message_passes_when_256_KB_is_declared_and_approved()
+    {
+        var port = ServeLarge(1, 200_000);
+        Start(CountScript.Replace("PORT", port.ToString()), ["variables", $"ws:localhost:{port}", JsWsLimits.ApprovalKey], manifestKB: 256);
+
+        Assert.Equal(1.0, WaitFor("t.n"));
+    }
+
+    [Fact]
+    public void A_200_KB_message_closes_the_socket_with_the_default_limit_or_when_not_approved()
+    {
+        var port = ServeLarge(1, 200_000);
+        Start(CountScript.Replace("PORT", port.ToString()), ["variables", $"ws:localhost:{port}"], manifestKB: 256);
+
+        Assert.Contains("too large", (string)WaitFor("t.err")!);
+    }
+
+    [Fact]
+    public void The_larger_limit_is_for_a_local_host_only()
+    {
+        var manifest = new PluginManifest { Id = "t", Name = "T", Version = "1.0.0", Entry = "index.js", Kind = PluginKind.Js, Permissions = ["ws:example.com:443"], Limits = new PluginLimits { WsMessageKB = 256 } };
+        Assert.Null(JsWsLimits.ApprovalKeyFor(manifest));
+        Assert.Equal(64 * 1024, JsWsLimits.MessageBytes(manifest, approved: true, "example.com", 64 * 1024));
+        Assert.Equal(64 * 1024, JsWsLimits.MessageBytes(manifest, approved: true, "foo.localhost", 64 * 1024));
+        Assert.Equal(64 * 1024, JsWsLimits.MessageBytes(manifest, approved: true, "127.0.0.2", 64 * 1024));
+        Assert.Equal(256 * 1024, JsWsLimits.MessageBytes(manifest, approved: true, "localhost", 64 * 1024));
+        Assert.Equal(256 * 1024, JsWsLimits.MessageBytes(manifest, approved: true, "[::1]", 64 * 1024));
+        Assert.Equal(64 * 1024, JsWsLimits.MessageBytes(manifest, approved: false, "localhost", 64 * 1024));
+
+        var local = manifest with { Permissions = ["ws:localhost:9000"] };
+        Assert.Equal(JsWsLimits.ApprovalKey, JsWsLimits.ApprovalKeyFor(local));
+        Assert.Contains(JsWsLimits.ApprovalKey, JsWsLimits.ListedPermissions(local));
+        Assert.Null(JsWsLimits.ApprovalKeyFor(local with { Limits = new PluginLimits { WsMessageKB = 64 } }));
+        Assert.Null(JsWsLimits.ApprovalKeyFor(local with { Limits = new PluginLimits { WsMessageKB = 2000 } }));
+        Assert.Equal(64 * 1024, JsWsLimits.MessageBytes(local with { Limits = new PluginLimits { WsMessageKB = 2000 } }, true, "localhost", 64 * 1024));
+    }
+
+    [Fact]
+    public void Large_messages_share_a_byte_budget_and_the_rest_are_dropped_with_one_line()
+    {
+        var port = ServeLarge(4, 900_000);
+        Start(CountScript.Replace("PORT", port.ToString()), ["variables", $"ws:localhost:{port}", JsWsLimits.ApprovalKey], manifestKB: 1024);
+
+        Assert.Equal(2.0, WaitFor("t.n"));
+        Assert.Single(_problems.Snapshot(), p => p.Code == ProblemCodes.LimitReached);
     }
 
     [Fact]

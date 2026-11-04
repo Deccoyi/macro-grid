@@ -32,12 +32,30 @@ export interface SettingField {
   itemFields?: SettingField[] | null;
   /** Required for kind "Button": the command id sent to the plugin's ISettingsCommandHandler. */
   command?: string | null;
+  /** With an options source: draw a searchable, paged combobox instead of a plain select. */
+  searchable?: boolean;
 }
 
 /** Mirrors MacroGrid.Plugin.Abstractions.OptionsResult — the response of a dynamic-dropdown query. */
 export interface OptionsResult {
   options: SettingOption[];
   error?: string | null;
+  /** More options exist after these (the next page starts at offset + options.length). */
+  hasMore?: boolean;
+  /** The source answered from what it has and is re-reading its data; ask again shortly. */
+  refreshing?: boolean;
+}
+
+/** The query of a searchable options source: sent as the query string of the options endpoint. */
+export interface OptionsQuery {
+  q?: string;
+  offset?: number;
+  limit?: number;
+  /** The stored value; the server includes its option so the form can tell a removed item from an unloaded one. */
+  selected?: string;
+  /** The person pressed refresh: the source re-reads the data behind the list. */
+  refresh?: boolean;
+  signal?: AbortSignal;
 }
 
 export interface ActionInfo {

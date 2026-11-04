@@ -459,12 +459,15 @@ public sealed class PluginWidgetTests : IAsyncLifetime
     [Fact]
     public void Too_large_and_too_many_events_are_dropped_with_one_report()
     {
+        // A frozen clock: the limit is per second of wall time, and a loaded machine must not refill the bucket while the loop runs.
+        var frozen = DateTimeOffset.UtcNow;
+        var events = new PluginWidgetEventHub(_problems, () => frozen);
         var seen = 0;
-        _events.Posted += _ => seen++;
+        events.Posted += _ => seen++;
 
-        _events.Post("W", new PluginWidgetEvent("w", "gauge", "big", JsonValue.Create(new string('x', PluginWidgetEventHub.MaxEventBytes + 1)), null, null, false));
+        events.Post("W", new PluginWidgetEvent("w", "gauge", "big", JsonValue.Create(new string('x', PluginWidgetEventHub.MaxEventBytes + 1)), null, null, false));
         for (var i = 0; i < 100; i++)
-            _events.Post("W", new PluginWidgetEvent("w", "gauge", "n", JsonValue.Create(i), null, null, false));
+            events.Post("W", new PluginWidgetEvent("w", "gauge", "n", JsonValue.Create(i), null, null, false));
 
         Assert.Equal(PluginWidgetEventHub.MaxEventsPerSecond, seen);
         Assert.Equal(2, _problems.Snapshot().Count(p => p.Code == ProblemCodes.WidgetEventDropped));

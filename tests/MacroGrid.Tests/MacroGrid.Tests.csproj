@@ -9,9 +9,14 @@
 
   <ItemGroup>
     <PackageReference Include="coverlet.collector" Version="10.1.0" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.10.1" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.11.0" />
     <PackageReference Include="xunit" Version="2.9.3" />
-    <PackageReference Include="xunit.runner.visualstudio" Version="4.0.0" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="4.0.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Several tests wait on timers and threads; fewer tests at once keep a loaded machine from starving them. -->
+    <Content Include="xunit.runner.json" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>
@@ -34,4 +39,4 @@
     <ProjectReference Include="..\MacroGrid.Tests.LegacyPlugin\MacroGrid.Tests.LegacyPlugin.csproj" />
   </ItemGroup>
 
-</Project>
+</Project>

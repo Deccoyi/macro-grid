@@ -917,6 +917,13 @@
       "five": "Item 5",
       "words": "Item Arg1"
     },
+    "schemaForm.search.unavailable": {
+      "zero": "Unavailable: 0",
+      "one": "Unavailable: 1",
+      "two": "Unavailable: 2",
+      "five": "Unavailable: 5",
+      "words": "Unavailable: Arg1"
+    },
     "state.defaultPageName": {
       "zero": "Page 0",
       "one": "Page 1",
@@ -1898,6 +1905,13 @@
       "two": "2. öğe",
       "five": "5. öğe",
       "words": "Arg1. öğe"
+    },
+    "schemaForm.search.unavailable": {
+      "zero": "Kullanılamıyor: 0",
+      "one": "Kullanılamıyor: 1",
+      "two": "Kullanılamıyor: 2",
+      "five": "Kullanılamıyor: 5",
+      "words": "Kullanılamıyor: Arg1"
     },
     "state.defaultPageName": {
       "zero": "Sayfa 0",

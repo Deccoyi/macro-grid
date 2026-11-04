@@ -20,6 +20,11 @@ export function permissionLabel(permission: string, t: Translate): PermissionLab
     const text = t(`plugins.permission.${permission}` as DictKey);
     return { kind: permission, text, consentText: text };
   }
+  // The opt-in to larger web socket messages (`limits.wsMessageKB` in plugin.json), approved like a permission.
+  if (permission === "limit:ws-large-messages") {
+    const text = t("plugins.permission.wsLarge");
+    return { kind: "unknown", text, consentText: text };
+  }
   const widgetOption = widgetOptionOf(permission);
   if (widgetOption) {
     const text = t(`plugins.permission.widget.${widgetOption}` as DictKey);

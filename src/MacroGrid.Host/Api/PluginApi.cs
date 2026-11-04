@@ -1,8 +1,11 @@
 using MacroGrid.Host.Ui;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using MacroGrid.Core.Backup;
 using MacroGrid.Core.Plugins;
+using MacroGrid.Core.Plugins.Js;
 using MacroGrid.Core.Plugins.Distribution;
+using MacroGrid.Core.Plugins.Images;
 using MacroGrid.Plugin.Abstractions;
 using Microsoft.AspNetCore.Routing;
 
@@ -67,6 +70,24 @@ internal static class PluginApi
             return Results.File(path, contentType);
         });
 
+        // A picture a plugin supplied for a button (profile value plugin-image:<pluginId>/<imageId>), for the editor's own preview. The bytes were checked when
+        // they were stored. A picture that is not cached is a 404; only with ?request=1 (a caller that really uses it) is the plugin asked for it, so a later load finds it. Like the rest of /api this is loopback only.
+        api.MapGet("/plugins/{pluginId}/images/{imageId}", (string pluginId, string imageId, string? request, PluginImageService images, HttpContext context) =>
+        {
+            // A miss must never be cached: the plugin answers asynchronously and the same URL is fetched again a moment later.
+            context.Response.Headers.CacheControl = "no-store";
+            if (!PluginImageRef.IsValidPluginId(pluginId) || !PluginImageRef.IsValidImageId(imageId) || !images.IsKnown(pluginId)) return Results.NotFound();
+            if (images.TryGetBytes(pluginId, imageId) is not { } picture)
+            {
+                // Only a caller that really uses the picture (?request=1) makes the plugin fetch it; browsing a list never does.
+                if (request is "1" or "true") images.RequestImage(pluginId, imageId);
+                return Results.NotFound();
+            }
+            context.Response.Headers.CacheControl = "private, max-age=31536000, immutable";
+            ApiResults.SandboxIcon(context);
+            return Results.File(picture.Bytes, picture.MediaType);
+        });
+
         // Browses for a folder and reads its plugin.json without installing anything yet, so the editor can
         // ask for consent before the second call actually installs it: a native (C#) plugin has no
         // permission gate at all, so only an official, signed one is accepted (anything else is refused here
@@ -87,7 +108,7 @@ internal static class PluginApi
                 selection.Set(sourceDir);
                 return ApiResults.Json(new {
                     canceled = false, path = sourceDir, id = manifest.Id, name = manifest.Name,
-                    kind = manifest.Kind.ToString().ToLowerInvariant(), permissions = manifest.Permissions ?? [],
+                    kind = manifest.Kind.ToString().ToLowerInvariant(), permissions = JsWsLimits.ListedPermissions(manifest),
                 });
             }
             catch (Exception ex) when (ex is JsonException or InvalidOperationException)
@@ -214,32 +235,19 @@ internal static class PluginApi
     }
 
     /// <summary><paramref name="values"/> (a form's current values, from a settings page or a plugin tree item) with
-    /// every top-level <see cref="SettingFieldKind.Password"/> field blanked out, so the editor never receives an
-    /// existing password back over the API — only what the person just typed. Fields nested in a
-    /// <see cref="SettingFieldKind.List"/> row are not covered; no shipped plugin nests a password there yet.</summary>
-    internal static JsonObject RedactPasswords(IReadOnlyList<SettingField> fields, JsonObject values)
-    {
-        foreach (var field in fields)
-            if (field.Kind == SettingFieldKind.Password && values.ContainsKey(field.Key))
-                values[field.Key] = "";
-        return values;
-    }
+    /// every <see cref="SettingFieldKind.Password"/> field blanked out, also inside list rows, so the editor never receives an
+    /// existing password back over the API — only what the person just typed.</summary>
+    internal static JsonObject RedactPasswords(IReadOnlyList<SettingField> fields, JsonObject values) =>
+        PluginSettingsSecrets.Blank(fields, values);
 
     /// <summary>An empty <see cref="SettingFieldKind.Password"/> field means "leave as is" (the editor never
     /// shows the real value to blank it against, see <see cref="RedactPasswords"/>), so it is restored from the
-    /// stored values (<paramref name="loadStored"/>) before the form is saved. A non-empty value is a real change
-    /// and passes through.</summary>
+    /// stored values (<paramref name="loadStored"/>) before the form is saved; a list row only from the same row
+    /// (see <see cref="PluginSettingsSecrets.RestoreBlankPasswords"/>). A non-empty value is a real change and passes through.</summary>
     internal static void RestoreUnchangedPasswords(IReadOnlyList<SettingField> fields, JsonObject values, Func<JsonObject> loadStored)
     {
-        List<SettingField>? passwordFields = null;
-        foreach (var field in fields)
-            if (field.Kind == SettingFieldKind.Password && values[field.Key] is JsonValue v && v.GetValueKind() == JsonValueKind.String && v.GetValue<string>().Length == 0)
-                (passwordFields ??= []).Add(field);
-        if (passwordFields is null) return;
-
-        var stored = loadStored();
-        foreach (var field in passwordFields)
-            values[field.Key] = stored[field.Key]?.DeepClone();
+        if (PluginSettingsSecrets.HasBlankPassword(fields, values))
+            PluginSettingsSecrets.RestoreBlankPasswords(fields, values, loadStored());
     }
 
     private sealed record SettingsCommandRequest(string? Command, JsonObject? Values);

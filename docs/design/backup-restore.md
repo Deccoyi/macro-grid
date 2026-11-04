@@ -16,7 +16,7 @@ A `.mgbackup` file is a zip. It is built from the stores (profiles, the profile 
 | `plugin-settings/<plugin id>.json` | only from a running plugin's settings page; password fields are removed, also inside list rows |
 | `languages/<tag>.json` | installed language packs |
 
-Not in a backup: passwords, device tokens and pairings, plugin files, and the values of user variables (only their definitions).
+Not in a backup: passwords, device tokens and pairings, plugin files (the plugin picture cache `.image-cache` included), and the values of user variables (only their definitions).
 
 Reading is strict: at most 2000 entries, 64 MB for one entry, 256 MB in all; unknown entry names are ignored; a newer `formatVersion` is refused with a message; a profile goes through the same checks as an import.
 

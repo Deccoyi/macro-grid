@@ -133,6 +133,7 @@ export const PARAMS: Partial<Record<DictKey, readonly string[]>> = {
   "restore.result.failed": ["items"],
   "profile.importMissing.files": ["files"],
   "schemaForm.untitledRow": ["index"],
+  "schemaForm.search.unavailable": ["name"],
   "state.defaultPageName": ["n"],  "status.pluginUpdates.one": ["n"],
   "status.pluginUpdates.other": ["n"],
   "undo.pastePartial": ["pasted", "total"],

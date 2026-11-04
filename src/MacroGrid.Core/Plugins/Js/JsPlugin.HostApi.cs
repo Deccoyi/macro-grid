@@ -103,7 +103,7 @@ public sealed partial class JsPlugin
             ?? throw new JsHostException("registerAction needs a definition.");
         if (string.IsNullOrWhiteSpace(meta.Type) || !meta.Type.StartsWith(_manifest.Id + ".", StringComparison.Ordinal))
             throw new JsHostException($"Action types must start with '{_manifest.Id}.'.");
-        _host!.RegisterAction(new JsAction(this, meta));
+        _host!.RegisterAction(new JsAction(this, meta with { Fields = meta.Fields?.Select(f => JsOptions.Sanitize(f, _manifest.Id)).ToArray() }));
     }
 
     // ---- notify ----
@@ -145,9 +145,13 @@ public sealed partial class JsPlugin
 
     private void SettingsPage(string json)
     {
-        var fields = ReadDefinition<SettingField[]>(json, "settings.page")
+        var fields = ReadDefinition<SettingField[]>(json, "settings.page")?.Select(f => JsOptions.Sanitize(f, _manifest.Id)).ToArray()
             ?? throw new JsHostException("settings.page needs a list of fields.");
-        _settingsPage = new JsSettingsPage(_host!.DataDirectory, fields);
+        _settingsPage = new JsSettingsPage(_host!.DataDirectory, fields, _host.Secrets,
+            key => _problems?.Report(_manifest.Id, _manifest.Name, ProblemSeverity.Warning, ProblemCodes.SecretUnreadable,
+                $"The saved password of the setting '{key}' cannot be read on this PC or Windows account. Enter it again in the plugin's settings.",
+                key, maxPerSourceAndCode: 20),
+            () => _problems?.Resolve(_manifest.Id, ProblemCodes.SecretUnreadable), SearchOptionsAsync);
     }
 
     private void Status(string id, string text, string level)

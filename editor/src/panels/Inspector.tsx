@@ -134,6 +134,13 @@ export function Inspector({
               pages={pages}
               profiles={profiles}
               variableCatalog={variableCatalog}
+              widgetIcon={{
+                current: widget.style?.icon,
+                apply: (icon) => onChange((w) => {
+                  w.style = { ...w.style, icon, iconName: undefined };
+                  if (icon === undefined) delete w.style.icon;
+                }),
+              }}
               onChange={(event: WidgetEventName, bindings: ActionBinding[]) =>
                 onChange((w) => {
                   if (bindings.length === 0) delete w.actions[event];

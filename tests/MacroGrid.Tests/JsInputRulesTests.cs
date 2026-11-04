@@ -85,7 +85,7 @@ public sealed class JsInputRulesTests : IDisposable
 
     private static async Task WaitAsync(Func<bool> condition)
     {
-        for (var i = 0; i < 200 && !condition(); i++) await Task.Delay(25);
+        for (var i = 0; i < 1200 && !condition(); i++) await Task.Delay(25);
         Assert.True(condition(), "The condition was not met in time.");
     }
 

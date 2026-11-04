@@ -114,6 +114,7 @@ internal static class ServiceRegistration
         services.AddSingleton(sp => new PluginLocalizer(() => sp.GetRequiredService<PreferencesStore>().Get().Language));
         services.AddSingleton<VariableCatalog>();
         services.AddHostedSingleton<VariableProviderHost>();
+        services.AddSingleton(sp => new MacroGrid.Core.Plugins.Images.PluginImageService(sp.GetRequiredService<ILogger<MacroGrid.Core.Plugins.Images.PluginImageService>>(), sp.GetRequiredService<ProblemList>()));
         // Registered after the provider host: loading a plugin starts its variable providers on that host.
         services.AddSingleton(sp => new PluginManager(pluginsRoot, ClientHub.ServerVersion,
             sp.GetRequiredService<PluginStatusRegistry>(), sp.GetRequiredService<ActionDispatcher>(),
@@ -124,7 +125,8 @@ internal static class ServiceRegistration
             windowSource: sp.GetRequiredService<IActiveWindowSource>(), problems: sp.GetRequiredService<ProblemList>(),
             widgetCatalog: sp.GetRequiredService<PluginWidgetCatalog>(), widgetEvents: sp.GetRequiredService<PluginWidgetEventHub>(),
             officialCatalog: sp.GetRequiredService<OfficialCatalog>(), origins: sp.GetRequiredService<PluginInstallOriginStore>(),
-            ownPorts: [ServerApp.Port, ServerApp.TlsPort], notifications: sp.GetRequiredService<PluginNotifications>()));
+            ownPorts: [ServerApp.Port, ServerApp.TlsPort], notifications: sp.GetRequiredService<PluginNotifications>(),
+            images: sp.GetRequiredService<MacroGrid.Core.Plugins.Images.PluginImageService>()));
         services.AddSingleton(sp => new BackupCollector(sp.GetRequiredService<ProfileStore>(), sp.GetRequiredService<ProfileTreeStore>(),
             sp.GetRequiredService<PreferencesStore>(), sp.GetRequiredService<UserVariableService>(), sp.GetRequiredService<AutomationStore>(),
             sp.GetRequiredService<DeviceStore>(), sp.GetRequiredService<PluginManager>(), sp.GetRequiredService<LanguagePackStore>()));

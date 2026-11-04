@@ -8,7 +8,14 @@ const shape = (fields: SettingField[]) =>
 
 describe("layoutFields", () => {
   it("puts consecutive shareable fields into two-column grids in order", () => {
-    expect(shape([f("a", "Number"), f("b", "Color"), f("c", "Select"), f("d", "Number")])).toEqual(["grid:a+b", "grid:c+d"]);
+    expect(shape([f("a", "Number"), f("b", "Color"), f("c", "Number"), f("d", "Number")])).toEqual(["grid:a+b", "grid:c+d"]);
+  });
+
+  it("always draws a Select (plain, dynamic or searchable) on a row of its own, one control per row", () => {
+    const sel = [f("source", "Select", { optionsSource: "s" }), f("panel", "Select", { optionsSource: "p", searchable: true }), f("plain", "Select")];
+    expect(shape(sel)).toEqual(["source", "panel", "plain"]);
+    expect(shape([f("a", "Number"), ...sel, f("b", "Number"), f("c", "Number")])).toEqual(["a", "source", "panel", "plain", "grid:b+c"]);
+    expect(shape([f("m", "Segmented", { optionsSource: "devices" }), f("n", "Segmented", { optionsSource: "devices" })])).toEqual(["m", "n"]);
   });
 
   it("leaves an odd field on its own at the end of its run", () => {

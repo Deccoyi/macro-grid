@@ -3,6 +3,7 @@ using System.Text.Json.Nodes;
 using MacroGrid.Core.Model;
 using MacroGrid.Plugin.Abstractions;
 using MacroGrid.Protocol;
+using MacroGrid.Core.Plugins.Images;
 using MacroGrid.Core.Plugins.Widgets;
 using MacroGrid.Core.Widgets;
 
@@ -25,7 +26,7 @@ public sealed record LayoutSendResult(LayoutSendKind Kind, IReadOnlySet<string> 
 /// <c>hello</c> it gets large <c>data:</c> values as cached asset references, and profile edits as small
 /// <c>layout.patch</c> messages; a client that announced nothing gets the plain full layout, as before.
 /// </summary>
-public sealed class LayoutSender(AssetStore assets, PluginWidgetCatalog? pluginWidgets = null)
+public sealed class LayoutSender(AssetStore assets, PluginWidgetCatalog? pluginWidgets = null, PluginImageService? images = null)
 {
     private static readonly IReadOnlySet<string> NoWidgets = new HashSet<string>();
 
@@ -90,10 +91,43 @@ public sealed class LayoutSender(AssetStore assets, PluginWidgetCatalog? pluginW
     {
         var node = JsonSerializer.SerializeToNode(profile, ProtocolJson.Options)!.AsObject();
         ReplaceRemovedWidgets(node);
+        ResolvePluginImages(node, null);
         AddPluginWidgetRuntime(session, profile, node);
         if (session.Supports(ClientCapabilities.Assets))
             assets.Externalize(node);
         return node;
+    }
+
+    /// <summary>A device never gets a <c>plugin-image:</c> reference. A button's <c>style.icon</c> that is one becomes the cached picture (and from there an asset reference,
+    /// like any large <c>data:</c> value), or is left out while the picture is missing (the plugin is asked for it and the picture follows as widget state). Any other string
+    /// that starts like a reference (the rules of a dynamic icon, which the server evaluates) is emptied.</summary>
+    private void ResolvePluginImages(JsonNode? node, string? parentKey)
+    {
+        switch (node)
+        {
+            case JsonObject obj:
+                foreach (var key in obj.Select(kv => kv.Key).ToList())
+                {
+                    if (obj[key] is JsonValue value && value.TryGetValue<string>(out var text) && PluginImageRef.LooksLikeRef(text))
+                    {
+                        if (key == "icon" && parentKey == "style")
+                        {
+                            if (images?.Resolve(text) is { } url) obj[key] = url;
+                            else obj.Remove(key);
+                        }
+                        else obj[key] = "";
+                    }
+                    else ResolvePluginImages(obj[key], key);
+                }
+                break;
+            case JsonArray array:
+                for (var i = 0; i < array.Count; i++)
+                {
+                    if (array[i] is JsonValue value && value.TryGetValue<string>(out var text) && PluginImageRef.LooksLikeRef(text)) array[i] = "";
+                    else ResolvePluginImages(array[i], null);
+                }
+                break;
+        }
     }
 
     /// <summary>The text (in the app language) a device draws where a removed <c>web</c> widget used to be.</summary>

@@ -4,6 +4,23 @@ New features and fixes in Macro Grid. For technical details, see [CHANGELOG-deve
 
 ## Unreleased
 
+## 1.6.0 - 2026-11-05
+### New
+- **Search in long lists of plugin options:** a plugin can now show a list with a search box that loads in pages, so even a very long list stays fast.
+- **Local apps can send bigger messages to plugins:** a script plugin that talks to an app on your own PC can ask to receive larger messages. You see and approve this like any other permission.
+- **Voicemod tutorial:** a new guide explains how to request your own Voicemod API key and connect it to Macro Grid. Macro Grid is not affiliated with Voicemod.
+- **Searchable pickers in plugin actions:** a plugin can now offer a long list (for example voices or sounds) as a search box. Type to filter, scroll for more, and use the keyboard. The name you picked is still shown when the plugin's app is closed.
+- **Plugin pictures as button icons:** when a picked item has a picture, one tick box uses it as the button icon.
+- **Refresh button for plugin lists:** a list with a search box now has a refresh button, so new items (for example sounds you just added in the app) show up without restarting.
+- **Plugin lists use one column:** dropdowns of plugin actions are always shown one per row with the name above, so they fit in a narrow Properties panel.
+- **Plugins can supply button pictures:** a plugin can now give its own pictures to buttons (for example one per voice). Shared profiles carry only the names you chose, never the pictures.
+
+### Changed
+- **Passwords in plugin settings are now stored protected:** a password or key typed into the settings of a script plugin is no longer saved as plain text. If you open the settings on another PC or Windows account, enter it again. A saved password also cannot be read by another plugin.
+
+### Fixed
+- **Plugin variables in texts:** adding a plugin's variable to a button text now inserts the variable itself, not its current value (for example `true`).
+
 ## 1.5.0 - 2026-11-02
 ### New
 - **Restore from a restore point:** File > Restore now asks whether to restore from a file or from one of the automatic restore points, listed with date, reason and size.

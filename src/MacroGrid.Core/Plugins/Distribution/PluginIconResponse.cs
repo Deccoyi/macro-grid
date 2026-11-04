@@ -8,4 +8,6 @@ public static class PluginIconResponse
 {
     public const string ContentSecurityPolicy = "default-src 'none'; style-src 'unsafe-inline'; sandbox";
     public const string ContentTypeOptions = "nosniff";
+    /// <summary>Another site cannot load or probe an icon or picture endpoint.</summary>
+    public const string CrossOriginResourcePolicy = "same-origin";
 }

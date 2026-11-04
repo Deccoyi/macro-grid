@@ -61,7 +61,7 @@ public static class PluginFolderValidator
 
         CheckCompatibility(manifest, macroGridVersion, Error, Warn);
         CheckEntry(dir, manifest, Error);
-        if (manifest.Kind == PluginKind.Js) CheckPermissions(manifest, Error, Warn);
+        if (manifest.Kind == PluginKind.Js) { CheckPermissions(manifest, Error, Warn); CheckLimits(manifest, Error, Warn); }
         CheckWidgets(dir, manifest, Error);
         CheckIcon(dir, manifest, Warn);
         CheckCatalogFields(manifest, Warn);
@@ -118,6 +118,15 @@ public static class PluginFolderValidator
         }
     }
 
+    private static void CheckLimits(PluginManifest manifest, Action<string> error, Action<string> warn)
+    {
+        if (manifest.Limits?.WsMessageKB is not { } kb) return;
+        if (!JsWsLimits.InRange(kb))
+            error($"limits.wsMessageKB must be {JsWsLimits.MinKB} to {JsWsLimits.MaxKB}, not {kb}");
+        else if (kb > JsWsLimits.MinKB && !JsWsLimits.HasLoopbackPermission(manifest.Permissions))
+            warn("limits.wsMessageKB only applies to a ws: permission for localhost or 127.0.0.1; every other address keeps 64 KB");
+    }
+
     private static void CheckWidgets(string dir, PluginManifest manifest, Action<string> error)
     {
         foreach (var problem in PluginWidgetValidator.Validate(dir, manifest, verified: false).Problems)
@@ -165,6 +174,8 @@ public static class PluginFolderValidator
         var total = 0L;
         foreach (var file in Directory.EnumerateFiles(dir, "*", SearchOption.AllDirectories))
         {
+            // The host's own picture cache is never part of a package.
+            if (Path.GetRelativePath(dir, file).StartsWith(Images.PluginImageCache.FolderName + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase)) continue;
             var length = new FileInfo(file).Length;
             if (length > PluginZip.MaxEntryBytes)
                 error($"{Path.GetRelativePath(dir, file)} is larger than {PluginZip.MaxEntryBytes / 1024 / 1024} MB");

@@ -31,4 +31,9 @@ describe("preview text", () => {
   it("keeps escaped braces as literal braces", () => {
     expect(renderPreviewText("{{x}}", { x: 1 })).toBe("{x}");
   });
+
+  it("applies an A/B format to a boolean like the server", () => {
+    expect(renderPreviewText("{p.on|ON/OFF}", { "p.on": true })).toBe("ON");
+    expect(renderPreviewText("{p.on|ON/OFF}", { "p.on": false })).toBe("OFF");
+  });
 });

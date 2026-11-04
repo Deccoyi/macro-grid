@@ -131,7 +131,7 @@ Every field is `stacked` (label row above the control), `inline` (label left, co
 | `Number` | stacked | yes (2 or 3 per row) | Unit (`px`, `ms`) inside the input on the right, dimmed. |
 | `Slider` | stacked | no | Track grows, then a 56 px editable value box. |
 | `Bool` | inline | no | Label left, small toggle (28x16) right. A description goes under the label. |
-| `Select` | stacked | yes (2 per row) | Native select with a chevron. Refresh icon in the label row when options load dynamically. |
+| `Select` | stacked, label above the control at any width | no, a row of its own | Native select with a chevron. A plugin list that has many items uses `searchable`: a search box with a refresh icon after it. Refresh icon in the label row when options load dynamically. |
 | `Segmented` | stacked | two options: yes (2 per row); three options: no, a row of its own | Selected segment has a 2 px accent line at the bottom. More than three options or long labels: use `Select`. |
 | `Color` | stacked | yes (2 or 3 per row) | Swatch plus mono hex, palette in a portal popover. |
 | `Hotkey` | stacked | no | Key-capture box: focus it and press the keys. Same control as the hotkey action. |
@@ -156,7 +156,7 @@ the window width (use `@container`, never `@media`).
 | under 240 | Compact: every grid is one column, section padding stays 12. |
 | 240 to 299 | Three-column grids become two columns; two-column grids stay. |
 | 300 to 399 | Default (the 320 reference): grids as defined above. |
-| 400 and wider | Wide: single-value fields (`Number`, `Select`, `Color`, `Segmented`) switch to `Label | Value` rows: label in a fixed 120 px column, control fills the rest, 28 px row. Grids collapse to one column of such rows. |
+| 400 and wider | Wide: single-value fields (`Number`, `Color`, `Segmented`; a `Select` stays stacked) switch to `Label | Value` rows: label in a fixed 120 px column, control fills the rest, 28 px row. Grids collapse to one column of such rows. |
 
 Rules that keep every width working: grid children get `min-width: 0`; labels are one line and cut with an ellipsis (set `title` to the full
 text, never wrap to two lines); controls fill their cell (`width: 100%`), never a fixed width, except the dependent-field input (96 px) and the
