@@ -12,6 +12,13 @@
 - `CHANGELOG-developer.md` records only: changes to the plugin SDK or the WebSocket protocol, breaking or incompatible changes, migrations, and anything a plugin author, integrator or maintainer has to do differently. Everything else (how a feature was built, refactors, internal details, small fixes) goes in the commit message and the pull request description, not in this file. Entries already there stay as they are.
 - When a change is finished, update `CHANGELOG.md` under `[Unreleased]`, and `CHANGELOG-developer.md` only if the change is one of the kinds above. See `docs/guides/versioning.md` and the `commit-all` skill.
 
+## Branches and merging
+- Never push or merge anything into `main` directly: no fixes, hotfixes, dependency bumps or bot PRs that target `main`. Every change, however small or urgent, lands on `dev` first (work branch -> merge into `dev`).
+- Before merging into `dev`: merge the latest `dev` into the work branch, resolve conflicts there and run the tests. Never merge into a `dev` that has conflicts.
+- `dev` -> `main` is the very last step and only the owner decides when. All pending work is already on `dev`; `main` has been merged back into `dev` if needed so the pull request is mergeable with no conflicts; the release content is prepared (see "Merging dev into main" below); one pull request, merge commit, never squash or rebase. The owner merges it.
+- Sub-sessions and agents never change versions: no edits to `<Version>` in `Directory.Build.props`, `version` in `package.json` or `plugin.json`, no version headings or dates in the changelogs, no tags. They write entries under `[Unreleased]` only. The version is chosen once, in the release preparation step before the `dev` -> `main` pull request (by the manager session or the owner).
+- Dependabot and other bots: every update PR must target `dev` (`target-branch: dev` on EVERY ecosystem entry in `.github/dependabot.yml`). GitHub security-update PRs ignore that file and target the default branch: retarget them by hand (`gh pr edit <n> --base dev`) before merging.
+
 ## Versions, releases and signing
 - Any version, release, tag or signing work (server, SDK, phone app or plugins): read `docs/guides/release.md` first (the one release guide, with the tag table, the order and the signing keys), then `docs/guides/versioning.md` for the rules. The other repositories link here; do not copy their content into other documents.
 - The server and the SDK share one version, set only in `<Version>` in `Directory.Build.props`. Never write a version into code or a project file.
