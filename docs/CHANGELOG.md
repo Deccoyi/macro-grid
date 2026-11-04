@@ -8,7 +8,7 @@ New features and fixes in Macro Grid. For technical details, see [CHANGELOG-deve
 ### New
 - **Search in long lists of plugin options:** a plugin can now show a list with a search box that loads in pages, so even a very long list stays fast.
 - **Local apps can send bigger messages to plugins:** a script plugin that talks to an app on your own PC can ask to receive larger messages. You see and approve this like any other permission.
-- **Voicemod tutorial:** a new guide explains how to request your own Voicemod API key and connect it to Macro Grid.
+- **Voicemod tutorial:** a new guide explains how to request your own Voicemod API key and connect it to Macro Grid. Macro Grid is not affiliated with Voicemod.
 - **Searchable pickers in plugin actions:** a plugin can now offer a long list (for example voices or sounds) as a search box. Type to filter, scroll for more, and use the keyboard. The name you picked is still shown when the plugin's app is closed.
 - **Plugin pictures as button icons:** when a picked item has a picture, one tick box uses it as the button icon.
 - **Refresh button for plugin lists:** a list with a search box now has a refresh button, so new items (for example sounds you just added in the app) show up without restarting.
