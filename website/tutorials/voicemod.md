@@ -5,7 +5,7 @@ Change your voice, switch voices and mute from your phone. The **Voice Changer C
 **You need:** Windows, the Voicemod app, a Voicemod Control API key (free), and the Voice Changer Control plugin in Macro Grid.
 
 ::: info Not affiliated
-Voice Changer Control is an independent plugin. It is not made, endorsed or sponsored by Voicemod and is not affiliated with Voicemod. Voicemod is a trademark of its owner.
+Voice Changer Control is an unofficial community plugin. Macro Grid and the plugin are not affiliated with, endorsed by or sponsored by Voicemod. Voicemod is a trademark of its owner.
 :::
 
 ## 1. Install and start Voicemod {#install-voicemod}

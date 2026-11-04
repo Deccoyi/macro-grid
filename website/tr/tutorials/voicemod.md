@@ -5,7 +5,7 @@ Sesinizi değiştirin, ses efektleri arasında geçin ve sessize alın; hepsi te
 **Gerekenler:** Windows, Voicemod uygulaması, Voicemod Control API anahtarı (ücretsiz) ve Macro Grid'de Voice Changer Control eklentisi.
 
 ::: info Bağlantı yok
-Voice Changer Control bağımsız bir eklentidir. Voicemod tarafından yapılmamış, onaylanmamış veya desteklenmemiştir ve Voicemod ile bağlantılı değildir. Voicemod, sahibinin ticari markasıdır.
+Voice Changer Control resmî olmayan bir topluluk eklentisidir. Macro Grid ve eklenti, Voicemod ile bağlantılı değildir; Voicemod tarafından onaylanmamış veya desteklenmemiştir. Voicemod, sahibinin ticari markasıdır.
 :::
 
 ## 1. Voicemod'u kurun ve başlatın {#install-voicemod}
