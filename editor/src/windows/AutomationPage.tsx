@@ -12,6 +12,7 @@ import { ConditionEditor } from "../panels/dynamic/ConditionEditor";
 import { combinatorOf, fromConditionNode, newCondition, toConditionNode } from "../panels/dynamic/conditionEditing";
 import { Field, NumberInput, Seg, SelectInput, Switch, TextInput } from "../panels/fields/controls";
 import { newRule, ruleProblem, stepNotes, toggleDay, triggerSummary, withChange } from "./automation";
+import { ChangeTriggerForm } from "./ChangeTriggerForm";
 import { DayChip, EmptyState, PageHeader, TimeInput } from "./settingsPrimitives";
 
 type Limits = AutomationResponse["limits"];
@@ -136,6 +137,7 @@ export function AutomationPage() {
       <div className="st-add-rule">
         <span>{t("automation.add")}</span>
         <button type="button" className="st-btn" disabled={full || !rules} onClick={() => add("variable")}>{t("automation.trigger.variable")}</button>
+        <button type="button" className="st-btn" disabled={full || !rules} onClick={() => add("variableChange")}>{t("automation.trigger.variableChange")}</button>
         <button type="button" className="st-btn" disabled={full || !rules} onClick={() => add("time")}>{t("automation.trigger.time")}</button>
         <button type="button" className="st-btn" disabled={full || !rules} onClick={() => add("deviceConnect")}>{t("automation.trigger.deviceConnect")}</button>
       </div>
@@ -174,7 +176,7 @@ function RuleEditor({ rule, limits, devices, actions, profiles, catalog, onChang
 
       <Seg
         value={trigger.kind}
-        options={(["variable", "time", "deviceConnect"] as const).map((k) => ({ value: k, label: t(`automation.trigger.${k}` as DictKey) }))}
+        options={(["variable", "variableChange", "time", "deviceConnect"] as const).map((k) => ({ value: k, label: t(`automation.trigger.${k}` as DictKey) }))}
         onChange={(kind) => {
           if (kind === trigger.kind) return;
           const fresh = newRule(kind, [], rule.name).trigger;
@@ -192,6 +194,8 @@ function RuleEditor({ rule, limits, devices, actions, profiles, catalog, onChang
         <div className="st-hint">{t("action.logic.unsupported")}</div>
       ))}
       {trigger.kind === "variable" && <div className="st-hint">{t("automation.variable.hint")}</div>}
+
+      {trigger.kind === "variableChange" && <ChangeTriggerForm trigger={trigger} catalog={userCatalog} onChange={setTrigger} />}
 
       {trigger.kind === "time" && (
         <>

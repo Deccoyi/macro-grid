@@ -33,6 +33,9 @@ public sealed partial class AutomationService : BackgroundService
     private static readonly TimeSpan GuardWindow = TimeSpan.FromSeconds(60);
     private const int GuardRefusals = 10;
     private const int MaxParallel = 4;
+    /// <summary>After a watched variable first has a value, its changes are only followed, not acted on: a plugin often shows a placeholder first.</summary>
+    private static readonly TimeSpan SettleWindow = TimeSpan.FromSeconds(3);
+    private const int SelfChangeLimit = 5;
     private const string Source = "automation";
 
     /// <summary>Steps that press keys by themselves. A rule runs without a touch, so these are refused there until the owner decides otherwise.</summary>
@@ -51,6 +54,10 @@ public sealed partial class AutomationService : BackgroundService
         public readonly TokenBucket Bucket = new(5, 0.5);
         public readonly Queue<DateTimeOffset> Refusals = new();
         public HashSet<string> Variables = new(StringComparer.OrdinalIgnoreCase);
+        // variableChange: the last value this rule has judged, until when changes are only followed, and the changes that came from the rule itself.
+        public object? LastSeen;
+        public DateTimeOffset SettleUntil;
+        public readonly Queue<DateTimeOffset> SelfChanges = new();
     }
 
     private readonly AutomationStore _store;
@@ -139,7 +146,7 @@ public sealed partial class AutomationService : BackgroundService
         var now = _clock.GetUtcNow();
         var rules = _store.List();
         var paused = _store.Paused;
-        List<(AutomationRule Rule, string? DeviceId)> due = [];
+        List<(AutomationRule Rule, string? DeviceId, ChangeValues? Change)> due = [];
 
         lock (_lock)
         {
@@ -173,23 +180,61 @@ public sealed partial class AutomationService : BackgroundService
                 {
                     case AutomationTriggerKinds.Variable when rule.Trigger.Condition is { } condition && dirty.Any(state.Variables.Contains):
                         var matches = DynamicRuleEvaluator.Matches(condition, _variables);
-                        if (matches && !state.WasTrue) due.Add((rule, null));
+                        if (matches && !state.WasTrue) due.Add((rule, null, null));
                         state.WasTrue = matches;
+                        break;
+                    case AutomationTriggerKinds.VariableChange when rule.Trigger.Variable is { } watched && dirty.Any(state.Variables.Contains):
+                        if (JudgeChange(rule, state, _variables.Get(watched), now) is { } change) due.Add((rule, null, change));
                         break;
                     case AutomationTriggerKinds.Time when state.LastMinute != minute && TimeMatches(rule.Trigger, local):
                         state.LastMinute = minute;
-                        due.Add((rule, null));
+                        due.Add((rule, null, null));
                         break;
                     case AutomationTriggerKinds.DeviceConnect when arrived is { Count: > 0 }:
                         foreach (var id in arrived.Where(id => rule.Trigger.DeviceId is null || rule.Trigger.DeviceId == id))
-                            due.Add((rule, id));
+                            due.Add((rule, id, null));
                         break;
                 }
             }
 
-            foreach (var (rule, deviceId) in due)
-                TryStart(rule, _state[rule.Id], deviceId, paused, manual: false, now);
+            foreach (var (rule, deviceId, change) in due)
+                TryStart(rule, _state[rule.Id], deviceId, paused, manual: false, now, change);
         }
+    }
+
+    /// <summary>
+    /// Called under the lock for a variable-change rule whose variable was written. Returns the values when the rule should start, otherwise null.
+    /// What it does not turn into a start: a value that is back where it was within one tick, the variable appearing or disappearing, the first
+    /// seconds after it appeared, a change made while the rule itself is running, and a start closer than the minimum interval.
+    /// </summary>
+    private ChangeValues? JudgeChange(AutomationRule rule, RuleState state, object? current, DateTimeOffset now)
+    {
+        var old = state.LastSeen;
+        if (state.Running)
+        {
+            // The rule's own steps (or anything else while it runs) changed the variable: follow it without starting, and say so when it keeps happening.
+            if (!ChangeTrigger.SameValue(old, current))
+            {
+                state.LastSeen = current;
+                state.SelfChanges.Enqueue(now);
+                while (state.SelfChanges.Count > 0 && now - state.SelfChanges.Peek() > GuardWindow) state.SelfChanges.Dequeue();
+                if (state.SelfChanges.Count >= SelfChangeLimit)
+                    _problems.Report(Source, rule.Name, ProblemSeverity.Warning, ProblemCodes.AutomationSelfChange,
+                        "This rule changes the variable that starts it. Those changes are ignored while the rule runs.", $"{ProblemCodes.AutomationSelfChange}:{rule.Id}", int.MaxValue);
+            }
+            return null;
+        }
+        state.LastSeen = current;
+        if (current is null) return null;
+        if (old is null)
+        {
+            state.SettleUntil = now + SettleWindow;
+            return null;
+        }
+        if (now < state.SettleUntil || ChangeTrigger.SameValue(old, current)) return null;
+        if (!ChangeTrigger.Matches(rule.Trigger, old, current)) return null;
+        if (rule.Trigger.MinIntervalSeconds > 0 && state.LastStart is { } last && now - last < TimeSpan.FromSeconds(rule.Trigger.MinIntervalSeconds)) return null;
+        return new ChangeValues(ChangeTrigger.Describe(old), ChangeTrigger.Describe(current));
     }
 
     /// <summary>Runs a rule now, as the "Run now" button of the editor does. It ignores the switch, the pause and the cooldown, not the overlap or the buckets.</summary>
@@ -252,6 +297,15 @@ public sealed partial class AutomationService : BackgroundService
             state.LastMinute = minute;
             state.Variables = [];
             state.WasTrue = false;
+            state.LastSeen = null;
+            state.SettleUntil = default;
+            state.SelfChanges.Clear();
+            if (rule.Trigger is { Kind: AutomationTriggerKinds.VariableChange, Variable: { } watched })
+            {
+                // Read now without firing, like the condition below: saving the rule or starting the server is not a change.
+                state.Variables = [watched];
+                state.LastSeen = _variables.Get(watched);
+            }
             if (rule.Trigger.Condition is { } condition)
             {
                 // The condition is read now without firing: a rule does not run because it was saved while its condition holds.
@@ -287,7 +341,7 @@ public sealed partial class AutomationService : BackgroundService
         trigger.Time == $"{local.Hour:00}:{local.Minute:00}" && (trigger.Days.Count == 0 || trigger.Days.Contains((int)local.DayOfWeek));
 
     /// <summary>Called under the lock. The order of the checks is the order in the design document.</summary>
-    private bool TryStart(AutomationRule rule, RuleState state, string? deviceId, bool paused, bool manual, DateTimeOffset now)
+    private bool TryStart(AutomationRule rule, RuleState state, string? deviceId, bool paused, bool manual, DateTimeOffset now, ChangeValues? change = null)
     {
         if (!manual && (paused || !rule.Enabled)) return false;
         if (state.Running) return false;
@@ -308,7 +362,7 @@ public sealed partial class AutomationService : BackgroundService
         state.LastStart = now;
         state.Runs++;
         var session = deviceId is null ? null : _sessions.All.FirstOrDefault(s => s.DeviceId == deviceId);
-        var run = Task.Run(() => RunAsync(rule, state, deviceId, session));
+        var run = Task.Run(() => RunAsync(rule, state, deviceId, session, change));
         _active[run] = 0;
         _ = run.ContinueWith(t => _active.TryRemove(t, out _), TaskScheduler.Default);
         return true;
@@ -330,7 +384,7 @@ public sealed partial class AutomationService : BackgroundService
                 "This rule kept starting too often and was switched off. Check what starts it, then switch it on again.", $"{ProblemCodes.AutomationSwitchedOff}:{rule.Id}", int.MaxValue);
     }
 
-    private async Task RunAsync(AutomationRule rule, RuleState state, string? deviceId, ClientSession? session)
+    private async Task RunAsync(AutomationRule rule, RuleState state, string? deviceId, ClientSession? session, ChangeValues? change)
     {
         var watch = Stopwatch.StartNew();
         var failures = new List<ActionFailure>();
@@ -348,7 +402,7 @@ public sealed partial class AutomationService : BackgroundService
                 {
                     IDeviceController device = session is null ? new NoDeviceController() : new SessionDeviceController(session, _profiles, _widgetState);
                     var context = new ActionContext(deviceId ?? "", "", "", device) { UserGesture = false };
-                    failures.AddRange(await _dispatcher.RunListAsync(rule.Actions, context, "rule:" + rule.Id, _stopping));
+                    failures.AddRange(await _dispatcher.RunListAsync(rule.Actions, context, "rule:" + rule.Id, _stopping, new TriggerVariableStore(_variables, change)));
                 }
             }
             finally { _slots.Release(); }
@@ -366,6 +420,8 @@ public sealed partial class AutomationService : BackgroundService
         lock (_lock)
         {
             state.Running = false;
+            // Whatever the variable became while the rule ran is not a new change for it.
+            if (rule.Trigger is { Kind: AutomationTriggerKinds.VariableChange, Variable: { } watched }) state.LastSeen = _variables.Get(watched);
             state.LastResult = failures.Count == 0 ? "ok" : "failed";
             state.LastMessage = failures.Count == 0 ? null : PlainText.Clean(failures[0].Message, 200);
             if (failures.Count == 0)
@@ -379,7 +435,7 @@ public sealed partial class AutomationService : BackgroundService
 
     private void ResolveAll(string id)
     {
-        foreach (var code in new[] { ProblemCodes.AutomationStepFailed, ProblemCodes.AutomationDropped, ProblemCodes.AutomationSwitchedOff, ProblemCodes.AutomationVariableMissing })
+        foreach (var code in new[] { ProblemCodes.AutomationStepFailed, ProblemCodes.AutomationDropped, ProblemCodes.AutomationSwitchedOff, ProblemCodes.AutomationVariableMissing, ProblemCodes.AutomationSelfChange })
             _problems.ResolveKey(Source, $"{code}:{id}");
     }
 

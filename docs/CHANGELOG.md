@@ -4,6 +4,10 @@ New features and fixes in Macro Grid. For technical details, see [CHANGELOG-deve
 
 ## Unreleased
 
+## 1.6.1 - 2026-11-06
+### New
+- **Automation rule that starts when a value changes:** a rule can now start when a variable changes, for example when the stream goes live or a number crosses a limit, and it can use the old and the new value in its steps.
+
 ## 1.6.0 - 2026-11-05
 ### New
 - **Search in long lists of plugin options:** a plugin can now show a list with a search box that loads in pages, so even a very long list stays fast.

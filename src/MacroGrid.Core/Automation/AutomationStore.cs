@@ -3,6 +3,7 @@ using System.Text.Json;
 using System.Text.RegularExpressions;
 using MacroGrid.Core.Diagnostics;
 using MacroGrid.Core.Model;
+using MacroGrid.Core.Variables;
 using MacroGrid.Protocol;
 
 namespace MacroGrid.Core.Automation;
@@ -93,6 +94,7 @@ public sealed partial class AutomationStore
                 Trigger = trigger,
                 Actions = [.. rule.Actions],
                 CooldownSeconds = rule.CooldownSeconds,
+                Extra = rule.Extra,
             });
         }
         error = "";
@@ -111,7 +113,7 @@ public sealed partial class AutomationStore
                     error = $"The condition of '{label}' is not valid (at most {AutomationLimits.MaxComparisons} comparisons).";
                     return false;
                 }
-                trigger = new AutomationTrigger { Kind = t.Kind, Condition = t.Condition };
+                trigger = new AutomationTrigger { Kind = t.Kind, Condition = t.Condition, Extra = t.Extra };
                 return true;
             case AutomationTriggerKinds.Time:
                 if (!TimeOnly.TryParseExact(t.Time ?? "", "HH:mm", CultureInfo.InvariantCulture, DateTimeStyles.None, out _))
@@ -124,15 +126,39 @@ public sealed partial class AutomationStore
                     error = $"The days of '{label}' must be between 0 and 6.";
                     return false;
                 }
-                trigger = new AutomationTrigger { Kind = t.Kind, Time = t.Time, Days = [.. t.Days.Distinct().Order()] };
+                trigger = new AutomationTrigger { Kind = t.Kind, Time = t.Time, Days = [.. t.Days.Distinct().Order()], Extra = t.Extra };
                 return true;
             case AutomationTriggerKinds.DeviceConnect:
-                trigger = new AutomationTrigger { Kind = t.Kind, DeviceId = string.IsNullOrWhiteSpace(t.DeviceId) ? null : t.DeviceId };
+                trigger = new AutomationTrigger { Kind = t.Kind, DeviceId = string.IsNullOrWhiteSpace(t.DeviceId) ? null : t.DeviceId, Extra = t.Extra };
                 return true;
+            case AutomationTriggerKinds.VariableChange:
+                return TryChange(t, label, out trigger, out error);
             default:
                 error = $"'{label}' has no known trigger.";
                 return false;
         }
+    }
+
+    private static bool TryChange(AutomationTrigger t, string label, out AutomationTrigger trigger, out string error)
+    {
+        trigger = new AutomationTrigger();
+        error = "";
+        var name = t.Variable?.Trim() ?? "";
+        if (name.Length == 0 || name.Length > AutomationLimits.MaxChangeTextLength || name.Any(char.IsControl)) { error = $"'{label}' needs a variable to watch."; return false; }
+        if (SelfVariables.IsSelfName(name)) { error = $"'{label}' watches a variable of one button ({name}). Only global variables can start a rule."; return false; }
+        var mode = string.IsNullOrEmpty(t.Mode) ? AutomationChangeModes.Any : t.Mode;
+        if (mode is not (AutomationChangeModes.Any or AutomationChangeModes.Crosses or AutomationChangeModes.Contains)) { error = $"The change mode of '{label}' is not valid."; return false; }
+        if (t.Threshold is { } n && !double.IsFinite(n) || mode == AutomationChangeModes.Crosses && t.Threshold is null) { error = $"'{label}' needs a number to cross."; return false; }
+        if (mode == AutomationChangeModes.Contains && string.IsNullOrEmpty(t.To)) { error = $"'{label}' needs the text to look for."; return false; }
+        if (t.MinIntervalSeconds is < 0 or > AutomationLimits.MaxMinIntervalSeconds) { error = $"The minimum interval of '{label}' must be between 0 and {AutomationLimits.MaxMinIntervalSeconds} seconds."; return false; }
+        if ((t.From?.Length ?? 0) > AutomationLimits.MaxChangeTextLength || (t.To?.Length ?? 0) > AutomationLimits.MaxChangeTextLength) { error = $"The text filters of '{label}' are too long."; return false; }
+        trigger = new AutomationTrigger
+        {
+            Kind = t.Kind, Variable = name, Mode = mode,
+            From = string.IsNullOrEmpty(t.From) ? null : t.From, To = string.IsNullOrEmpty(t.To) ? null : t.To,
+            Threshold = mode == AutomationChangeModes.Crosses ? t.Threshold : null, MinIntervalSeconds = t.MinIntervalSeconds, Extra = t.Extra,
+        };
+        return true;
     }
 
     /// <summary>Checks the tree shape and counts its comparisons.</summary>

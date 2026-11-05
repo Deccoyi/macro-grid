@@ -120,7 +120,9 @@ export interface UserVariablesResponse {
 }
 
 /** Mirrors MacroGrid.Core.Automation: one trigger; only the fields of its kind are used. */
-export type AutomationTriggerKind = "variable" | "time" | "deviceConnect";
+export type AutomationTriggerKind = "variable" | "time" | "deviceConnect" | "variableChange";
+
+export type AutomationChangeMode = "any" | "crosses" | "contains";
 
 export interface AutomationTrigger {
   kind: AutomationTriggerKind;
@@ -131,6 +133,15 @@ export interface AutomationTrigger {
   days: number[];
   /** null = any paired device. */
   deviceId?: string | null;
+  /** variableChange: the full name of the watched variable. */
+  variable?: string | null;
+  mode?: AutomationChangeMode | null;
+  /** variableChange: the old value must equal this; null = any. */
+  from?: string | null;
+  /** variableChange: the new value must equal this (null = any); the word to look for in mode "contains". An empty string is an unfinished choice. */
+  to?: string | null;
+  threshold?: number | null;
+  minIntervalSeconds?: number;
 }
 
 export interface AutomationRuleDef {

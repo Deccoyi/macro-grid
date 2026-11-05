@@ -1,6 +1,6 @@
 # Otomasyon kuralları
 
-Bir kural, bir eylem listesini düğmeye basmadan kendiliğinden çalıştırır: bir değer bir sınırı geçtiğinde, günün belirli bir saatinde ya da bir cihaz bağlandığında. Kural eklemek, düzenlemek ya da silmek için **Tercihler → Otomasyon** yolunu açın.
+Bir kural, bir eylem listesini düğmeye basmadan kendiliğinden çalıştırır: bir değer bir sınırı geçtiğinde, bir değer değiştiğinde, günün belirli bir saatinde ya da bir cihaz bağlandığında. Kural eklemek, düzenlemek ya da silmek için **Tercihler → Otomasyon** yolunu açın.
 
 Kurallar tuşlara basmaz. Bir kural kısayol gönderemez ya da metin yazamaz, çünkü bunları o an önde olan pencereye basarak yapardı. Böyle bir adım reddedilir ve [Tanılama Mesajları](/tr/guide/troubleshooting) penceresinde gösterilir.
 
@@ -9,10 +9,19 @@ Kurallar tuşlara basmaz. Bir kural kısayol gönderemez ya da metin yazamaz, ç
 | Tetikleyici | Ne zaman başlar |
 |---|---|
 | **Bir değer doğru olunca** | Bir değişken üzerindeki bir koşul doğru olur; örneğin `system.cpu` değeri `90`dan büyük. Kural, koşul yanlıştan doğruya geçtiğinde başlar. Sunucu açıldığı ya da kural kaydedildiği için, koşul zaten doğruyken başlamaz. |
+| **Bir değer değişince** | Seçtiğiniz bir değişken değişir. Doğru/yanlış değerde nereden nereye değiştiğini, sayıda her değişikliği ya da seçtiğiniz bir sayıyı (iki yönde de) geçmesini, metinde her değişikliği, belirli bir metne dönüşmesini ya da bir sözcük içermesini seçebilirsiniz. Adımlarda `{trigger.old}` ve `{trigger.new}` ile önceki ve sonraki değeri okuyabilirsiniz (en çok 256 karakter). Kendi değişkenlerinizle ve OBS durumu gibi eklenti değişkenleriyle çalışır. |
 | **Bir saatte** | Yerel saat, sizin belirlediğiniz saate (`HH:mm`) gelir ve seçtiğiniz günlerden birindedir; varsayılan olarak her gün. Bilgisayar uykudayken ya da Macro Grid kapalıyken geçen bir saat sonradan telafi edilmez. |
 | **Bir cihaz bağlandığında** | Daha önce bağlı olmayan eşleşmiş bir cihaz bağlanır. Tek bir cihaz ya da eşleşmiş herhangi bir cihaz seçebilirsiniz. |
 
 Değeri olmayan bir değişken, bir koşulda yanlış sayılır.
+
+### "Bir değer değişince" neleri yok sayar
+
+- Çeyrek saniyeden hızlı değişiklikler birleştirilir: bu süre içinde açılıp kapanan bir değer, değişmemiş sayılır.
+- Kural, Macro Grid başlarken, kuralı kaydederken ya da değer ortaya çıkarken ya da kaybolurken (örneğin bir eklenti yüklenirken) başlamaz. Yeni ortaya çıkan değere önce oturması için üç saniye tanınır.
+- Kural çalışırken yapılan değişiklikler yok sayılır; böylece bir kural kendini başlatamaz. Bu, uzun bir çalışma sırasında başkasının yaptığı gerçek bir değişikliği de gizler. Bir kural kendi değerini değiştirip duruyorsa [Tanılama Mesajları](/tr/guide/troubleshooting) içinde `P164` görürsünüz.
+- Yalnızca genel değişkenler izlenebilir; tek bir düğmenin değişkenleri (`self.…`) izlenemez.
+- **İki başlama arasında en az … saniye bekle** ayarı, hızlı değişen bir değerin kuralı çok sık başlatmasını önler.
 
 ## Adımlar
 
