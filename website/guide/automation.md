@@ -1,6 +1,6 @@
 # Automation rules
 
-A rule runs a list of actions by itself, without a button press: when a value crosses a limit, at a time of day, or when a device connects. Open **Preferences → Automation** to add, edit or delete rules.
+A rule runs a list of actions by itself, without a button press: when a value crosses a limit, when a value changes, at a time of day, or when a device connects. Open **Preferences → Automation** to add, edit or delete rules.
 
 Rules do not press keys. A rule cannot send a shortcut or type text, because it would press them in whatever window is in front. Such a step is refused and shown in [Diagnostic Messages](/guide/troubleshooting#diagnostic-messages).
 
@@ -9,10 +9,19 @@ Rules do not press keys. A rule cannot send a shortcut or type text, because it 
 | Trigger | Starts when |
 |---|---|
 | **When a value turns true** | A condition on a variable becomes true, for example `system.cpu` greater than `90`. The rule starts when the condition goes from false to true. It does not start because the server started or the rule was saved while the condition was already true. |
+| **When a value changes** | A variable you pick changes. For a true/false value you can set what it changes from and to; for a number, any change or crossing a number you choose (in either direction); for text, any change, becoming a given text, or containing a word. Use `{trigger.old}` and `{trigger.new}` in the steps to read the value before and after (at most 256 characters). Works with your own variables and with plugin variables such as the state of OBS. |
 | **At a time** | The local time is the time you set (`HH:mm`) on one of the days you pick, every day by default. A time that passed while the PC was asleep or Macro Grid was closed is not made up later. |
 | **When a device connects** | A paired device connects that was not connected before. You can pick one device, or any paired device. |
 
 A variable that has no value counts as false in a condition.
+
+### What "when a value changes" ignores
+
+- Changes faster than a quarter of a second are merged: a value that goes on and off again within that time counts as no change.
+- The rule does not start when Macro Grid starts, when you save the rule, or when the value appears or disappears (for example when a plugin loads). A value that has just appeared gets three seconds to settle first.
+- Changes made while the rule itself is running are ignored, so a rule cannot start itself. This also hides a real change that someone else makes during a long run. If a rule keeps changing its own value you see `P164` in [Diagnostic Messages](/guide/troubleshooting#diagnostic-messages).
+- Only global variables can be watched, not the variables of one button (`self.…`).
+- **Wait at least … seconds between starts** keeps a fast-changing value from starting the rule too often.
 
 ## Steps
 

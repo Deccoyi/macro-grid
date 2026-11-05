@@ -6,11 +6,14 @@ A rule runs a list of actions by itself, without a button press. Rules live in P
 
 ```
 AutomationRule { Id, Name, Enabled, Trigger, Actions: List<ActionBinding>, CooldownSeconds }
-AutomationTrigger { Kind: "variable" | "time" | "deviceConnect",
+AutomationTrigger { Kind: "variable" | "variableChange" | "time" | "deviceConnect",
                     Condition: ConditionNode?      // variable
                     Time: "HH:mm"?, Days: int[]?   // time; days 0-6 (Sunday = 0), empty = every day
-                    DeviceId: string? }            // deviceConnect; null = any paired device
+                    DeviceId: string?              // deviceConnect; null = any paired device
+                    Variable, Mode, From, To, Threshold, MinIntervalSeconds }   // variableChange (below)
 ```
+
+`AutomationRule` and `AutomationTrigger` keep fields they do not know (`[JsonExtensionData]`), so a file written by a newer build survives a round trip through this one. The other way round does not work: a build without `variableChange` refuses to save a list that contains such a rule ("has no known trigger") until that rule is deleted. Rules live only in `automation.json` and in a backup, never in a profile package.
 
 `AutomationStore` (`Core/Automation/`) keeps the list in `automation.json` (`formatVersion` 1, `paused`, `rules`). It is written through a `.tmp` file, a file that cannot be read is moved to `.broken`, and `TryReplace` is all or nothing. An action type that is not registered is accepted, because its plugin may be switched off; it fails when the rule runs, like on a button.
 
@@ -21,10 +24,19 @@ AutomationTrigger { Kind: "variable" | "time" | "deviceConnect",
 | Trigger | Starts | Does not start |
 | --- | --- | --- |
 | `variable` | when the condition goes from false to true | when the server starts or the rule is saved while the condition already holds, or while it stays true; a crossing shorter than one tick can be missed |
+| `variableChange` | when the watched variable's value differs from the last value judged (see below) | when the server starts or the rule is saved, when the variable appears or disappears, in the 3 s after it appeared, for a value that is back where it was within one tick, for changes made while the rule runs |
 | `time` | when the local minute equals `Time` on an allowed weekday, once per minute | for a minute that passed while the PC slept or Macro Grid was closed (nothing is caught up) |
 | `deviceConnect` | when a paired device appears in the session list that was not there before | when a device that is already connected opens a second session |
 
 The condition of a `variable` rule is an ordinary rules condition (see [variable-types-and-conditions.md](variable-types-and-conditions.md)); a variable that is not available makes it false.
+
+### The `variableChange` trigger
+
+One global variable by full name (`self.*` is refused when saving). `Mode`: `any` (optionally narrowed by `From` / `To`, compared as numbers when both sides are numbers, otherwise as text without case), `crosses` (a number goes from below `Threshold` to at or above it, or back) or `contains` (the new text contains `To`). `MinIntervalSeconds` (0-3600) is a start-to-start gap on top of the cooldown. The editor shows "it becomes" as mode `any` with `To`.
+
+Detection is on the 250 ms loop, from the same variable-changed event as the `variable` trigger; there is no polling. The rule remembers the last value it judged. Rebuilding the rule reads the current value without firing. A missing value on either side never fires; when a value first appears (or comes back, for instance after a plugin reload) the rule only follows it for 3 s. Writes inside one tick merge, so a flip and flip back is no change, and the old value is the one at the previous judged tick. While the rule runs, changes of its variable are followed without starting (re-entry guard) and the value is read again when the run ends. Five such changes within 60 s report `P164`; the guard also hides a real outside change during a long run. Loops through other rules end in `P162` as before.
+
+**Tokens.** The steps (text fields that allow variables, and the conditions of If steps) can read `{trigger.old}` and `{trigger.new}`: the values as text (booleans `true`/`false`, numbers with the invariant culture), control characters removed, at most 256 characters, because a plugin variable can carry text from the internet. A store that wraps the real one answers them and is passed to `ActionDispatcher.RunListAsync`; there is no SDK or protocol change. "Run now" has no values, so the tokens are empty there. The tokens are not in the variable picker.
 
 ## What a rule may do
 
@@ -55,6 +67,7 @@ The Error List (source `automation`, one line per rule and kind) shows:
 | `P161` | starts were dropped because the rule started too often | when the rule is deleted |
 | `P162` | the rule was switched off because it kept starting | when the rule is deleted |
 | `P163` | the rule uses a user variable that is not in the Global Variable List (checked when rules are saved and when a variable is deleted) | when the variable exists again or the rule changes |
+| `P164` | a `variableChange` rule keeps changing the variable that starts it (its own changes are ignored) | when the rule is deleted |
 
 The numbers (50 rules, 20 steps, 5 and 20 starts, 10 refusals in 60 s, 4 at once) are first guesses and live in `AutomationLimits` and the service constants. There is no separate write limiter for variables: rule starts are capped, each start has at most 20 steps, and unchanged writes are silent.
 

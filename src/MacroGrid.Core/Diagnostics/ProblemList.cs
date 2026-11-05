@@ -71,6 +71,8 @@ public static class ProblemCodes
     public const string AutomationSwitchedOff = "P162";
     /// <summary>An automation rule uses a user variable that is not in the Global Variable List. Cleared when the variable exists again or the rule changes.</summary>
     public const string AutomationVariableMissing = "P163";
+    /// <summary>A variable-change rule keeps changing the variable that starts it; its own changes are ignored. Cleared when the rule is deleted.</summary>
+    public const string AutomationSelfChange = "P164";
 }
 
 /// <summary>

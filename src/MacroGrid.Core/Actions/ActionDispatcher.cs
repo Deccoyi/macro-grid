@@ -143,13 +143,15 @@ public sealed class ActionDispatcher(IEnumerable<IActionHandler> handlers, ILogg
     /// Runs an action list in order (If, Otherwise, End and Stop steps included) and returns the failures; a failing step never stops the next one.
     /// <paramref name="origin"/> is only the text the log uses (a widget id, or <c>rule:&lt;id&gt;</c>). The list belongs to no widget, so a rule can use it too.
     /// </summary>
-    public async Task<IReadOnlyList<ActionFailure>> RunListAsync(IReadOnlyList<ActionBinding> bindings, ActionContext context, string? origin, CancellationToken cancellationToken)
+    public async Task<IReadOnlyList<ActionFailure>> RunListAsync(IReadOnlyList<ActionBinding> bindings, ActionContext context, string? origin, CancellationToken cancellationToken, IVariableStore? store = null)
     {
+        // A rule passes a store that also answers its trigger tokens; the If conditions and the {variable} texts of its steps both read it.
+        store ??= variables;
         List<ActionFailure>? errors = null;
         var flow = new ActionFlow.Run();
         foreach (var binding in bindings)
         {
-            var step = flow.Next(binding.Type, () => IfMet(binding, flow));
+            var step = flow.Next(binding.Type, () => IfMet(binding, flow, store));
             if (step == FlowStep.Stop) break;
             if (step == FlowStep.Skip) continue;
 
@@ -161,7 +163,7 @@ public sealed class ActionDispatcher(IEnumerable<IActionHandler> handlers, ILogg
                 continue;
             }
 
-            var failure = await RunOneAsync(handler, ResolveVariables(handler, binding.Settings), context, origin, cancellationToken);
+            var failure = await RunOneAsync(handler, ResolveVariables(handler, binding.Settings, store), context, origin, cancellationToken);
             flow.Ran(failure is not null);
             if (failure is not null) (errors ??= []).Add(failure);
         }
@@ -169,7 +171,7 @@ public sealed class ActionDispatcher(IEnumerable<IActionHandler> handlers, ILogg
     }
 
     /// <summary>Whether an If step is met. A missing or unreadable condition, or no variable store, counts as not met.</summary>
-    private bool IfMet(ActionBinding binding, ActionFlow.Run flow)
+    private bool IfMet(ActionBinding binding, ActionFlow.Run flow, IVariableStore? variables)
     {
         var when = binding.Settings["when"] is JsonValue w && w.TryGetValue<string>(out var text) ? text : ActionFlow.WhenCondition;
         if (when == ActionFlow.WhenPreviousFailed) return flow.PreviousFailed;
@@ -264,16 +266,17 @@ public sealed class ActionDispatcher(IEnumerable<IActionHandler> handlers, ILogg
     /// binding's own settings are never modified (they belong to the saved profile); a copy is returned only
     /// when there is something to resolve.
     /// </summary>
-    private JsonObject ResolveVariables(IActionHandler handler, JsonObject settings)
+    private JsonObject ResolveVariables(IActionHandler handler, JsonObject settings, IVariableStore? store = null)
     {
-        if (variables is null || handler is not IActionDescriptor descriptor) return settings;
+        var source = store ?? variables;
+        if (source is null || handler is not IActionDescriptor descriptor) return settings;
 
         JsonObject? resolved = null;
         foreach (var field in descriptor.Fields.Where(f => f.AllowVariables))
         {
             if (settings[field.Key] is not JsonValue value || !value.TryGetValue<string>(out var text) || !text.Contains('{')) continue;
             resolved ??= (JsonObject)settings.DeepClone();
-            resolved[field.Key] = Template.Parse(text).Render(variables);
+            resolved[field.Key] = Template.Parse(text).Render(source);
         }
         return resolved ?? settings;
     }

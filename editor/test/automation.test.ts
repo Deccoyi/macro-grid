@@ -41,6 +41,27 @@ describe("automation helpers", () => {
     expect(stepNotes({ ...rule, trigger: { ...rule.trigger, kind: "deviceConnect" } })).toEqual(["keys"]);
   });
 
+  it("holds a change rule back until it is complete, and says when it starts", () => {
+    const rule = newRule("variableChange", [], "A");
+    expect(ruleProblem(rule)).toBe("variable");
+    rule.trigger.variable = "user.x";
+    expect(ruleProblem(rule)).toBeNull();
+    expect(triggerSummary(rule, [], t)).toBe("automation.summary.change|user.x");
+    rule.trigger = { ...rule.trigger, mode: "crosses", threshold: null };
+    expect(ruleProblem(rule)).toBe("threshold");
+    rule.trigger.threshold = 50;
+    expect(ruleProblem(rule)).toBeNull();
+    expect(triggerSummary(rule, [], t)).toBe("automation.summary.crosses|user.x,50");
+    rule.trigger = { ...rule.trigger, mode: "contains", threshold: null, to: "" };
+    expect(ruleProblem(rule)).toBe("text");
+    rule.trigger.to = "err";
+    expect(triggerSummary(rule, [], t)).toBe("automation.summary.contains|user.x,err");
+    rule.trigger = { ...rule.trigger, mode: "any", to: "" };
+    expect(ruleProblem(rule)).toBe("text");
+    rule.trigger.to = "on";
+    expect(triggerSummary(rule, [], t)).toBe("automation.summary.becomes|user.x,on");
+  });
+
   it("toggles days in order", () => {
     expect(toggleDay([1, 3], 2)).toEqual([1, 2, 3]);
     expect(toggleDay([1, 2, 3], 2)).toEqual([1, 3]);

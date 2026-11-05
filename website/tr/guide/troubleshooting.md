@@ -68,6 +68,7 @@ Yükleyici henüz kod imzalı değil. **Ek bilgi**'yi, ardından **Yine de çal�
 | `P161` | Bir otomasyon kuralı çok sık başladı, bu yüzden bazı başlatmalar atlandı. | Onu neyin tetiklediğini kontrol edin. |
 | `P162` | Bir otomasyon kuralı sürekli başladığı için kapatıldı. | Tetikleyicisini düzeltin, sonra yeniden açın. |
 | `P163` | Bir otomasyon kuralı var olmayan bir genel değişken kullanıyor. | Kuralda başka bir değişken seçin ya da değişkeni yeniden ekleyin. |
+| `P164` | Bir otomasyon kuralı, kendisini başlatan değeri değiştiriyor. | O kuralın adımlarına bakın. Kural çalışırken kendi değişiklikleri yok sayılır. |
 
 ## Bir düğme gri
 

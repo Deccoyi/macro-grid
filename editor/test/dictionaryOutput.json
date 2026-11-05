@@ -70,6 +70,34 @@
       "five": "When 5",
       "words": "When Arg1"
     },
+    "automation.summary.change": {
+      "zero": "When 0 changes",
+      "one": "When 1 changes",
+      "two": "When 2 changes",
+      "five": "When 5 changes",
+      "words": "When Arg1 changes"
+    },
+    "automation.summary.becomes": {
+      "zero": "When 0 becomes 0",
+      "one": "When 1 becomes 1",
+      "two": "When 2 becomes 2",
+      "five": "When 5 becomes 5",
+      "words": "When Arg1 becomes Arg2"
+    },
+    "automation.summary.crosses": {
+      "zero": "When 0 crosses 0",
+      "one": "When 1 crosses 1",
+      "two": "When 2 crosses 2",
+      "five": "When 5 crosses 5",
+      "words": "When Arg1 crosses Arg2"
+    },
+    "automation.summary.contains": {
+      "zero": "When 0 contains \"0\"",
+      "one": "When 1 contains \"1\"",
+      "two": "When 2 contains \"2\"",
+      "five": "When 5 contains \"5\"",
+      "words": "When Arg1 contains \"Arg2\""
+    },
     "automation.summary.time": {
       "zero": "At 0, 0",
       "one": "At 1, 1",
@@ -1058,6 +1086,34 @@
       "two": "2 olunca",
       "five": "5 olunca",
       "words": "Arg1 olunca"
+    },
+    "automation.summary.change": {
+      "zero": "0 değişince",
+      "one": "1 değişince",
+      "two": "2 değişince",
+      "five": "5 değişince",
+      "words": "Arg1 değişince"
+    },
+    "automation.summary.becomes": {
+      "zero": "0 değeri 0 olunca",
+      "one": "1 değeri 1 olunca",
+      "two": "2 değeri 2 olunca",
+      "five": "5 değeri 5 olunca",
+      "words": "Arg1 değeri Arg2 olunca"
+    },
+    "automation.summary.crosses": {
+      "zero": "0 değeri 0 sayısını geçince",
+      "one": "1 değeri 1 sayısını geçince",
+      "two": "2 değeri 2 sayısını geçince",
+      "five": "5 değeri 5 sayısını geçince",
+      "words": "Arg1 değeri Arg2 sayısını geçince"
+    },
+    "automation.summary.contains": {
+      "zero": "0 değeri \"0\" içerince",
+      "one": "1 değeri \"1\" içerince",
+      "two": "2 değeri \"2\" içerince",
+      "five": "5 değeri \"5\" içerince",
+      "words": "Arg1 değeri \"Arg2\" içerince"
     },
     "automation.summary.time": {
       "zero": "0, 0",

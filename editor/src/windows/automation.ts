@@ -6,12 +6,15 @@ import { summarizeCondition } from "../panels/dynamic/conditionSummary";
 
 type Translate = (key: DictKey, ...args: string[]) => string;
 
-export type RuleProblem = "name" | "time" | "condition";
+export type RuleProblem = "name" | "time" | "condition" | "variable" | "threshold" | "text";
 
 /** Steps that need a device to act on (they change a page or a profile); only a rule started by a device has one. */
 const DEVICE_STEPS = new Set(["core.page", "core.profile"]);
 /** Steps that press keys by themselves; the server refuses them inside a rule. */
 const KEY_STEPS = new Set(["core.hotkey", "core.typeText"]);
+
+/** The longest minimum time between two starts of a change rule; the server holds the same number. */
+export const AUTOMATION_MAX_MIN_INTERVAL = 3600;
 
 const TIME_PATTERN = /^([01]\d|2[0-3]):[0-5]\d$/;
 
@@ -30,6 +33,7 @@ export function newRule(kind: AutomationTriggerKind, existing: readonly Automati
       time: kind === "time" ? "08:00" : null,
       days: [],
       deviceId: null,
+      ...(kind === "variableChange" ? { variable: "", mode: "any" as const, from: null, to: null, threshold: null, minIntervalSeconds: 0 } : {}),
     },
     actions: [],
     cooldownSeconds: 0,
@@ -47,6 +51,12 @@ export function ruleProblem(rule: AutomationRuleDef): RuleProblem | null {
   const trigger = rule.trigger;
   if (trigger.kind === "time" && !TIME_PATTERN.test(trigger.time ?? "")) return "time";
   if (trigger.kind === "variable" && !conditionComplete(trigger.condition)) return "condition";
+  if (trigger.kind === "variableChange") {
+    if (!trigger.variable) return "variable";
+    if (trigger.mode === "crosses" && (trigger.threshold === null || trigger.threshold === undefined || !Number.isFinite(trigger.threshold))) return "threshold";
+    // An empty string is a text choice that is not typed yet; null means "any".
+    if (trigger.mode === "contains" ? !trigger.to : trigger.to === "") return "text";
+  }
   return null;
 }
 
@@ -60,6 +70,13 @@ function conditionComplete(node: AutomationRuleDef["trigger"]["condition"]): boo
 export function triggerSummary(rule: AutomationRuleDef, devices: readonly PairedDeviceInfo[], t: Translate): string {
   const trigger = rule.trigger;
   if (trigger.kind === "variable") return t("automation.summary.variable", summarizeCondition(trigger.condition ?? undefined, t));
+  if (trigger.kind === "variableChange") {
+    const name = trigger.variable || "?";
+    if (trigger.mode === "crosses") return t("automation.summary.crosses", name, String(trigger.threshold ?? ""));
+    if (trigger.mode === "contains") return t("automation.summary.contains", name, trigger.to ?? "");
+    if (trigger.to) return t("automation.summary.becomes", name, trigger.to);
+    return t("automation.summary.change", name);
+  }
   if (trigger.kind === "time") {
     const days = trigger.days.length === 0 || trigger.days.length === 7
       ? t("automation.days.every")

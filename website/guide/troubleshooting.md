@@ -68,6 +68,7 @@ The installer is not code-signed yet. Choose **More info**, then **Run anyway**.
 | `P161` | An automation rule started too often, so some starts were dropped. | Check what triggers it. |
 | `P162` | An automation rule was switched off because it kept starting. | Fix its trigger, then switch it on again. |
 | `P163` | An automation rule uses a global variable that does not exist. | Pick another variable in the rule, or add the variable again. |
+| `P164` | An automation rule changes the value that starts it. | Check the steps of that rule. Its own changes are ignored while it runs. |
 
 ## A button is grey
 
