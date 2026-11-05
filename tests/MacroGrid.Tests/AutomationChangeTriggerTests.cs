@@ -271,6 +271,15 @@ public sealed class AutomationChangeTriggerTests : IDisposable
     }
 
     [Fact]
+    public void Numbers_of_different_types_are_the_same_value_when_equal()
+    {
+        Assert.True(ChangeTrigger.SameValue(1, 1.0));
+        Assert.False(ChangeTrigger.SameValue(1, 2.5));
+        Assert.False(ChangeTrigger.SameValue(true, 1));
+        Assert.False(ChangeTrigger.SameValue("1", 1));
+    }
+
+    [Fact]
     public void Rules_that_cannot_work_are_refused_with_a_clear_message()
     {
         bool Refused(Action<AutomationTrigger> shape, string expected)

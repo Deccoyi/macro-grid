@@ -213,7 +213,7 @@ public sealed partial class AutomationService : BackgroundService
         if (state.Running)
         {
             // The rule's own steps (or anything else while it runs) changed the variable: follow it without starting, and say so when it keeps happening.
-            if (!Equals(old, current))
+            if (!ChangeTrigger.SameValue(old, current))
             {
                 state.LastSeen = current;
                 state.SelfChanges.Enqueue(now);
@@ -231,7 +231,7 @@ public sealed partial class AutomationService : BackgroundService
             state.SettleUntil = now + SettleWindow;
             return null;
         }
-        if (now < state.SettleUntil || Equals(old, current)) return null;
+        if (now < state.SettleUntil || ChangeTrigger.SameValue(old, current)) return null;
         if (!ChangeTrigger.Matches(rule.Trigger, old, current)) return null;
         if (rule.Trigger.MinIntervalSeconds > 0 && state.LastStart is { } last && now - last < TimeSpan.FromSeconds(rule.Trigger.MinIntervalSeconds)) return null;
         return new ChangeValues(ChangeTrigger.Describe(old), ChangeTrigger.Describe(current));

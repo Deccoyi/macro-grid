@@ -37,6 +37,10 @@ public static class ChangeTrigger
         return sb.ToString();
     }
 
+    /// <summary>The same value: equal, or numbers of different types that are equal (1 and 1.0).</summary>
+    public static bool SameValue(object? a, object? b) =>
+        Equals(a, b) || a is not (null or bool or string or char) && b is not (null or bool or string or char) && TryNumber(a, out var x) && TryNumber(b, out var y) && x == y;
+
     /// <summary>True when going from <paramref name="old"/> to <paramref name="now"/> (already known to differ) is a start for this trigger.</summary>
     public static bool Matches(AutomationTrigger trigger, object? old, object? now)
     {

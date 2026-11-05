@@ -52,10 +52,9 @@ export function ChangeTriggerForm({ trigger, catalog, onChange }: ChangeTriggerF
           catalog={catalog}
           mode="bare"
           onInsert={(name) => {
-            // The old filters were typed for another kind of value, so they start again.
-            const next = catalog.find((v) => v.name === name)?.type ?? "text";
-            const keepMode = next === "number" ? trigger.mode === "crosses" : next === "text" ? trigger.mode !== "crosses" : trigger.mode !== "crosses" && trigger.mode !== "contains";
-            onChange(name === trigger.variable ? {} : { variable: name, ...(keepMode ? {} : { mode: "any", from: null, to: null, threshold: null }) });
+            // The filters were typed for the old variable: a different one starts again, so no value stays that the new form cannot show.
+            if (name === trigger.variable) return;
+            onChange({ variable: name, mode: "any", from: null, to: null, threshold: null });
           }}
           renderTrigger={(open) => (
             <button type="button" className="dz-chip mono" onClick={open}>
