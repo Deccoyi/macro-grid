@@ -124,7 +124,6 @@ export const tr = {
   "automation.change.true": "Doğru",
   "automation.change.false": "Yanlış",
   "automation.change.threshold": "Geçilecek sayı",
-  "automation.change.text": "Metin",
   "automation.change.minInterval": "İki başlama arasında en az bu kadar saniye bekle",
   "automation.change.hint": "Adımlarda {trigger.old} önceki değeri, {trigger.new} sonraki değeri verir. Çeyrek saniyeden hızlı değişiklikler birleştirilir. Bir değerin ortaya çıkması ya da kaybolması kuralı başlatmaz; yeni ortaya çıkan değere oturması için üç saniye tanınır. Kural çalışırken yapılan değişiklikler yok sayılır.",
   "automation.newName": "Kural {n}",

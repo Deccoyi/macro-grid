@@ -6,6 +6,9 @@ New features and fixes in Macro Grid. For technical details, see [CHANGELOG-deve
 ### Changed
 - **Clearer If blocks in action lists:** the end of an If now says which If it closes and that the steps below it always run, an If that was never closed shows a warning with a button to close it, the add buttons say whether they add inside the If, inside the Else or below the block, and a missing Else is shown with its own button.
 
+### Fixed
+- **Labels in the "when a value changes" rule:** the fields under "Value to watch" now show what they are ("Starts when", "From", "To", and the text to compare).
+
 ## 1.6.1 - 2026-11-06
 ### New
 - **Automation rule that starts when a value changes:** a rule can now start when a variable changes, for example when the stream goes live or a number crosses a limit, and it can use the old and the new value in its steps.

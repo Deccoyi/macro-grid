@@ -38,11 +38,13 @@ export function ChangeTriggerForm({ trigger, catalog, onChange }: ChangeTriggerF
   };
 
   const boolSelect = (label: DictKey, value: string | null | undefined, set: (v: string | null) => void) => (
-    <SelectInput label={t(label)} value={value ?? ""} onChange={(v) => set(v === "" ? null : v)}>
-      <option value="">{t("automation.change.anyValue")}</option>
-      <option value="true">{t("automation.change.true")}</option>
-      <option value="false">{t("automation.change.false")}</option>
-    </SelectInput>
+    <Field label={t(label)}>
+      <SelectInput value={value ?? ""} onChange={(v) => set(v === "" ? null : v)}>
+        <option value="">{t("automation.change.anyValue")}</option>
+        <option value="true">{t("automation.change.true")}</option>
+        <option value="false">{t("automation.change.false")}</option>
+      </SelectInput>
+    </Field>
   );
 
   return (
@@ -73,11 +75,13 @@ export function ChangeTriggerForm({ trigger, catalog, onChange }: ChangeTriggerF
       )}
 
       {choices.length > 0 && (
-        <Seg
-          value={choice}
-          options={choices.map((c) => ({ value: c, label: t(`automation.change.mode.${c}` as DictKey) }))}
-          onChange={pickChoice}
-        />
+        <Field label={t("automation.change.mode")}>
+          <Seg
+            value={choice}
+            options={choices.map((c) => ({ value: c, label: t(`automation.change.mode.${c}` as DictKey) }))}
+            onChange={pickChoice}
+          />
+        </Field>
       )}
 
       {choice === "crosses" && (
@@ -92,7 +96,7 @@ export function ChangeTriggerForm({ trigger, catalog, onChange }: ChangeTriggerF
       )}
 
       {(choice === "becomes" || choice === "contains") && (
-        <Field label={t("automation.change.text")}>
+        <Field label={t(`automation.change.mode.${choice}` as DictKey)}>
           <TextInput value={trigger.to ?? ""} maxLength={200} onChange={(to) => onChange({ to })} />
         </Field>
       )}

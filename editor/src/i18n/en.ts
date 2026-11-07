@@ -123,7 +123,6 @@ export const en: Record<DictKey, string> = {
   "automation.change.true": "True",
   "automation.change.false": "False",
   "automation.change.threshold": "Number to cross",
-  "automation.change.text": "Text",
   "automation.change.minInterval": "Wait at least this many seconds between starts",
   "automation.change.hint": "In the steps, {trigger.old} is the value before and {trigger.new} the value after. Changes faster than a quarter of a second are merged. A value that appears or disappears does not start the rule, and a value that just appeared gets three seconds to settle. Changes made while this rule runs are ignored.",
   "automation.newName": "Rule {n}",
