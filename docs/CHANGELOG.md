@@ -3,6 +3,8 @@
 New features and fixes in Macro Grid. For technical details, see [CHANGELOG-developer.md](CHANGELOG-developer.md).
 
 ## Unreleased
+### Fixed
+- **Labels in the "when a value changes" rule:** the fields under "Value to watch" now show what they are ("Starts when", "From", "To", and the text to compare).
 
 ## 1.6.1 - 2026-11-06
 ### New
