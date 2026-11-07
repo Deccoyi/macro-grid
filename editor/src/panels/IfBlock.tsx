@@ -12,16 +12,19 @@ import { summarizeCondition } from "./dynamic/conditionSummary";
  * is only drawn as one by a rail down its left side, in the colour of its lane.
  */
 
-/** How far each block lane is indented. A rail of this lane's colour (If = accent, Otherwise = neutral) joins all rows of a block. */
+/** How far each block lane is indented. A neutral rail on both sides joins all rows of a block into one box (the accent colour is kept for selection). */
 const LANE_STEP = 14;
-const railColor = (lane: Lane) => (lane === "if" ? "var(--ms-accent)" : "var(--ms-border-strong)");
+const RAIL = "linear-gradient(var(--ms-border-strong), var(--ms-border-strong))";
 export function railStyle(stack: Lane[]): React.CSSProperties {
   if (stack.length === 0) return {};
+  const left = stack.map((_, i) => `${i * LANE_STEP + 4}px 0`);
+  const right = stack.map((_, i) => `calc(100% - ${i * LANE_STEP + 4}px) 0`);
   return {
     paddingLeft: stack.length * LANE_STEP,
-    backgroundImage: stack.map((l) => `linear-gradient(${railColor(l)}, ${railColor(l)})`).join(", "),
-    backgroundSize: stack.map(() => "3px 100%").join(", "),
-    backgroundPosition: stack.map((_, i) => `${i * LANE_STEP + 4}px 0`).join(", "),
+    paddingRight: stack.length * LANE_STEP - 4,
+    backgroundImage: [...stack, ...stack].map(() => RAIL).join(", "),
+    backgroundSize: [...stack, ...stack].map(() => "2px 100%").join(", "),
+    backgroundPosition: [...left, ...right].join(", "),
     backgroundRepeat: "no-repeat",
   };
 }
@@ -50,17 +53,26 @@ export function ElseRow({ frame, setRef, onRemove }: RowFrame & { onRemove: () =
 }
 
 /**
- * The cap that closes a block. It names the If it closes and says the steps below it run in every case, so a step that sits just
- * under the cap is plainly outside the block. A stray End (no If to close) can be removed.
+ * The cap that closes a block. When the If has no Otherwise it first shows a dashed strip saying so, with the button that adds one.
+ * The cap names the If it closes and says the steps below it run in every case, so a step just under it is plainly outside the block.
+ * A stray End (no If to close) can be removed.
  */
-export function EndCap({ frame, setRef, summary, stray, onRemove }: RowFrame & { summary: string; stray?: boolean; onRemove: () => void }) {
+export function EndCap({ frame, setRef, summary, stray, canAddElse, onAddElse, onRemove }: RowFrame & { summary: string; stray?: boolean; canAddElse?: boolean; onAddElse?: () => void; onRemove: () => void }) {
   const { t } = useT();
   return (
-    <div ref={setRef} style={{ ...frame, borderTop: "1px solid var(--ms-border-strong)", borderBottom: "1px solid var(--ms-border)", borderBottomLeftRadius: 6, padding: "3px 0 3px 6px", marginBottom: 2, fontSize: 11, display: "flex", alignItems: "center", gap: 6, minWidth: 0 }}>
-      <span style={{ fontWeight: 700, letterSpacing: ".04em", textTransform: "uppercase", color: "var(--ms-text-secondary)", flex: "none" }}>{stray ? t("action.logic.end") : t("action.logic.endOf")}</span>
-      {summary && <span title={`${summary} · ${t("action.logic.endHint")}`} style={{ flex: "0 1 auto", minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", color: "var(--ms-text-disabled)" }}>{summary}</span>}
-      {!stray && <span style={{ color: "var(--ms-text-disabled)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", minWidth: 0 }}>· {t("action.logic.endHint")}</span>}
-      {stray && <button className="ghost" onClick={onRemove} title={t("action.remove")} style={{ marginLeft: "auto" }}><X size={12} /></button>}
+    <div ref={setRef} style={frame}>
+      {canAddElse && (
+        <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "4px 6px", margin: "4px 0", border: "1px dashed var(--ms-border-strong)", borderRadius: "var(--pf-radius)", fontSize: 12, color: "var(--ms-text-secondary)", flexWrap: "wrap" }}>
+          <span style={{ minWidth: 0 }}>{t("action.logic.noElse")}</span>
+          <button type="button" className="pf-add" style={{ marginLeft: "auto" }} onClick={onAddElse}>+ {t("action.logic.addElse")}</button>
+        </div>
+      )}
+      <div style={{ borderTop: "2px solid var(--ms-border-strong)", borderBottom: "2px solid var(--ms-border-strong)", borderBottomLeftRadius: 6, borderBottomRightRadius: 6, background: "var(--ms-bg-surface-raised)", padding: "3px 6px", fontSize: 11, display: "flex", alignItems: "center", gap: 6, minWidth: 0 }}>
+        <span style={{ fontWeight: 800, letterSpacing: ".04em", textTransform: "uppercase", color: "var(--ms-text-primary)", flex: "none" }}>{stray ? t("action.logic.end") : t("action.logic.endOf")}</span>
+        {summary && <span title={`${summary} · ${t("action.logic.endHint")}`} style={{ flex: "0 1 auto", minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", color: "var(--ms-text-secondary)" }}>{summary}</span>}
+        {!stray && <span style={{ color: "var(--ms-text-secondary)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", minWidth: 0 }}>· {t("action.logic.endHint")}</span>}
+        {stray && <button className="ghost" onClick={onRemove} title={t("action.remove")} style={{ marginLeft: "auto" }}><X size={12} /></button>}
+      </div>
     </div>
   );
 }
@@ -74,7 +86,6 @@ interface IfRowProps extends RowFrame {
   variableCatalog: VariableInfo[];
   onToggle: () => void;
   onChange: (settings: Record<string, unknown>) => void;
-  onAddElse: () => void;
   onClose: () => void;
   onMove: (dir: -1 | 1) => void;
   canMove: (dir: -1 | 1) => boolean;
@@ -82,7 +93,7 @@ interface IfRowProps extends RowFrame {
 }
 
 /** An If: a slim row with what it tests, "Add else", and a collapse that shrinks the block to one line (what it tests, how many steps it holds). An If with no End says so and offers to close it. */
-export function IfRow({ row, binding, bindings, collapsed, frame, setRef, grip, variableCatalog, onToggle, onChange, onAddElse, onClose, onMove, canMove, onRemove }: IfRowProps) {
+export function IfRow({ row, binding, bindings, collapsed, frame, setRef, grip, variableCatalog, onToggle, onChange, onClose, onMove, canMove, onRemove }: IfRowProps) {
   const { t, tn } = useT();
   const unclosed = row.endIndex === undefined;
   const stepCount = unclosed ? 0 : bindings.slice(row.index + 1, row.endIndex).filter((b) => b.type !== FLOW_IF && b.type !== FLOW_ELSE && b.type !== FLOW_END).length;
@@ -94,7 +105,7 @@ export function IfRow({ row, binding, bindings, collapsed, frame, setRef, grip, 
           {collapsed ? <ChevronRight size={14} /> : <ChevronDown size={14} />}
         </button>
         {grip}
-        <span className="pf-tag">{t("action.logic.if")}</span>
+        <span className="pf-tag solid">{t("action.logic.if")}</span>
         {/* The summary takes the room the buttons leave; when that is under 120px it drops to its own line instead of being cut to nothing. */}
         {collapsed && (
           <span title={`${summary} · ${tn("action.logic.steps", stepCount)}`} style={{ flex: "1 1 120px", minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontSize: 12, color: "var(--ms-text-secondary)" }}>
@@ -110,9 +121,6 @@ export function IfRow({ row, binding, bindings, collapsed, frame, setRef, grip, 
       {!collapsed && (
         <>
           <IfStepEditor binding={binding} variableCatalog={variableCatalog} onChange={onChange} />
-          {row.elseIndex === undefined && (
-            <button type="button" className="ghost" onClick={onAddElse} style={{ alignSelf: "flex-start", fontSize: 12 }}>{t("action.logic.addElse")}</button>
-          )}
         </>
       )}
       {unclosed && (

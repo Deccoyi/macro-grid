@@ -15,6 +15,8 @@ The editor already draws an If block from the flat list (see [../design/logic-st
 - **Container.** An If is the header card (what it tests), a lane of steps joined by a rail, an optional Otherwise divider with its own lane, and an End cap. Nested Ifs repeat this one level deeper.
 - **End cap.** It says "End of If", repeats what the If tested and states that the steps below run in every case. A step directly under the cap is then plainly outside the block.
 - **Unclosed If.** The header shows a warning "This If is not closed" with one button that adds the End at the end of the list. That is exactly where the server already ends such a block, so the rule runs the same before and after the click.
+- **Colours.** The block is neutral (rails, header, End cap). The accent colour is only for hover, focus and drop targets, because it already means selection. A mockup is in [../design/if-block-ui-mockup-v2.html](../design/if-block-ui-mockup-v2.html).
+- **Labelled add buttons.** The last add button of a lane says "Add action inside If" or "inside Else"; the one right under a block is dashed and says "Add action below the If". An If without Otherwise shows a strip "This If has no Else" with an "Add else" button above the End cap.
 - **Add, remove, move.** Unchanged: add at any slot, an If brings its End, removing an If keeps its steps, moving moves the whole block, a move that would break a block is refused.
 - **Validation.** The editor view marks the two cases the user can act on: an unclosed If (button) and a stray Otherwise or End (remove button, as before). Too-deep nesting is refused with a message when added. The profile check keeps its `W233`.
 

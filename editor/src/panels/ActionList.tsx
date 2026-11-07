@@ -46,7 +46,9 @@ export function ActionList({ bindings, actions, pages, profiles, variableCatalog
   const stacks = laneStacks(bindings);
   const hidden = (index: number) => rows.some((r) => r.kind === "if" && collapsed.has(r.index) && index > r.index && index <= (r.endIndex ?? bindings.length - 1));
   /** What the If that an End closes tests, shown on the End so a step below it is plainly outside. */
-  const endSummary = (end: { index: number }) => { const owner = rows.find((r) => r.kind === "if" && r.endIndex === end.index); return owner ? summarizeIf(bindings[owner.index]!, t) : ""; };
+  const endSummary = (end: { index: number }) => { const owner = ownerOf(end); return owner ? summarizeIf(bindings[owner.index]!, t) : ""; };
+  const ownerOf = (end: { index: number }) => rows.find((r) => r.kind === "if" && r.endIndex === end.index);
+  const endHasNoElse = (end: { index: number }) => ownerOf(end)?.elseIndex === undefined;
   const [notice, setNotice] = useState<string | null>(null);
   const reshape = (next: ActionBinding[]) => { setNotice(null); setCollapsed(carryCollapsed(bindings, next, collapsed)); onChange(next); };
 
@@ -140,8 +142,18 @@ export function ActionList({ bindings, actions, pages, profiles, variableCatalog
         <div key={`slot-${pos}`} style={railStyle(stack)} {...dropProps}>
           <div className={`pf-empty${state}`}>
             <span className="pf-empty-text">{droppable ? label : t(lane === "else" ? "action.logic.emptyElse" : "action.logic.emptyIf")}</span>
-            {!droppable && picker((open) => <button type="button" className="ghost pf-btn small pf-empty-add" onClick={open} disabled={addable.length === 0}>{t("action.add")}</button>)}
+            {!droppable && picker((open) => <button type="button" className="pf-add pf-empty-add" onClick={open} disabled={addable.length === 0}>+ {t(lane === "else" ? "action.logic.addInElse" : "action.logic.addInIf")}</button>)}
           </div>
+        </div>
+      );
+    }
+    // The end of a lane and the point right under a block get a labelled button, so it is clear whether a step lands inside the block or after it.
+    const endOfLane = !droppable && before !== undefined && !before.stray && next !== undefined && (next.kind === "else" || next.kind === "end") && before.kind !== "if" && before.kind !== "else";
+    const belowBlock = !droppable && before?.kind === "end" && !before.stray;
+    if (endOfLane || belowBlock) {
+      return (
+        <div key={`slot-${pos}`} style={{ ...railStyle(stack), paddingTop: 4, paddingBottom: 4, display: "flex" }}>
+          {picker((open) => <button type="button" className={`pf-add${belowBlock ? " outside" : ""}`} onClick={open} disabled={addable.length === 0}>+ {t(belowBlock ? "action.logic.addBelowIf" : lane === "else" ? "action.logic.addInElse" : "action.logic.addInIf")}</button>)}
         </div>
       );
     }
@@ -177,7 +189,7 @@ export function ActionList({ bindings, actions, pages, profiles, variableCatalog
 
         let body: React.ReactNode;
         if (row.kind === "end") {
-          body = <EndCap setRef={setRef} frame={frame} summary={endSummary(row)} stray={row.stray} onRemove={() => removeBinding(index)} />;
+          body = <EndCap setRef={setRef} frame={frame} summary={endSummary(row)} stray={row.stray} canAddElse={!row.stray && endHasNoElse(row)} onAddElse={() => reshape(addElse(bindings, ownerOf(row)!.index))} onRemove={() => removeBinding(index)} />;
         } else if (row.kind === "else") {
           body = <ElseRow setRef={setRef} frame={frame} onRemove={() => removeBinding(index)} />;
         } else if (row.kind === "if") {
@@ -193,7 +205,6 @@ export function ActionList({ bindings, actions, pages, profiles, variableCatalog
               variableCatalog={withoutSelf(variableCatalog)}
               onToggle={() => toggleCollapsed(index)}
               onChange={(settings) => updateBinding(index, { settings })}
-              onAddElse={() => reshape(addElse(bindings, index))}
               onClose={() => reshape(closeIf(bindings, index))}
               onMove={(dir) => move(index, dir)}
               canMove={(dir) => moveRow(bindings, index, dir) !== bindings}
@@ -238,11 +249,11 @@ export function ActionList({ bindings, actions, pages, profiles, variableCatalog
       })}
 
       {slot(bindings.length)}
-      <ActionPicker
+      {rows[rows.length - 1]?.kind !== "end" && <ActionPicker
         actions={addable}
         onPick={insertBinding(bindings.length)}
         renderTrigger={(open) => <button type="button" className="ghost pf-btn small" onClick={open} disabled={addable.length === 0}>{t("action.add")}</button>}
-      />
+      />}
       {notice && <p className="pf-hint error" role="alert" style={{ position: "sticky", bottom: 0, padding: "4px 0", background: "var(--ms-bg-surface, var(--ms-bg-canvas))" }}>{notice}</p>}
     </div>
   );
