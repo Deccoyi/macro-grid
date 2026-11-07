@@ -19,6 +19,7 @@ Each plan exists once. If the same text exists in another repository or on the D
 |---|---|---|---|---|
 | 1 | [Discover: screenshots and leftovers](discover-store-fields.md) | `macro-grid`, `macro-grid-plugin` | [discover-store-fields.md](discover-store-fields.md) | Icon, category and tags are built. Five small leftovers can be done now; screenshots wait for a trigger the owner confirms. |
 | 2 | [Live-stream chat plugin](live-stream-chat-plugin.md) | `macro-grid-plugin` | [live-stream-chat-plugin.md](live-stream-chat-plugin.md) | Needs a platform that fits the two conditions in the plan. |
+| 3 | [If block redesign](if-block-redesign.md) | `macro-grid` | [if-block-redesign.md](if-block-redesign.md) | The End cap and the unclosed-If fix are built; two larger ideas wait for a decision. |
 
 Done and no longer listed: the crash report window (see [../design/crash-report.md](../design/crash-report.md)), the `web` widget, which was then removed again (see [remove-web-widget.md](remove-web-widget.md)), the branded installer, the plugin manifest field rename (`macroGrid` is now `minMacroGrid`, the old name still read), version unification — one version for the server and the SDK, a `macroGrid` field for every plugin and
 the phone app, one release guide, all four sections released,

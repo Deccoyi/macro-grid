@@ -82,6 +82,13 @@ export function addElse(bindings: readonly ActionBinding[], ifIndex: number): Ac
   return [...bindings.slice(0, at), { type: FLOW_ELSE, settings: {} }, ...bindings.slice(at)];
 }
 
+/** Closes an If that has no End by adding the End at the end of the list. That is where the server already ends such a block, so the list runs exactly as before. Does nothing for an If that is closed. */
+export function closeIf(bindings: readonly ActionBinding[], ifIndex: number): ActionBinding[] {
+  const row = layout(bindings)[ifIndex];
+  if (!row || row.kind !== "if" || row.endIndex !== undefined) return [...bindings];
+  return [...bindings, { type: FLOW_END, settings: {} }];
+}
+
 /** Removes a row. An If takes its Otherwise and End with it and leaves the steps inside; an End never goes alone (remove its If). */
 export function remove(bindings: readonly ActionBinding[], index: number): ActionBinding[] {
   const row = layout(bindings)[index];

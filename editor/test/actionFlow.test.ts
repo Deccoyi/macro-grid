@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { ActionBinding } from "@macro/renderer";
-import { MAX_DEPTH, addElse, carryCollapsed, addIf, insertAt, isWellFormed, laneStacks, layout, move, moveTo, remove } from "../src/panels/actionFlow";
+import { MAX_DEPTH, addElse, carryCollapsed, closeIf, addIf, insertAt, isWellFormed, laneStacks, layout, move, moveTo, remove } from "../src/panels/actionFlow";
 
 /** "if" "else" "end" are the markers; anything else is a plain step named by the text. */
 const MARKER: Record<string, string> = { if: "core.if", else: "core.else", end: "core.endIf" };
@@ -184,5 +184,19 @@ describe("carryCollapsed", () => {
   it("drops a collapsed If that was removed", () => {
     const l = list("a", "if", "b", "end");
     expect(carryCollapsed(l, remove(l, 1), new Set([1])).size).toBe(0);
+  });
+});
+
+describe("closeIf", () => {
+  it("adds the missing End at the end of the list, where the server ends the block", () => {
+    const next = closeIf(list("if", "a", "end", "if", "b", "c"), 3);
+    expect(names(next)).toBe("if a end if b c end");
+    expect(isWellFormed(next)).toBe(true);
+  });
+
+  it("leaves a closed If and a plain step alone", () => {
+    const closed = list("if", "a", "end");
+    expect(closeIf(closed, 0)).toEqual(closed);
+    expect(closeIf(closed, 1)).toEqual(closed);
   });
 });

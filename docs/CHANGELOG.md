@@ -3,6 +3,8 @@
 New features and fixes in Macro Grid. For technical details, see [CHANGELOG-developer.md](CHANGELOG-developer.md).
 
 ## Unreleased
+### Changed
+- **Clearer If blocks in action lists:** the end of an If now says which If it closes and that the steps below it always run, and an If that was never closed shows a warning with a button to close it.
 
 ## 1.6.1 - 2026-11-06
 ### New
