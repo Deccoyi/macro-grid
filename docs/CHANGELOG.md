@@ -4,7 +4,7 @@ New features and fixes in Macro Grid. For technical details, see [CHANGELOG-deve
 
 ## Unreleased
 ### Fixed
-- **Labels in the "when a value changes" rule:** the fields under "Value to watch" now show what they are. A true/false value has no From/To choice any more: the rule starts whenever it flips.
+- **Simpler "when a value changes" rule:** the rule now starts on any change of the value; the From/To, text and number filters are gone from the form (use an If step with `{trigger.old}` and `{trigger.new}`). Rules that already have a filter keep it and show a "Remove filter" button.
 
 ## 1.6.1 - 2026-11-06
 ### New
