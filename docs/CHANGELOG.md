@@ -4,7 +4,7 @@ New features and fixes in Macro Grid. For technical details, see [CHANGELOG-deve
 
 ## Unreleased
 ### Fixed
-- **Labels in the "when a value changes" rule:** the fields under "Value to watch" now show what they are ("Starts when", "From", "To", and the text to compare).
+- **Labels in the "when a value changes" rule:** the fields under "Value to watch" now show what they are. A true/false value has no From/To choice any more: the rule starts whenever it flips.
 
 ## 1.6.1 - 2026-11-06
 ### New

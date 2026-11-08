@@ -38,4 +38,11 @@ describe("ChangeTriggerForm", () => {
     fireEvent.click(screen.getByText("pick obs.live")); // the variable already chosen: nothing changes
     expect(calls).toEqual([]);
   });
+
+  it("shows no filters for a boolean, even if an old rule has a to value", () => {
+    const trigger: AutomationTrigger = { kind: "variableChange", variable: "obs.live", mode: "any", from: null, to: "true", days: [] };
+    render(<PreferencesProvider><ChangeTriggerForm trigger={trigger} catalog={catalog} onChange={() => {}} /></PreferencesProvider>);
+    expect(screen.queryByRole("combobox")).toBeNull();
+    expect(screen.queryByRole("textbox")).toBeNull();
+  });
 });

@@ -3,7 +3,7 @@ import type { AutomationTrigger, VariableInfo } from "../api/types";
 import { useT } from "../i18n/I18nContext";
 import type { DictKey } from "../i18n/tr";
 import { VariablePicker } from "../panels/VariablePicker";
-import { Field, NumberInput, Seg, SelectInput, TextInput } from "../panels/fields/controls";
+import { Field, NumberInput, Seg, TextInput } from "../panels/fields/controls";
 import { AUTOMATION_MAX_MIN_INTERVAL } from "./automation";
 
 type Choice = "any" | "becomes" | "crosses" | "contains";
@@ -21,7 +21,7 @@ interface ChangeTriggerFormProps {
   onChange: (change: Partial<AutomationTrigger>) => void;
 }
 
-/** The form of a "when a value changes" rule: the value to watch, what kind of change counts, and the minimum time between starts. */
+/** The form of a "when a value changes" rule: the value to watch, what kind of change counts, and the minimum time between starts. A boolean can only flip, so it has no filters. */
 export function ChangeTriggerForm({ trigger, catalog, onChange }: ChangeTriggerFormProps) {
   const { t } = useT();
   const info = catalog.find((v) => v.name === trigger.variable);
@@ -36,16 +36,6 @@ export function ChangeTriggerForm({ trigger, catalog, onChange }: ChangeTriggerF
     else if (next === "contains") onChange({ mode: "contains", from: null, to: "", threshold: null });
     else onChange({ mode: "crosses", from: null, to: null, threshold: trigger.threshold ?? 0 });
   };
-
-  const boolSelect = (label: DictKey, value: string | null | undefined, set: (v: string | null) => void) => (
-    <Field label={t(label)}>
-      <SelectInput value={value ?? ""} onChange={(v) => set(v === "" ? null : v)}>
-        <option value="">{t("automation.change.anyValue")}</option>
-        <option value="true">{t("automation.change.true")}</option>
-        <option value="false">{t("automation.change.false")}</option>
-      </SelectInput>
-    </Field>
-  );
 
   return (
     <>
@@ -66,13 +56,6 @@ export function ChangeTriggerForm({ trigger, catalog, onChange }: ChangeTriggerF
           )}
         />
       </Field>
-
-      {type === "boolean" && (
-        <>
-          {boolSelect("automation.change.from", trigger.from, (from) => onChange({ from, mode: "any" }))}
-          {boolSelect("automation.change.to", trigger.to, (to) => onChange({ to, mode: "any" }))}
-        </>
-      )}
 
       {choices.length > 0 && (
         <Field label={t("automation.change.mode")}>
@@ -95,7 +78,7 @@ export function ChangeTriggerForm({ trigger, catalog, onChange }: ChangeTriggerF
         </Field>
       )}
 
-      {(choice === "becomes" || choice === "contains") && (
+      {type !== "boolean" && (choice === "becomes" || choice === "contains") && (
         <Field label={t(`automation.change.mode.${choice}` as DictKey)}>
           <TextInput value={trigger.to ?? ""} maxLength={200} onChange={(to) => onChange({ to })} />
         </Field>
