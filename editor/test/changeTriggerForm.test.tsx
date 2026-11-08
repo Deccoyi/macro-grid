@@ -38,4 +38,21 @@ describe("ChangeTriggerForm", () => {
     fireEvent.click(screen.getByText("pick obs.live")); // the variable already chosen: nothing changes
     expect(calls).toEqual([]);
   });
+
+  it("shows no filter controls for a new rule", () => {
+    const trigger: AutomationTrigger = { kind: "variableChange", variable: "obs.scene", mode: "any", from: null, to: null, days: [] };
+    render(<PreferencesProvider><ChangeTriggerForm trigger={trigger} catalog={catalog} onChange={() => {}} /></PreferencesProvider>);
+    expect(screen.queryByRole("combobox")).toBeNull();
+    expect(screen.queryByRole("textbox")).toBeNull();
+    expect(screen.queryByText("Remove filter")).toBeNull();
+  });
+
+  it("keeps an old filter and removes it only on request", () => {
+    const calls: Partial<AutomationTrigger>[] = [];
+    const trigger: AutomationTrigger = { kind: "variableChange", variable: "obs.scene", mode: "contains", from: null, to: "Game", days: [] };
+    render(<PreferencesProvider><ChangeTriggerForm trigger={trigger} catalog={catalog} onChange={(c) => calls.push(c)} /></PreferencesProvider>);
+    expect(calls).toEqual([]);
+    fireEvent.click(screen.getByText("Remove filter"));
+    expect(calls).toEqual([{ mode: "any", from: null, to: null, threshold: null }]);
+  });
 });
