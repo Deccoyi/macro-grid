@@ -36,6 +36,7 @@ A list that does not match still runs safely: a missing End means the block goes
 
 - Rows are indented by depth (at most 3 nested Ifs). If, Otherwise and End are slim rows without a type picker; an End is never removed alone.
 - The If row holds the `when` choice and, for a condition, the same condition editor as the dynamic rules (without the "This button" variables, which have no value in an action).
+- The End row is a cap that names the If it closes and says the steps below it run in every case, so a step under it is plainly outside the block. An If with no End shows a warning with a button that adds the End at the end of the list (where the server already ends it). See [../plans/if-block-redesign.md](../plans/if-block-redesign.md).
 - "Add otherwise" adds the Otherwise before the End. Collapsing an If shows one line: what it tests and how many steps it holds. This is view state only. A row opened from the Error List opens the blocks that hide it.
 - Moving an If moves its whole block. A move that would break a block is refused. Removing an If removes its Otherwise and End and keeps the steps inside.
 - The picker offers If, Wait and Stop under Logic. Picking If adds an If and its End together.

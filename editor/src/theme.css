@@ -537,6 +537,11 @@ hr.sep {
 .pf-grip:hover { color: var(--ms-text-secondary); }
 .pf-grip:active { cursor: grabbing; }
 .pf-tag { flex-shrink: 0; padding: 1px 6px; border-radius: 3px; font-size: 11px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; background: var(--ms-accent); color: var(--ms-accent-on); }
+.pf-tag.solid { background: var(--ms-text-primary); color: var(--ms-bg-canvas); }
+/* A labelled add button that says where it adds. Neutral until hovered or focused (the accent colour means selection). */
+.pf-add { display: inline-flex; align-items: center; gap: 6px; align-self: flex-start; padding: 3px 10px; font-size: 12px; font-weight: 600; border: 1px solid var(--ms-border-strong); border-radius: var(--pf-radius); background: var(--ms-bg-surface-raised); color: var(--ms-text-primary); }
+.pf-add:hover:not(:disabled), .pf-add:focus-visible { border-color: var(--ms-accent); color: var(--ms-accent); }
+.pf-add.outside { border-style: dashed; background: transparent; color: var(--ms-text-secondary); font-weight: 500; }
 .pf-tag.neutral { background: var(--ms-bg-surface-raised); color: var(--ms-text-secondary); border: 1px solid var(--ms-border-strong); }
 .pf-slot { height: 14px; min-width: 0; display: flex; align-items: stretch; }
 .pf-slot-inner { position: relative; flex: 1; min-width: 0; display: flex; align-items: center; justify-content: center; }

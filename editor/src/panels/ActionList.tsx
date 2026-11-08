@@ -1,15 +1,14 @@
 import { useEffect, useRef, useState } from "react";
-import { CircleAlert, ChevronUp, ChevronDown, ChevronRight, GripVertical, X } from "lucide-react";
-import type { ActionBinding, ConditionNode, Page } from "@macro/renderer";
+import { CircleAlert, ChevronUp, ChevronDown, GripVertical, X } from "lucide-react";
+import type { ActionBinding, Page } from "@macro/renderer";
 import type { ActionInfo, ProfileSummary, VariableInfo } from "../api/types";
 import { useCatalogText } from "../i18n/catalogText";
 import { useT } from "../i18n/I18nContext";
 import { ActionPicker } from "./ActionPicker";
 import { formFor } from "./actionForms/forms";
 import type { WidgetIconControl } from "./actionForms/SchemaForm";
-import { FLOW_ELSE, FLOW_END, FLOW_IF, MAX_DEPTH, addElse, carryCollapsed, insertAt, laneStacks, layout, move as moveRow, moveTo, remove as removeRow, type FlowRow, type Lane } from "./actionFlow";
-import { IfStepEditor, whenOf } from "./IfStepEditor";
-import { summarizeCondition } from "./dynamic/conditionSummary";
+import { FLOW_ELSE, FLOW_END, FLOW_IF, MAX_DEPTH, addElse, carryCollapsed, closeIf, insertAt, laneStacks, layout, move as moveRow, moveTo, remove as removeRow } from "./actionFlow";
+import { ElseRow, EndCap, IfRow, railStyle, summarizeIf } from "./IfBlock";
 
 export interface ActionListProps {
   bindings: ActionBinding[];
@@ -27,20 +26,6 @@ export interface ActionListProps {
 
 /** The "This button" variables work only in the button's own text and rules, so an action's fields do not offer them. */
 const LEGACY_SET_VARIABLE = "core.setVariable";
-
-/** How far each block lane is indented. A rail of this lane's colour (If = accent, Otherwise = neutral) joins all rows of a block. */
-const LANE_STEP = 14;
-const railColor = (lane: Lane) => (lane === "if" ? "var(--ms-accent)" : "var(--ms-border-strong)");
-function railStyle(stack: Lane[]): React.CSSProperties {
-  if (stack.length === 0) return {};
-  return {
-    paddingLeft: stack.length * LANE_STEP,
-    backgroundImage: stack.map((l) => `linear-gradient(${railColor(l)}, ${railColor(l)})`).join(", "),
-    backgroundSize: stack.map(() => "3px 100%").join(", "),
-    backgroundPosition: stack.map((_, i) => `${i * LANE_STEP + 4}px 0`).join(", "),
-    backgroundRepeat: "no-repeat",
-  };
-}
 
 function withoutSelf(catalog: VariableInfo[]): VariableInfo[] {
   return catalog.filter((v) => !v.name.toLowerCase().startsWith("self."));
@@ -60,6 +45,10 @@ export function ActionList({ bindings, actions, pages, profiles, variableCatalog
   const rows = layout(bindings);
   const stacks = laneStacks(bindings);
   const hidden = (index: number) => rows.some((r) => r.kind === "if" && collapsed.has(r.index) && index > r.index && index <= (r.endIndex ?? bindings.length - 1));
+  /** What the If that an End closes tests, shown on the End so a step below it is plainly outside. */
+  const endSummary = (end: { index: number }) => { const owner = ownerOf(end); return owner ? summarizeIf(bindings[owner.index]!, t) : ""; };
+  const ownerOf = (end: { index: number }) => rows.find((r) => r.kind === "if" && r.endIndex === end.index);
+  const endHasNoElse = (end: { index: number }) => ownerOf(end)?.elseIndex === undefined;
   const [notice, setNotice] = useState<string | null>(null);
   const reshape = (next: ActionBinding[]) => { setNotice(null); setCollapsed(carryCollapsed(bindings, next, collapsed)); onChange(next); };
 
@@ -153,8 +142,18 @@ export function ActionList({ bindings, actions, pages, profiles, variableCatalog
         <div key={`slot-${pos}`} style={railStyle(stack)} {...dropProps}>
           <div className={`pf-empty${state}`}>
             <span className="pf-empty-text">{droppable ? label : t(lane === "else" ? "action.logic.emptyElse" : "action.logic.emptyIf")}</span>
-            {!droppable && picker((open) => <button type="button" className="ghost pf-btn small pf-empty-add" onClick={open} disabled={addable.length === 0}>{t("action.add")}</button>)}
+            {!droppable && picker((open) => <button type="button" className="pf-add pf-empty-add" onClick={open} disabled={addable.length === 0}>+ {t(lane === "else" ? "action.logic.addInElse" : "action.logic.addInIf")}</button>)}
           </div>
+        </div>
+      );
+    }
+    // The end of a lane and the point right under a block get a labelled button, so it is clear whether a step lands inside the block or after it.
+    const endOfLane = !droppable && before !== undefined && !before.stray && next !== undefined && (next.kind === "else" || next.kind === "end") && before.kind !== "if" && before.kind !== "else";
+    const belowBlock = !droppable && before?.kind === "end" && !before.stray;
+    if (endOfLane || belowBlock) {
+      return (
+        <div key={`slot-${pos}`} style={{ ...railStyle(stack), paddingTop: 4, paddingBottom: 4, display: "flex" }}>
+          {picker((open) => <button type="button" className={`pf-add${belowBlock ? " outside" : ""}`} onClick={open} disabled={addable.length === 0}>+ {t(belowBlock ? "action.logic.addBelowIf" : lane === "else" ? "action.logic.addInElse" : "action.logic.addInIf")}</button>)}
         </div>
       );
     }
@@ -190,20 +189,9 @@ export function ActionList({ bindings, actions, pages, profiles, variableCatalog
 
         let body: React.ReactNode;
         if (row.kind === "end") {
-          body = (
-            <div ref={setRef} style={{ ...frame, borderTop: "1px dashed var(--ms-border)", padding: "2px 0 0", fontSize: 11, fontWeight: 700, letterSpacing: ".04em", textTransform: "uppercase", color: "var(--ms-text-disabled)", display: "flex", alignItems: "center", gap: 6 }}>
-              {t("action.logic.end")}
-              {row.stray && <button className="ghost" onClick={() => removeBinding(index)} title={t("action.remove")} style={{ marginLeft: "auto" }}><X size={12} /></button>}
-            </div>
-          );
+          body = <EndCap setRef={setRef} frame={frame} summary={endSummary(row)} stray={row.stray} canAddElse={!row.stray && endHasNoElse(row)} onAddElse={() => reshape(addElse(bindings, ownerOf(row)!.index))} onRemove={() => removeBinding(index)} />;
         } else if (row.kind === "else") {
-          body = (
-            <div ref={setRef} className="pf-card" style={{ ...frame, padding: "4px 8px", display: "flex", alignItems: "center", gap: 6, background: "var(--ms-bg-inset)" }}>
-              <span className="pf-tag neutral">{t("action.logic.else")}</span>
-              <div style={{ flex: 1 }} />
-              <button className="ghost" onClick={() => removeBinding(index)} title={t("action.remove")}><X size={13} /></button>
-            </div>
-          );
+          body = <ElseRow setRef={setRef} frame={frame} onRemove={() => removeBinding(index)} />;
         } else if (row.kind === "if") {
           body = (
             <IfRow
@@ -217,7 +205,7 @@ export function ActionList({ bindings, actions, pages, profiles, variableCatalog
               variableCatalog={withoutSelf(variableCatalog)}
               onToggle={() => toggleCollapsed(index)}
               onChange={(settings) => updateBinding(index, { settings })}
-              onAddElse={() => reshape(addElse(bindings, index))}
+              onClose={() => reshape(closeIf(bindings, index))}
               onMove={(dir) => move(index, dir)}
               canMove={(dir) => moveRow(bindings, index, dir) !== bindings}
               onRemove={() => removeBinding(index)}
@@ -261,67 +249,12 @@ export function ActionList({ bindings, actions, pages, profiles, variableCatalog
       })}
 
       {slot(bindings.length)}
-      <ActionPicker
+      {rows[rows.length - 1]?.kind !== "end" && <ActionPicker
         actions={addable}
         onPick={insertBinding(bindings.length)}
         renderTrigger={(open) => <button type="button" className="ghost pf-btn small" onClick={open} disabled={addable.length === 0}>{t("action.add")}</button>}
-      />
+      />}
       {notice && <p className="pf-hint error" role="alert" style={{ position: "sticky", bottom: 0, padding: "4px 0", background: "var(--ms-bg-surface, var(--ms-bg-canvas))" }}>{notice}</p>}
-    </div>
-  );
-}
-
-interface IfRowProps {
-  row: FlowRow;
-  binding: ActionBinding;
-  bindings: ActionBinding[];
-  collapsed: boolean;
-  frame: React.CSSProperties;
-  setRef: (el: HTMLDivElement | null) => void;
-  grip: React.ReactNode;
-  variableCatalog: VariableInfo[];
-  onToggle: () => void;
-  onChange: (settings: Record<string, unknown>) => void;
-  onAddElse: () => void;
-  onMove: (dir: -1 | 1) => void;
-  canMove: (dir: -1 | 1) => boolean;
-  onRemove: () => void;
-}
-
-/** An If: a slim row with what it tests, "Add otherwise", and a collapse that shrinks the block to one line (what it tests, how many steps it holds). */
-function IfRow({ row, binding, bindings, collapsed, frame, setRef, grip, variableCatalog, onToggle, onChange, onAddElse, onMove, canMove, onRemove }: IfRowProps) {
-  const { t, tn } = useT();
-  const when = whenOf(binding);
-  const stepCount = row.endIndex === undefined ? 0 : bindings.slice(row.index + 1, row.endIndex).filter((b) => b.type !== FLOW_IF && b.type !== FLOW_ELSE && b.type !== FLOW_END).length;
-  const summary = when === "condition" ? summarizeCondition(binding.settings.condition as ConditionNode | undefined, t) : t(`action.logic.when.${when}`);
-  return (
-    <div ref={setRef} className="pf-card" style={{ ...frame, padding: 8, display: "flex", flexDirection: "column", gap: 8, background: "var(--ms-bg-canvas)" }}>
-      <div style={{ display: "flex", gap: 4, alignItems: "center", flexWrap: "wrap" }}>
-        <button className="ghost" onClick={onToggle} title={t(collapsed ? "action.logic.expand" : "action.logic.collapse")} aria-expanded={!collapsed} style={{ display: "flex", padding: 4 }}>
-          {collapsed ? <ChevronRight size={14} /> : <ChevronDown size={14} />}
-        </button>
-        {grip}
-        <span className="pf-tag">{t("action.logic.if")}</span>
-        {/* The summary takes the room the buttons leave; when that is under 120px it drops to its own line instead of being cut to nothing. */}
-        {collapsed && (
-          <span title={`${summary} · ${tn("action.logic.steps", stepCount)}`} style={{ flex: "1 1 120px", minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontSize: 12, color: "var(--ms-text-secondary)" }}>
-            {summary} · {tn("action.logic.steps", stepCount)}
-          </span>
-        )}
-        <div style={{ display: "flex", gap: 0, marginLeft: "auto" }}>
-          <button className="ghost" style={{ padding: 4 }} onClick={() => onMove(-1)} disabled={!canMove(-1)} title={t("action.moveUp")}><ChevronUp size={14} /></button>
-          <button className="ghost" style={{ padding: 4 }} onClick={() => onMove(1)} disabled={!canMove(1)} title={t("action.moveDown")}><ChevronDown size={14} /></button>
-          <button className="ghost" style={{ padding: 4 }} onClick={onRemove} title={t("action.logic.removeBlock")}><X size={14} /></button>
-        </div>
-      </div>
-      {!collapsed && (
-        <>
-          <IfStepEditor binding={binding} variableCatalog={variableCatalog} onChange={onChange} />
-          {row.elseIndex === undefined && (
-            <button type="button" className="ghost" onClick={onAddElse} style={{ alignSelf: "flex-start", fontSize: 12 }}>{t("action.logic.addElse")}</button>
-          )}
-        </>
-      )}
     </div>
   );
 }

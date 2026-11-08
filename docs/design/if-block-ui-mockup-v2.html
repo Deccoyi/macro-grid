@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>If block UI mockup v2</title>
+<style>
+/* Tokens copied from editor/src/theme.css (dark default, light via data-theme). */
+:root{--ms-bg-canvas:#1c1e22;--ms-bg-surface:#232529;--ms-bg-surface-raised:#2b2e33;--ms-bg-inset:#16171a;--ms-border:#35383e;--ms-border-strong:#5a5e66;--ms-text-primary:#e6e7ea;--ms-text-secondary:#b0b4bc;--ms-text-disabled:#7a7e86;--ms-accent:#d97706;--ms-accent-bg-muted:rgba(217,119,6,.15);--ms-accent-on:#1c1e22;--r:4px}
+:root[data-theme="light"]{--ms-bg-canvas:#f3f4f6;--ms-bg-surface:#fff;--ms-bg-surface-raised:#eceef1;--ms-bg-inset:#e5e7eb;--ms-border:#d4d7dc;--ms-border-strong:#80858d;--ms-text-primary:#1c1e22;--ms-text-secondary:#454a52;--ms-text-disabled:#6b7078;--ms-accent:#b45f04;--ms-accent-bg-muted:rgba(180,95,4,.12);--ms-accent-on:#fff}
+*{box-sizing:border-box}
+body{margin:0;background:var(--ms-bg-canvas);color:var(--ms-text-primary);font:13px/1.4 system-ui,"Segoe UI",sans-serif}
+header{padding:16px 24px 4px;display:flex;gap:16px;align-items:center;flex-wrap:wrap}
+h1{font-size:16px;margin:0}
+button{font:inherit;color:inherit;background:none;border:1px solid transparent;border-radius:var(--r);cursor:pointer}
+button:focus-visible{outline:2px solid var(--ms-accent);outline-offset:1px}
+.toggle{margin-left:auto;border-color:var(--ms-border-strong);padding:3px 10px}
+.grid{display:flex;flex-wrap:wrap;gap:28px 32px;padding:12px 24px 40px;align-items:flex-start}
+figure{margin:0}
+figcaption{font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--ms-text-secondary);margin-bottom:6px;max-width:44ch}
+figcaption small{display:block;text-transform:none;letter-spacing:0;font-weight:400;color:var(--ms-text-disabled);margin-top:2px}
+.panel{width:440px;max-width:100%;background:var(--ms-bg-surface);border:1px solid var(--ms-border);border-radius:6px;padding:10px;display:flex;flex-direction:column;gap:6px}
+
+.card{border:1px solid var(--ms-border-strong);border-radius:var(--r);background:var(--ms-bg-surface);}
+.head{display:flex;align-items:center;gap:6px;height:32px;padding:0 6px;font-size:12px}
+.num{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:50%;background:var(--ms-bg-surface-raised);color:var(--ms-text-secondary);font-size:10px;font-weight:700}
+.sp{flex:1}
+.ic{width:24px;height:24px;display:inline-flex;align-items:center;justify-content:center;color:var(--ms-text-secondary);padding:0}
+
+/* The block: neutral by default. The accent colour is only for hover, focus and drop targets (selection). */
+.block{border:2px solid var(--ms-border-strong);border-radius:6px;background:var(--ms-bg-canvas);overflow:hidden}
+.bhead{display:flex;align-items:center;gap:6px;padding:6px 8px;background:var(--ms-bg-surface-raised);border-bottom:2px solid var(--ms-border-strong)}
+.tag{font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;padding:1px 7px;border-radius:3px;background:var(--ms-text-primary);color:var(--ms-bg-canvas)}
+.cond{flex:1;min-width:0;border:1px solid var(--ms-border-strong);background:var(--ms-bg-inset);border-radius:var(--r);padding:3px 8px;color:var(--ms-text-primary)}
+.lane{padding:8px;display:flex;flex-direction:column;gap:6px}
+.lane-label{font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;display:flex;align-items:center;gap:8px;padding:4px 8px;border-top:2px solid var(--ms-border-strong);border-bottom:1px solid var(--ms-border);background:var(--ms-bg-inset);color:var(--ms-text-primary)}
+.lane-label.else{color:var(--ms-text-secondary)}
+.lane-label.else.none{border-top-style:dashed}
+.bfoot{padding:4px 8px;border-top:2px solid var(--ms-border-strong);font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--ms-text-primary);background:var(--ms-bg-surface-raised);display:flex;gap:8px;align-items:center}
+.bfoot span{font-weight:400;text-transform:none;letter-spacing:0;color:var(--ms-text-secondary)}
+
+/* Add buttons: always visible, labelled, target stated. Inside = solid outline, outside = quiet dashed. */
+.add{display:flex;align-items:center;gap:6px;padding:4px 10px;border:1px solid var(--ms-border-strong);color:var(--ms-text-primary);background:var(--ms-bg-surface-raised);font-weight:600;font-size:12px;border-radius:var(--r);align-self:flex-start}
+.add:hover{border-color:var(--ms-accent);color:var(--ms-accent)}
+.add.out{border-style:dashed;background:transparent;color:var(--ms-text-secondary);font-weight:500}
+.add.else{background:var(--ms-bg-surface)}
+.note{font-size:12px;color:var(--ms-text-secondary)}
+.outside{border-left:3px solid transparent;padding-left:0}
+.out-hint{font-size:11px;color:var(--ms-text-disabled);margin:2px 2px 0}
+.sec{font-size:11px;font-weight:700;color:var(--ms-text-disabled);text-transform:uppercase;letter-spacing:.04em;margin-top:4px}
+</style>
+</head>
+<body>
+<header><h1>If block mockup v2</h1><span class="note">Neutral colours; accent only on hover and selection.</span><button class="toggle" onclick="var r=document.documentElement;r.dataset.theme=r.dataset.theme==='dark'?'light':'dark'">Light / dark</button></header>
+<div class="grid">
+
+<figure>
+<figcaption>A. New If, just added<small>Else missing is shown as a strip, not a small link. Each + says where it adds.</small></figcaption>
+<div class="panel">
+  <div class="block">
+    <div class="bhead"><span class="tag">If</span><span class="cond">this condition is met</span><button class="ic">▲</button><button class="ic">▼</button><button class="ic">✕</button></div>
+    <div class="lane-label">When met</div>
+    <div class="lane"><span class="note">Nothing inside yet.</span><button class="add">+ Add step inside If</button></div>
+    <div class="lane-label else none">Else · not set <button class="add else" style="margin-left:auto">+ Add Else</button></div>
+    <div class="bfoot">End of If <span>steps below run in every case</span></div>
+  </div>
+  <div class="sec">After the If</div>
+  <button class="add out">+ Add step below the If</button>
+</div>
+</figure>
+
+<figure>
+<figcaption>B. Rule CamControl shape<small>Toggle sits below the cap, outside the box, under the "After the If" label.</small></figcaption>
+<div class="panel">
+  <div class="block">
+    <div class="bhead"><span class="tag">If</span><span class="cond">Cam.visible = true</span><button class="ic">▲</button><button class="ic">▼</button><button class="ic">✕</button></div>
+    <div class="lane-label">When met</div>
+    <div class="lane">
+      <div class="card"><div class="head"><span class="num">1</span>OBS · Set item visibility<span class="sp"></span><button class="ic">✕</button></div></div>
+      <button class="add">+ Add step inside If</button>
+    </div>
+    <div class="lane-label else none">Else · not set <button class="add else" style="margin-left:auto">+ Add Else</button></div>
+    <div class="bfoot">End of If <span>steps below run in every case</span></div>
+  </div>
+  <div class="sec">After the If</div>
+  <div class="card"><div class="head"><span class="num">2</span>OBS · Set item visibility (toggle)<span class="sp"></span><button class="ic">✕</button></div></div>
+  <button class="add out">+ Add step below the If</button>
+</div>
+</figure>
+
+<figure>
+<figcaption>C. With Else<small>Else is its own labelled lane with its own add button.</small></figcaption>
+<div class="panel">
+  <div class="block">
+    <div class="bhead"><span class="tag">If</span><span class="cond">Cam.visible = true</span><button class="ic">▲</button><button class="ic">▼</button><button class="ic">✕</button></div>
+    <div class="lane-label">When met</div>
+    <div class="lane">
+      <div class="card"><div class="head"><span class="num">1</span>OBS · Hide item<span class="sp"></span><button class="ic">✕</button></div></div>
+      <button class="add">+ Add step inside If</button>
+    </div>
+    <div class="lane-label else">Else · when not met <button class="ic" style="margin-left:auto" title="Remove Else">✕</button></div>
+    <div class="lane">
+      <span class="note">Nothing inside yet.</span>
+      <button class="add">+ Add step inside Else</button>
+    </div>
+    <div class="bfoot">End of If <span>steps below run in every case</span></div>
+  </div>
+  <div class="sec">After the If</div>
+  <button class="add out">+ Add step below the If</button>
+</div>
+</figure>
+
+</div>
+</body>
+</html>
