@@ -13,6 +13,8 @@ public sealed class ProfileStore
     private readonly string _dir;
     private readonly Lock _lock = new();
     private readonly Dictionary<string, Profile> _profiles = [];
+    // Name-sorted snapshot, dropped whenever the profile set changes. Never mutated after creation, so it is safe to hand out.
+    private IReadOnlyList<Profile>? _sorted;
 
     public ProfileStore(string dataDir)
     {
@@ -35,7 +37,7 @@ public sealed class ProfileStore
 
     public IReadOnlyList<Profile> All
     {
-        get { lock (_lock) return _profiles.Values.OrderBy(p => p.Name).ToList(); }
+        get { lock (_lock) return _sorted ??= _profiles.Values.OrderBy(p => p.Name).ToList(); }
     }
 
     public Profile? Get(string id)
@@ -54,6 +56,7 @@ public sealed class ProfileStore
                 return false;
 
             _profiles.Remove(id);
+            _sorted = null;
             var path = PathFor(id);
             if (File.Exists(path)) File.Delete(path);
         }
@@ -74,6 +77,7 @@ public sealed class ProfileStore
             File.Move(tmp, path, overwrite: true);
             listChanged = !_profiles.TryGetValue(profile.Id, out var before) || before.Name != profile.Name;
             _profiles[profile.Id] = profile;
+            _sorted = null;
         }
         if (listChanged) ListChanged?.Invoke();
     }

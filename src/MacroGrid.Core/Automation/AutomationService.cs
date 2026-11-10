@@ -23,12 +23,18 @@ public enum AutomationRunResult { Started, NotFound, Refused }
 
 /// <summary>
 /// Runs the automation rules (docs/design/automation-rules.md). Event handlers only record what happened; every decision is made on a
-/// 250 ms tick, which a test can also call by hand. A rule never runs without these limits: no overlap with itself, a cooldown, a bucket
+/// tick, which a test can also call by hand. The tick is not periodic: it runs once, one <see cref="CoalesceWindow"/> after the first thing that
+/// could change a decision (a rule, a variable, a device), and at the start of a minute while a time rule exists. With none of those it sleeps. A rule never runs without these limits: no overlap with itself, a cooldown, a bucket
 /// of its own and one for all rules, and at most four lists at once.
 /// </summary>
-public sealed partial class AutomationService : BackgroundService
+public sealed partial class AutomationService : BackgroundService, IVariableDemandSource
 {
-    private static readonly TimeSpan TickInterval = TimeSpan.FromMilliseconds(250);
+    /// <summary>Changes that arrive within this time of the first one are judged together, as they were by the old 250 ms tick (a value that goes there and back inside it is no change).</summary>
+    private static readonly TimeSpan CoalesceWindow = TimeSpan.FromMilliseconds(250);
+    /// <summary>A time rule is looked at this long after the minute starts, so a timer that fires a hair early still sees the new minute.</summary>
+    private static readonly TimeSpan MinuteMargin = TimeSpan.FromMilliseconds(50);
+    /// <summary>With a time rule present the wait never exceeds this, so a clock that jumped is noticed.</summary>
+    private static readonly TimeSpan MaxTimeRuleWait = TimeSpan.FromSeconds(60);
     private static readonly TimeSpan MinCooldown = TimeSpan.FromSeconds(1);
     private static readonly TimeSpan GuardWindow = TimeSpan.FromSeconds(60);
     private const int GuardRefusals = 10;
@@ -54,6 +60,8 @@ public sealed partial class AutomationService : BackgroundService
         public readonly TokenBucket Bucket = new(5, 0.5);
         public readonly Queue<DateTimeOffset> Refusals = new();
         public HashSet<string> Variables = new(StringComparer.OrdinalIgnoreCase);
+        // The user.* names the trigger and the steps mention, read once when the rule is (re)built.
+        public string[] UserNames = [];
         // variableChange: the last value this rule has judged, until when changes are only followed, and the changes that came from the rule itself.
         public object? LastSeen;
         public DateTimeOffset SettleUntil;
@@ -80,8 +88,18 @@ public sealed partial class AutomationService : BackgroundService
     private HashSet<string> _devices = [];
     private bool _devicesKnown;
     private bool _rulesChanged = true;
+    private bool _definitionsChanged;
     private bool _sessionsChanged = true;
     private CancellationToken _stopping;
+    private readonly SemaphoreSlim _wake = new(0, 1);
+    private volatile bool _hasTimeRules;
+    // Every variable name some rule's trigger reads, so a write to any other one does not wake the loop. Rebuilt with the rules, under the lock.
+    private volatile HashSet<string> _watched = [];
+
+    /// <summary>The variable is watched by a rule's trigger or condition.</summary>
+    public bool Observes(string name) => _watched.Contains(name);
+
+    public bool ObservesPrefix(string prefix) => _watched.Any(n => n.StartsWith(prefix, StringComparison.Ordinal));
 
     public AutomationService(
         AutomationStore store, VariableStore variables, SessionRegistry sessions, ActionDispatcher dispatcher, ProblemList problems,
@@ -101,7 +119,9 @@ public sealed partial class AutomationService : BackgroundService
         // Only noted here; the tick decides. Hooked up in the constructor so a test that calls Tick by hand sees the same events.
         _store.Changed += OnRulesChanged;
         _variables.Changed += OnVariableChanged;
+        _variables.Demand.AddSource(this);
         _sessions.Changed += OnSessionsChanged;
+        if (_userVariables is not null) _userVariables.DefinitionsChanged += OnDefinitionsChanged;
     }
 
     /// <summary>The state of every rule, by id.</summary>
@@ -116,11 +136,13 @@ public sealed partial class AutomationService : BackgroundService
         _stopping = stoppingToken;
         try
         {
-            using var timer = new PeriodicTimer(TickInterval, _clock);
-            while (await timer.WaitForNextTickAsync(stoppingToken))
+            // The first pass builds the rule states (_rulesChanged starts true).
+            RunTick();
+            while (!stoppingToken.IsCancellationRequested)
             {
-                try { Tick(); }
-                catch (Exception ex) { _logger.LogError(ex, "Automation tick failed"); }
+                var signalled = await _wake.WaitAsync(NextTimeWake(_clock.GetUtcNow(), _hasTimeRules) ?? Timeout.InfiniteTimeSpan, stoppingToken);
+                if (signalled) await Task.Delay(CoalesceWindow, _clock, stoppingToken);
+                RunTick();
             }
         }
         catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
@@ -133,12 +155,45 @@ public sealed partial class AutomationService : BackgroundService
         _store.Changed -= OnRulesChanged;
         _variables.Changed -= OnVariableChanged;
         _sessions.Changed -= OnSessionsChanged;
+        if (_userVariables is not null) _userVariables.DefinitionsChanged -= OnDefinitionsChanged;
         base.Dispose();
     }
 
-    private void OnRulesChanged() { lock (_lock) _rulesChanged = true; }
-    private void OnSessionsChanged() { lock (_lock) _sessionsChanged = true; }
-    private void OnVariableChanged(string name) { lock (_lock) _dirtyVariables.Add(name); }
+    private void RunTick()
+    {
+        try { Tick(); }
+        catch (Exception ex) { _logger.LogError(ex, "Automation tick failed"); }
+    }
+
+    /// <summary>How long until the next minute starts, or null when no time rule exists (then only an event wakes the loop).</summary>
+    internal static TimeSpan? NextTimeWake(DateTimeOffset utcNow, bool hasTimeRules)
+    {
+        if (!hasTimeRules) return null;
+        var intoMinute = TimeSpan.FromTicks(utcNow.UtcTicks % TimeSpan.TicksPerMinute);
+        var wait = TimeSpan.FromMinutes(1) - intoMinute + MinuteMargin;
+        return wait < MaxTimeRuleWait ? wait : MaxTimeRuleWait;
+    }
+
+    /// <summary>Asks for a pass. One signal is enough however many events follow before the pass runs.</summary>
+    private void Wake()
+    {
+        try { _wake.Release(); }
+        catch (SemaphoreFullException) { }
+    }
+
+    private void OnRulesChanged() { lock (_lock) _rulesChanged = true; Wake(); }
+    private void OnDefinitionsChanged() { lock (_lock) _definitionsChanged = true; Wake(); }
+    private void OnSessionsChanged() { lock (_lock) _sessionsChanged = true; Wake(); }
+    private void OnVariableChanged(string name)
+    {
+        lock (_lock)
+        {
+            // Only a variable some rule watches can change a decision; the rest would wake the loop for nothing.
+            if (!_watched.Contains(name) && !_rulesChanged) return;
+            _dirtyVariables.Add(name);
+        }
+        Wake();
+    }
 
     /// <summary>One decision pass. Called every 250 ms by the service; a test calls it by hand with a clock it moves.</summary>
     public void Tick()
@@ -158,8 +213,10 @@ public sealed partial class AutomationService : BackgroundService
             }
             var dirty = _dirtyVariables.ToList();
             _dirtyVariables.Clear();
-            // Deleting a variable removes its value, which arrives here as a change of that name.
-            if (rebuilt || dirty.Any(UserVariables.IsUserName)) CheckMissingVariables(rules);
+            // Only a changed rule list or changed variable definitions can add or clear a missing variable; a new value cannot.
+            var definitionsChanged = _definitionsChanged;
+            _definitionsChanged = false;
+            if (rebuilt || definitionsChanged) CheckMissingVariables(rules);
             var sessionsChanged = _sessionsChanged;
             _sessionsChanged = false;
 
@@ -300,6 +357,8 @@ public sealed partial class AutomationService : BackgroundService
             state.LastSeen = null;
             state.SettleUntil = default;
             state.SelfChanges.Clear();
+            state.UserNames = [.. UserVariableName().Matches(
+                JsonSerializer.Serialize(rule.Trigger, ProtocolJson.Options) + JsonSerializer.Serialize(rule.Actions, ProtocolJson.Options)).Select(m => m.Value)];
             if (rule.Trigger is { Kind: AutomationTriggerKinds.VariableChange, Variable: { } watched })
             {
                 // Read now without firing, like the condition below: saving the rule or starting the server is not a change.
@@ -314,6 +373,10 @@ public sealed partial class AutomationService : BackgroundService
             }
             _state[rule.Id] = state;
         }
+        var before = _watched;
+        _watched = [.. _state.Values.SelectMany(st => st.Variables)];
+        if (!_watched.IsSubsetOf(before)) _variables.Demand.NotifyChanged();
+        _hasTimeRules = rules.Any(r => r.Trigger.Kind == AutomationTriggerKinds.Time);
         if (!_devicesKnown) { _devices = CurrentDevices(); _devicesKnown = true; }
     }
 
@@ -326,8 +389,8 @@ public sealed partial class AutomationService : BackgroundService
         if (_userVariables is null) return;
         foreach (var rule in rules)
         {
-            var text = JsonSerializer.Serialize(rule.Trigger, ProtocolJson.Options) + JsonSerializer.Serialize(rule.Actions, ProtocolJson.Options);
-            var missing = UserVariableName().Matches(text).Select(m => m.Value).FirstOrDefault(name => _userVariables.Find(name) is null);
+            if (!_state.TryGetValue(rule.Id, out var state)) continue;
+            var missing = state.UserNames.FirstOrDefault(name => _userVariables.Find(name) is null);
             var key = $"{ProblemCodes.AutomationVariableMissing}:{rule.Id}";
             if (missing is null) _problems.ResolveKey(Source, key);
             else _problems.Report(Source, rule.Name, ProblemSeverity.Warning, ProblemCodes.AutomationVariableMissing,

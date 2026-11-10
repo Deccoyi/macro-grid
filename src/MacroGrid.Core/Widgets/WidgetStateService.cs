@@ -16,7 +16,7 @@ namespace MacroGrid.Core.Widgets;
 /// Pushes template-driven widget text and toggle state to clients.
 /// Live updates are batched at 100ms (max ~10Hz) and only sent when the rendered text actually changed for that client.
 /// </summary>
-public sealed class WidgetStateService : IHostedService, IDisposable
+public sealed class WidgetStateService : IHostedService, IDisposable, IVariableDemandSource
 {
     /// <summary>Widget property paths the editor can dynamize, mapped to the key sent to clients in WidgetStateMessage.Style.</summary>
     private static readonly Dictionary<string, string> DynamizableProperties = new()
@@ -41,7 +41,7 @@ public sealed class WidgetStateService : IHostedService, IDisposable
     private readonly HashSet<(string? SessionId, string WidgetId)> _dirtyWidgets = [];
     private readonly LastResultStore? _results;
     private readonly Lock _dirtyLock = new();
-    private Timer? _timer;
+    private CoalescingTimer? _timer;
     private int _flushing;
 
     /// <summary>A client that does not take a frame for this long is dropped, so it cannot hold up the others; a phone reconnects by itself.</summary>
@@ -72,6 +72,7 @@ public sealed class WidgetStateService : IHostedService, IDisposable
         _layouts = layouts;
         _logger = logger;
         _variables.Changed += OnVariableChanged;
+        _variables.Demand.AddSource(this);
         _pluginWidgets = pluginWidgets;
         if (pluginWidgets is not null) pluginWidgets.PluginChanged += OnPluginWidgetsChanged;
     }
@@ -83,6 +84,8 @@ public sealed class WidgetStateService : IHostedService, IDisposable
     /// <summary>An action type appeared or went away (a plugin switched on or off): every widget with actions on a shown page is looked at again for its unavailable mark.</summary>
     private void OnActionTypesChanged()
     {
+        Interlocked.Increment(ref _handlerGeneration); // action dependencies depend on the handler list
+        _variables.Demand.NotifyChanged();
         foreach (var session in _sessions.All)
         {
             if (session.ProfileId is null || session.PageId is null) continue;
@@ -120,7 +123,9 @@ public sealed class WidgetStateService : IHostedService, IDisposable
 
     public Task StartAsync(CancellationToken cancellationToken)
     {
-        _timer = new Timer(_ => _ = FlushOnceAsync(), null, TimeSpan.FromMilliseconds(100), TimeSpan.FromMilliseconds(100));
+        // Armed by the first change after a flush (see OnVariableChanged), not ticking while nothing changes.
+        _timer = new CoalescingTimer(TimeSpan.FromMilliseconds(100), () => _ = FlushOnceAsync());
+        if (HasPending()) _timer.Request();
         return Task.CompletedTask;
     }
 
@@ -133,6 +138,7 @@ public sealed class WidgetStateService : IHostedService, IDisposable
     public void Dispose()
     {
         _variables.Changed -= OnVariableChanged;
+        _timer?.Dispose();
         if (_pluginWidgets is not null) _pluginWidgets.PluginChanged -= OnPluginWidgetsChanged;
         if (_images is not null) _images.ImagesChanged -= OnImagesChanged;
     }
@@ -169,6 +175,7 @@ public sealed class WidgetStateService : IHostedService, IDisposable
     /// </summary>
     public async Task BroadcastProfileAsync(Profile profile, CancellationToken ct = default)
     {
+        _variables.Demand.NotifyChanged(); // a save can add widgets that read more variables
         foreach (var session in _sessions.All)
         {
             if (session.ProfileId != profile.Id) continue;
@@ -206,49 +213,47 @@ public sealed class WidgetStateService : IHostedService, IDisposable
     /// <summary>Sends the current rendered text and toggle state of every relevant widget on a page, e.g. right after a layout is shown.</summary>
     public async Task SendInitialAsync(ClientSession session, Page page, CancellationToken ct)
     {
+        _variables.Demand.NotifyChanged(); // a page is shown: plugins refresh what they skipped
         var profile = session.ProfileId is null ? null : _profiles.Get(session.ProfileId);
         foreach (var widget in page.Widgets)
         {
             // A removed web widget reaches the device as a plain label with fixed text: no live state may overwrite it.
             if (widget.Type == WidgetTypes.Web) continue;
             var scope = ScopeFor(session, widget);
+            // One frame per widget: the client merges state per field, so null fields leave the old value alone.
             var text = DynamicText.Resolve(widget, scope);
-            if (text is not null)
-            {
-                session.SentTexts[widget.Id] = text;
-                await session.SendAsync(MessageTypes.WidgetState, new WidgetStateMessage(widget.Id, Text: text), ct);
-            }
+            if (text is not null) session.SentTexts[widget.Id] = text;
 
-            if (widget.Type == WidgetTypes.Toggle)
-                await session.SendAsync(MessageTypes.WidgetState, new WidgetStateMessage(widget.Id, Active: _toggles.Get(widget.Id)), ct);
+            bool? active = widget.Type == WidgetTypes.Toggle ? _toggles.Get(widget.Id) : null;
 
             var value = ResolveBoundValue(widget);
-            if (value is not null)
-            {
-                session.SentValues[widget.Id] = value.Value;
-                await session.SendAsync(MessageTypes.WidgetState, new WidgetStateMessage(widget.Id, Value: value), ct);
-            }
+            if (value is not null) session.SentValues[widget.Id] = value.Value;
 
             var unavailable = UnavailableFor(widget, scope, profile);
+            List<string>? unavailableToSend = null;
             if (unavailable.Count > 0 || session.SentUnavailable.GetValueOrDefault(widget.Id, "").Length > 0)
             {
                 session.SentUnavailable[widget.Id] = string.Join(UnavailableSeparator, unavailable);
-                await session.SendAsync(MessageTypes.WidgetState, new WidgetStateMessage(widget.Id, Unavailable: [.. unavailable]), ct);
+                unavailableToSend = [.. unavailable];
             }
 
+            Dictionary<string, string>? styleToSend = null;
             var style = ResolveDynamicStyle(widget, scope);
             if (style is not null)
             {
                 session.SentStyles[widget.Id] = style;
-                await session.SendAsync(MessageTypes.WidgetState, new WidgetStateMessage(widget.Id, Style: _layouts.ForClient(session, style)), ct);
+                styleToSend = _layouts.ForClient(session, style);
             }
             else if (session.SentStyles.TryGetValue(widget.Id, out var previous) && previous.Count > 0)
             {
                 // Nothing matches now but the device still holds an old style (the page was off screen while the variable changed): the client
-                // merges state, so an empty style is what takes it back to the widget's own.
+                // merges state, so an empty style (not null) is what takes it back to the widget's own.
                 session.SentStyles[widget.Id] = [];
-                await session.SendAsync(MessageTypes.WidgetState, new WidgetStateMessage(widget.Id, Style: []), ct);
+                styleToSend = [];
             }
+
+            if (text is null && active is null && value is null && unavailableToSend is null && styleToSend is null) continue;
+            await session.SendAsync(MessageTypes.WidgetState, new WidgetStateMessage(widget.Id, Text: text, Value: value, Active: active, Style: styleToSend, Unavailable: unavailableToSend), ct);
         }
     }
 
@@ -303,8 +308,92 @@ public sealed class WidgetStateService : IHostedService, IDisposable
         return resolved;
     }
 
-    private static bool BindingsDependOn(IEnumerable<DynamicBinding> bindings, HashSet<string> dirtyVariables) =>
-        bindings.SelectMany(b => b.Cases).SelectMany(c => DynamicRuleEvaluator.CollectVariables(c.Condition)).Any(dirtyVariables.Contains);
+    private static HashSet<string> StyleDependenciesOf(IEnumerable<DynamicBinding> bindings) =>
+        [.. bindings.SelectMany(b => b.Cases).SelectMany(c => DynamicRuleEvaluator.CollectVariables(c.Condition))];
+
+    /// <summary>What one widget of a page reads, worked out once. It must stay the same set the flush used to rebuild on every pass.</summary>
+    private sealed class WidgetEntry(Widget widget, HashSet<string> text, HashSet<string> style, string? valueVariable, HashSet<string> actions)
+    {
+        public Widget Widget { get; } = widget;
+        public HashSet<string> TextDependencies { get; } = text;
+        public HashSet<string> StyleDependencies { get; } = style;
+        public string? ValueVariable { get; } = valueVariable;
+        public HashSet<string> ActionDependencies { get; } = actions;
+    }
+
+    /// <summary>Reverse index of one page: variable name to the widgets that read it. Built for one <see cref="Page"/> object (a save puts new objects in the store, so
+    /// an edit drops the index with the old page) and for one generation of action handlers (<see cref="_handlerGeneration"/>).</summary>
+    private sealed class PageIndex(List<WidgetEntry> entries, int generation)
+    {
+        public int Generation { get; } = generation;
+        private readonly Dictionary<string, List<int>> _byVariable = Build(entries);
+        private readonly Dictionary<string, List<int>> _byWidgetId = entries.Select((e, i) => (e.Widget.Id, i)).GroupBy(x => x.Id).ToDictionary(g => g.Key, g => g.Select(x => x.i).ToList());
+
+        private static Dictionary<string, List<int>> Build(List<WidgetEntry> entries)
+        {
+            var map = new Dictionary<string, List<int>>();
+            for (var i = 0; i < entries.Count; i++)
+            {
+                var e = entries[i];
+                IEnumerable<string> names = e.TextDependencies.Concat(e.StyleDependencies).Concat(e.ActionDependencies);
+                if (!string.IsNullOrEmpty(e.ValueVariable)) names = names.Append(e.ValueVariable);
+                foreach (var name in names.Distinct())
+                {
+                    if (!map.TryGetValue(name, out var list)) map[name] = list = [];
+                    list.Add(i);
+                }
+            }
+            return map;
+        }
+
+        /// <summary>The widgets touched by the dirty variables or marked for a forced look, in page order.</summary>
+        public bool Reads(string name) => _byVariable.ContainsKey(name);
+
+        public bool ReadsPrefix(string prefix) => _byVariable.Keys.Any(k => k.StartsWith(prefix, StringComparison.Ordinal));
+
+        public IEnumerable<WidgetEntry> Affected(HashSet<string> dirty, HashSet<string> marked)
+        {
+            var hit = new SortedSet<int>();
+            foreach (var name in dirty)
+                if (_byVariable.TryGetValue(name, out var list)) hit.UnionWith(list);
+            foreach (var id in marked)
+                if (_byWidgetId.TryGetValue(id, out var list)) hit.UnionWith(list);
+            return hit.Select(i => entries[i]);
+        }
+    }
+
+    private readonly System.Runtime.CompilerServices.ConditionalWeakTable<Page, PageIndex> _indexes = new();
+    private int _handlerGeneration;
+
+    /// <summary>The variable is read by a widget on a page a device shows now (text, look, value variable or action templates).</summary>
+    public bool Observes(string name) => ShownIndexes().Any(i => i.Reads(name));
+
+    public bool ObservesPrefix(string prefix) => ShownIndexes().Any(i => i.ReadsPrefix(prefix));
+
+    private IEnumerable<PageIndex> ShownIndexes()
+    {
+        foreach (var session in _sessions.All)
+        {
+            if (session.ProfileId is null || session.PageId is null) continue;
+            if (_profiles.Get(session.ProfileId)?.FindPage(session.PageId) is { } page) yield return IndexFor(page);
+        }
+    }
+
+    private PageIndex IndexFor(Page page)
+    {
+        var generation = Volatile.Read(ref _handlerGeneration);
+        if (_indexes.TryGetValue(page, out var index) && index.Generation == generation) return index;
+        var entries = new List<WidgetEntry>();
+        foreach (var widget in page.Widgets)
+        {
+            if (widget.Type == WidgetTypes.Web) continue; // see SendInitialAsync
+            entries.Add(new WidgetEntry(widget, DynamicText.Dependencies(widget), StyleDependenciesOf(widget.Dynamic.Values),
+                widget.Props?["valueVariable"]?.GetValue<string>(), _actions is null ? [] : _actions.ActionDependencies(widget)));
+        }
+        index = new PageIndex(entries, generation);
+        _indexes.AddOrUpdate(page, index);
+        return index;
+    }
 
     private static bool StyleChanged(Dictionary<string, string>? previous, Dictionary<string, string> next)
     {
@@ -379,6 +468,12 @@ public sealed class WidgetStateService : IHostedService, IDisposable
     private void OnVariableChanged(string name)
     {
         lock (_dirtyLock) _dirtyVariables.Add(name);
+        _timer?.Request();
+    }
+
+    private bool HasPending()
+    {
+        lock (_dirtyLock) return _dirtyVariables.Count > 0 || _dirtyWidgets.Count > 0;
     }
 
     /// <summary>One flush at a time: a flush that is still sending (a slow client) is not overlapped by the next tick, the variables
@@ -394,6 +489,8 @@ public sealed class WidgetStateService : IHostedService, IDisposable
         {
             Volatile.Write(ref _flushing, 0);
         }
+        // A change that arrived while this flush ran (its timer run was skipped by the guard above) must not wait for the next unrelated change.
+        if (HasPending()) _timer?.Request();
     }
 
     internal async Task FlushAsync()
@@ -426,18 +523,19 @@ public sealed class WidgetStateService : IHostedService, IDisposable
         var page = profile?.FindPage(session.PageId);
         if (page is null) return;
 
-        foreach (var widget in page.Widgets)
+        var index = IndexFor(page);
+        foreach (var entry in index.Affected(dirty, marked))
         {
-            if (widget.Type == WidgetTypes.Web) continue; // see SendInitialAsync
+            var widget = entry.Widget;
             var forced = marked.Contains(widget.Id);
             var scope = ScopeFor(session, widget);
             string? text = null;
-            if ((forced || DynamicText.Dependencies(widget).Any(dirty.Contains)) && DynamicText.Resolve(widget, scope) is { } rendered
+            if ((forced || entry.TextDependencies.Any(dirty.Contains)) && DynamicText.Resolve(widget, scope) is { } rendered
                 && (!session.SentTexts.TryGetValue(widget.Id, out var prevText) || prevText != rendered))
                 text = rendered;
 
             Dictionary<string, string>? style = null;
-            if ((widget.Dynamic.Count > 0 || PluginImageRef.LooksLikeRef(widget.Style?.Icon)) && (forced || BindingsDependOn(widget.Dynamic.Values, dirty)))
+            if ((widget.Dynamic.Count > 0 || PluginImageRef.LooksLikeRef(widget.Style?.Icon)) && (forced || entry.StyleDependencies.Any(dirty.Contains)))
             {
                 var resolved = ResolveDynamicStyle(widget, scope);
                 var previous = session.SentStyles.GetValueOrDefault(widget.Id);
@@ -448,7 +546,7 @@ public sealed class WidgetStateService : IHostedService, IDisposable
             }
 
             double? value = null;
-            var variableName = widget.Props?["valueVariable"]?.GetValue<string>();
+            var variableName = entry.ValueVariable;
             if (!string.IsNullOrEmpty(variableName) && dirty.Contains(variableName))
             {
                 var resolved = ResolveBoundValue(widget);
@@ -457,7 +555,7 @@ public sealed class WidgetStateService : IHostedService, IDisposable
             }
 
             List<string>? unavailable = null;
-            if (forced || (_actions is not null && _actions.ActionDependencies(widget).Any(dirty.Contains)))
+            if (forced || entry.ActionDependencies.Any(dirty.Contains))
             {
                 var now = UnavailableFor(widget, scope, profile);
                 if (string.Join(UnavailableSeparator, now) !=session.SentUnavailable.GetValueOrDefault(widget.Id, ""))

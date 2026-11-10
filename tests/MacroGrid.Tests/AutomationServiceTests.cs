@@ -360,6 +360,25 @@ public sealed class AutomationServiceTests : IDisposable
     }
 
     [Fact]
+    public async Task A_changed_value_does_not_rescan_for_missing_variables_but_a_changed_definition_does()
+    {
+        Assert.True(_userVariables.TryReplace([new("count", VariableType.Number, 0)], out _));
+        Save(false, When("b", "user.other", ">", "1"));
+        await TickAsync();
+        var problem = Assert.Single(_problems.Snapshot(), p => p.Key == "P163:b");
+
+        // Clear the line by hand: only a rescan could bring it back.
+        _problems.ResolveKey(problem.Source, problem.Key!);
+        _variables.Set("user.count", 5);
+        await TickAsync();
+        Assert.DoesNotContain(_problems.Snapshot(), p => p.Key == "P163:b");
+
+        Assert.True(_userVariables.TryReplace([new("count", VariableType.Number, 0), new("x", VariableType.Number, 0)], out _));
+        await TickAsync();
+        Assert.Contains(_problems.Snapshot(), p => p.Key == "P163:b");
+    }
+
+    [Fact]
     public async Task Run_now_ignores_the_switch_and_the_pause_and_answers_unknown_and_no_device()
     {
         var off = At("a", "23:00");
@@ -408,5 +427,38 @@ public sealed class AutomationServiceTests : IDisposable
 
         Assert.Empty(_problems.Snapshot());
         Assert.Empty(_service.Status());
+    }
+
+    [Fact]
+    public void The_loop_sleeps_without_a_time_rule_and_wakes_at_the_start_of_the_next_minute_with_one()
+    {
+        var at = new DateTimeOffset(2026, 10, 7, 7, 29, 15, TimeSpan.Zero);
+        Assert.Null(AutomationService.NextTimeWake(at, hasTimeRules: false));
+        var wait = AutomationService.NextTimeWake(at, hasTimeRules: true)!.Value;
+        Assert.InRange(wait, TimeSpan.FromSeconds(45), TimeSpan.FromSeconds(46));
+        // Exactly on the minute the next boundary is a minute away; the wait is capped so a clock jump is noticed.
+        Assert.Equal(TimeSpan.FromSeconds(60), AutomationService.NextTimeWake(at.AddSeconds(-15), hasTimeRules: true));
+    }
+
+    [Fact]
+    public async Task The_running_service_starts_a_variable_rule_without_a_periodic_tick()
+    {
+        var probe = new Probe("t.ok");
+        var dispatcher = new ActionDispatcher([probe], NullLogger<ActionDispatcher>.Instance, _variables);
+        var profiles = new ProfileStore(_dir);
+        var widgetState = new WidgetStateService(_variables, _sessions, profiles, new ToggleStateStore(), new LayoutSender(new AssetStore()), NullLogger<WidgetStateService>.Instance);
+        using var service = new AutomationService(_store, _variables, _sessions, dispatcher, _problems, profiles, widgetState, NullLogger<AutomationService>.Instance);
+        _variables.Set("user.live", 0);
+        Save(false, When("live", "user.live", ">", "1"));
+        await service.StartAsync(default);
+        try
+        {
+            await Task.Delay(300);
+            _variables.Set("unwatched.name", 1); // wakes nothing
+            _variables.Set("user.live", 5);
+            await probe.FirstRun.Task.WaitAsync(TimeSpan.FromSeconds(10));
+            Assert.Single(probe.Runs);
+        }
+        finally { await service.StopAsync(default); }
     }
 }

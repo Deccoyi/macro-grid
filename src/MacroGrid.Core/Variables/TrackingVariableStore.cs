@@ -20,7 +20,17 @@ internal sealed class TrackingVariableStore(IVariableStore inner) : IVariableSto
         inner.Set(name, value);
     }
 
-    public object? Get(string name) => inner.Get(name);
+    public object? Get(string name)
+    {
+        // A read of someone else's variable keeps it "needed" for a while (IVariableDemand); a plugin reading its own state does not.
+        if (inner is VariableStore store)
+        {
+            bool own;
+            lock (_lock) own = _names.Contains(name);
+            if (!own) store.Demand.Touch(name);
+        }
+        return inner.Get(name);
+    }
 
     public void Remove(string name)
     {

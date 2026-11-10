@@ -42,7 +42,7 @@ internal sealed class PluginWidgetSessionState
 /// its own handler, read its own variables (JavaScript plugins need <c>variables</c>) and the variables the person bound in the widget's settings, and run
 /// its own actions (JavaScript plugins need <c>actions</c>). Rates, sizes and time are limited here and checked again on every message.
 /// </summary>
-public sealed class PluginWidgetRouter : IHostedService, IDisposable
+public sealed class PluginWidgetRouter : IHostedService, IDisposable, IVariableDemandSource
 {
     public const int MaxRequestBytes = 16 * 1024;
     public const int MaxReplyBytes = 64 * 1024;
@@ -67,7 +67,7 @@ public sealed class PluginWidgetRouter : IHostedService, IDisposable
     private readonly Func<DateTimeOffset> _clock;
     private readonly HashSet<string> _dirty = [];
     private readonly Lock _dirtyLock = new();
-    private Timer? _timer;
+    private CoalescingTimer? _timer;
     private int _flushing;
 
     public PluginWidgetRouter(PluginWidgetCatalog catalog, IPluginWidgetHost plugins, PluginPermissionStore permissions, ProfileStore profiles,
@@ -86,12 +86,30 @@ public sealed class PluginWidgetRouter : IHostedService, IDisposable
         _logger = logger;
         _clock = clock ?? (() => DateTimeOffset.UtcNow);
         _variables.Changed += OnVariableChanged;
+        _variables.Demand.AddSource(this);
         _events.Posted += OnEvent;
+    }
+
+    /// <summary>The variable is subscribed to by a plugin widget on a connected device.</summary>
+    public bool Observes(string name) => Subscribed(names => names.Contains(name));
+
+    public bool ObservesPrefix(string prefix) => Subscribed(names => names.Any(n => n.StartsWith(prefix, StringComparison.Ordinal)));
+
+    private bool Subscribed(Func<HashSet<string>, bool> test)
+    {
+        foreach (var session in _sessions.All)
+        {
+            var state = session.WidgetBridge;
+            lock (state.Lock)
+                if (state.Subscriptions.Values.Any(test)) return true;
+        }
+        return false;
     }
 
     public Task StartAsync(CancellationToken cancellationToken)
     {
-        _timer = new Timer(_ => _ = FlushVariablesAsync(), null, TimeSpan.FromMilliseconds(100), TimeSpan.FromMilliseconds(100));
+        _timer = new CoalescingTimer(TimeSpan.FromMilliseconds(100), () => _ = FlushVariablesAsync());
+        if (HasPending()) _timer.Request();
         return Task.CompletedTask;
     }
 
@@ -339,6 +357,7 @@ public sealed class PluginWidgetRouter : IHostedService, IDisposable
             state.Subscriptions[widget.Id] = [.. allowed];
             state.Sent[widget.Id] = sent;
         }
+        _variables.Demand.NotifyChanged();
         if (initial.Count > 0)
             await session.SendAsync(MessageTypes.PluginWidgetVars, new PluginWidgetVarsMessage(widget.Id, initial));
     }
@@ -359,6 +378,12 @@ public sealed class PluginWidgetRouter : IHostedService, IDisposable
     private void OnVariableChanged(string name)
     {
         lock (_dirtyLock) _dirty.Add(name);
+        _timer?.Request();
+    }
+
+    private bool HasPending()
+    {
+        lock (_dirtyLock) return _dirty.Count > 0;
     }
 
     private async Task FlushVariablesAsync()
@@ -367,6 +392,8 @@ public sealed class PluginWidgetRouter : IHostedService, IDisposable
         if (Interlocked.Exchange(ref _flushing, 1) == 1) return;
         try { await FlushCoreAsync(); }
         finally { Interlocked.Exchange(ref _flushing, 0); }
+        // A change that arrived while this flush ran (its timer run was skipped above) must not wait for the next unrelated change.
+        if (HasPending()) _timer?.Request();
     }
 
     private async Task FlushCoreAsync()

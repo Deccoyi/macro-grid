@@ -61,6 +61,10 @@ public interface IPluginHost
 
     /// <summary>Hands over pictures for buttons when the host asks (<see cref="IPluginImageSource"/>). Has a default (accepts nothing), like <see cref="Diagnostics"/>.</summary>
     IPluginImages Images => NullPluginImages.Instance;
+
+    /// <summary>Whether anything currently needs the variables the plugin publishes (<see cref="IVariableDemand"/>), so it can skip work nobody sees. Has a default
+    /// (everything is needed), like <see cref="Diagnostics"/>.</summary>
+    IVariableDemand Demand => NullVariableDemand.Instance;
 }
 
 /// <summary>Encrypts one plugin's own secret before it is written to disk and decrypts it when read back. Backed

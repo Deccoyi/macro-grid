@@ -4,6 +4,10 @@ This file follows the [Keep a Changelog](https://keepachangelog.com/) format. Fo
 
 ## [Unreleased]
 
+## [1.7.0] - 2026-11-10
+### Added
+- **Variable demand (SDK addition, the next MINOR; host):** `IPluginHost.Demand` (default member, `NullVariableDemand`: everything is needed) returns `IVariableDemand` with `IsObserved(name)`, `IsPrefixObserved(prefix)` and the event `Changed` (raised when demand may have grown; not when it shrinks). A plugin can skip polling for variables nothing reads. The host counts widgets on shown pages (text, looks, value variable, action templates), automation triggers and conditions, plugin widget subscriptions, and, with a 30-second lease, variables a script or plugin read and every variable after the editor's live-preview snapshot. A plugin that uses it sets `minMacroGrid` to this version. Design: `docs/design/variable-demand.md`.
+
 ## [1.6.1] - 2026-11-06
 ### Added
 - **Automation trigger `variableChange` (host only; no SDK or protocol change):** a rule starts when a variable changes (boolean, number or text), with optional from and to filters, number threshold, minimum interval and the tokens `{trigger.old}` and `{trigger.new}`. `AutomationRule` and `AutomationTrigger` gained `[JsonExtensionData]` so future fields survive a round trip. An older server keeps the rule unknown and cannot save automation rules until it is deleted. Design: `docs/design/automation-rules.md`.

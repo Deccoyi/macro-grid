@@ -32,10 +32,13 @@ public sealed partial class AutomationStore
 
     public bool Paused { get { lock (_lock) return _paused; } }
 
-    /// <summary>A copy of the rules in the order the person arranged them.</summary>
+    /// <summary>
+    /// The rules in the order the person arranged them. This is a shared snapshot: the store never changes a list or a rule it has
+    /// handed out (it swaps in a new one), and callers must not change them either.
+    /// </summary>
     public IReadOnlyList<AutomationRule> List()
     {
-        lock (_lock) return Clone(_rules);
+        lock (_lock) return _rules;
     }
 
     /// <summary>Replaces the whole list. Nothing changes when any part is invalid.</summary>
@@ -63,10 +66,14 @@ public sealed partial class AutomationStore
     {
         lock (_lock)
         {
-            var rule = _rules.FirstOrDefault(r => r.Id == id);
-            if (rule is null || !rule.Enabled) return false;
-            rule.Enabled = false;
-            Write(new RulesFile(1, _paused, _rules));
+            var index = _rules.FindIndex(r => r.Id == id);
+            if (index < 0 || !_rules[index].Enabled) return false;
+            // Copy instead of changing in place: a list handed out earlier must stay as it was.
+            var disabled = Clone([_rules[index]])[0];
+            disabled.Enabled = false;
+            var next = new List<AutomationRule>(_rules) { [index] = disabled };
+            Write(new RulesFile(1, _paused, next));
+            _rules = next;
         }
         Changed?.Invoke();
         return true;

@@ -5,7 +5,8 @@ import { useCommands } from "../commands/CommandsContext";
 import type { Command } from "../commands/types";
 import type { DeviceSize } from "../grid/DevicePreviewFrame";
 import { DevicePreviewFrame } from "../grid/DevicePreviewFrame";
-import { EditorCanvas } from "../grid/EditorCanvas";
+import { EditorCanvas, type EditorCanvasProps } from "../grid/EditorCanvas";
+import { useLiveVariables } from "../state/liveValues";
 import { useDiagnostics } from "../diagnostics/DiagnosticsContext";
 import { problemWidgets } from "../diagnostics/problemWidgets";
 import { useT } from "../i18n/I18nContext";
@@ -14,6 +15,11 @@ import { useEditorStateContext } from "../state/EditorStateContext";
 import { clearPluginTreeSelection } from "../state/pluginTreeSelectionStore";
 import { useOpenPages } from "./OpenPagesContext";
 import { useWorkspaceUi } from "./WorkspaceUiContext";
+
+/** Reads the polled variable values itself, so the 2-second poll re-renders only the canvas and not the whole document area. */
+function LiveEditorCanvas(props: Omit<EditorCanvasProps, "variables">) {
+  return <EditorCanvas {...props} variables={useLiveVariables()} />;
+}
 
 /** The document area: page tabs — every page the user has opened from Hierarchy stays open as a tab
  * (default-layout.html) — plus the existing device preview and canvas, moved here from App.tsx
@@ -102,14 +108,13 @@ export function DocumentArea({ deviceSize }: { deviceSize: DeviceSize | null }) 
             onPointerDownCapture={() => { clearProfileProperties(); clearPluginTreeSelection(); }}
           >
             <DevicePreviewFrame size={deviceSize}>
-              <EditorCanvas
+              <LiveEditorCanvas
                 page={currentPage}
                 selectedIds={state.selectedIds}
                 onSelect={(ids) => { state.setSelectedIds(ids); if (ids.length > 0) { clearProfileProperties(); clearPluginTreeSelection(); } }}
                 onToggleSelect={state.toggleSelected}
                 onRectChange={state.setWidgetRect}
                 onContextMenu={(x, y) => setWidgetMenu({ x, y })}
-                variables={state.variables}
                 problemWidgets={marked}
               />
             </DevicePreviewFrame>

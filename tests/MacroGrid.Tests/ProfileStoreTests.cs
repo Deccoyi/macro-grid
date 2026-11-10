@@ -15,6 +15,26 @@ public sealed class ProfileStoreTests : IDisposable
     }
 
     [Fact]
+    public void All_follows_saves_and_deletes_and_is_sorted_by_name()
+    {
+        var store = new ProfileStore(_dir);
+        var before = store.All;
+        Assert.Same(before, store.All);
+
+        store.Save(new Profile { Id = "z", Name = "Zeta", Pages = [new Page { Id = "pg" }] });
+        store.Save(new Profile { Id = "b", Name = "Beta", Pages = [new Page { Id = "pg" }] });
+        Assert.Equal(["Beta", "Zeta"], store.All.Select(p => p.Name).Where(n => n is "Beta" or "Zeta"));
+
+        var beta = store.Get("b")!;
+        beta.Name = "Zzz";
+        store.Save(beta);
+        Assert.Equal("Zzz", store.All[^1].Name);
+
+        Assert.True(store.Delete("z"));
+        Assert.DoesNotContain(store.All, p => p.Id == "z");
+    }
+
+    [Fact]
     public void Creates_default_profile_on_first_run()
     {
         var store = new ProfileStore(_dir);

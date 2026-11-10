@@ -63,6 +63,7 @@ internal static class CrashCapture
     {
         // Only the first crash writes; a second one on another thread returns at once.
         if (Interlocked.Exchange(ref _handled, 1) != 0) return;
+        ShutdownLog.UnhandledException(e.ExceptionObject, e.IsTerminating);
         try
         {
             var ex = e.ExceptionObject as Exception ?? new Exception(e.ExceptionObject?.ToString());

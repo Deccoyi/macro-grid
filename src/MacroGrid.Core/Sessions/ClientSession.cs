@@ -71,11 +71,14 @@ public sealed class ClientSession(WebSocket socket)
 
     internal WebSocket Socket => socket;
 
-    public async Task SendAsync(Envelope envelope, CancellationToken cancellationToken = default)
+    public Task SendAsync(Envelope envelope, CancellationToken cancellationToken = default)
     {
-        if (socket.State != WebSocketState.Open) return;
-        var bytes = Encoding.UTF8.GetBytes(envelope.ToJson());
+        if (socket.State != WebSocketState.Open) return Task.CompletedTask;
+        return SendBytesAsync(Encoding.UTF8.GetBytes(envelope.ToJson()), cancellationToken);
+    }
 
+    private async Task SendBytesAsync(byte[] bytes, CancellationToken cancellationToken)
+    {
         // WebSocket allows only one concurrent send; broadcasts and replies may race.
         await _sendLock.WaitAsync(cancellationToken);
         try
@@ -88,6 +91,9 @@ public sealed class ClientSession(WebSocket socket)
         }
     }
 
-    public Task SendAsync<T>(string type, T data, CancellationToken cancellationToken = default) =>
-        SendAsync(Envelope.Create(type, data), cancellationToken);
+    public async Task SendAsync<T>(string type, T data, CancellationToken cancellationToken = default)
+    {
+        if (socket.State != WebSocketState.Open) return;
+        await SendBytesAsync(Envelope.ToUtf8(type, data), cancellationToken);
+    }
 }

@@ -47,6 +47,36 @@ internal static class WebViewEnvironment
         };
     }
 
+    /// <summary>Suspends the browser while the window is minimized or hidden (after a short delay) and resumes it on any change back.
+    /// Never while the window is disabled (an open tool window blocks the editor). Resume also runs on session unlock, as a safety net.
+    /// An unavailable or failing suspend is skipped by the controller. The view is never destroyed, so unsaved edits stay.</summary>
+    private static void AttachSuspend(Form host, WebView2 view)
+    {
+        var controller = new MacroGrid.Windows.Windows.WebViewSuspendController(
+            () => !host.IsDisposed && host.IsHandleCreated && host.Enabled &&
+                  (host.WindowState == FormWindowState.Minimized || !host.Visible),
+            () => view.CoreWebView2.TrySuspendAsync(),
+            () => view.CoreWebView2.Resume(),
+            visible => view.Visible = visible,
+            TimeSpan.FromSeconds(5));
+
+        void Changed(object? s, EventArgs e) { if (!host.IsDisposed) controller.Evaluate(); }
+        void Unlocked(object? s, Microsoft.Win32.SessionSwitchEventArgs e)
+        {
+            if (e.Reason is Microsoft.Win32.SessionSwitchReason.SessionUnlock or Microsoft.Win32.SessionSwitchReason.SessionLogon
+                && !host.IsDisposed && host.IsHandleCreated)
+                host.BeginInvoke(controller.Evaluate);
+        }
+
+        host.SizeChanged += Changed;
+        host.VisibleChanged += Changed;
+        host.EnabledChanged += Changed;
+        host.Activated += Changed;
+        Microsoft.Win32.SystemEvents.SessionSwitch += Unlocked;
+        host.Disposed += (_, _) => Microsoft.Win32.SystemEvents.SessionSwitch -= Unlocked;
+        controller.Evaluate();
+    }
+
     internal static string WithCrashMarker(string url)
     {
         var fragment = url.IndexOf('#');
@@ -107,6 +137,7 @@ internal static class WebViewEnvironment
                 LockDown(view.CoreWebView2);
                 KeepAliveAfterRendererLoss(view.CoreWebView2, url);
                 view.CoreWebView2.Navigate(url);
+                AttachSuspend(host, view);
                 _workingFolder = folder;
                 return;
             }
