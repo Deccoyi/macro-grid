@@ -5,13 +5,15 @@ namespace MacroGrid.Windows.Windows;
 /// logic is testable. A window that stays hidden or minimized for <c>delay</c> is hidden and suspended; any change
 /// back to "wanted visible" resumes it at once. A failed or unavailable suspend is skipped, never retried in a loop,
 /// and a resume failure is swallowed (the view then simply stays as the browser left it).
+/// <c>wait</c> replaces the real delay (tests drive it by hand); production passes nothing.
 /// </summary>
 public sealed class WebViewSuspendController(
     Func<bool> wantSuspended,
     Func<Task<bool>> trySuspend,
     Action resume,
     Action<bool> setVisible,
-    TimeSpan delay)
+    TimeSpan delay,
+    Func<TimeSpan, Task>? wait = null)
 {
     private int _generation;
     private bool _suspended;
@@ -31,7 +33,7 @@ public sealed class WebViewSuspendController(
         try
         {
             if (_suspended) return;
-            await Task.Delay(delay);
+            await (wait is null ? Task.Delay(delay) : wait(delay));
             if (generation != _generation || !wantSuspended()) return;
 
             // The view must be invisible before TrySuspend is allowed.
