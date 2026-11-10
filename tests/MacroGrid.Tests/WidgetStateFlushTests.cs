@@ -235,4 +235,108 @@ public sealed class WidgetStateFlushTests : IDisposable
         await service.SendInitialAsync(session, page, default);
         Assert.Equal(2, socket.Sent.Count);
     }
+
+    private (WidgetStateService Service, VariableStore Variables, TestSocket Socket, ProfileStore Profiles) FlushRig(params Widget[] widgets)
+    {
+        var profiles = new ProfileStore(_dir);
+        profiles.Save(new Profile { Id = "p", Name = "P", Pages = [new Page { Id = "a", Widgets = [.. widgets] }] });
+        var variables = new VariableStore();
+        var sessions = new SessionRegistry();
+        var socket = new TestSocket(hangs: false);
+        sessions.Add(Identified(socket));
+        var service = new WidgetStateService(variables, sessions, profiles, new ToggleStateStore(), new LayoutSender(new AssetStore()), NullLogger<WidgetStateService>.Instance);
+        return (service, variables, socket, profiles);
+    }
+
+    private static string[] SentIds(TestSocket socket) => [.. socket.Sent.Select(e => e.DataAs<WidgetStateMessage>()!.WidgetId)];
+
+    [Fact]
+    public async Task Flush_touches_only_widgets_that_read_the_changed_variables()
+    {
+        var styled = new Widget
+        {
+            Id = "styled",
+            Dynamic = new Dictionary<string, DynamicBinding>
+            {
+                ["style.background"] = new DynamicBinding { Cases = [new DynamicCase(new ConditionNode { Variable = "t.cond", Operator = "==", Value = "1" }, "#ff0000")] },
+            },
+        };
+        var ruleText = new Widget
+        {
+            Id = "ruleText",
+            Dynamic = new Dictionary<string, DynamicBinding>
+            {
+                ["text"] = new DynamicBinding { Cases = [new DynamicCase(new ConditionNode { Variable = "t.cond2", Operator = "==", Value = "1" }, "r={t.result}")], Default = "d={t.default}" },
+            },
+        };
+        var slider = new Widget { Id = "slider", Type = WidgetTypes.Slider, Props = new System.Text.Json.Nodes.JsonObject { ["valueVariable"] = "t.level" } };
+        var (service, variables, socket, _) = FlushRig(new Widget { Id = "text", Text = "a={t.text}" }, styled, ruleText, slider, new Widget { Id = "other", Text = "x={t.other}" });
+        using var _s = service;
+
+        variables.Set("t.unrelated", 1);
+        await service.FlushAsync();
+        Assert.Empty(socket.Sent);
+
+        variables.Set("t.text", 1);
+        await service.FlushAsync();
+        Assert.Equal(["text"], SentIds(socket));
+
+        socket.Sent.Clear();
+        variables.Set("t.cond", 1);
+        variables.Set("t.level", 0.5);
+        variables.Set("t.result", "q");
+        variables.Set("t.default", "z");
+        await service.FlushAsync();
+        // Page order is kept; the rule-text widget reads its result and default templates too.
+        Assert.Equal(["styled", "ruleText", "slider"], SentIds(socket));
+    }
+
+    [Fact]
+    public async Task Refresh_forces_one_widget_and_a_replaced_page_is_indexed_again()
+    {
+        var (service, variables, socket, profiles) = FlushRig(new Widget { Id = "a1", Text = "a={t.one}" }, new Widget { Id = "a2", Text = "b={t.two}" });
+        using var _s = service;
+
+        service.Refresh("a2", null);
+        await service.FlushAsync();
+        Assert.Equal(["a2"], SentIds(socket));
+
+        // An editor save replaces the profile: the next flush must follow the new widget list, not the old index.
+        profiles.Save(new Profile { Id = "p", Name = "P", Pages = [new Page { Id = "a", Widgets = [new Widget { Id = "n1", Text = "n={t.two}" }] }] });
+        socket.Sent.Clear();
+        variables.Set("t.two", 5);
+        await service.FlushAsync();
+        Assert.Equal(["n1"], SentIds(socket));
+    }
+
+    [Fact]
+    public async Task The_started_service_flushes_a_change_by_itself_and_a_change_during_a_flush_is_not_left_waiting()
+    {
+        var (service, variables, socket, _) = FlushRig(new Widget { Id = "w", Text = "v={t.v}" });
+        using var _s = service;
+        await service.StartAsync(default);
+
+        variables.Set("t.v", 1);
+        await WaitForAsync(() => socket.Sent.Count >= 1);
+
+        variables.Set("t.v", 2);
+        variables.Set("t.v", 3);
+        await WaitForAsync(() => socket.Sent.Count >= 2 && socket.Sent[^1].DataAs<WidgetStateMessage>()!.Text == "v=3");
+
+        // Quiet again: nothing more is sent.
+        var count = socket.Sent.Count;
+        await Task.Delay(400);
+        Assert.Equal(count, socket.Sent.Count);
+        await service.StopAsync(default);
+    }
+
+    private static async Task WaitForAsync(Func<bool> condition)
+    {
+        var until = DateTime.UtcNow.AddSeconds(10);
+        while (!condition())
+        {
+            Assert.True(DateTime.UtcNow < until, "timed out");
+            await Task.Delay(20);
+        }
+    }
 }
