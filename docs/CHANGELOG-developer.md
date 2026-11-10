@@ -3,6 +3,8 @@
 This file follows the [Keep a Changelog](https://keepachangelog.com/) format. For versioning rules, see [versioning.md](guides/versioning.md). The short, public changelog is [CHANGELOG.md](CHANGELOG.md).
 
 ## [Unreleased]
+
+## [1.7.0] - 2026-11-10
 ### Added
 - **Variable demand (SDK addition, the next MINOR; host):** `IPluginHost.Demand` (default member, `NullVariableDemand`: everything is needed) returns `IVariableDemand` with `IsObserved(name)`, `IsPrefixObserved(prefix)` and the event `Changed` (raised when demand may have grown; not when it shrinks). A plugin can skip polling for variables nothing reads. The host counts widgets on shown pages (text, looks, value variable, action templates), automation triggers and conditions, plugin widget subscriptions, and, with a 30-second lease, variables a script or plugin read and every variable after the editor's live-preview snapshot. A plugin that uses it sets `minMacroGrid` to this version. Design: `docs/design/variable-demand.md`.
 
