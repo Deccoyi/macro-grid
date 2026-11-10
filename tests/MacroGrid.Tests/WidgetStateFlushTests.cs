@@ -49,6 +49,46 @@ public sealed class WidgetStateFlushTests : IDisposable
     private static ClientSession Identified(TestSocket socket) =>
         new(socket) { DeviceId = "d-" + Guid.NewGuid().ToString("N"), ProfileId = "p", PageId = "a" };
 
+    private WidgetStateService Service(Widget widget, out ProfileStore profiles)
+    {
+        profiles = new ProfileStore(_dir);
+        profiles.Save(new Profile { Id = "p", Name = "P", Pages = [new Page { Id = "a", Widgets = [widget] }] });
+        return new WidgetStateService(new VariableStore(), new SessionRegistry(), profiles, new ToggleStateStore(), new LayoutSender(new AssetStore()),
+            NullLogger<WidgetStateService>.Instance);
+    }
+
+    [Fact]
+    public async Task Initial_state_of_a_widget_is_one_frame()
+    {
+        using var service = Service(new Widget { Id = "w", Type = WidgetTypes.Toggle, Text = "v={test.value}" }, out var profiles);
+        var socket = new TestSocket(hangs: false);
+        var session = Identified(socket);
+
+        await service.SendInitialAsync(session, profiles.Get("p")!.Pages[0], default);
+
+        var data = Assert.Single(socket.Sent).DataAs<WidgetStateMessage>()!;
+        Assert.Equal("w", data.WidgetId);
+        Assert.Equal("v=", data.Text?[..2]);
+        Assert.NotNull(data.Active);
+        Assert.Null(data.Style);
+    }
+
+    [Fact]
+    public async Task Initial_state_clears_a_stale_style_with_an_empty_style_not_null()
+    {
+        using var service = Service(new Widget { Id = "w", Text = "v={test.value}" }, out var profiles);
+        var socket = new TestSocket(hangs: false);
+        var session = Identified(socket);
+        session.SentStyles["w"] = new Dictionary<string, string> { ["color"] = "red" };
+
+        await service.SendInitialAsync(session, profiles.Get("p")!.Pages[0], default);
+
+        var data = Assert.Single(socket.Sent).DataAs<WidgetStateMessage>()!;
+        Assert.NotNull(data.Style);
+        Assert.Empty(data.Style);
+        Assert.Equal("v=", data.Text?[..2]);
+    }
+
     [Fact]
     public async Task A_client_that_does_not_take_frames_is_dropped_and_does_not_hold_up_the_others()
     {
