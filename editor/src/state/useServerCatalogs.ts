@@ -1,24 +1,23 @@
 import { useCallback, useEffect, useState } from "react";
 import { api } from "../api/client";
-import type { ActionInfo, StatusEntry, VariableInfo, VariableSnapshot } from "../api/types";
+import type { ActionInfo, VariableInfo } from "../api/types";
 import { usePreferences } from "../preferences/PreferencesContext";
+import { setLiveStatus, setLiveVariables } from "./liveValues";
 import { USER_VARIABLES_CHANGED } from "./userVariablesEvent";
 import { invalidateIconPacks } from "../panels/IconPicker";
 
 /**
- * Read-only data the server describes: live variable values, status items, the action catalog and the
- * variable catalog. Keeps them fresh (polling, refetch on focus and on a saved language change).
+ * Read-only data the server describes: live variable values and status items (kept in liveValues.ts, not in React state), the action
+ * catalog and the variable catalog. Keeps them fresh (polling, refetch on focus and on a saved language change).
  */
 export function useServerCatalogs() {
   const { savedLanguage } = usePreferences();
-  const [variables, setVariables] = useState<VariableSnapshot>({});
   const [actions, setActions] = useState<ActionInfo[]>([]);
   const [variableCatalog, setVariableCatalog] = useState<VariableInfo[]>([]);
-  const [status, setStatus] = useState<StatusEntry[]>([]);
 
   const refreshVariables = useCallback(() => {
-    api.variablesSnapshot().then(setVariables).catch(() => {});
-    api.getStatus().then(setStatus).catch(() => {});
+    api.variablesSnapshot().then(setLiveVariables).catch(() => {});
+    api.getStatus().then(setLiveStatus).catch(() => {});
   }, []);
 
   const refreshCatalogs = useCallback(() => {
@@ -71,7 +70,7 @@ export function useServerCatalogs() {
     };
   }, [refreshVariables]);
 
-  return { variables, actions, variableCatalog, status, refreshVariables };
+  return { actions, variableCatalog, refreshVariables };
 }
 
 function sameTypes(a: ActionInfo[], b: ActionInfo[]): boolean {

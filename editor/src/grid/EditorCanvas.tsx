@@ -10,7 +10,7 @@ import { useSelfPreview } from "../state/selfPreviewStore";
 import type { WidgetProblems } from "../diagnostics/problemWidgets";
 import { usePluginWidgetPreview } from "./usePluginWidgetPreview";
 
-interface EditorCanvasProps {
+export interface EditorCanvasProps {
   page: Page;
   selectedIds: string[];
   onSelect: (ids: string[]) => void;

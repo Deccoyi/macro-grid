@@ -34,6 +34,7 @@ export function DiagnosticsProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     let stopped = false;
     const poll = () => {
+      if (document.hidden) return;
       api.fetchProblems()
         .then((result) => {
           if (stopped || result.version === serverVersion.current) return;
@@ -44,7 +45,9 @@ export function DiagnosticsProvider({ children }: { children: ReactNode }) {
     };
     poll();
     const timer = window.setInterval(poll, POLL_MS);
-    return () => { stopped = true; window.clearInterval(timer); };
+    // One immediate refresh when the page is shown again.
+    document.addEventListener("visibilitychange", poll);
+    return () => { stopped = true; window.clearInterval(timer); document.removeEventListener("visibilitychange", poll); };
   }, []);
 
   // What the editor's own hooks notice (a widget that did not fit): the same message again is counted, not listed twice.
