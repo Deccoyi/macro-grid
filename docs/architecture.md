@@ -47,7 +47,7 @@ half-written profile).
 - **Page** `{ id, name, cols, rows, gap, padding, alignment, widgets[] }`: a grid; a profile can have several pages.
 - **Widget** `{ id, type, name, x, y, w, h, text, style, customCss, props, actions, dynamic }`
   - `name` is the instance name: 1 to 64 characters, unique on its page, always present (the server fills it in for older profiles when it loads them). It is for messages and pickers and is never a reference. See [design/diagnostics-and-repair.md](design/diagnostics-and-repair.md).
-  - `type` is `button`, `toggle`, `slider`, `knob`, `label`, `image`, `web`, `plugin-widget` or `plugin-html`. The `web` type was removed: an old profile keeps such a widget, the editor shows it as unavailable and a device gets a plain label instead (see [plans/remove-web-widget.md](plans/remove-web-widget.md)). A `plugin-widget` is a
+  - `type` is `button`, `toggle`, `slider`, `knob`, `label`, `image`, `web`, `plugin-widget` or `plugin-html`. The `web` type was removed: an old profile keeps such a widget, the editor shows it as unavailable and a device gets a plain label instead. A `plugin-widget` is a
     custom widget of a plugin (`props`: `plugin`, `widget`, `settings`) whose code runs in a sandboxed worker on the device and draws to a canvas, see
     [design/plugin-widgets.md](design/plugin-widgets.md). The reserved `plugin-html` type only draws a placeholder.
   - `style`: `background`, `foreground`, `align`, `vAlign`, `fontSize`, `borderColor`, `borderWidth`, `radius`, `icon` (an image URL, normally

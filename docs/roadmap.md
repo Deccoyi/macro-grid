@@ -49,7 +49,7 @@ Where the project stands. The server and the SDK are at 1.0.0 and under active d
   recommendation (not a hard limit), a crash guard, a `storage` option, per-widget option switches, plugin SVG icons, a `Color` setting kind, a
   Toolbox search and grouping menu, and Diagnostic Messages in the editor. Example plugins Hello Gauge and Hello Weather
   ([design/plugin-widgets.md](design/plugin-widgets.md)).
-- **The `web` widget was removed:** an old profile keeps the widget, shown as unavailable ([plans/remove-web-widget.md](plans/remove-web-widget.md)).
+- **The `web` widget was removed:** an old profile keeps the widget, shown as unavailable.
 - **"Allow unencrypted connections" preference:** off makes the plain port answer only this computer. Default on; default off is planned for the next MAJOR version once the browser deck and old paired phones are settled ([design/security-hardening.md](design/security-hardening.md)).
 - **A phone-app style permission system for plugins that are not C#:** each permission is explained in plain words and approved before an install or an
   update runs, and every installed plugin lists what it may do with a tick box per permission (and per widget option: keep loaded, data kept on the
