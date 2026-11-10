@@ -72,13 +72,16 @@ public sealed class ClientHub(
             }
         });
 
+        var endReason = "unknown";
         try
         {
-            await ReceiveLoopAsync(session, queue.Writer, cancellationToken);
+            endReason = await ReceiveLoopAsync(session, queue.Writer, cancellationToken);
         }
-        catch (Exception ex) when (ex is WebSocketException or OperationCanceledException)
+        catch (Exception ex)
         {
-            // Client vanished (Wi-Fi drop, app killed) or server is shutting down.
+            endReason = DisconnectReason.Describe(ex);
+            // Client vanished (Wi-Fi drop, app killed) or server is shutting down: expected. Anything else still propagates.
+            if (ex is not (WebSocketException or OperationCanceledException)) throw;
         }
         finally
         {
@@ -87,11 +90,12 @@ public sealed class ClientHub(
             await worker;
             widgetRouter.Forget(session);
             sessions.Remove(session);
-            logger.LogInformation("Client {Session} ({Device}) disconnected", session.Id, session.DeviceName ?? "?");
+            logger.LogInformation("Client {Session} ({Device}) disconnected: {Reason}", session.Id, session.DeviceName ?? "?", endReason);
         }
     }
 
-    private async Task ReceiveLoopAsync(ClientSession session, ChannelWriter<Func<Task>> queue, CancellationToken ct)
+    /// <summary>Runs until the session ends and returns why it ended (for the log).</summary>
+    private async Task<string> ReceiveLoopAsync(ClientSession session, ChannelWriter<Func<Task>> queue, CancellationToken ct)
     {
         var socket = session.Socket;
         var buffer = new byte[8 * 1024];
@@ -102,15 +106,16 @@ public sealed class ClientHub(
             var result = await socket.ReceiveAsync(buffer, ct);
             if (result.MessageType == WebSocketMessageType.Close)
             {
+                var reason = DisconnectReason.Describe(result.CloseStatus, result.CloseStatusDescription);
                 await socket.CloseOutputAsync(WebSocketCloseStatus.NormalClosure, null, ct);
-                return;
+                return reason;
             }
 
             message.Write(buffer, 0, result.Count);
             if (message.Length > MaxMessageBytes)
             {
                 await socket.CloseOutputAsync(WebSocketCloseStatus.MessageTooBig, "message too big", ct);
-                return;
+                return "closed by server: message too big";
             }
             if (!result.EndOfMessage) continue;
 
@@ -135,6 +140,8 @@ public sealed class ClientHub(
 
             await HandleMessageAsync(session, envelope, queue, ct);
         }
+
+        return $"socket no longer open (state {socket.State})";
     }
 
     private async Task HandleMessageAsync(ClientSession session, Envelope envelope, ChannelWriter<Func<Task>> queue, CancellationToken ct)

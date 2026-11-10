@@ -53,7 +53,7 @@ internal sealed class TrayContext : ApplicationContext
         _openTestPageItem = new ToolStripMenuItem(null, null, (_, _) => Open($"http://localhost:{ServerApp.Port}/"));
         _openDataFolderItem = new ToolStripMenuItem(null, null, (_, _) => Open(ProfileStore.DefaultDataDir));
         _checkUpdatesItem = new ToolStripMenuItem(null, null, (_, _) => _ = CheckForUpdatesAsync());
-        _exitItem = new ToolStripMenuItem(null, null, (_, _) => ExitThread());
+        _exitItem = new ToolStripMenuItem(null, null, (_, _) => { ShutdownLog.Requested("tray Exit menu"); ExitThread(); });
         menu.Items.Add(_openEditorItem);
         menu.Items.Add(_openTestPageItem);
         menu.Items.Add(_openDataFolderItem);
@@ -78,7 +78,7 @@ internal sealed class TrayContext : ApplicationContext
         }, null);
         _updates.UpdateAnnounced += offer => _ui.Post(_ => AnnounceUpdate(offer), null);
         // The installer has been started; leave the way the Exit item does, so the tray icon and the server go down cleanly.
-        server.Services.GetRequiredService<UpdateInstaller>().ExitRequested += () => _ui.Post(_ => ExitThread(), null);
+        server.Services.GetRequiredService<UpdateInstaller>().ExitRequested += () => _ui.Post(_ => { ShutdownLog.Requested("update installer"); ExitThread(); }, null);
 
         _hub.SessionsChanged += () => _ui.Post(_ => UpdateClients(), null);
         // The menu texts follow the language preference, also while the app is running.
