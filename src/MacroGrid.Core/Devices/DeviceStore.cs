@@ -61,6 +61,12 @@ public sealed class DeviceStore
         get { lock (_lock) return _devices.Values.OrderByDescending(d => d.LastSeenAt).ToList(); }
     }
 
+    /// <summary>The paired device with this id, or null. O(1), unlike scanning <see cref="All"/>.</summary>
+    public PairedDevice? Find(string id)
+    {
+        lock (_lock) return _devices.GetValueOrDefault(id);
+    }
+
     public PairedDevice? FindByToken(string? token)
     {
         if (string.IsNullOrEmpty(token)) return null;
