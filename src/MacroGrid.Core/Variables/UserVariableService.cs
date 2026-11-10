@@ -40,6 +40,9 @@ public sealed class UserVariableService : IVariableCatalogSource, IHostedService
         Load();
     }
 
+    /// <summary>Raised after the definitions changed (not when a value changes).</summary>
+    public event Action? DefinitionsChanged;
+
     /// <summary>The definitions, in the order the person arranged them.</summary>
     public IReadOnlyList<UserVariable> List()
     {
@@ -87,6 +90,7 @@ public sealed class UserVariableService : IVariableCatalogSource, IHostedService
             ScheduleValueSave();
         }
         error = "";
+        DefinitionsChanged?.Invoke();
         return true;
     }
 

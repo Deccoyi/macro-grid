@@ -149,13 +149,18 @@ public sealed class AutomationStoreTests : IDisposable
     }
 
     [Fact]
-    public void The_list_returned_is_a_copy()
+    public void List_returns_the_same_snapshot_until_the_rules_change_and_disable_does_not_touch_an_earlier_one()
     {
         var store = new AutomationStore(_dir);
         store.TryReplace([Variable("a")], false, out _);
 
-        store.List()[0].Enabled = false;
+        var before = store.List();
+        Assert.Same(before, store.List());
 
-        Assert.True(store.List()[0].Enabled);
+        Assert.True(store.Disable("a"));
+
+        Assert.True(before[0].Enabled);
+        Assert.False(store.List()[0].Enabled);
+        Assert.NotSame(before, store.List());
     }
 }
