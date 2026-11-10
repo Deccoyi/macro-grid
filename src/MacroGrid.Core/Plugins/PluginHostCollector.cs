@@ -13,7 +13,7 @@ namespace MacroGrid.Core.Plugins;
 /// here — PluginLoader adds the collected instances to the app's own DI container afterwards, the same
 /// way built-in actions/providers are registered in ServiceRegistration.cs.
 /// </summary>
-internal sealed class PluginHostCollector(string serverVersion, string dataDirectory, string pluginId, PluginStatusRegistry statusRegistry, ILogger logger, ISecretProtector? secretProtector = null, PluginWidgetEventHub? widgetEvents = null, string pluginName = "", ProblemList? problems = null, double diagnosticsCallsPerSecond = 10, PluginImageService? images = null) : IPluginHost
+internal sealed class PluginHostCollector(string serverVersion, string dataDirectory, string pluginId, PluginStatusRegistry statusRegistry, ILogger logger, ISecretProtector? secretProtector = null, PluginWidgetEventHub? widgetEvents = null, string pluginName = "", ProblemList? problems = null, double diagnosticsCallsPerSecond = 10, PluginImageService? images = null, IVariableDemand? demand = null) : IPluginHost
 {
     /// <summary>Adapts the host's own <see cref="ISecretProtector"/> to the SDK-facing <see cref="IPluginSecrets"/>.
     /// <paramref name="protector"/> is only ever null in a test host that never registered one; a plugin that
@@ -143,6 +143,7 @@ internal sealed class PluginHostCollector(string serverVersion, string dataDirec
     public IPluginImages Images { get; } = new ImagesAdapter(images, pluginId);
     private readonly DiagnosticsAdapter _diagnostics = new(problems, pluginId, pluginName, logger, diagnosticsCallsPerSecond);
     public IPluginDiagnostics Diagnostics => _diagnostics;
+    public IVariableDemand Demand { get; } = demand ?? NullVariableDemand.Instance;
 
     /// <summary>Called when the plugin is unloaded: its later calls do nothing, so a late report cannot reappear after the list was cleared.</summary>
     internal void Retire() => _diagnostics.Retire();

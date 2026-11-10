@@ -16,7 +16,7 @@ namespace MacroGrid.Core.Widgets;
 /// Pushes template-driven widget text and toggle state to clients.
 /// Live updates are batched at 100ms (max ~10Hz) and only sent when the rendered text actually changed for that client.
 /// </summary>
-public sealed class WidgetStateService : IHostedService, IDisposable
+public sealed class WidgetStateService : IHostedService, IDisposable, IVariableDemandSource
 {
     /// <summary>Widget property paths the editor can dynamize, mapped to the key sent to clients in WidgetStateMessage.Style.</summary>
     private static readonly Dictionary<string, string> DynamizableProperties = new()
@@ -72,6 +72,7 @@ public sealed class WidgetStateService : IHostedService, IDisposable
         _layouts = layouts;
         _logger = logger;
         _variables.Changed += OnVariableChanged;
+        _variables.Demand.AddSource(this);
         _pluginWidgets = pluginWidgets;
         if (pluginWidgets is not null) pluginWidgets.PluginChanged += OnPluginWidgetsChanged;
     }
@@ -84,6 +85,7 @@ public sealed class WidgetStateService : IHostedService, IDisposable
     private void OnActionTypesChanged()
     {
         Interlocked.Increment(ref _handlerGeneration); // action dependencies depend on the handler list
+        _variables.Demand.NotifyChanged();
         foreach (var session in _sessions.All)
         {
             if (session.ProfileId is null || session.PageId is null) continue;
@@ -173,6 +175,7 @@ public sealed class WidgetStateService : IHostedService, IDisposable
     /// </summary>
     public async Task BroadcastProfileAsync(Profile profile, CancellationToken ct = default)
     {
+        _variables.Demand.NotifyChanged(); // a save can add widgets that read more variables
         foreach (var session in _sessions.All)
         {
             if (session.ProfileId != profile.Id) continue;
@@ -210,6 +213,7 @@ public sealed class WidgetStateService : IHostedService, IDisposable
     /// <summary>Sends the current rendered text and toggle state of every relevant widget on a page, e.g. right after a layout is shown.</summary>
     public async Task SendInitialAsync(ClientSession session, Page page, CancellationToken ct)
     {
+        _variables.Demand.NotifyChanged(); // a page is shown: plugins refresh what they skipped
         var profile = session.ProfileId is null ? null : _profiles.Get(session.ProfileId);
         foreach (var widget in page.Widgets)
         {
@@ -343,6 +347,10 @@ public sealed class WidgetStateService : IHostedService, IDisposable
         }
 
         /// <summary>The widgets touched by the dirty variables or marked for a forced look, in page order.</summary>
+        public bool Reads(string name) => _byVariable.ContainsKey(name);
+
+        public bool ReadsPrefix(string prefix) => _byVariable.Keys.Any(k => k.StartsWith(prefix, StringComparison.Ordinal));
+
         public IEnumerable<WidgetEntry> Affected(HashSet<string> dirty, HashSet<string> marked)
         {
             var hit = new SortedSet<int>();
@@ -356,6 +364,20 @@ public sealed class WidgetStateService : IHostedService, IDisposable
 
     private readonly System.Runtime.CompilerServices.ConditionalWeakTable<Page, PageIndex> _indexes = new();
     private int _handlerGeneration;
+
+    /// <summary>The variable is read by a widget on a page a device shows now (text, look, value variable or action templates).</summary>
+    public bool Observes(string name) => ShownIndexes().Any(i => i.Reads(name));
+
+    public bool ObservesPrefix(string prefix) => ShownIndexes().Any(i => i.ReadsPrefix(prefix));
+
+    private IEnumerable<PageIndex> ShownIndexes()
+    {
+        foreach (var session in _sessions.All)
+        {
+            if (session.ProfileId is null || session.PageId is null) continue;
+            if (_profiles.Get(session.ProfileId)?.FindPage(session.PageId) is { } page) yield return IndexFor(page);
+        }
+    }
 
     private PageIndex IndexFor(Page page)
     {
