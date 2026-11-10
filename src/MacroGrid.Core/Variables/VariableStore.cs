@@ -16,6 +16,9 @@ public sealed class VariableStore : IVariableStore
     /// <summary>Raised after a variable's value actually changes; a Set with an unchanged (Equals) value is silent.</summary>
     public event Action<string>? Changed;
 
+    /// <summary>Which variables anything currently reads (see <see cref="VariableDemand"/>); plugins reach it through <c>IPluginHost.Demand</c>.</summary>
+    public VariableDemand Demand { get; } = new();
+
     public void Set(string name, object? value)
     {
         lock (_lock)
@@ -45,6 +48,7 @@ public sealed class VariableStore : IVariableStore
     /// <summary>A point-in-time copy of every known variable, for the editor's one-shot live preview.</summary>
     public IReadOnlyDictionary<string, object?> Snapshot()
     {
+        Demand.TouchAll();
         lock (_lock) return new Dictionary<string, object?>(_values);
     }
 }

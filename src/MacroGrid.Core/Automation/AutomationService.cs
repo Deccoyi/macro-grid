@@ -27,7 +27,7 @@ public enum AutomationRunResult { Started, NotFound, Refused }
 /// could change a decision (a rule, a variable, a device), and at the start of a minute while a time rule exists. With none of those it sleeps. A rule never runs without these limits: no overlap with itself, a cooldown, a bucket
 /// of its own and one for all rules, and at most four lists at once.
 /// </summary>
-public sealed partial class AutomationService : BackgroundService
+public sealed partial class AutomationService : BackgroundService, IVariableDemandSource
 {
     /// <summary>Changes that arrive within this time of the first one are judged together, as they were by the old 250 ms tick (a value that goes there and back inside it is no change).</summary>
     private static readonly TimeSpan CoalesceWindow = TimeSpan.FromMilliseconds(250);
@@ -94,7 +94,12 @@ public sealed partial class AutomationService : BackgroundService
     private readonly SemaphoreSlim _wake = new(0, 1);
     private volatile bool _hasTimeRules;
     // Every variable name some rule's trigger reads, so a write to any other one does not wake the loop. Rebuilt with the rules, under the lock.
-    private HashSet<string> _watched = [];
+    private volatile HashSet<string> _watched = [];
+
+    /// <summary>The variable is watched by a rule's trigger or condition.</summary>
+    public bool Observes(string name) => _watched.Contains(name);
+
+    public bool ObservesPrefix(string prefix) => _watched.Any(n => n.StartsWith(prefix, StringComparison.Ordinal));
 
     public AutomationService(
         AutomationStore store, VariableStore variables, SessionRegistry sessions, ActionDispatcher dispatcher, ProblemList problems,
@@ -114,6 +119,7 @@ public sealed partial class AutomationService : BackgroundService
         // Only noted here; the tick decides. Hooked up in the constructor so a test that calls Tick by hand sees the same events.
         _store.Changed += OnRulesChanged;
         _variables.Changed += OnVariableChanged;
+        _variables.Demand.AddSource(this);
         _sessions.Changed += OnSessionsChanged;
         if (_userVariables is not null) _userVariables.DefinitionsChanged += OnDefinitionsChanged;
     }
@@ -367,7 +373,9 @@ public sealed partial class AutomationService : BackgroundService
             }
             _state[rule.Id] = state;
         }
+        var before = _watched;
         _watched = [.. _state.Values.SelectMany(st => st.Variables)];
+        if (!_watched.IsSubsetOf(before)) _variables.Demand.NotifyChanged();
         _hasTimeRules = rules.Any(r => r.Trigger.Kind == AutomationTriggerKinds.Time);
         if (!_devicesKnown) { _devices = CurrentDevices(); _devicesKnown = true; }
     }
