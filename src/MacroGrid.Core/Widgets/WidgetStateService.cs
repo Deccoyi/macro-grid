@@ -212,43 +212,40 @@ public sealed class WidgetStateService : IHostedService, IDisposable
             // A removed web widget reaches the device as a plain label with fixed text: no live state may overwrite it.
             if (widget.Type == WidgetTypes.Web) continue;
             var scope = ScopeFor(session, widget);
+            // One frame per widget: the client merges state per field, so null fields leave the old value alone.
             var text = DynamicText.Resolve(widget, scope);
-            if (text is not null)
-            {
-                session.SentTexts[widget.Id] = text;
-                await session.SendAsync(MessageTypes.WidgetState, new WidgetStateMessage(widget.Id, Text: text), ct);
-            }
+            if (text is not null) session.SentTexts[widget.Id] = text;
 
-            if (widget.Type == WidgetTypes.Toggle)
-                await session.SendAsync(MessageTypes.WidgetState, new WidgetStateMessage(widget.Id, Active: _toggles.Get(widget.Id)), ct);
+            bool? active = widget.Type == WidgetTypes.Toggle ? _toggles.Get(widget.Id) : null;
 
             var value = ResolveBoundValue(widget);
-            if (value is not null)
-            {
-                session.SentValues[widget.Id] = value.Value;
-                await session.SendAsync(MessageTypes.WidgetState, new WidgetStateMessage(widget.Id, Value: value), ct);
-            }
+            if (value is not null) session.SentValues[widget.Id] = value.Value;
 
             var unavailable = UnavailableFor(widget, scope, profile);
+            List<string>? unavailableToSend = null;
             if (unavailable.Count > 0 || session.SentUnavailable.GetValueOrDefault(widget.Id, "").Length > 0)
             {
                 session.SentUnavailable[widget.Id] = string.Join(UnavailableSeparator, unavailable);
-                await session.SendAsync(MessageTypes.WidgetState, new WidgetStateMessage(widget.Id, Unavailable: [.. unavailable]), ct);
+                unavailableToSend = [.. unavailable];
             }
 
+            Dictionary<string, string>? styleToSend = null;
             var style = ResolveDynamicStyle(widget, scope);
             if (style is not null)
             {
                 session.SentStyles[widget.Id] = style;
-                await session.SendAsync(MessageTypes.WidgetState, new WidgetStateMessage(widget.Id, Style: _layouts.ForClient(session, style)), ct);
+                styleToSend = _layouts.ForClient(session, style);
             }
             else if (session.SentStyles.TryGetValue(widget.Id, out var previous) && previous.Count > 0)
             {
                 // Nothing matches now but the device still holds an old style (the page was off screen while the variable changed): the client
-                // merges state, so an empty style is what takes it back to the widget's own.
+                // merges state, so an empty style (not null) is what takes it back to the widget's own.
                 session.SentStyles[widget.Id] = [];
-                await session.SendAsync(MessageTypes.WidgetState, new WidgetStateMessage(widget.Id, Style: []), ct);
+                styleToSend = [];
             }
+
+            if (text is null && active is null && value is null && unavailableToSend is null && styleToSend is null) continue;
+            await session.SendAsync(MessageTypes.WidgetState, new WidgetStateMessage(widget.Id, Text: text, Value: value, Active: active, Style: styleToSend, Unavailable: unavailableToSend), ct);
         }
     }
 

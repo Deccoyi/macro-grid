@@ -127,5 +127,5 @@ public sealed class AutoProfileSwitcher(
         && (string.IsNullOrEmpty(match.TitleContains) || window.Title.Contains(match.TitleContains, StringComparison.OrdinalIgnoreCase));
 
     private PairedDevice? FindDevice(string? deviceId) =>
-        deviceId is null ? null : devices.All.FirstOrDefault(d => d.Id == deviceId);
+        deviceId is null ? null : devices.Find(deviceId);
 }

@@ -35,7 +35,33 @@ internal sealed class JsSettingsPage(string dataDirectory, IReadOnlyList<Setting
     public Task<OptionsResult> SearchOptionsAsync(string sourceId, JsonObject currentValues, OptionsQuery query, CancellationToken cancellationToken) =>
         options is null ? Task.FromResult(JsOptions.Fail("This plugin does not provide dynamic options.")) : options(sourceId, currentValues, query, cancellationToken);
 
+    // Decrypted values of the last load, valid while the file's stamp (write time + length) is unchanged. A restore or a hand edit changes
+    // the stamp, and Save drops the cache. Stays inside this page object (one per plugin), so no other plugin can reach it; Load hands out copies.
+    private JsonObject? _cached;
+    private (bool Exists, DateTime Written, long Length) _cachedStamp;
+
+    private (bool, DateTime, long) Stamp()
+    {
+        var info = new FileInfo(_path);
+        return info.Exists ? (true, info.LastWriteTimeUtc, info.Length) : (false, default, 0);
+    }
+
     public JsonObject Load()
+    {
+        lock (_lock)
+        {
+            if (_cached is not null && Stamp() == _cachedStamp) return (JsonObject)_cached.DeepClone();
+        }
+        var unreadable = false;
+        (bool, DateTime, long) stamp;
+        JsonObject loaded;
+        lock (_lock) { stamp = Stamp(); loaded = LoadFromDisk(() => unreadable = true); }
+        // A value that could not be unprotected is reported on every load, so that result is never cached.
+        lock (_lock) { _cached = unreadable ? null : (JsonObject)loaded.DeepClone(); _cachedStamp = stamp; }
+        return loaded;
+    }
+
+    private JsonObject LoadFromDisk(Action markUnreadable)
     {
         var values = new JsonObject();
         foreach (var field in fields)
@@ -56,7 +82,7 @@ internal sealed class JsSettingsPage(string dataDirectory, IReadOnlyList<Setting
         PluginSettingsSecrets.ForEachPassword(fields, values, (holder, field) =>
         {
             if (holder[field.Key] is JsonValue v && v.TryGetValue<string>(out var text) && text.Length > 0)
-                holder[field.Key] = Unprotect(field.Key, text);
+                holder[field.Key] = Unprotect(field.Key, text, markUnreadable);
         });
         return values;
     }
@@ -97,13 +123,13 @@ internal sealed class JsSettingsPage(string dataDirectory, IReadOnlyList<Setting
     private static bool IsProtected(string text) =>
         text.StartsWith(ProtectedPrefix, StringComparison.Ordinal) || text.StartsWith(LegacyProtectedPrefix, StringComparison.Ordinal);
 
-    private string Unprotect(string key, string stored)
+    private string Unprotect(string key, string stored, Action markUnreadable)
     {
         if (!IsProtected(stored)) return stored;
         string? plain = null;
         try { plain = secrets?.Unprotect(stored[ProtectedPrefix.Length..]); }
         catch (Exception ex) when (ex is InvalidOperationException or CryptographicException) { /* no protector here: unreadable */ }
-        if (plain is null) onUnreadable?.Invoke(key);
+        if (plain is null) { markUnreadable(); onUnreadable?.Invoke(key); }
         return plain ?? "";
     }
 
@@ -125,6 +151,7 @@ internal sealed class JsSettingsPage(string dataDirectory, IReadOnlyList<Setting
         {
             Directory.CreateDirectory(dataDirectory);
             File.WriteAllText(_path, json);
+            _cached = null;
         }
         onSaved?.Invoke();
     }
