@@ -308,4 +308,35 @@ public sealed class WidgetStateFlushTests : IDisposable
         await service.FlushAsync();
         Assert.Equal(["n1"], SentIds(socket));
     }
+
+    [Fact]
+    public async Task The_started_service_flushes_a_change_by_itself_and_a_change_during_a_flush_is_not_left_waiting()
+    {
+        var (service, variables, socket, _) = FlushRig(new Widget { Id = "w", Text = "v={t.v}" });
+        using var _s = service;
+        await service.StartAsync(default);
+
+        variables.Set("t.v", 1);
+        await WaitForAsync(() => socket.Sent.Count >= 1);
+
+        variables.Set("t.v", 2);
+        variables.Set("t.v", 3);
+        await WaitForAsync(() => socket.Sent.Count >= 2 && socket.Sent[^1].DataAs<WidgetStateMessage>()!.Text == "v=3");
+
+        // Quiet again: nothing more is sent.
+        var count = socket.Sent.Count;
+        await Task.Delay(400);
+        Assert.Equal(count, socket.Sent.Count);
+        await service.StopAsync(default);
+    }
+
+    private static async Task WaitForAsync(Func<bool> condition)
+    {
+        var until = DateTime.UtcNow.AddSeconds(10);
+        while (!condition())
+        {
+            Assert.True(DateTime.UtcNow < until, "timed out");
+            await Task.Delay(20);
+        }
+    }
 }

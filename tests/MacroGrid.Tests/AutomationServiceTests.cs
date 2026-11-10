@@ -428,4 +428,37 @@ public sealed class AutomationServiceTests : IDisposable
         Assert.Empty(_problems.Snapshot());
         Assert.Empty(_service.Status());
     }
+
+    [Fact]
+    public void The_loop_sleeps_without_a_time_rule_and_wakes_at_the_start_of_the_next_minute_with_one()
+    {
+        var at = new DateTimeOffset(2026, 10, 7, 7, 29, 15, TimeSpan.Zero);
+        Assert.Null(AutomationService.NextTimeWake(at, hasTimeRules: false));
+        var wait = AutomationService.NextTimeWake(at, hasTimeRules: true)!.Value;
+        Assert.InRange(wait, TimeSpan.FromSeconds(45), TimeSpan.FromSeconds(46));
+        // Exactly on the minute the next boundary is a minute away; the wait is capped so a clock jump is noticed.
+        Assert.Equal(TimeSpan.FromSeconds(60), AutomationService.NextTimeWake(at.AddSeconds(-15), hasTimeRules: true));
+    }
+
+    [Fact]
+    public async Task The_running_service_starts_a_variable_rule_without_a_periodic_tick()
+    {
+        var probe = new Probe("t.ok");
+        var dispatcher = new ActionDispatcher([probe], NullLogger<ActionDispatcher>.Instance, _variables);
+        var profiles = new ProfileStore(_dir);
+        var widgetState = new WidgetStateService(_variables, _sessions, profiles, new ToggleStateStore(), new LayoutSender(new AssetStore()), NullLogger<WidgetStateService>.Instance);
+        using var service = new AutomationService(_store, _variables, _sessions, dispatcher, _problems, profiles, widgetState, NullLogger<AutomationService>.Instance);
+        _variables.Set("user.live", 0);
+        Save(false, When("live", "user.live", ">", "1"));
+        await service.StartAsync(default);
+        try
+        {
+            await Task.Delay(300);
+            _variables.Set("unwatched.name", 1); // wakes nothing
+            _variables.Set("user.live", 5);
+            await probe.FirstRun.Task.WaitAsync(TimeSpan.FromSeconds(10));
+            Assert.Single(probe.Runs);
+        }
+        finally { await service.StopAsync(default); }
+    }
 }

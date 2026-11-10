@@ -67,7 +67,7 @@ public sealed class PluginWidgetRouter : IHostedService, IDisposable
     private readonly Func<DateTimeOffset> _clock;
     private readonly HashSet<string> _dirty = [];
     private readonly Lock _dirtyLock = new();
-    private Timer? _timer;
+    private CoalescingTimer? _timer;
     private int _flushing;
 
     public PluginWidgetRouter(PluginWidgetCatalog catalog, IPluginWidgetHost plugins, PluginPermissionStore permissions, ProfileStore profiles,
@@ -91,7 +91,8 @@ public sealed class PluginWidgetRouter : IHostedService, IDisposable
 
     public Task StartAsync(CancellationToken cancellationToken)
     {
-        _timer = new Timer(_ => _ = FlushVariablesAsync(), null, TimeSpan.FromMilliseconds(100), TimeSpan.FromMilliseconds(100));
+        _timer = new CoalescingTimer(TimeSpan.FromMilliseconds(100), () => _ = FlushVariablesAsync());
+        if (HasPending()) _timer.Request();
         return Task.CompletedTask;
     }
 
@@ -359,6 +360,12 @@ public sealed class PluginWidgetRouter : IHostedService, IDisposable
     private void OnVariableChanged(string name)
     {
         lock (_dirtyLock) _dirty.Add(name);
+        _timer?.Request();
+    }
+
+    private bool HasPending()
+    {
+        lock (_dirtyLock) return _dirty.Count > 0;
     }
 
     private async Task FlushVariablesAsync()
@@ -367,6 +374,8 @@ public sealed class PluginWidgetRouter : IHostedService, IDisposable
         if (Interlocked.Exchange(ref _flushing, 1) == 1) return;
         try { await FlushCoreAsync(); }
         finally { Interlocked.Exchange(ref _flushing, 0); }
+        // A change that arrived while this flush ran (its timer run was skipped above) must not wait for the next unrelated change.
+        if (HasPending()) _timer?.Request();
     }
 
     private async Task FlushCoreAsync()

@@ -41,7 +41,7 @@ public sealed class WidgetStateService : IHostedService, IDisposable
     private readonly HashSet<(string? SessionId, string WidgetId)> _dirtyWidgets = [];
     private readonly LastResultStore? _results;
     private readonly Lock _dirtyLock = new();
-    private Timer? _timer;
+    private CoalescingTimer? _timer;
     private int _flushing;
 
     /// <summary>A client that does not take a frame for this long is dropped, so it cannot hold up the others; a phone reconnects by itself.</summary>
@@ -121,7 +121,9 @@ public sealed class WidgetStateService : IHostedService, IDisposable
 
     public Task StartAsync(CancellationToken cancellationToken)
     {
-        _timer = new Timer(_ => _ = FlushOnceAsync(), null, TimeSpan.FromMilliseconds(100), TimeSpan.FromMilliseconds(100));
+        // Armed by the first change after a flush (see OnVariableChanged), not ticking while nothing changes.
+        _timer = new CoalescingTimer(TimeSpan.FromMilliseconds(100), () => _ = FlushOnceAsync());
+        if (HasPending()) _timer.Request();
         return Task.CompletedTask;
     }
 
@@ -134,6 +136,7 @@ public sealed class WidgetStateService : IHostedService, IDisposable
     public void Dispose()
     {
         _variables.Changed -= OnVariableChanged;
+        _timer?.Dispose();
         if (_pluginWidgets is not null) _pluginWidgets.PluginChanged -= OnPluginWidgetsChanged;
         if (_images is not null) _images.ImagesChanged -= OnImagesChanged;
     }
@@ -443,6 +446,12 @@ public sealed class WidgetStateService : IHostedService, IDisposable
     private void OnVariableChanged(string name)
     {
         lock (_dirtyLock) _dirtyVariables.Add(name);
+        _timer?.Request();
+    }
+
+    private bool HasPending()
+    {
+        lock (_dirtyLock) return _dirtyVariables.Count > 0 || _dirtyWidgets.Count > 0;
     }
 
     /// <summary>One flush at a time: a flush that is still sending (a slow client) is not overlapped by the next tick, the variables
@@ -458,6 +467,8 @@ public sealed class WidgetStateService : IHostedService, IDisposable
         {
             Volatile.Write(ref _flushing, 0);
         }
+        // A change that arrived while this flush ran (its timer run was skipped by the guard above) must not wait for the next unrelated change.
+        if (HasPending()) _timer?.Request();
     }
 
     internal async Task FlushAsync()

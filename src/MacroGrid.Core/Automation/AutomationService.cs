@@ -23,12 +23,18 @@ public enum AutomationRunResult { Started, NotFound, Refused }
 
 /// <summary>
 /// Runs the automation rules (docs/design/automation-rules.md). Event handlers only record what happened; every decision is made on a
-/// 250 ms tick, which a test can also call by hand. A rule never runs without these limits: no overlap with itself, a cooldown, a bucket
+/// tick, which a test can also call by hand. The tick is not periodic: it runs once, one <see cref="CoalesceWindow"/> after the first thing that
+/// could change a decision (a rule, a variable, a device), and at the start of a minute while a time rule exists. With none of those it sleeps. A rule never runs without these limits: no overlap with itself, a cooldown, a bucket
 /// of its own and one for all rules, and at most four lists at once.
 /// </summary>
 public sealed partial class AutomationService : BackgroundService
 {
-    private static readonly TimeSpan TickInterval = TimeSpan.FromMilliseconds(250);
+    /// <summary>Changes that arrive within this time of the first one are judged together, as they were by the old 250 ms tick (a value that goes there and back inside it is no change).</summary>
+    private static readonly TimeSpan CoalesceWindow = TimeSpan.FromMilliseconds(250);
+    /// <summary>A time rule is looked at this long after the minute starts, so a timer that fires a hair early still sees the new minute.</summary>
+    private static readonly TimeSpan MinuteMargin = TimeSpan.FromMilliseconds(50);
+    /// <summary>With a time rule present the wait never exceeds this, so a clock that jumped is noticed.</summary>
+    private static readonly TimeSpan MaxTimeRuleWait = TimeSpan.FromSeconds(60);
     private static readonly TimeSpan MinCooldown = TimeSpan.FromSeconds(1);
     private static readonly TimeSpan GuardWindow = TimeSpan.FromSeconds(60);
     private const int GuardRefusals = 10;
@@ -85,6 +91,10 @@ public sealed partial class AutomationService : BackgroundService
     private bool _definitionsChanged;
     private bool _sessionsChanged = true;
     private CancellationToken _stopping;
+    private readonly SemaphoreSlim _wake = new(0, 1);
+    private volatile bool _hasTimeRules;
+    // Every variable name some rule's trigger reads, so a write to any other one does not wake the loop. Rebuilt with the rules, under the lock.
+    private HashSet<string> _watched = [];
 
     public AutomationService(
         AutomationStore store, VariableStore variables, SessionRegistry sessions, ActionDispatcher dispatcher, ProblemList problems,
@@ -120,11 +130,13 @@ public sealed partial class AutomationService : BackgroundService
         _stopping = stoppingToken;
         try
         {
-            using var timer = new PeriodicTimer(TickInterval, _clock);
-            while (await timer.WaitForNextTickAsync(stoppingToken))
+            // The first pass builds the rule states (_rulesChanged starts true).
+            RunTick();
+            while (!stoppingToken.IsCancellationRequested)
             {
-                try { Tick(); }
-                catch (Exception ex) { _logger.LogError(ex, "Automation tick failed"); }
+                var signalled = await _wake.WaitAsync(NextTimeWake(_clock.GetUtcNow(), _hasTimeRules) ?? Timeout.InfiniteTimeSpan, stoppingToken);
+                if (signalled) await Task.Delay(CoalesceWindow, _clock, stoppingToken);
+                RunTick();
             }
         }
         catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
@@ -141,10 +153,41 @@ public sealed partial class AutomationService : BackgroundService
         base.Dispose();
     }
 
-    private void OnRulesChanged() { lock (_lock) _rulesChanged = true; }
-    private void OnDefinitionsChanged() { lock (_lock) _definitionsChanged = true; }
-    private void OnSessionsChanged() { lock (_lock) _sessionsChanged = true; }
-    private void OnVariableChanged(string name) { lock (_lock) _dirtyVariables.Add(name); }
+    private void RunTick()
+    {
+        try { Tick(); }
+        catch (Exception ex) { _logger.LogError(ex, "Automation tick failed"); }
+    }
+
+    /// <summary>How long until the next minute starts, or null when no time rule exists (then only an event wakes the loop).</summary>
+    internal static TimeSpan? NextTimeWake(DateTimeOffset utcNow, bool hasTimeRules)
+    {
+        if (!hasTimeRules) return null;
+        var intoMinute = TimeSpan.FromTicks(utcNow.UtcTicks % TimeSpan.TicksPerMinute);
+        var wait = TimeSpan.FromMinutes(1) - intoMinute + MinuteMargin;
+        return wait < MaxTimeRuleWait ? wait : MaxTimeRuleWait;
+    }
+
+    /// <summary>Asks for a pass. One signal is enough however many events follow before the pass runs.</summary>
+    private void Wake()
+    {
+        try { _wake.Release(); }
+        catch (SemaphoreFullException) { }
+    }
+
+    private void OnRulesChanged() { lock (_lock) _rulesChanged = true; Wake(); }
+    private void OnDefinitionsChanged() { lock (_lock) _definitionsChanged = true; Wake(); }
+    private void OnSessionsChanged() { lock (_lock) _sessionsChanged = true; Wake(); }
+    private void OnVariableChanged(string name)
+    {
+        lock (_lock)
+        {
+            // Only a variable some rule watches can change a decision; the rest would wake the loop for nothing.
+            if (!_watched.Contains(name) && !_rulesChanged) return;
+            _dirtyVariables.Add(name);
+        }
+        Wake();
+    }
 
     /// <summary>One decision pass. Called every 250 ms by the service; a test calls it by hand with a clock it moves.</summary>
     public void Tick()
@@ -324,6 +367,8 @@ public sealed partial class AutomationService : BackgroundService
             }
             _state[rule.Id] = state;
         }
+        _watched = [.. _state.Values.SelectMany(st => st.Variables)];
+        _hasTimeRules = rules.Any(r => r.Trigger.Kind == AutomationTriggerKinds.Time);
         if (!_devicesKnown) { _devices = CurrentDevices(); _devicesKnown = true; }
     }
 
