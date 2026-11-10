@@ -19,6 +19,7 @@ internal static class Program
     {
         // First: a crash anywhere after this line leaves a marker for the next start (see CrashCapture).
         CrashCapture.Install(ProfileStore.DefaultDataDir);
+        ShutdownLog.Install(ProfileStore.DefaultDataDir);
 
         var mutexName = @"Local\MacroGrid.Server";
 #if DEBUG
@@ -114,12 +115,15 @@ internal static class Program
         var openEditor = StartupPolicy.ShouldOpenEditor(args, server.Services.GetRequiredService<PreferencesStore>().Get());
         Application.Run(new TrayContext(server, openEditor, updated, crashReport, CrashReportPolicy.When(crashMarkers, openEditor)));
 
+        ShutdownLog.Requested("tray loop ended");
+
         // The tray icon is gone at this point. If stopping the server hangs (for example a hosted service waiting for
         // the UI thread, whose message loop has just ended) or a foreground thread survives, the process would stay
         // in the background with no icon to quit it from. This watchdog ends the process in that case.
         new Thread(() =>
         {
             Thread.Sleep(TimeSpan.FromSeconds(8));
+            ShutdownLog.Write("Stopping the server took longer than 8 seconds; ending the process");
             Environment.Exit(0);
         }) { IsBackground = true }.Start();
 
