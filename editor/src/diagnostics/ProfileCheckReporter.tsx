@@ -1,5 +1,6 @@
 import { useEffect, useMemo } from "react";
 import type { Profile } from "@macro/renderer";
+import { useLiveNames } from "../state/liveValues";
 import { usePluginWidgets } from "../state/usePluginWidgets";
 import type { ActionInfo, ProfileSummary, VariableInfo } from "../api/types";
 import type { DictKey } from "../i18n/tr";
@@ -12,12 +13,12 @@ interface Props {
   profiles: ProfileSummary[];
   actions: ActionInfo[];
   variableCatalog: VariableInfo[];
-  /** The names of the variables that have a value right now, joined into one sorted text so the 2-second value poll does not re-run the check. */
-  liveNames: string;
 }
 
 /** Runs the profile check 300 ms after the profile, the action list or the plugin widgets change, and replaces the earlier lines of that check. */
-export function ProfileCheckReporter({ profile, profiles, actions, variableCatalog, liveNames }: Props) {
+export function ProfileCheckReporter({ profile, profiles, actions, variableCatalog }: Props) {
+  // One sorted text of the names that have a value: the 2-second value poll then re-renders this only when a name appears or goes.
+  const liveNames = useLiveNames();
   const pluginWidgets = usePluginWidgets();
   const { report } = useDiagnostics();
   const { t } = useT();

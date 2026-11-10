@@ -112,10 +112,11 @@ export function PluginsWindow() {
   const [pluginsWithStatus, setPluginsWithStatus] = useState<Set<string>>(new Set());
   useEffect(() => {
     let stopped = false;
-    const load = () => api.getStatus().then((list) => { if (!stopped) setPluginsWithStatus(new Set(list.filter((i) => i.pluginId !== "core").map((i) => i.pluginId))); }).catch(() => {});
+    const load = () => document.hidden ? undefined : api.getStatus().then((list) => { if (!stopped) setPluginsWithStatus(new Set(list.filter((i) => i.pluginId !== "core").map((i) => i.pluginId))); }).catch(() => {});
     load();
     const timer = window.setInterval(load, 4000);
-    return () => { stopped = true; window.clearInterval(timer); };
+    document.addEventListener("visibilitychange", load);
+    return () => { stopped = true; window.clearInterval(timer); document.removeEventListener("visibilitychange", load); };
   }, []);
   useDocumentTitle("plugins.title");
   const [category, setCategory] = useState<Category>("installed");

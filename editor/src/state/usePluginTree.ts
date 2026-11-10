@@ -89,6 +89,7 @@ export function usePluginTree() {
   useEffect(() => {
     let cancelled = false;
     const poll = async () => {
+      if (document.hidden) return;
       try {
         const result = await api.getPluginTreeChanges(revisionRef.current);
         if (cancelled) return;
@@ -112,8 +113,9 @@ export function usePluginTree() {
       }
     };
     const interval = setInterval(poll, 4000);
+    document.addEventListener("visibilitychange", poll);
     poll();
-    return () => { cancelled = true; clearInterval(interval); };
+    return () => { cancelled = true; clearInterval(interval); document.removeEventListener("visibilitychange", poll); };
   }, [dropLevel, dropWholePlugin, loadLevel]);
 
   return { getLevel, ensureLevelLoaded, loadMore, setExpanded };

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import type { Page, Profile, Widget } from "@macro/renderer";
 import { Copy, Smartphone, Trash2 } from "lucide-react";
 import { api } from "./api/client";
@@ -17,6 +17,7 @@ import type { DeviceSize } from "./grid/DevicePreviewFrame";
 import { useT } from "./i18n/I18nContext";
 import { useDocumentTitle } from "./i18n/useDocumentTitle";
 import type { DictKey } from "./i18n/tr";
+import { useLiveStatus } from "./state/liveValues";
 import { StatusBar } from "./components/StatusBar";
 import { ContextMenu, type ContextMenuEntry } from "./panels/ContextMenu";
 import { MenuBar } from "./panels/MenuBar";
@@ -56,13 +57,16 @@ export function App() {
   );
 }
 
+/** Reads the polled status items itself, so the 2-second poll re-renders only the bar and not App. */
+function LiveStatusBar() {
+  return <StatusBar items={useLiveStatus()} />;
+}
+
 function AppContent() {
   const { t, tn } = useT();
   useDocumentTitle("app.title");
   const { previewProfiles } = usePreferences();
   const state = useEditorState();
-  // The names of the variables that have a value, as one text: the 2-second value poll then re-runs the profile check only when a name appears or goes.
-  const liveNames = useMemo(() => Object.keys(state.variables).filter((k) => state.variables[k] != null).sort().join("\n"), [state.variables]);
   const { profile, currentPage } = state;
   const [devicePresetId, setDevicePresetId] = useState("free");
   const [customSize, setCustomSize] = useState<DeviceSize>({ width: 390, height: 844 });
@@ -358,7 +362,7 @@ function AppContent() {
       <EditorStateProvider value={state}>
        <DiagnosticsProvider>
         <SaveSummaryReporter profile={state.profile} saveCount={state.saveCount} />
-        <ProfileCheckReporter profile={state.profile} profiles={state.profiles} actions={state.actions} variableCatalog={state.variableCatalog} liveNames={liveNames} />
+        <ProfileCheckReporter profile={state.profile} profiles={state.profiles} actions={state.actions} variableCatalog={state.variableCatalog} />
         <WorkspaceUiProvider
           value={{
             openPageContextMenu: (x, y, pageId) => setPageMenu({ x, y, pageId }),
@@ -438,7 +442,7 @@ function AppContent() {
        </DiagnosticsProvider>
       </EditorStateProvider>
 
-      <StatusBar items={state.status} />
+      <LiveStatusBar />
     </div>
     </WorkspaceProvider>
   );
