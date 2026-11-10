@@ -360,6 +360,25 @@ public sealed class AutomationServiceTests : IDisposable
     }
 
     [Fact]
+    public async Task A_changed_value_does_not_rescan_for_missing_variables_but_a_changed_definition_does()
+    {
+        Assert.True(_userVariables.TryReplace([new("count", VariableType.Number, 0)], out _));
+        Save(false, When("b", "user.other", ">", "1"));
+        await TickAsync();
+        var problem = Assert.Single(_problems.Snapshot(), p => p.Key == "P163:b");
+
+        // Clear the line by hand: only a rescan could bring it back.
+        _problems.ResolveKey(problem.Source, problem.Key!);
+        _variables.Set("user.count", 5);
+        await TickAsync();
+        Assert.DoesNotContain(_problems.Snapshot(), p => p.Key == "P163:b");
+
+        Assert.True(_userVariables.TryReplace([new("count", VariableType.Number, 0), new("x", VariableType.Number, 0)], out _));
+        await TickAsync();
+        Assert.Contains(_problems.Snapshot(), p => p.Key == "P163:b");
+    }
+
+    [Fact]
     public async Task Run_now_ignores_the_switch_and_the_pause_and_answers_unknown_and_no_device()
     {
         var off = At("a", "23:00");

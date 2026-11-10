@@ -54,6 +54,8 @@ public sealed partial class AutomationService : BackgroundService
         public readonly TokenBucket Bucket = new(5, 0.5);
         public readonly Queue<DateTimeOffset> Refusals = new();
         public HashSet<string> Variables = new(StringComparer.OrdinalIgnoreCase);
+        // The user.* names the trigger and the steps mention, read once when the rule is (re)built.
+        public string[] UserNames = [];
         // variableChange: the last value this rule has judged, until when changes are only followed, and the changes that came from the rule itself.
         public object? LastSeen;
         public DateTimeOffset SettleUntil;
@@ -80,6 +82,7 @@ public sealed partial class AutomationService : BackgroundService
     private HashSet<string> _devices = [];
     private bool _devicesKnown;
     private bool _rulesChanged = true;
+    private bool _definitionsChanged;
     private bool _sessionsChanged = true;
     private CancellationToken _stopping;
 
@@ -102,6 +105,7 @@ public sealed partial class AutomationService : BackgroundService
         _store.Changed += OnRulesChanged;
         _variables.Changed += OnVariableChanged;
         _sessions.Changed += OnSessionsChanged;
+        if (_userVariables is not null) _userVariables.DefinitionsChanged += OnDefinitionsChanged;
     }
 
     /// <summary>The state of every rule, by id.</summary>
@@ -133,10 +137,12 @@ public sealed partial class AutomationService : BackgroundService
         _store.Changed -= OnRulesChanged;
         _variables.Changed -= OnVariableChanged;
         _sessions.Changed -= OnSessionsChanged;
+        if (_userVariables is not null) _userVariables.DefinitionsChanged -= OnDefinitionsChanged;
         base.Dispose();
     }
 
     private void OnRulesChanged() { lock (_lock) _rulesChanged = true; }
+    private void OnDefinitionsChanged() { lock (_lock) _definitionsChanged = true; }
     private void OnSessionsChanged() { lock (_lock) _sessionsChanged = true; }
     private void OnVariableChanged(string name) { lock (_lock) _dirtyVariables.Add(name); }
 
@@ -158,8 +164,10 @@ public sealed partial class AutomationService : BackgroundService
             }
             var dirty = _dirtyVariables.ToList();
             _dirtyVariables.Clear();
-            // Deleting a variable removes its value, which arrives here as a change of that name.
-            if (rebuilt || dirty.Any(UserVariables.IsUserName)) CheckMissingVariables(rules);
+            // Only a changed rule list or changed variable definitions can add or clear a missing variable; a new value cannot.
+            var definitionsChanged = _definitionsChanged;
+            _definitionsChanged = false;
+            if (rebuilt || definitionsChanged) CheckMissingVariables(rules);
             var sessionsChanged = _sessionsChanged;
             _sessionsChanged = false;
 
@@ -300,6 +308,8 @@ public sealed partial class AutomationService : BackgroundService
             state.LastSeen = null;
             state.SettleUntil = default;
             state.SelfChanges.Clear();
+            state.UserNames = [.. UserVariableName().Matches(
+                JsonSerializer.Serialize(rule.Trigger, ProtocolJson.Options) + JsonSerializer.Serialize(rule.Actions, ProtocolJson.Options)).Select(m => m.Value)];
             if (rule.Trigger is { Kind: AutomationTriggerKinds.VariableChange, Variable: { } watched })
             {
                 // Read now without firing, like the condition below: saving the rule or starting the server is not a change.
@@ -326,8 +336,8 @@ public sealed partial class AutomationService : BackgroundService
         if (_userVariables is null) return;
         foreach (var rule in rules)
         {
-            var text = JsonSerializer.Serialize(rule.Trigger, ProtocolJson.Options) + JsonSerializer.Serialize(rule.Actions, ProtocolJson.Options);
-            var missing = UserVariableName().Matches(text).Select(m => m.Value).FirstOrDefault(name => _userVariables.Find(name) is null);
+            if (!_state.TryGetValue(rule.Id, out var state)) continue;
+            var missing = state.UserNames.FirstOrDefault(name => _userVariables.Find(name) is null);
             var key = $"{ProblemCodes.AutomationVariableMissing}:{rule.Id}";
             if (missing is null) _problems.ResolveKey(Source, key);
             else _problems.Report(Source, rule.Name, ProblemSeverity.Warning, ProblemCodes.AutomationVariableMissing,
