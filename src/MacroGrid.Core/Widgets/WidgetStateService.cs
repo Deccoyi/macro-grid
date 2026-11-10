@@ -83,6 +83,7 @@ public sealed class WidgetStateService : IHostedService, IDisposable
     /// <summary>An action type appeared or went away (a plugin switched on or off): every widget with actions on a shown page is looked at again for its unavailable mark.</summary>
     private void OnActionTypesChanged()
     {
+        Interlocked.Increment(ref _handlerGeneration); // action dependencies depend on the handler list
         foreach (var session in _sessions.All)
         {
             if (session.ProfileId is null || session.PageId is null) continue;
@@ -300,8 +301,74 @@ public sealed class WidgetStateService : IHostedService, IDisposable
         return resolved;
     }
 
-    private static bool BindingsDependOn(IEnumerable<DynamicBinding> bindings, HashSet<string> dirtyVariables) =>
-        bindings.SelectMany(b => b.Cases).SelectMany(c => DynamicRuleEvaluator.CollectVariables(c.Condition)).Any(dirtyVariables.Contains);
+    private static HashSet<string> StyleDependenciesOf(IEnumerable<DynamicBinding> bindings) =>
+        [.. bindings.SelectMany(b => b.Cases).SelectMany(c => DynamicRuleEvaluator.CollectVariables(c.Condition))];
+
+    /// <summary>What one widget of a page reads, worked out once. It must stay the same set the flush used to rebuild on every pass.</summary>
+    private sealed class WidgetEntry(Widget widget, HashSet<string> text, HashSet<string> style, string? valueVariable, HashSet<string> actions)
+    {
+        public Widget Widget { get; } = widget;
+        public HashSet<string> TextDependencies { get; } = text;
+        public HashSet<string> StyleDependencies { get; } = style;
+        public string? ValueVariable { get; } = valueVariable;
+        public HashSet<string> ActionDependencies { get; } = actions;
+    }
+
+    /// <summary>Reverse index of one page: variable name to the widgets that read it. Built for one <see cref="Page"/> object (a save puts new objects in the store, so
+    /// an edit drops the index with the old page) and for one generation of action handlers (<see cref="_handlerGeneration"/>).</summary>
+    private sealed class PageIndex(List<WidgetEntry> entries, int generation)
+    {
+        public int Generation { get; } = generation;
+        private readonly Dictionary<string, List<int>> _byVariable = Build(entries);
+        private readonly Dictionary<string, List<int>> _byWidgetId = entries.Select((e, i) => (e.Widget.Id, i)).GroupBy(x => x.Id).ToDictionary(g => g.Key, g => g.Select(x => x.i).ToList());
+
+        private static Dictionary<string, List<int>> Build(List<WidgetEntry> entries)
+        {
+            var map = new Dictionary<string, List<int>>();
+            for (var i = 0; i < entries.Count; i++)
+            {
+                var e = entries[i];
+                IEnumerable<string> names = e.TextDependencies.Concat(e.StyleDependencies).Concat(e.ActionDependencies);
+                if (!string.IsNullOrEmpty(e.ValueVariable)) names = names.Append(e.ValueVariable);
+                foreach (var name in names.Distinct())
+                {
+                    if (!map.TryGetValue(name, out var list)) map[name] = list = [];
+                    list.Add(i);
+                }
+            }
+            return map;
+        }
+
+        /// <summary>The widgets touched by the dirty variables or marked for a forced look, in page order.</summary>
+        public IEnumerable<WidgetEntry> Affected(HashSet<string> dirty, HashSet<string> marked)
+        {
+            var hit = new SortedSet<int>();
+            foreach (var name in dirty)
+                if (_byVariable.TryGetValue(name, out var list)) hit.UnionWith(list);
+            foreach (var id in marked)
+                if (_byWidgetId.TryGetValue(id, out var list)) hit.UnionWith(list);
+            return hit.Select(i => entries[i]);
+        }
+    }
+
+    private readonly System.Runtime.CompilerServices.ConditionalWeakTable<Page, PageIndex> _indexes = new();
+    private int _handlerGeneration;
+
+    private PageIndex IndexFor(Page page)
+    {
+        var generation = Volatile.Read(ref _handlerGeneration);
+        if (_indexes.TryGetValue(page, out var index) && index.Generation == generation) return index;
+        var entries = new List<WidgetEntry>();
+        foreach (var widget in page.Widgets)
+        {
+            if (widget.Type == WidgetTypes.Web) continue; // see SendInitialAsync
+            entries.Add(new WidgetEntry(widget, DynamicText.Dependencies(widget), StyleDependenciesOf(widget.Dynamic.Values),
+                widget.Props?["valueVariable"]?.GetValue<string>(), _actions is null ? [] : _actions.ActionDependencies(widget)));
+        }
+        index = new PageIndex(entries, generation);
+        _indexes.AddOrUpdate(page, index);
+        return index;
+    }
 
     private static bool StyleChanged(Dictionary<string, string>? previous, Dictionary<string, string> next)
     {
@@ -423,18 +490,19 @@ public sealed class WidgetStateService : IHostedService, IDisposable
         var page = profile?.FindPage(session.PageId);
         if (page is null) return;
 
-        foreach (var widget in page.Widgets)
+        var index = IndexFor(page);
+        foreach (var entry in index.Affected(dirty, marked))
         {
-            if (widget.Type == WidgetTypes.Web) continue; // see SendInitialAsync
+            var widget = entry.Widget;
             var forced = marked.Contains(widget.Id);
             var scope = ScopeFor(session, widget);
             string? text = null;
-            if ((forced || DynamicText.Dependencies(widget).Any(dirty.Contains)) && DynamicText.Resolve(widget, scope) is { } rendered
+            if ((forced || entry.TextDependencies.Any(dirty.Contains)) && DynamicText.Resolve(widget, scope) is { } rendered
                 && (!session.SentTexts.TryGetValue(widget.Id, out var prevText) || prevText != rendered))
                 text = rendered;
 
             Dictionary<string, string>? style = null;
-            if ((widget.Dynamic.Count > 0 || PluginImageRef.LooksLikeRef(widget.Style?.Icon)) && (forced || BindingsDependOn(widget.Dynamic.Values, dirty)))
+            if ((widget.Dynamic.Count > 0 || PluginImageRef.LooksLikeRef(widget.Style?.Icon)) && (forced || entry.StyleDependencies.Any(dirty.Contains)))
             {
                 var resolved = ResolveDynamicStyle(widget, scope);
                 var previous = session.SentStyles.GetValueOrDefault(widget.Id);
@@ -445,7 +513,7 @@ public sealed class WidgetStateService : IHostedService, IDisposable
             }
 
             double? value = null;
-            var variableName = widget.Props?["valueVariable"]?.GetValue<string>();
+            var variableName = entry.ValueVariable;
             if (!string.IsNullOrEmpty(variableName) && dirty.Contains(variableName))
             {
                 var resolved = ResolveBoundValue(widget);
@@ -454,7 +522,7 @@ public sealed class WidgetStateService : IHostedService, IDisposable
             }
 
             List<string>? unavailable = null;
-            if (forced || (_actions is not null && _actions.ActionDependencies(widget).Any(dirty.Contains)))
+            if (forced || entry.ActionDependencies.Any(dirty.Contains))
             {
                 var now = UnavailableFor(widget, scope, profile);
                 if (string.Join(UnavailableSeparator, now) !=session.SentUnavailable.GetValueOrDefault(widget.Id, ""))
